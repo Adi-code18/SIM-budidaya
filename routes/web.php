@@ -14,6 +14,14 @@ Route::get('/dashboard', function () {
     return view('dashboard.index');
 })->name('dashboard');
 
+Route::get('/pembibitan', function () {
+    return view('pembibitan.index');
+})->name('pembibitan');
+
+Route::get('/pembesaran', function () {
+    return view('pembesaran.index');
+})->name('pembesaran');
+
 Route::get('/pembudidaya', function () {
     return view('pembudidaya.index');
 })->name('pembudidaya');

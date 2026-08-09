@@ -12,6 +12,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Leaflet.js Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <!-- Tailwind CSS CDN Fallback -->
@@ -83,18 +86,13 @@
 
         <!-- Sidebar Navigation -->
         <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" 
-               class="fixed inset-y-0 left-0 z-50 w-64 bg-navy-800 text-white flex flex-col transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 shrink-0 shadow-2xl">
+               class="fixed inset-y-0 left-0 z-50 w-64 bg-[#031B4E] text-white flex flex-col transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 shrink-0 shadow-2xl">
             
             <!-- App Branding -->
             <div class="h-20 px-6 flex items-center justify-between border-b border-white/10">
-                <a href="{{ route('dashboard') }}" class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-400 to-blue-600 flex items-center justify-center shadow-lg shadow-sky-500/30">
-                        <i class="fa-solid fa-fish-fins text-white text-xl"></i>
-                    </div>
-                    <div>
-                        <span class="font-extrabold text-lg tracking-wider text-white block leading-tight">SIM-BUDIDAYA</span>
-                        <span class="text-[10px] tracking-widest uppercase text-sky-300 font-semibold">Manajemen Ikan</span>
-                    </div>
+                <a href="{{ route('dashboard') }}" class="block">
+                    <span class="font-extrabold text-xl tracking-wide text-white block leading-none">SIM-BUDIDAYA</span>
+                    <span class="text-[9px] tracking-[0.18em] uppercase text-sky-300 font-semibold block mt-1">AQUAFARM MANAGEMENT</span>
                 </a>
                 <button @click="sidebarOpen = false" class="lg:hidden text-slate-300 hover:text-white p-1">
                     <i class="fa-solid fa-xmark text-xl"></i>
@@ -102,114 +100,80 @@
             </div>
 
             <!-- Navigation Links -->
-            <nav class="flex-1 px-4 py-6 overflow-y-auto space-y-1">
-                <div class="px-3 pb-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">Menu Utama</div>
+            <nav class="flex-1 px-4 py-6 overflow-y-auto space-y-1.5">
                 
                 <a href="{{ route('dashboard') }}" 
-                   class="flex items-center gap-3.5 px-3.5 py-3 rounded-xl transition-all duration-200 text-sm font-medium {{ request()->routeIs('dashboard') ? 'sidebar-active' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}">
-                    <i class="fa-solid fa-chart-pie text-base w-5 text-center"></i>
-                    <span>Dashboard Utama</span>
+                   class="flex items-center gap-3.5 px-4 py-2.5 rounded-xl transition-all duration-200 text-xs font-semibold {{ request()->routeIs('dashboard') ? 'bg-[#0284C7] text-white shadow-md shadow-sky-600/30' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}">
+                    <i class="fa-solid fa-table-cells-large text-sm w-5 text-center"></i>
+                    <span>Dashboard</span>
                 </a>
 
-                <a href="{{ route('pembudidaya') }}" 
-                   class="flex items-center gap-3.5 px-3.5 py-3 rounded-xl transition-all duration-200 text-sm font-medium {{ request()->routeIs('pembudidaya') ? 'sidebar-active' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}">
-                    <i class="fa-solid fa-water text-base w-5 text-center"></i>
-                    <span>Manajemen Kolam</span>
+                <a href="{{ route('pembibitan') }}" 
+                   class="flex items-center gap-3.5 px-4 py-2.5 rounded-xl transition-all duration-200 text-xs font-semibold {{ request()->routeIs('pembibitan') ? 'bg-[#0284C7] text-white shadow-md shadow-sky-600/30' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}">
+                    <i class="fa-solid fa-droplet text-sm w-5 text-center"></i>
+                    <span>Pembibitan</span>
+                </a>
+
+                <a href="{{ route('pembesaran') }}" 
+                   class="flex items-center gap-3.5 px-4 py-2.5 rounded-xl transition-all duration-200 text-xs font-semibold {{ request()->routeIs('pembesaran') ? 'bg-[#0284C7] text-white shadow-md shadow-sky-600/30' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}">
+                    <i class="fa-solid fa-bars-staggered text-sm w-5 text-center"></i>
+                    <span>Pembesaran</span>
                 </a>
 
                 <a href="{{ route('log-pakan') }}" 
-                   class="flex items-center gap-3.5 px-3.5 py-3 rounded-xl transition-all duration-200 text-sm font-medium {{ request()->routeIs('log-pakan') ? 'sidebar-active' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}">
-                    <i class="fa-solid fa-clipboard-list text-base w-5 text-center"></i>
-                    <span>Log Pakan Harian</span>
+                   class="flex items-center gap-3.5 px-4 py-2.5 rounded-xl transition-all duration-200 text-xs font-semibold {{ request()->routeIs('log-pakan') ? 'bg-[#0284C7] text-white shadow-md shadow-sky-600/30' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}">
+                    <i class="fa-regular fa-calendar text-sm w-5 text-center"></i>
+                    <span>Log Pakan</span>
                 </a>
 
                 <a href="{{ route('distribusi') }}" 
-                   class="flex items-center gap-3.5 px-3.5 py-3 rounded-xl transition-all duration-200 text-sm font-medium {{ request()->routeIs('distribusi') ? 'sidebar-active' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}">
-                    <i class="fa-solid fa-truck-ramp-box text-base w-5 text-center"></i>
+                   class="flex items-center gap-3.5 px-4 py-2.5 rounded-xl transition-all duration-200 text-xs font-semibold {{ request()->routeIs('distribusi') ? 'bg-[#0284C7] text-white shadow-md shadow-sky-600/30' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}">
+                    <i class="fa-solid fa-truck text-sm w-5 text-center"></i>
                     <span>Distribusi & Order</span>
                 </a>
 
-                <div class="px-3 pt-6 pb-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">Keuangan & Admin</div>
-
                 <a href="{{ route('keuangan') }}" 
-                   class="flex items-center gap-3.5 px-3.5 py-3 rounded-xl transition-all duration-200 text-sm font-medium {{ request()->routeIs('keuangan') ? 'sidebar-active' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}">
-                    <i class="fa-solid fa-wallet text-base w-5 text-center"></i>
-                    <span>Financial Management</span>
+                   class="flex items-center gap-3.5 px-4 py-2.5 rounded-xl transition-all duration-200 text-xs font-semibold {{ request()->routeIs('keuangan') ? 'bg-[#0284C7] text-white shadow-md shadow-sky-600/30' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}">
+                    <i class="fa-regular fa-credit-card text-sm w-5 text-center"></i>
+                    <span>Keuangan</span>
                 </a>
 
                 <a href="{{ route('mitra') }}" 
-                   class="flex items-center gap-3.5 px-3.5 py-3 rounded-xl transition-all duration-200 text-sm font-medium {{ request()->routeIs('mitra') ? 'sidebar-active' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}">
-                    <i class="fa-solid fa-users text-base w-5 text-center"></i>
+                   class="flex items-center gap-3.5 px-4 py-2.5 rounded-xl transition-all duration-200 text-xs font-semibold {{ request()->routeIs('mitra') ? 'bg-[#0284C7] text-white shadow-md shadow-sky-600/30' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}">
+                    <i class="fa-regular fa-handshake text-sm w-5 text-center"></i>
                     <span>Manajemen Mitra</span>
                 </a>
             </nav>
 
-            <!-- User Footer Profile Card -->
-            <div class="p-4 border-t border-white/10 bg-navy-900/50">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="relative">
-                            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=120" 
-                                 alt="Profile" 
-                                 class="w-10 h-10 rounded-xl object-cover ring-2 ring-sky-400/50">
-                            <span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-navy-800"></span>
-                        </div>
-                        <div class="overflow-hidden">
-                            <p class="text-sm font-bold text-white truncate">Adi Darmawan</p>
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-500/20 text-sky-300 border border-sky-400/30">
-                                <i class="fa-solid fa-user-shield text-[9px]"></i> Manajer
-                            </span>
-                        </div>
+            <!-- User Profile Button Footer -->
+            <div class="p-4 border-t border-white/10">
+                <div class="flex items-center gap-3 px-3 py-2 rounded-full bg-white/10 text-white w-fit">
+                    <div class="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-xs">
+                        <i class="fa-solid fa-user"></i>
                     </div>
-                    <a href="{{ route('login') }}" title="Logout" class="text-slate-400 hover:text-rose-400 p-2 transition-colors">
-                        <i class="fa-solid fa-right-from-bracket text-base"></i>
-                    </a>
+                    <span class="text-xs font-bold pr-2">Manajer</span>
                 </div>
             </div>
         </aside>
 
         <!-- Main Content Area -->
-        <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <div class="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#F4F7FA]">
 
             <!-- Top Header Bar -->
-            <header class="h-20 bg-white border-b border-slate-200/80 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+            <header class="h-16 bg-white border-b border-slate-200/80 px-6 flex items-center justify-between sticky top-0 z-30 shadow-xs">
                 <div class="flex items-center gap-4">
                     <button @click="sidebarOpen = true" class="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
-                        <i class="fa-solid fa-bars-staggered text-xl"></i>
+                        <i class="fa-solid fa-bars text-lg"></i>
                     </button>
-                    <!-- Search Input -->
-                    <div class="relative hidden sm:block w-64 lg:w-80">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                        <input type="text" 
-                               placeholder="Cari kolam, pakan, mitra, transaksi..." 
-                               class="w-full pl-10 pr-4 py-2 rounded-xl text-sm bg-slate-100/80 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition-all">
-                    </div>
+                    <span class="text-xs sm:text-sm font-medium text-slate-600">Selamat Datang, Adi Darmawan</span>
                 </div>
 
-                <!-- Right Action Icons & User -->
-                <div class="flex items-center gap-3 sm:gap-4">
-                    <!-- Date badge -->
-                    <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-600">
-                        <i class="fa-regular fa-calendar text-sky-600"></i>
-                        <span>{{ date('d M Y') }}</span>
-                    </div>
-
-                    <!-- Quick Notifications -->
-                    <button class="relative p-2.5 rounded-xl text-slate-600 hover:bg-slate-100 transition-colors">
-                        <i class="fa-regular fa-bell text-lg"></i>
-                        <span class="absolute top-2 right-2 w-2.5 h-2.5 bg-rose-500 rounded-full ring-2 ring-white"></span>
-                    </button>
-
-                    <!-- Role Badge Indicator -->
-                    <div class="flex items-center gap-3 pl-3 border-l border-slate-200">
-                        <div class="text-right hidden sm:block">
-                            <p class="text-xs font-bold text-slate-800">Manajer Operasional</p>
-                            <p class="text-[11px] text-slate-500 font-medium">SIM-BUDIDAYA</p>
-                        </div>
-                        <div class="w-9 h-9 rounded-xl bg-navy-800 text-white flex items-center justify-center font-bold text-xs shadow-md">
-                            MN
-                        </div>
-                    </div>
+                <!-- Right Action Logout -->
+                <div class="flex items-center gap-3">
+                    <a href="{{ route('login') }}" class="px-3.5 py-1.5 rounded-lg bg-[#E53E3E] hover:bg-red-600 text-white font-bold text-xs flex items-center gap-2 shadow-sm transition-all">
+                        <i class="fa-solid fa-right-from-bracket text-xs"></i>
+                        <span>Log Out</span>
+                    </a>
                 </div>
             </header>
 
