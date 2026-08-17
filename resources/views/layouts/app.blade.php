@@ -138,6 +138,12 @@
                     <span>Keuangan</span>
                 </a>
 
+                <a href="{{ route('petugas') }}" 
+                   class="flex items-center gap-3.5 px-4 py-2.5 rounded-xl transition-all duration-200 text-xs font-semibold {{ request()->routeIs('petugas*') ? 'bg-[#0284C7] text-white shadow-md shadow-sky-600/30' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}">
+                    <i class="fa-solid fa-users-gear text-sm w-5 text-center"></i>
+                    <span>Manajemen Petugas</span>
+                </a>
+
                 <a href="{{ route('mitra') }}" 
                    class="flex items-center gap-3.5 px-4 py-2.5 rounded-xl transition-all duration-200 text-xs font-semibold {{ request()->routeIs('mitra') ? 'bg-[#0284C7] text-white shadow-md shadow-sky-600/30' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}">
                     <i class="fa-regular fa-handshake text-sm w-5 text-center"></i>

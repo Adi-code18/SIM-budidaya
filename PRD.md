@@ -12,9 +12,15 @@
 Aplikasi berbasis web untuk pengelolaan data mitra, sistem distribusi, serta pemetaan lokasi geospatial interaktif.
 
 ## Fitur Utama
-- **Manajemen Data Mitra:** Pengelolaan data distributor, agen, dan kemitraan, pakan, keuangan, pengelolaan panen & bibit.
-- **Pemetaan Geospatial Interaktif:** Input dan visualisasi koordinat lokasi mitra menggunakan **Leaflet.js**.
+- Manajemen Data Mitra.
+- Pengelolaan data distributor(order) 
+- Pengelolaan pakan
+- keuangan
+- pengelolaan panen & bibit.
+- Input dan visualisasi koordinat lokasi mitra menggunakan **Leaflet.js**.
 - **Antarmuka Reaktif:** Tampilan web responsif yang dibangun menggunakan **Tailwind CSS** dan **Alpine.js**.
+- manajemen ikan dari pembibitan dan pembesaran
+- manajemen akun karyawan 
 
 ## Stack Teknologi
 - **Backend:** PHP / Laravel
@@ -23,5 +29,13 @@ Aplikasi berbasis web untuk pengelolaan data mitra, sistem distribusi, serta pem
 - **Database:** MySQL 
 
 ---
+## fitur di Mobile 
+ di dalam aplikasi mobile disini aku hanya akan membuat aplikasi untuk memonitoring area distribusi , yang dimana ada beberapa fitur yaitu:
+ - ada fitur tracking barang saat pengiriman pada barang (detail barang)
+ - ada fitur daftar barang yang siap dikirim(mirip sepeti daftar tugas konsepnya)
+ - ada fitur riwayat pengiriman 
+ - fitur account
 
-   
+
+
+ 

@@ -114,6 +114,7 @@
                             <i class="fa-solid fa-location-dot text-xs"></i>
                         </div>
                         <span>Status & Lokasi</span>
+                        
                     </div>
 
                     <div>

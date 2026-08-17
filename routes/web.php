@@ -41,3 +41,24 @@ Route::get('/keuangan', function () {
 Route::get('/mitra', function () {
     return view('mitra.index');
 })->name('mitra');
+
+Route::get('/petugas', function () {
+    return view('petugas.index');
+})->name('petugas');
+
+Route::get('/petugas/create', function () {
+    return view('petugas.create');
+})->name('petugas.create');
+
+Route::get('/petugas/{id}/edit', function () {
+    return view('petugas.edit');
+})->name('petugas.edit');
+
+Route::get('/petugas/libur/approval', function () {
+    return view('petugas.approval-libur');
+})->name('petugas.libur.approval');
+
+Route::get('/petugas/libur/ajukan', function () {
+    return view('petugas.ajukan-libur');
+})->name('petugas.libur.ajukan');
+
