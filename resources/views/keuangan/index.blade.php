@@ -111,7 +111,6 @@
                                     <option>Bibit</option>
                                     <option>Operasional</option>
                                     <option>Penjualan</option>
-                                    <option>Utilitas</option>
                                     <option>Transportasi</option>
                                 </select>
                             </div>
@@ -211,7 +210,7 @@
 
     <!-- 4 Financial KPI Cards Grid -->
     <div x-show="!showForm" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        
+
         <!-- Card 1: Total Revenue -->
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
             <div class="flex items-center justify-between">
@@ -269,12 +268,12 @@
 
     <!-- Chart & Expense Breakdown (2 Columns) -->
     <div x-show="!showForm" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         <!-- Left 2 Cols: Monthly Cash Flow Bar Chart -->
         <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-base font-bold text-slate-900">Monthly Cash Flow</h3>
-                
+
                 <div class="flex items-center gap-4 text-xs font-medium">
                     <div class="flex items-center gap-1.5 text-slate-700">
                         <span class="w-2.5 h-2.5 rounded-full bg-[#0B2570]"></span>
@@ -298,7 +297,7 @@
                 <h3 class="text-base font-bold text-slate-900 mb-4">Expense Distribution</h3>
 
                 <div class="space-y-4 text-xs">
-                    
+
                     <!-- Item 1: Pakan -->
                     <div>
                         <div class="flex items-center justify-between font-bold text-slate-700 mb-1.5">
@@ -353,7 +352,7 @@
     <div x-show="!showForm" class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
         <div class="p-5 border-b border-slate-100 flex items-center justify-between">
             <h3 class="text-base font-bold text-slate-900">Transaction History</h3>
-            
+
             <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-600 shadow-xs cursor-pointer">
                 <span>This Month</span>
                 <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1"></i>
@@ -372,7 +371,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
-                    
+
                     <!-- Row 1 -->
                     <tr class="hover:bg-slate-50/50 transition-colors">
                         <td class="py-4 px-6 text-slate-400 font-semibold">Oct 24, 2023</td>

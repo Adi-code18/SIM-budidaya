@@ -8,12 +8,12 @@
     <!-- ========================================================================= -->
     <!-- TAB 1: TABEL UTAMA MANAJEMEN PETUGAS                                      -->
     <!-- ========================================================================= -->
-    <div x-show="activeTab === 'daftar'" 
+    <div x-show="activeTab === 'daftar'"
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0 translate-y-1"
          x-transition:enter-end="opacity-100 translate-y-0"
          class="space-y-6">
-        
+
         <!-- Title & Action Button -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -21,7 +21,7 @@
                 <p class="text-xs text-slate-500 font-medium mt-0.5">Kelola data petugas lapangan, teknisi, dan staf operasional.</p>
             </div>
             <div>
-                <button @click="activeTab = 'create'" 
+                <button @click="activeTab = 'create'"
                         class="px-4 py-2.5 rounded-xl bg-[#031B4E] hover:bg-navy-900 text-white font-extrabold text-xs shadow-md shadow-sky-950/20 transition-all flex items-center gap-2">
                     <i class="fa-solid fa-plus text-xs"></i>
                     <span>Tambah Petugas Baru</span>
@@ -36,8 +36,8 @@
                 <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                     <i class="fa-solid fa-magnifying-glass text-xs"></i>
                 </div>
-                <input type="text" 
-                       placeholder="Cari nama atau email..." 
+                <input type="text"
+                       placeholder="Cari nama atau email..."
                        class="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
             </div>
 
@@ -46,7 +46,7 @@
                 <select class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all cursor-pointer">
                     <option value="">Semua Peran</option>
                     <option value="logistik">Logistik Pasar</option>
-                    <option value="teknisi">Teknisi Kolam</option>
+                    <option value="teknisi">Petugas kolam pembesaran</option>
                     <option value="pengawas">Pengawas Pembibitan</option>
                     <option value="manajer">Manajer Operasional</option>
                 </select>
@@ -86,13 +86,13 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
-                        
+
                         <!-- Row 1: Ahmad Rifat (Cuti) -->
                         <tr class="hover:bg-slate-50/50 transition-colors">
                             <td class="py-4 px-6">
                                 <div class="flex items-center gap-3">
-                                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=120" 
-                                         alt="Ahmad Rifat" 
+                                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=120"
+                                         alt="Ahmad Rifat"
                                          class="w-10 h-10 rounded-full object-cover border border-slate-200 shadow-xs">
                                     <div>
                                         <h4 class="font-extrabold text-slate-900 text-xs">Ahmad Rifat</h4>
@@ -124,11 +124,11 @@
                             </td>
                             <td class="py-4 px-6 text-center">
                                 <div class="relative inline-block text-left" x-data="{ open: false }">
-                                    <button @click="open = !open" @click.away="open = false" 
+                                    <button @click="open = !open" @click.away="open = false"
                                             class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors">
                                         <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
                                     </button>
-                                    <div x-show="open" 
+                                    <div x-show="open"
                                          x-transition:enter="transition ease-out duration-100"
                                          x-transition:enter-start="transform opacity-0 scale-95"
                                          x-transition:enter-end="transform opacity-100 scale-100"
@@ -162,8 +162,8 @@
                         <tr class="hover:bg-slate-50/50 transition-colors">
                             <td class="py-4 px-6">
                                 <div class="flex items-center gap-3">
-                                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=120" 
-                                         alt="Budi Santoso" 
+                                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=120"
+                                         alt="Budi Santoso"
                                          class="w-10 h-10 rounded-full object-cover border border-slate-200 shadow-xs">
                                     <div>
                                         <h4 class="font-extrabold text-slate-900 text-xs">Budi Santoso</h4>
@@ -173,7 +173,7 @@
                             </td>
                             <td class="py-4 px-6">
                                 <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-cyan-100 text-cyan-800 uppercase">
-                                    Teknisi Kolam
+                                    Petugas kolam pembesaran
                                 </span>
                             </td>
                             <td class="py-4 px-6 font-semibold text-slate-600">
@@ -186,20 +186,20 @@
                                 -
                             </td>
                             <td class="py-4 px-6 text-slate-600 font-semibold">
-                                Aktif
+                                Cuti
                             </td>
                             <td class="py-4 px-6">
                                 <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-700 uppercase">
-                                    Aktif
+                                    Cuti
                                 </span>
                             </td>
                             <td class="py-4 px-6 text-center">
                                 <div class="relative inline-block text-left" x-data="{ open: false }">
-                                    <button @click="open = !open" @click.away="open = false" 
+                                    <button @click="open = !open" @click.away="open = false"
                                             class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors">
                                         <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
                                     </button>
-                                    <div x-show="open" 
+                                    <div x-show="open"
                                          x-transition:enter="transition ease-out duration-100"
                                          x-transition:enter-start="transform opacity-0 scale-95"
                                          x-transition:enter-end="transform opacity-100 scale-100"
@@ -233,8 +233,8 @@
                         <tr class="hover:bg-slate-50/50 transition-colors">
                             <td class="py-4 px-6">
                                 <div class="flex items-center gap-3">
-                                    <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=120" 
-                                         alt="Siti Rahma" 
+                                    <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=120"
+                                         alt="Siti Rahma"
                                          class="w-10 h-10 rounded-full object-cover border border-slate-200 shadow-xs">
                                     <div>
                                         <h4 class="font-extrabold text-slate-900 text-xs">Siti Rahma</h4>
@@ -257,20 +257,20 @@
                                 -
                             </td>
                             <td class="py-4 px-6 text-slate-600 font-semibold">
-                                Aktif
+                                Cuti
                             </td>
                             <td class="py-4 px-6">
                                 <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-700 uppercase">
-                                    Aktif
+                                    Cuti
                                 </span>
                             </td>
                             <td class="py-4 px-6 text-center">
                                 <div class="relative inline-block text-left" x-data="{ open: false }">
-                                    <button @click="open = !open" @click.away="open = false" 
+                                    <button @click="open = !open" @click.away="open = false"
                                             class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors">
                                         <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
                                     </button>
-                                    <div x-show="open" 
+                                    <div x-show="open"
                                          x-transition:enter="transition ease-out duration-100"
                                          x-transition:enter-start="transform opacity-0 scale-95"
                                          x-transition:enter-end="transform opacity-100 scale-100"
@@ -322,12 +322,12 @@
     <!-- ========================================================================= -->
     <!-- TAB 2: FORM REGISTRASI PETUGAS BARU                                      -->
     <!-- ========================================================================= -->
-    <div x-show="activeTab === 'create'" 
+    <div x-show="activeTab === 'create'"
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0 translate-y-1"
          x-transition:enter-end="opacity-100 translate-y-0"
          class="space-y-6 max-w-6xl mx-auto">
-        
+
         <div class="flex items-center gap-3">
             <button @click="activeTab = 'daftar'" class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 flex items-center justify-center transition-colors shadow-xs">
                 <i class="fa-solid fa-arrow-left text-sm"></i>
@@ -429,12 +429,12 @@
     <!-- ========================================================================= -->
     <!-- TAB 3: FORM EDIT DATA PETUGAS                                             -->
     <!-- ========================================================================= -->
-    <div x-show="activeTab === 'edit'" 
+    <div x-show="activeTab === 'edit'"
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0 translate-y-1"
          x-transition:enter-end="opacity-100 translate-y-0"
          class="space-y-6 max-w-4xl mx-auto">
-        
+
         <div class="space-y-1">
             <div class="flex items-center gap-2 text-xs font-semibold text-slate-400">
                 <button @click="activeTab = 'daftar'" class="hover:text-slate-600 transition-colors">Manajemen Petugas</button>
@@ -449,8 +449,8 @@
             <!-- Profile Banner -->
             <div class="flex items-center gap-4 pb-6 border-b border-slate-100">
                 <div class="relative">
-                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=160" 
-                         alt="Ahmad Rifat" 
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=160"
+                         alt="Ahmad Rifat"
                          class="w-16 h-16 rounded-full object-cover border-2 border-sky-500/20 shadow-xs">
                     <div class="absolute bottom-0 right-0 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white"></div>
                 </div>
@@ -509,12 +509,12 @@
     <!-- ========================================================================= -->
     <!-- TAB 4: TINJAU PERSETUJUAN LIBUR (STATUS DISETUJUI ONLY)                   -->
     <!-- ========================================================================= -->
-    <div x-show="activeTab === 'approval'" 
+    <div x-show="activeTab === 'approval'"
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0 translate-y-1"
          x-transition:enter-end="opacity-100 translate-y-0"
          class="space-y-6 max-w-4xl mx-auto">
-        
+
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
                 <div class="flex items-center gap-2 text-xs font-semibold text-slate-400 mb-1">
@@ -525,7 +525,7 @@
                 <h1 class="text-2xl font-extrabold text-[#0B2570] tracking-tight">Tinjau Persetujuan Libur</h1>
                 <p class="text-xs text-slate-500 font-medium mt-0.5">Detail informasi persetujuan izin dan durasi libur staf.</p>
             </div>
-            
+
             <div>
                 <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-xs">
                     <i class="fa-solid fa-circle-check text-emerald-600"></i>
@@ -613,12 +613,12 @@
     <!-- ========================================================================= -->
     <!-- TAB 5: FORM AJUKAN LIBUR PETUGAS                                         -->
     <!-- ========================================================================= -->
-    <div x-show="activeTab === 'ajukan'" 
+    <div x-show="activeTab === 'ajukan'"
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0 translate-y-1"
          x-transition:enter-end="opacity-100 translate-y-0"
          class="space-y-6 max-w-4xl mx-auto">
-        
+
         <div class="space-y-1">
             <div class="flex items-center gap-2 text-xs font-semibold text-slate-400">
                 <button @click="activeTab = 'daftar'" class="hover:text-slate-600 transition-colors">Manajemen Petugas</button>
