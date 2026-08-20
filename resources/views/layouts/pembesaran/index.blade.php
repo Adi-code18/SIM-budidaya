@@ -12,10 +12,6 @@
             <h1 class="text-2xl font-extrabold text-[#0B2570] tracking-tight mt-0.5">Status Kolam Aktif</h1>
         </div>
         <div class="flex items-center gap-3">
-            <button class="px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 transition-colors flex items-center gap-2">
-                <i class="fa-solid fa-arrows-rotate text-xs text-sky-600"></i>
-                <span>Pindah Kolam / Grading</span>
-            </button>
             <button @click="showForm = !showForm"
                     class="px-4 py-2 rounded-xl bg-[#051B44] hover:bg-navy-900 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-2">
                 <i class="fa-solid" :class="showForm ? 'fa-table-list' : 'fa-circle-plus'" class="text-xs"></i>

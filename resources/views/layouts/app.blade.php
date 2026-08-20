@@ -152,20 +152,18 @@
             </nav>
 
             <!-- User Profile Button Footer -->
-            <div class="p-4 border-t border-white/10">
-                <div class="flex items-center gap-3 px-3 py-2 rounded-full bg-white/10 text-white w-fit">
-                    <div class="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-xs">
+            <div class="p-4 border-t border-white/10 flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-white/10 text-white">
+                    <div class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-xs">
                         <i class="fa-solid fa-user"></i>
                     </div>
-                    <span class="text-xs font-bold pr-2">Manajer</span>
+                    <span class="text-xs font-bold pr-1">Manajer</span>
                 </div>
-                </div>
-                <div class="flex items-center gap-3">
-                    <a href="{{ route('login') }}" class="px-3.5 py-1.5 rounded-lg bg-[#E53E3E] hover:bg-red-600 text-white font-bold text-xs flex items-center gap-2 shadow-sm transition-all">
-                        <i class="fa-solid fa-right-from-bracket text-xs"></i>
-                        <span>Log Out</span>
-                    </a>
-                </div>
+                <a href="{{ route('login') }}" class="px-3 py-1.5 rounded-lg bg-[#E53E3E] hover:bg-red-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all">
+                    <i class="fa-solid fa-right-from-bracket text-xs"></i>
+                    <span>Log Out</span>
+                </a>
+            </div>
         </aside>
 
         <!-- Main Content Area -->

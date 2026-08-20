@@ -1,4 +1,4 @@
-@extends('mobile_web_petugas_distribusi.layout')
+@extends('mobile_web_petugas.petugas_distribusi.layout')
 
 @section('title', 'Detail & Tracking Pengiriman - SIM-BUDIDAYA Mobile')
 

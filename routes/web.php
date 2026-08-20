@@ -65,28 +65,68 @@ Route::get('/petugas/libur/ajukan', function () {
 // Mobile Web Petugas Distribusi Routes
 Route::prefix('mobile-petugas')->name('mobile.petugas.')->group(function () {
     Route::get('/splash', function () {
-        return view('mobile_web_petugas_distribusi.splash');
+        return view('mobile_web_petugas.splash');
     })->name('splash');
 
     Route::get('/login', function () {
-        return view('mobile_web_petugas_distribusi.login');
+        return view('mobile_web_petugas.login');
     })->name('login');
 
     Route::get('/pengiriman', function () {
-        return view('mobile_web_petugas_distribusi.index');
+        return view('mobile_web_petugas.petugas_distribusi.index');
     })->name('pengiriman');
 
     Route::get('/detail/{id?}', function ($id = 'ORD-9924A') {
-        return view('mobile_web_petugas_distribusi.detail', compact('id'));
+        return view('mobile_web_petugas.petugas_distribusi.detail', compact('id'));
     })->name('detail');
 
     Route::get('/riwayat', function () {
-        return view('mobile_web_petugas_distribusi.riwayat');
+        return view('mobile_web_petugas.petugas_distribusi.riwayat');
     })->name('riwayat');
 
     Route::get('/akun', function () {
-        return view('mobile_web_petugas_distribusi.akun');
+        return view('mobile_web_petugas.petugas_distribusi.akun');
     })->name('akun');
 });
+
+// Mobile Web Petugas Pembibitan Routes
+Route::prefix('petugas-pembibitan')->name('petugas.pembibitan.')->group(function () {
+    Route::get('/', function () {
+        return view('mobile_web_petugas.petugas_pembibitan.index');
+    })->name('dashboard');
+
+    Route::get('/form', function () {
+        return view('mobile_web_petugas.petugas_pembibitan.log_pembibitan');
+    })->name('form');
+
+    Route::get('/log-pakan', function () {
+        return view('mobile_web_petugas.petugas_pembibitan.log_pakan');
+    })->name('log-pakan');
+
+    Route::get('/akun', function () {
+        return view('mobile_web_petugas.petugas_pembibitan.akun');
+    })->name('akun');
+});
+
+// Mobile Web Petugas Pembesaran Routes
+Route::prefix('petugas-pembesaran')->name('petugas.pembesaran.')->group(function () {
+    Route::get('/', function () {
+        return view('mobile_web_petugas.petugas_pembesaran.index');
+    })->name('dashboard');
+
+    Route::get('/create-batch', function () {
+        return view('mobile_web_petugas.petugas_pembesaran.create_batch');
+    })->name('create-batch');
+
+    Route::get('/log-pakan', function () {
+        return view('mobile_web_petugas.petugas_pembesaran.log_pakan');
+    })->name('log-pakan');
+
+    Route::get('/akun', function () {
+        return view('mobile_web_petugas.petugas_pembesaran.akun');
+    })->name('akun');
+});
+
+
 
 

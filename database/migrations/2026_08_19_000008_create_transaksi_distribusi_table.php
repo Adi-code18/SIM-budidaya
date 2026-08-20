@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id('id_transaksi');
             $table->foreignId('id_user')->constrained('users', 'id_user')->onDelete('cascade');
             $table->foreignId('id_mitra')->constrained('mitra_distributor', 'id_mitra')->onDelete('cascade');
+            $table->foreignId('id_pembesaran')->constrained('batch_pembesaran', 'id_pembesaran')->onDelete('cascade');
             $table->date('tanggal_order');
             $table->decimal('Total_kg', 10, 2);
             $table->decimal('harga_total', 15, 2);

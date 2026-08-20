@@ -190,17 +190,10 @@
                     <!-- Params -->
                     <div class="space-y-2 text-xs">
                         <div class="flex items-center justify-between p-2 bg-slate-50 rounded-lg border border-slate-100">
-                            <span class="font-semibold text-slate-500">Target Suhu</span>
-                            <span class="font-extrabold text-[#0B2570]">27°C - 30°C</span>
-                        </div>
-                        <div class="flex items-center justify-between p-2 bg-slate-50 rounded-lg border border-slate-100">
                             <span class="font-semibold text-slate-500">pH</span>
                             <span class="font-extrabold text-[#0B2570]">6.5 - 7.5</span>
                         </div>
-                        <div class="flex items-center justify-between p-2 bg-slate-50 rounded-lg border border-slate-100">
-                            <span class="font-semibold text-slate-500">Oksigen Terlarut</span>
-                            <span class="font-extrabold text-[#0B2570]">> 5 mg/L</span>
-                        </div>
+                        
                     </div>
                 </div>
             </div>

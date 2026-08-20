@@ -19,6 +19,7 @@ return new class extends Migration
             $table->decimal('biomassa_est', 8, 2)->default(0);
             $table->decimal('fcr', 4, 2)->nullable();
             $table->decimal('target_panen_kg', 8, 2)->default(0);
+            $table->decimal('jumlah_panen_kg', 8, 2)->default(0);
             $table->string('jenis_ikan');
             $table->string('status_siklus')->default('berjalan');
             $table->timestamps();

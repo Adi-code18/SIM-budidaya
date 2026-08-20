@@ -1,4 +1,4 @@
-@extends('mobile_web_petugas_distribusi.layout')
+@extends('mobile_web_petugas.petugas_distribusi.layout')
 
 @section('title', 'Login Mobile - SIM-BUDIDAYA')
 @section('hide_header', true)
