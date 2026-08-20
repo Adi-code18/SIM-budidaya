@@ -20,7 +20,7 @@
         <div>
             <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-xs">
                 <i class="fa-solid fa-circle-check text-emerald-600"></i>
-                <span>Disetujui</span>
+                <span>Cuti</span>
             </span>
         </div>
     </div>
@@ -42,7 +42,7 @@
                 <div>
                     <div class="flex items-center gap-2">
                         <h3 class="text-base font-extrabold text-slate-900">Budi Santoso</h3>
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-700 uppercase">Disetujui</span>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-700 uppercase">Cuti</span>
                     </div>
                     <p class="text-xs text-slate-500 font-medium">Teknisi Kolam Pembesaran - Sektor A</p>
                 </div>

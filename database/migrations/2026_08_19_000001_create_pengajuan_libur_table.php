@@ -17,7 +17,7 @@ return new class extends Migration
             $table->date('tanggal_mulai');
             $table->date('tanggal_selesai');
             $table->text('keterangan')->nullable();
-            $table->string('status_pengajuan')->default('pending');
+            $table->string('status_pengajuan')->default('setuju');
             $table->timestamps();
         });
     }

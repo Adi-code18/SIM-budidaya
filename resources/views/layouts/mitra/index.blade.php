@@ -3,7 +3,185 @@
 @section('title', 'Manajemen Mitra - SIM-BUDIDAYA')
 
 @section('content')
-<div class="space-y-6" x-data="{ showForm: false, tipeMitra: 'distributor' }">
+<div class="space-y-6" x-data='{
+    showForm: false,
+    formMode: "create",
+    filterTipe: "",
+    filterWilayah: "",
+    searchQuery: "",
+    toastMessage: "",
+    showToast: false,
+
+    mitras: [
+        {
+            id: "MTR-2023-081",
+            nama: "The Ocean Grill",
+            tipe: "Restoran",
+            tipeKey: "restoran",
+            alamat: "Jl. Sudirman No. 45, Jakarta Pusat",
+            wilayah: "jakarta",
+            lat: "-6.208800",
+            lng: "106.845600",
+            kontak: "+62 812-3456-7890",
+            email: "info@oceangrill.com",
+            image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&q=80&w=120"
+        },
+        {
+            id: "MTR-2023-102",
+            nama: "IndoFrozen Supply",
+            tipe: "Supplier Frozen Food",
+            tipeKey: "supplier",
+            alamat: "Kawasan Industri Jababeka, Bekasi",
+            wilayah: "jabar",
+            lat: "-6.285000",
+            lng: "107.170000",
+            kontak: "+62 813-9876-5432",
+            email: "contact@indofrozen.co.id",
+            image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80&w=120"
+        },
+        {
+            id: "MTR-2022-045",
+            nama: "Pasar Ikan Muara Baru",
+            tipe: "Pasar Tradisional",
+            tipeKey: "pasar",
+            alamat: "Jl. Muara Baru Raya, Jakarta Utara",
+            wilayah: "jakarta",
+            lat: "-6.111000",
+            lng: "106.804000",
+            kontak: "+62 811-2233-4455",
+            email: "muarabaru@pasarikan.id",
+            image: ""
+        },
+        {
+            id: "MTR-2023-156",
+            nama: "Global Seafood Corp",
+            tipe: "Eksportir",
+            tipeKey: "eksportir",
+            alamat: "Pelabuhan Tanjung Priok, Jakarta",
+            wilayah: "jakarta",
+            lat: "-6.103000",
+            lng: "106.880000",
+            kontak: "+62 818-5544-3322",
+            email: "export@globalseafood.com",
+            image: "https://images.unsplash.com/photo-1541888946425-d0fbb186a5b3?auto=format&fit=crop&q=80&w=120"
+        }
+    ],
+
+    form: {
+        id: "",
+        nama: "",
+        tipeKey: "distributor",
+        tipe: "Distributor",
+        alamat: "",
+        lat: "-6.200000",
+        lng: "106.816666",
+        kontak: "",
+        email: "",
+        image: ""
+    },
+
+    openCreateForm() {
+        this.formMode = "create";
+        this.form = {
+            id: "MTR-2024-" + String(Math.floor(100 + Math.random() * 900)),
+            nama: "",
+            tipeKey: "distributor",
+            tipe: "Distributor",
+            alamat: "",
+            lat: "-6.200000",
+            lng: "106.816666",
+            kontak: "",
+            email: "",
+            image: ""
+        };
+        this.showForm = true;
+        this.$nextTick(() => initMitraMap(this.form.lat, this.form.lng, false));
+    },
+
+    openEditForm(mitra) {
+        this.formMode = "edit";
+        this.form = JSON.parse(JSON.stringify(mitra));
+        this.showForm = true;
+        this.$nextTick(() => initMitraMap(this.form.lat, this.form.lng, false));
+    },
+
+    openViewForm(mitra) {
+        this.formMode = "view";
+        this.form = JSON.parse(JSON.stringify(mitra));
+        this.showForm = true;
+        this.$nextTick(() => initMitraMap(this.form.lat, this.form.lng, true));
+    },
+
+    saveForm() {
+        if (this.formMode === "view") return;
+
+        if (!this.form.nama.trim()) {
+            alert("Nama mitra wajib diisi!");
+            return;
+        }
+        if (!this.form.alamat.trim()) {
+            alert("Alamat lengkap wajib diisi!");
+            return;
+        }
+
+        const tipeMap = {
+            distributor: "Distributor",
+            supplier: "Supplier Frozen Food",
+            restoran: "Restoran",
+            pasar: "Pasar Tradisional",
+            eksportir: "Eksportir"
+        };
+        this.form.tipe = tipeMap[this.form.tipeKey] || "Distributor";
+
+        if (this.formMode === "create") {
+            this.mitras.unshift({ ...this.form });
+            this.notify("Data Mitra baru berhasil ditambahkan!");
+        } else if (this.formMode === "edit") {
+            const index = this.mitras.findIndex(m => m.id === this.form.id);
+            if (index !== -1) {
+                this.mitras[index] = { ...this.form };
+            }
+            this.notify("Data Mitra berhasil diperbarui!");
+        }
+        this.showForm = false;
+    },
+
+    deleteMitra(mitra) {
+        if (confirm("Apakah Anda yakin ingin menghapus data mitra \"" + mitra.nama + "\"?")) {
+            this.mitras = this.mitras.filter(m => m.id !== mitra.id);
+            this.notify("Data mitra \"" + mitra.nama + "\" berhasil dihapus!");
+        }
+    },
+
+    notify(msg) {
+        this.toastMessage = msg;
+        this.showToast = true;
+        setTimeout(() => { this.showToast = false; }, 3500);
+    },
+
+    get filteredMitras() {
+        return this.mitras.filter(m => {
+            const matchTipe = !this.filterTipe || m.tipeKey === this.filterTipe;
+            const matchWilayah = !this.filterWilayah || (m.wilayah && m.wilayah === this.filterWilayah) || (m.alamat && m.alamat.toLowerCase().includes(this.filterWilayah.toLowerCase()));
+            const matchSearch = !this.searchQuery || m.nama.toLowerCase().includes(this.searchQuery.toLowerCase()) || m.id.toLowerCase().includes(this.searchQuery.toLowerCase()) || m.alamat.toLowerCase().includes(this.searchQuery.toLowerCase());
+            return matchTipe && matchWilayah && matchSearch;
+        });
+    }
+}' >
+    <!-- Toast Notification -->
+    <div x-show="showToast"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+         x-transition:leave-end="opacity-0 translate-y-2 scale-95"
+         class="fixed top-5 right-5 z-50 bg-[#051B44] text-white px-5 py-3 rounded-xl shadow-2xl border border-sky-400/30 flex items-center gap-3">
+        <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-circle-check text-base"></i>
+        </div>
+        <span class="text-xs font-semibold" x-text="toastMessage"></span>
+    </div>
 
     <!-- Subtitle & Page Title Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -12,7 +190,7 @@
             <p class="text-xs text-slate-500 font-medium mt-0.5">Kelola hubungan dan distribusi hasil budidaya ke mitra strategis.</p>
         </div>
         <div>
-            <button @click="showForm = !showForm; if(showForm) { $nextTick(() => initMitraMap()); }" 
+            <button @click="if (showForm) { showForm = false; } else { openCreateForm(); }" 
                     class="px-4 py-2 rounded-xl bg-[#051B44] hover:bg-navy-900 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-2">
                 <i class="fa-solid" :class="showForm ? 'fa-list' : 'fa-plus'"></i>
                 <span x-text="showForm ? 'Lihat Daftar Mitra' : 'Tambah Mitra Baru'"></span>
@@ -20,14 +198,35 @@
         </div>
     </div>
 
-    <!-- Input Form Section (Shown when showForm is true) -->
+    <!-- Input / Edit / View Form Section (Shown when showForm is true) -->
     <div x-show="showForm" 
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0 -translate-y-2"
          x-transition:enter-end="opacity-100 translate-y-0"
          class="space-y-4">
         
-        <h2 class="text-lg font-extrabold text-slate-900 tracking-tight">Input Manajemen Mitra</h2>
+        <div class="flex items-center justify-between">
+            <h2 class="text-lg font-extrabold text-slate-900 tracking-tight"
+                x-text="formMode === 'create' ? 'Input Manajemen Mitra Baru' : (formMode === 'edit' ? 'Edit Data Mitra — ' + form.id : 'View Lengkap Data Mitra — ' + form.id)"></h2>
+            
+            <span x-show="formMode === 'view'" class="px-3 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1.5">
+                <i class="fa-solid fa-lock"></i> Mode View Lengkap (Disabled)
+            </span>
+            <span x-show="formMode === 'edit'" class="px-3 py-1 rounded-full text-xs font-extrabold bg-sky-100 text-sky-800 border border-sky-300 flex items-center gap-1.5">
+                <i class="fa-solid fa-pen"></i> Mode Edit Data
+            </span>
+        </div>
+
+        <!-- Mode View Info Banner -->
+        <div x-show="formMode === 'view'" class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+                <i class="fa-solid fa-shield-halved text-amber-600 text-base shrink-0"></i>
+                <span>Data mitra ditampilkan dalam <strong>mode lihat (read-only)</strong>. Semua bidang formulir dinonaktifkan agar data tidak sengaja diubah.</span>
+            </div>
+            <button @click="formMode = 'edit'; initMitraMap(form.lat, form.lng, false)" class="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] shrink-0 transition-colors flex items-center gap-1.5">
+                <i class="fa-solid fa-pen-to-square"></i> Ubah Ke Mode Edit
+            </button>
+        </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
@@ -45,14 +244,17 @@
                     <div class="w-10 h-10 rounded-xl bg-[#0B2570] text-white flex items-center justify-center shadow-md">
                         <i class="fa-solid fa-map-location-dot text-lg"></i>
                     </div>
-                    <h3 class="text-xl font-extrabold text-white">Registrasi Mitra</h3>
+                    <h3 class="text-xl font-extrabold text-white" x-text="formMode === 'create' ? 'Registrasi Mitra' : (formMode === 'edit' ? 'Lokasi & Data Mitra' : 'Detail Lokasi Mitra')"></h3>
                     <p class="text-xs text-sky-100/80 font-medium leading-relaxed">
                         Daftarkan entitas mitra rantai pasok baru. Pastikan titik koordinat akurat untuk keperluan perhitungan biaya distribusi dan estimasi waktu tiba (ETA).
                     </p>
 
                     <div class="pt-2">
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold bg-sky-500/20 text-sky-300 border border-sky-400/30">
+                        <span x-show="formMode !== 'view'" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold bg-sky-500/20 text-sky-300 border border-sky-400/30">
                             <i class="fa-solid fa-hand-pointer"></i> Klik lokasi pada peta untuk mengambil Lat &amp; Lng otomatis
+                        </span>
+                        <span x-show="formMode === 'view'" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-400/30">
+                            <i class="fa-solid fa-lock"></i> Peta dalam mode terkunci (View Only)
                         </span>
                     </div>
                 </div>
@@ -61,7 +263,7 @@
             <!-- Right 7 Cols: Mitra Input Fields Form -->
             <div class="lg:col-span-7 bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-5">
                 
-                <form action="#" method="POST" @submit.prevent class="space-y-5">
+                <form action="#" method="POST" @submit.prevent="saveForm()" class="space-y-5">
                     
                     <!-- Section 1: Identitas Mitra -->
                     <div class="space-y-3">
@@ -74,15 +276,40 @@
                             <div class="sm:col-span-2">
                                 <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">NAMA MITRA</label>
                                 <input type="text" 
+                                       x-model="form.nama"
+                                       :disabled="formMode === 'view'"
                                        placeholder="PT. Global Akuakultur..." 
-                                       class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                                       :class="formMode === 'view' ? 'bg-slate-100 text-slate-500 cursor-not-allowed border-slate-200 font-bold' : 'bg-slate-50/70 focus:bg-white text-slate-700 font-semibold focus:ring-sky-500'"
+                                       class="w-full px-3.5 py-2.5 rounded-xl border text-xs focus:outline-none focus:ring-2 transition-all">
                             </div>
                             <div>
                                 <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">ID MITRA (AUTO)</label>
                                 <input type="text" 
-                                       value="MTR-2023-089" 
+                                       x-model="form.id" 
                                        readonly 
+                                       disabled
                                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-extrabold text-slate-500 bg-slate-100 cursor-not-allowed">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">NO. TELEPON / KONTAK</label>
+                                <input type="text" 
+                                       x-model="form.kontak"
+                                       :disabled="formMode === 'view'"
+                                       placeholder="+62 812-xxxx-xxxx" 
+                                       :class="formMode === 'view' ? 'bg-slate-100 text-slate-500 cursor-not-allowed border-slate-200 font-bold' : 'bg-slate-50/70 focus:bg-white text-slate-700 font-semibold focus:ring-sky-500'"
+                                       class="w-full px-3.5 py-2.5 rounded-xl border text-xs focus:outline-none focus:ring-2 transition-all">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">EMAIL MITRA</label>
+                                <input type="email" 
+                                       x-model="form.email"
+                                       :disabled="formMode === 'view'"
+                                       placeholder="mitra@perusahaan.com" 
+                                       :class="formMode === 'view' ? 'bg-slate-100 text-slate-500 cursor-not-allowed border-slate-200 font-bold' : 'bg-slate-50/70 focus:bg-white text-slate-700 font-semibold focus:ring-sky-500'"
+                                       class="w-full px-3.5 py-2.5 rounded-xl border text-xs focus:outline-none focus:ring-2 transition-all">
                             </div>
                         </div>
                     </div>
@@ -96,18 +323,41 @@
 
                         <div>
                             <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1.5">TIPE MITRA</label>
-                            <div class="flex items-center gap-2 p-1 bg-slate-100 rounded-xl max-w-sm text-xs font-bold">
+                            <div class="flex flex-wrap items-center gap-2 p-1.5 bg-slate-100 rounded-xl text-xs font-bold" :class="formMode === 'view' ? 'opacity-80 pointer-events-none' : ''">
                                 <button type="button" 
-                                        @click="tipeMitra = 'distributor'" 
-                                        :class="tipeMitra === 'distributor' ? 'bg-[#051B44] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" 
-                                        class="flex-1 py-2 rounded-lg transition-all text-center">
+                                        @click="if(formMode !== 'view') form.tipeKey = 'distributor'" 
+                                        :disabled="formMode === 'view'"
+                                        :class="form.tipeKey === 'distributor' ? 'bg-[#051B44] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" 
+                                        class="px-3 py-2 rounded-lg transition-all text-center flex-1 min-w-[100px]">
                                     Distributor
                                 </button>
                                 <button type="button" 
-                                        @click="tipeMitra = 'supplier'" 
-                                        :class="tipeMitra === 'supplier' ? 'bg-[#051B44] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" 
-                                        class="flex-1 py-2 rounded-lg transition-all text-center">
+                                        @click="if(formMode !== 'view') form.tipeKey = 'supplier'" 
+                                        :disabled="formMode === 'view'"
+                                        :class="form.tipeKey === 'supplier' ? 'bg-[#051B44] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" 
+                                        class="px-3 py-2 rounded-lg transition-all text-center flex-1 min-w-[100px]">
                                     Supplier
+                                </button>
+                                <button type="button" 
+                                        @click="if(formMode !== 'view') form.tipeKey = 'restoran'" 
+                                        :disabled="formMode === 'view'"
+                                        :class="form.tipeKey === 'restoran' ? 'bg-[#051B44] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" 
+                                        class="px-3 py-2 rounded-lg transition-all text-center flex-1 min-w-[100px]">
+                                    Restoran
+                                </button>
+                                <button type="button" 
+                                        @click="if(formMode !== 'view') form.tipeKey = 'pasar'" 
+                                        :disabled="formMode === 'view'"
+                                        :class="form.tipeKey === 'pasar' ? 'bg-[#051B44] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" 
+                                        class="px-3 py-2 rounded-lg transition-all text-center flex-1 min-w-[100px]">
+                                    Pasar
+                                </button>
+                                <button type="button" 
+                                        @click="if(formMode !== 'view') form.tipeKey = 'eksportir'" 
+                                        :disabled="formMode === 'view'"
+                                        :class="form.tipeKey === 'eksportir' ? 'bg-[#051B44] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" 
+                                        class="px-3 py-2 rounded-lg transition-all text-center flex-1 min-w-[100px]">
+                                    Eksportir
                                 </button>
                             </div>
                         </div>
@@ -123,8 +373,11 @@
                         <div>
                             <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">ALAMAT LENGKAP</label>
                             <textarea rows="2" 
+                                      x-model="form.alamat"
+                                      :disabled="formMode === 'view'"
                                       placeholder="Jl. Raya Pelabuhan No. 45..." 
-                                      class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all"></textarea>
+                                      :class="formMode === 'view' ? 'bg-slate-100 text-slate-500 cursor-not-allowed border-slate-200 font-bold' : 'bg-slate-50/70 focus:bg-white text-slate-700 font-semibold focus:ring-sky-500'"
+                                      class="w-full px-3.5 py-2.5 rounded-xl border text-xs focus:outline-none focus:ring-2 transition-all"></textarea>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
@@ -132,18 +385,22 @@
                                 <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">LATITUDE</label>
                                 <input type="text" 
                                        id="latInput" 
-                                       value="Lat: -6.200000" 
+                                       x-model="form.lat"
                                        readonly 
-                                       class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-extrabold text-[#0B2570] bg-sky-50/60 cursor-pointer"
+                                       :disabled="formMode === 'view'"
+                                       :class="formMode === 'view' ? 'bg-slate-100 text-slate-500 cursor-not-allowed border-slate-200' : 'bg-sky-50/60 text-[#0B2570] cursor-pointer border-slate-200'"
+                                       class="w-full px-3.5 py-2.5 rounded-xl border text-xs font-extrabold"
                                        title="Ambil otomatis dengan klik pada peta">
                             </div>
                             <div>
                                 <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">LONGITUDE</label>
                                 <input type="text" 
                                        id="lngInput" 
-                                       value="Lng: 106.816666" 
+                                       x-model="form.lng"
                                        readonly 
-                                       class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-extrabold text-[#0B2570] bg-sky-50/60 cursor-pointer"
+                                       :disabled="formMode === 'view'"
+                                       :class="formMode === 'view' ? 'bg-slate-100 text-slate-500 cursor-not-allowed border-slate-200' : 'bg-sky-50/60 text-[#0B2570] cursor-pointer border-slate-200'"
+                                       class="w-full px-3.5 py-2.5 rounded-xl border text-xs font-extrabold"
                                        title="Ambil otomatis dengan klik pada peta">
                             </div>
                         </div>
@@ -154,12 +411,20 @@
                         <button type="button" 
                                 @click="showForm = false" 
                                 class="px-5 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors">
-                            Batal
+                            <span x-text="formMode === 'view' ? 'Tutup' : 'Batal'"></span>
                         </button>
-                        <button type="submit" 
+                        <button x-show="formMode !== 'view'"
+                                type="submit" 
                                 class="px-5 py-2 rounded-xl bg-[#051B44] hover:bg-navy-900 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-2">
-                            <span>Simpan Data</span>
+                            <span x-text="formMode === 'create' ? 'Simpan Data Baru' : 'Simpan Perubahan'"></span>
                             <i class="fa-solid fa-circle-check text-xs"></i>
+                        </button>
+                        <button x-show="formMode === 'view'"
+                                type="button"
+                                @click="formMode = 'edit'; initMitraMap(form.lat, form.lng, false)"
+                                class="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-2">
+                            <span>Edit Data Ini</span>
+                            <i class="fa-solid fa-pen-to-square text-xs"></i>
                         </button>
                     </div>
 
@@ -172,33 +437,45 @@
     </div>
 
     <!-- Filters & Metric Header Row (Directory Mode) -->
-    <div x-show="!showForm" class="grid grid-cols-1 md:grid-cols-3 gap-5">
+    <div x-show="!showForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
         
-        <!-- Filter 1: Tipe Mitra -->
-        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
-                <i class="fa-solid fa-sliders text-sm"></i>
+        <!-- Search Box -->
+        <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-magnifying-glass text-xs"></i>
             </div>
             <div class="flex-1">
-                <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">TIPE MITRA</span>
-                <select class="w-full bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer mt-0.5">
+                <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block">CARI MITRA</span>
+                <input type="text" x-model="searchQuery" placeholder="Nama, ID, atau alamat..." class="w-full bg-transparent text-xs font-bold text-slate-800 focus:outline-none mt-0.5 placeholder:font-medium placeholder:text-slate-400">
+            </div>
+        </div>
+
+        <!-- Filter 1: Tipe Mitra -->
+        <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-sliders text-xs"></i>
+            </div>
+            <div class="flex-1">
+                <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block">TIPE MITRA</span>
+                <select x-model="filterTipe" class="w-full bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer mt-0.5">
                     <option value="">Semua Tipe</option>
                     <option value="restoran">Restoran</option>
                     <option value="supplier">Supplier Frozen Food</option>
                     <option value="pasar">Pasar Tradisional</option>
                     <option value="eksportir">Eksportir</option>
+                    <option value="distributor">Distributor</option>
                 </select>
             </div>
         </div>
 
         <!-- Filter 2: Wilayah -->
-        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
-                <i class="fa-solid fa-location-dot text-sm"></i>
+        <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-location-dot text-xs"></i>
             </div>
             <div class="flex-1">
-                <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">WILAYAH</span>
-                <select class="w-full bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer mt-0.5">
+                <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block">WILAYAH</span>
+                <select x-model="filterWilayah" class="w-full bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer mt-0.5">
                     <option value="">Seluruh Indonesia</option>
                     <option value="jakarta">DKI Jakarta</option>
                     <option value="jabar">Jawa Barat</option>
@@ -208,15 +485,15 @@
         </div>
 
         <!-- Metric Card: Total Mitra Aktif -->
-        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+        <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-[#BEE3F8]/60 text-[#006699] flex items-center justify-center shrink-0">
-                    <i class="fa-solid fa-users text-base"></i>
+                <div class="w-9 h-9 rounded-xl bg-[#BEE3F8]/60 text-[#006699] flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-users text-sm"></i>
                 </div>
                 <div>
-                    <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">TOTAL MITRA AKTIF</span>
+                    <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block">TOTAL MITRA AKTIF</span>
                     <div class="flex items-baseline gap-2 mt-0.5">
-                        <h3 class="text-xl font-extrabold text-slate-900">124</h3>
+                        <h3 class="text-lg font-extrabold text-slate-900" x-text="mitras.length"></h3>
                         <span class="text-[10px] font-extrabold text-emerald-600">+5 bln ini</span>
                     </div>
                 </div>
@@ -239,135 +516,97 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
                     
-                    <!-- Row 1 -->
-                    <tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="py-4 px-6">
-                            <div class="flex items-center gap-3">
-                                <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&q=80&w=120" 
-                                     alt="The Ocean Grill" 
-                                     class="w-10 h-10 rounded-xl object-cover border border-slate-200">
-                                <div>
-                                    <h4 class="font-extrabold text-[#0055CC] text-sm">The Ocean Grill</h4>
-                                    <span class="text-[10px] text-slate-400 block font-normal">ID: MTR-2023-081</span>
+                    <template x-for="(mitra, index) in filteredMitras" :key="mitra.id">
+                        <tr class="hover:bg-slate-50/50 transition-colors">
+                            <td class="py-4 px-6">
+                                <div class="flex items-center gap-3">
+                                    <template x-if="mitra.image">
+                                        <img :src="mitra.image" 
+                                             :alt="mitra.nama" 
+                                             class="w-10 h-10 rounded-xl object-cover border border-slate-200">
+                                    </template>
+                                    <template x-if="!mitra.image">
+                                        <div class="w-10 h-10 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center shrink-0 border border-sky-200 font-bold text-sm">
+                                            <i class="fa-solid fa-store"></i>
+                                        </div>
+                                    </template>
+                                    <div>
+                                        <h4 class="font-extrabold text-[#0055CC] text-sm cursor-pointer hover:underline" @click="openViewForm(mitra)" x-text="mitra.nama"></h4>
+                                        <span class="text-[10px] text-slate-400 block font-normal" x-text="'ID: ' + mitra.id"></span>
+                                    </div>
                                 </div>
-                            </div>
-                        </td>
-                        <td class="py-4 px-6">
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#E0F2FE] text-[#0284C7] uppercase">
-                                RESTORAN
-                            </span>
-                        </td>
-                        <td class="py-4 px-6">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 text-slate-400">
-                                    <i class="fa-solid fa-map-location-dot text-xs"></i>
+                            </td>
+                            <td class="py-4 px-6">
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase"
+                                      :class="{
+                                          'bg-[#E0F2FE] text-[#0284C7]': mitra.tipeKey === 'restoran' || mitra.tipe.toLowerCase().includes('restoran'),
+                                          'bg-[#C6F6D5] text-[#22543D]': mitra.tipeKey === 'supplier' || mitra.tipe.toLowerCase().includes('supplier'),
+                                          'bg-[#E2E8F0] text-[#475569]': mitra.tipeKey === 'pasar' || mitra.tipe.toLowerCase().includes('pasar'),
+                                          'bg-[#051B44] text-white': mitra.tipeKey === 'eksportir' || mitra.tipe.toLowerCase().includes('eksportir'),
+                                          'bg-amber-100 text-amber-800': mitra.tipeKey === 'distributor' || mitra.tipe.toLowerCase().includes('distributor')
+                                      }"
+                                      x-text="mitra.tipe">
+                                </span>
+                            </td>
+                            <td class="py-4 px-6">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 text-slate-400">
+                                        <i class="fa-solid fa-map-location-dot text-xs"></i>
+                                    </div>
+                                    <span class="text-xs text-slate-700 font-medium" x-text="mitra.alamat"></span>
                                 </div>
-                                <span class="text-xs text-slate-700 font-medium">Jl. Sudirman No. 45, Jakarta Pusat</span>
-                            </div>
-                        </td>
-                        <td class="py-4 px-6 text-right">
-                            <button class="text-slate-400 hover:text-slate-600 p-1">
-                                <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
-                            </button>
-                        </td>
-                    </tr>
+                            </td>
+                            <td class="py-4 px-6 text-right">
+                                <!-- Action Dropdown -->
+                                <div class="relative inline-block text-left" x-data="{ open: false }">
+                                    <button @click="open = !open" @click.away="open = false"
+                                            class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors">
+                                        <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
+                                    </button>
+                                    
+                                    <div x-show="open"
+                                         x-transition:enter="transition ease-out duration-100"
+                                         x-transition:enter-start="transform opacity-0 scale-95"
+                                         x-transition:enter-end="transform opacity-100 scale-100"
+                                         x-transition:leave="transition ease-in duration-75"
+                                         x-transition:leave-start="transform opacity-100 scale-100"
+                                         x-transition:leave-end="transform opacity-0 scale-95"
+                                         class="absolute right-0 mt-2 w-44 rounded-xl bg-white border border-slate-200 shadow-xl py-1.5 z-50 text-left">
+                                        
+                                        <!-- View Lengkap -->
+                                        <button @click="open = false; openViewForm(mitra)" 
+                                                class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
+                                            <i class="fa-solid fa-eye text-sky-600 w-4"></i>
+                                            <span>View Lengkap</span>
+                                        </button>
 
-                    <!-- Row 2 -->
-                    <tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="py-4 px-6">
-                            <div class="flex items-center gap-3">
-                                <img src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80&w=120" 
-                                     alt="IndoFrozen Supply" 
-                                     class="w-10 h-10 rounded-xl object-cover border border-slate-200">
-                                <div>
-                                    <h4 class="font-extrabold text-[#0055CC] text-sm">IndoFrozen Supply</h4>
-                                    <span class="text-[10px] text-slate-400 block font-normal">ID: MTR-2023-102</span>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="py-4 px-6">
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#C6F6D5] text-[#22543D] uppercase">
-                                SUPPLIER FROZEN FOOD
-                            </span>
-                        </td>
-                        <td class="py-4 px-6">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 text-slate-400">
-                                    <i class="fa-solid fa-map-location-dot text-xs"></i>
-                                </div>
-                                <span class="text-xs text-slate-700 font-medium">Kawasan Industri Jababeka, Bekasi</span>
-                            </div>
-                        </td>
-                        <td class="py-4 px-6 text-right">
-                            <button class="text-slate-400 hover:text-slate-600 p-1">
-                                <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
-                            </button>
-                        </td>
-                    </tr>
+                                        <!-- Edit Data -->
+                                        <button @click="open = false; openEditForm(mitra)" 
+                                                class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
+                                            <i class="fa-solid fa-pen-to-square text-amber-600 w-4"></i>
+                                            <span>Edit Data</span>
+                                        </button>
 
-                    <!-- Row 3 -->
-                    <tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="py-4 px-6">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center shrink-0 border border-slate-200">
-                                    <i class="fa-solid fa-store text-sm"></i>
-                                </div>
-                                <div>
-                                    <h4 class="font-extrabold text-[#0055CC] text-sm">Pasar Ikan Muara Baru</h4>
-                                    <span class="text-[10px] text-slate-400 block font-normal">ID: MTR-2022-045</span>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="py-4 px-6">
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#E2E8F0] text-[#475569] uppercase">
-                                PASAR TRADISIONAL
-                            </span>
-                        </td>
-                        <td class="py-4 px-6">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 text-slate-400">
-                                    <i class="fa-solid fa-map-location-dot text-xs"></i>
-                                </div>
-                                <span class="text-xs text-slate-700 font-medium">Jl. Muara Baru Raya, Jakarta Utara</span>
-                            </div>
-                        </td>
-                        <td class="py-4 px-6 text-right">
-                            <button class="text-slate-400 hover:text-slate-600 p-1">
-                                <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
-                            </button>
-                        </td>
-                    </tr>
+                                        <div class="my-1 border-t border-slate-100"></div>
 
-                    <!-- Row 4 -->
-                    <tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="py-4 px-6">
-                            <div class="flex items-center gap-3">
-                                <img src="https://images.unsplash.com/photo-1541888946425-d0fbb186a5b3?auto=format&fit=crop&q=80&w=120" 
-                                     alt="Global Seafood Corp" 
-                                     class="w-10 h-10 rounded-xl object-cover border border-slate-200">
-                                <div>
-                                    <h4 class="font-extrabold text-[#0055CC] text-sm">Global Seafood Corp</h4>
-                                    <span class="text-[10px] text-slate-400 block font-normal">ID: MTR-2023-156</span>
+                                        <!-- Hapus Data -->
+                                        <button @click="open = false; deleteMitra(mitra)" 
+                                                class="w-full px-3.5 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2.5">
+                                            <i class="fa-solid fa-trash-can text-red-500 w-4"></i>
+                                            <span>Hapus Data</span>
+                                        </button>
+
+                                    </div>
                                 </div>
-                            </div>
-                        </td>
-                        <td class="py-4 px-6">
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#051B44] text-white uppercase">
-                                EKSPORTIR
-                            </span>
-                        </td>
-                        <td class="py-4 px-6">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 text-slate-400">
-                                    <i class="fa-solid fa-map-location-dot text-xs"></i>
-                                </div>
-                                <span class="text-xs text-slate-700 font-medium">Pelabuhan Tanjung Priok, Jakarta</span>
-                            </div>
-                        </td>
-                        <td class="py-4 px-6 text-right">
-                            <button class="text-slate-400 hover:text-slate-600 p-1">
-                                <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
-                            </button>
+                            </td>
+                        </tr>
+                    </template>
+
+                    <!-- Empty State -->
+                    <tr x-show="filteredMitras.length === 0">
+                        <td colspan="4" class="py-12 text-center text-slate-400">
+                            <i class="fa-solid fa-folder-open text-3xl mb-2 block"></i>
+                            <span class="text-xs font-medium">Tidak ada data mitra yang sesuai dengan pencarian/filter.</span>
                         </td>
                     </tr>
 
@@ -377,13 +616,11 @@
 
         <!-- Table Footer Pagination -->
         <div class="p-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-slate-500">
-            <span>Menampilkan 1-4 dari 124 Mitra</span>
+            <span x-text="'Menampilkan 1-' + filteredMitras.length + ' dari ' + mitras.length + ' Mitra'"></span>
             <div class="flex items-center gap-1">
                 <button class="w-7 h-7 rounded border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-50">&lt;</button>
                 <button class="w-7 h-7 rounded bg-[#051B44] text-white font-bold flex items-center justify-center">1</button>
-                <button class="w-7 h-7 rounded border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50">2</button>
-                <button class="w-7 h-7 rounded border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50">3</button>
-                <button class="w-7 h-7 rounded border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-50">&gt;</button>
+                <button class="w-7 h-7 rounded border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50">&gt;</button>
             </div>
         </div>
     </div>
@@ -394,46 +631,69 @@
 @push('scripts')
 <script>
     let mitraMapInstance = null;
-    function initMitraMap() {
-        if (mitraMapInstance) {
-            mitraMapInstance.invalidateSize();
-            return;
-        }
+    let currentMarker = null;
+
+    function initMitraMap(latVal, lngVal, isReadOnly = false) {
+        const latNum = parseFloat(latVal) || -6.200000;
+        const lngNum = parseFloat(lngVal) || 106.816666;
 
         const mapContainer = document.getElementById('mitraMapPicker');
         if (!mapContainer) return;
 
-        mitraMapInstance = L.map('mitraMapPicker', {
-            zoomControl: false
-        }).setView([-6.200000, 106.816666], 13);
+        if (!mitraMapInstance) {
+            mitraMapInstance = L.map('mitraMapPicker', {
+                zoomControl: false
+            }).setView([latNum, lngNum], 13);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '© OpenStreetMap'
-        }).addTo(mitraMapInstance);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap'
+            }).addTo(mitraMapInstance);
 
-        L.control.zoom({ position: 'topright' }).addTo(mitraMapInstance);
-
-        let marker = L.marker([-6.200000, 106.816666], { draggable: true }).addTo(mitraMapInstance);
-
-        function updateCoords(lat, lng) {
-            const latElem = document.getElementById('latInput');
-            const lngElem = document.getElementById('lngInput');
-            if (latElem) latElem.value = 'Lat: ' + parseFloat(lat).toFixed(6);
-            if (lngElem) lngElem.value = 'Lng: ' + parseFloat(lng).toFixed(6);
+            L.control.zoom({ position: 'topright' }).addTo(mitraMapInstance);
+        } else {
+            mitraMapInstance.setView([latNum, lngNum], 13);
+            setTimeout(() => {
+                mitraMapInstance.invalidateSize();
+            }, 200);
         }
 
-        mitraMapInstance.on('click', function(e) {
-            const lat = e.latlng.lat;
-            const lng = e.latlng.lng;
-            marker.setLatLng([lat, lng]);
-            updateCoords(lat, lng);
-        });
+        if (currentMarker) {
+            mitraMapInstance.removeLayer(currentMarker);
+        }
 
-        marker.on('dragend', function(e) {
-            const latlng = marker.getLatLng();
-            updateCoords(latlng.lat, latlng.lng);
-        });
+        currentMarker = L.marker([latNum, lngNum], { draggable: !isReadOnly }).addTo(mitraMapInstance);
+
+        function updateCoords(l1, l2) {
+            const latElem = document.getElementById('latInput');
+            const lngElem = document.getElementById('lngInput');
+            if (latElem) latElem.value = parseFloat(l1).toFixed(6);
+            if (lngElem) lngElem.value = parseFloat(l2).toFixed(6);
+
+            const rootElem = document.querySelector('[x-data]');
+            if (rootElem && rootElem._x_dataStack) {
+                const data = rootElem._x_dataStack[0];
+                if (data && data.form) {
+                    data.form.lat = parseFloat(l1).toFixed(6);
+                    data.form.lng = parseFloat(l2).toFixed(6);
+                }
+            }
+        }
+
+        mitraMapInstance.off('click');
+        if (!isReadOnly) {
+            mitraMapInstance.on('click', function(e) {
+                const lat = e.latlng.lat;
+                const lng = e.latlng.lng;
+                currentMarker.setLatLng([lat, lng]);
+                updateCoords(lat, lng);
+            });
+
+            currentMarker.on('dragend', function(e) {
+                const latlng = currentMarker.getLatLng();
+                updateCoords(latlng.lat, latlng.lng);
+            });
+        }
     }
 </script>
 @endpush

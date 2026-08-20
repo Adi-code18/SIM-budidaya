@@ -3,7 +3,111 @@
 @section('title', 'Financial Management - SIM-BUDIDAYA')
 
 @section('content')
-<div class="space-y-6" x-data="{ showForm: false, tipeTransaksi: 'income' }">
+<div class="space-y-6" x-data='{
+    showForm: false,
+    formMode: "create",
+    tipeTransaksi: "income",
+    transactions: [
+        { id: "#TRX-202310-0482", tanggal: "2026-08-06", tipe: "income", nominal: 45000000, kategori: "Pakan", ref: "INV/2023/10/099", kolam: "Kolam A-01", keterangan: "Pembelian pakan harian" },
+        { id: "#TRX-202310-0483", tanggal: "2026-08-05", tipe: "income", nominal: 128500000, kategori: "Penjualan", ref: "SO-2458", kolam: "Kolam B-02", keterangan: "Penjualan hasil panen mitra B" },
+        { id: "#TRX-202310-0484", tanggal: "2026-08-04", tipe: "expense", nominal: 12400000, kategori: "Bibit", ref: "PO-2204", kolam: "Kolam A-02", keterangan: "Pembelian bibit ikan" },
+        { id: "#TRX-202310-0485", tanggal: "2026-08-03", tipe: "expense", nominal: 5200000, kategori: "Operasional", ref: "UTIL-88", kolam: "Tidak dialokasikan", keterangan: "Listrik dan air" }
+    ],
+    form: {
+        id: "",
+        tanggal: "",
+        tipe: "income",
+        nominal: "",
+        kategori: "",
+        ref: "",
+        kolam: "Tidak dialokasikan",
+        keterangan: ""
+    },
+
+    formatCurrency(value) {
+        return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(value || 0);
+    },
+
+    openCreateForm() {
+        this.formMode = "create";
+        this.showForm = true;
+        this.tipeTransaksi = "income";
+        this.form = {
+            id: "#TRX-" + new Date().getFullYear() + "-" + String(Math.floor(1000 + Math.random() * 9000)),
+            tanggal: "",
+            tipe: "income",
+            nominal: "",
+            kategori: "",
+            ref: "",
+            kolam: "Tidak dialokasikan",
+            keterangan: ""
+        };
+    },
+
+    openViewForm(item) {
+        this.formMode = "view";
+        this.showForm = true;
+        this.tipeTransaksi = item.tipe;
+        this.form = { ...item };
+    },
+
+    openEditForm(item) {
+        this.formMode = "edit";
+        this.showForm = true;
+        this.tipeTransaksi = item.tipe;
+        this.form = { ...item };
+    },
+
+    saveForm() {
+        const payload = {
+            ...this.form,
+            tipe: this.tipeTransaksi,
+            nominal: Number(this.form.nominal || 0)
+        };
+
+        if (this.formMode === "create") {
+            this.transactions.unshift(payload);
+        } else if (this.formMode === "edit") {
+            const index = this.transactions.findIndex(t => t.id === payload.id);
+            if (index !== -1) {
+                this.transactions[index] = payload;
+            }
+        }
+
+        this.showForm = false;
+    },
+
+    deleteTransaction(item) {
+        if (confirm("Apakah Anda yakin ingin menghapus transaksi \"" + item.ref + "\"?")) {
+            this.transactions = this.transactions.filter(t => t.id !== item.id);
+        }
+    },
+
+    exportReport() {
+        const header = ["DATE", "DESCRIPTION", "CATEGORY", "TYPE", "AMOUNT", "REF"];
+        const rows = this.transactions.map(item => [
+            item.tanggal,
+            item.keterangan,
+            item.kategori,
+            item.tipe === "income" ? "Pemasukan" : "Pengeluaran",
+            item.nominal,
+            item.ref
+        ]);
+        const csv = [header, ...rows]
+            .map(row => row.map(value => "\"" + String(value).replace(/"/g, "\"\"") + "\"").join(","))
+            .join("\n");
+
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "financial_report.csv";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+    }
+}' >
 
     <!-- Subtitle & Page Title Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -12,11 +116,11 @@
             <p class="text-xs text-slate-500 font-medium mt-0.5">Monitor revenue streams, expenses, and overall aquaculture profitability.</p>
         </div>
         <div class="flex items-center gap-3">
-            <button class="px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 transition-colors flex items-center gap-2">
+            <button @click="exportReport()" class="px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 transition-colors flex items-center gap-2">
                 <i class="fa-solid fa-download text-xs text-slate-500"></i>
                 <span>Export Report</span>
             </button>
-            <button @click="showForm = !showForm"
+            <button @click="openCreateForm()"
                     class="px-4 py-2 rounded-xl bg-[#051B44] hover:bg-navy-900 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-2">
                 <i class="fa-solid" :class="showForm ? 'fa-table-list' : 'fa-plus'" class="text-xs"></i>
                 <span x-text="showForm ? 'Lihat Data' : 'Add Transaction'"></span>
@@ -56,14 +160,16 @@
                         <!-- Tipe Transaksi Toggle -->
                         <div>
                             <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1.5">TIPE TRANSAKSI</label>
-                            <div class="flex items-center gap-2 p-1 bg-slate-100 rounded-xl max-w-sm text-xs font-bold">
-                                <button type="button" @click="tipeTransaksi = 'income'"
+                            <div class="flex items-center gap-2 p-1 bg-slate-100 rounded-xl max-w-sm text-xs font-bold" :class="formMode === 'view' ? 'opacity-70 pointer-events-none' : ''">
+                                <button type="button" @click="if (formMode !== 'view') { tipeTransaksi = 'income'; form.tipe = 'income'; }"
                                         :class="tipeTransaksi === 'income' ? 'bg-[#051B44] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'"
+                                        :disabled="formMode === 'view'"
                                         class="flex-1 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5">
                                     <i class="fa-solid fa-arrow-down text-[10px]"></i> Pemasukan (Income)
                                 </button>
-                                <button type="button" @click="tipeTransaksi = 'expense'"
+                                <button type="button" @click="if (formMode !== 'view') { tipeTransaksi = 'expense'; form.tipe = 'expense'; }"
                                         :class="tipeTransaksi === 'expense' ? 'bg-[#051B44] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'"
+                                        :disabled="formMode === 'view'"
                                         class="flex-1 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5">
                                     <i class="fa-solid fa-arrow-up text-[10px]"></i> Pengeluaran (Expense)
                                 </button>
@@ -72,13 +178,14 @@
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">ID KEUANGAN (Auto generated)</label>
-                                <input type="text" value="#TRX-202310-0482" readonly
+                                <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">ID KEUANGAN</label>
+                                <input type="text" x-model="form.id" readonly
+                                       :disabled="formMode === 'view'"
                                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-extrabold text-slate-500 bg-slate-100 cursor-not-allowed">
                             </div>
                             <div>
                                 <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">TANGGAL TRANSAKSI</label>
-                                <input type="date" value="2026-08-06"
+                                <input type="date" x-model="form.tanggal" :disabled="formMode === 'view'"
                                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
                             </div>
                         </div>
@@ -97,7 +204,7 @@
                             <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">NOMINAL (Rp)</label>
                             <div class="relative">
                                 <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">Rp</span>
-                                <input type="text" placeholder="0"
+                                <input type="number" x-model="form.nominal" :disabled="formMode === 'view'" placeholder="0"
                                        class="w-full pl-10 pr-3.5 py-3 rounded-xl border border-slate-200 text-lg font-extrabold text-slate-900 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
                             </div>
                         </div>
@@ -105,8 +212,8 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">KATEGORI</label>
-                                <select class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
-                                    <option>Pilih Kategori...</option>
+                                <select x-model="form.kategori" :disabled="formMode === 'view'" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                                    <option value="">Pilih Kategori...</option>
                                     <option>Pakan</option>
                                     <option>Bibit</option>
                                     <option>Operasional</option>
@@ -116,38 +223,46 @@
                             </div>
                             <div>
                                 <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">REF ID / No. NOTA</label>
-                                <input type="text" placeholder="Contoh: INV/2023/10/099"
+                                <input type="text" x-model="form.ref" :disabled="formMode === 'view'" placeholder="Contoh: INV/2023/10/099"
                                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
                             </div>
                         </div>
 
                         <div>
                             <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">ALOKASI KOLAM (OPSIONAL)</label>
-                            <select class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                            <select x-model="form.kolam" :disabled="formMode === 'view'" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
                                 <option>Tidak dialokasikan ke kolam spesifik</option>
                                 <option>Kolam A-01</option>
                                 <option>Kolam A-02</option>
                                 <option>Kolam B-01</option>
+                                <option>Kolam B-02</option>
                             </select>
                         </div>
 
                         <div>
                             <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">KETERANGAN / DESKRIPSI</label>
-                            <textarea rows="3" placeholder="Tambahkan catatan khusus terkait transaksi ini..."
+                            <textarea rows="3" x-model="form.keterangan" :disabled="formMode === 'view'" placeholder="Tambahkan catatan khusus terkait transaksi ini..."
                                       class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all"></textarea>
                         </div>
                     </div>
 
                     <!-- Form Actions -->
                     <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
-                        <button type="button" @click="showForm = false"
+                        <button type="button" @click="showForm = false; formMode = 'create'"
                                 class="px-5 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors">
-                            Batalkan
+                            <span x-text="formMode === 'view' ? 'Tutup' : 'Batalkan'"></span>
                         </button>
-                        <button type="submit"
+
+                        <button x-show="formMode !== 'view'" type="submit" @click="saveForm()"
                                 class="px-5 py-2 rounded-xl bg-[#051B44] hover:bg-navy-900 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-2">
                             <i class="fa-solid fa-floppy-disk text-xs"></i>
-                            <span>Simpan Transaksi</span>
+                            <span x-text="formMode === 'create' ? 'Simpan Transaksi' : 'Simpan Perubahan'"></span>
+                        </button>
+
+                        <button x-show="formMode === 'view'" type="button" @click="formMode = 'edit'"
+                                class="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-2">
+                            <i class="fa-solid fa-pen-to-square text-xs"></i>
+                            <span>Update</span>
                         </button>
                     </div>
 
@@ -372,73 +487,49 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
 
-                    <!-- Row 1 -->
-                    <tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="py-4 px-6 text-slate-400 font-semibold">Oct 24, 2023</td>
-                        <td class="py-4 px-6 font-bold text-slate-900">Bulk Feed Purchase - Grade A</td>
-                        <td class="py-4 px-6">
-                            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-[#E0F2FE] text-[#0284C7]">
-                                Pakan
-                            </span>
-                        </td>
-                        <td class="py-4 px-6 font-extrabold text-rose-600">- Rp 45.000.000</td>
-                        <td class="py-4 px-6 text-right">
-                            <button class="text-slate-400 hover:text-slate-600 p-1">
-                                <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
-                            </button>
-                        </td>
-                    </tr>
+                    <template x-for="transaction in transactions" :key="transaction.id">
+                        <tr class="hover:bg-slate-50/50 transition-colors">
+                            <td class="py-4 px-6 text-slate-400 font-semibold" x-text="transaction.tanggal"></td>
+                            <td class="py-4 px-6 font-bold text-slate-900" x-text="transaction.keterangan"></td>
+                            <td class="py-4 px-6">
+                                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold"
+                                      :class="transaction.tipe === 'income' ? 'bg-[#C6F6D5] text-[#22543D]' : 'bg-[#E0F2FE] text-[#0284C7]'"
+                                      x-text="transaction.kategori"></span>
+                            </td>
+                            <td class="py-4 px-6 font-extrabold" :class="transaction.tipe === 'income' ? 'text-emerald-600' : 'text-rose-600'"
+                                x-text="(transaction.tipe === 'income' ? '+ ' : '- ') + formatCurrency(transaction.nominal)"></td>
+                            <td class="py-4 px-6 text-right">
+                                <div class="relative inline-block text-left" x-data="{ open: false }">
+                                    <button @click="open = !open" @click.away="open = false" class="text-slate-400 hover:text-slate-600 p-1">
+                                        <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
+                                    </button>
 
-                    <!-- Row 2 -->
-                    <tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="py-4 px-6 text-slate-400 font-semibold">Oct 22, 2023</td>
-                        <td class="py-4 px-6 font-bold text-slate-900">Harvest Sales - Pool 04 (Mitra B)</td>
-                        <td class="py-4 px-6">
-                            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-[#C6F6D5] text-[#22543D]">
-                                Penjualan
-                            </span>
-                        </td>
-                        <td class="py-4 px-6 font-extrabold text-emerald-600">+ Rp128.500.000</td>
-                        <td class="py-4 px-6 text-right">
-                            <button class="text-slate-400 hover:text-slate-600 p-1">
-                                <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
-                            </button>
-                        </td>
-                    </tr>
-
-                    <!-- Row 3 -->
-                    <tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="py-4 px-6 text-slate-400 font-semibold">Oct 20, 2023</td>
-                        <td class="py-4 px-6 font-bold text-slate-900">New Fingerling Stock - Catfish</td>
-                        <td class="py-4 px-6">
-                            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-[#E0F2FE] text-[#0284C7]">
-                                Bibit
-                            </span>
-                        </td>
-                        <td class="py-4 px-6 font-extrabold text-rose-600">- Rp 12.400.000</td>
-                        <td class="py-4 px-6 text-right">
-                            <button class="text-slate-400 hover:text-slate-600 p-1">
-                                <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
-                            </button>
-                        </td>
-                    </tr>
-
-                    <!-- Row 4 -->
-                    <tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="py-4 px-6 text-slate-400 font-semibold">Oct 18, 2023</td>
-                        <td class="py-4 px-6 font-bold text-slate-900">Electricity &amp; Water Utilities</td>
-                        <td class="py-4 px-6">
-                            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-[#E2E8F0] text-[#475569]">
-                                Operasional
-                            </span>
-                        </td>
-                        <td class="py-4 px-6 font-extrabold text-rose-600">- Rp 5.200.000</td>
-                        <td class="py-4 px-6 text-right">
-                            <button class="text-slate-400 hover:text-slate-600 p-1">
-                                <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
-                            </button>
-                        </td>
-                    </tr>
+                                    <div x-show="open"
+                                         x-transition:enter="transition ease-out duration-100"
+                                         x-transition:enter-start="transform opacity-0 scale-95"
+                                         x-transition:enter-end="transform opacity-100 scale-100"
+                                         x-transition:leave="transition ease-in duration-75"
+                                         x-transition:leave-start="transform opacity-100 scale-100"
+                                         x-transition:leave-end="transform opacity-0 scale-95"
+                                         class="absolute right-0 mt-2 w-44 rounded-xl bg-white border border-slate-200 shadow-xl py-1.5 z-50 text-left">
+                                        <button @click="open = false; openViewForm(transaction)" class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
+                                            <i class="fa-solid fa-eye text-sky-600 w-4"></i>
+                                            <span>View</span>
+                                        </button>
+                                        <button @click="open = false; openEditForm(transaction)" class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
+                                            <i class="fa-solid fa-pen-to-square text-amber-600 w-4"></i>
+                                            <span>Update</span>
+                                        </button>
+                                        <div class="my-1 border-t border-slate-100"></div>
+                                        <button @click="open = false; deleteTransaction(transaction)" class="w-full px-3.5 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2.5">
+                                            <i class="fa-solid fa-trash-can text-red-500 w-4"></i>
+                                            <span>Delete</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </template>
 
                 </tbody>
             </table>
