@@ -1,0 +1,265 @@
+@extends('mobile_web_petugas_distribusi.layout')
+
+@section('title', 'Detail & Tracking Pengiriman - SIM-BUDIDAYA Mobile')
+
+@section('content')
+<div class="p-4 space-y-4" x-data="{ 
+    uploadModal: false, 
+    mapModal: false,
+    uploadedImage: null,
+    deliveryDone: false,
+    confirmArrived() {
+        if(!this.uploadedImage) {
+            $dispatch('toast', { msg: 'Harap upload foto serah terima terlebih dahulu!', type: 'error' });
+            this.uploadModal = true;
+            return;
+        }
+        this.deliveryDone = true;
+        triggerToast('Pengiriman berhasil diselesaikan!', 'success');
+    },
+    handleImageUpload(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                this.uploadedImage = evt.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+}">
+
+    <!-- Top Back Navigation Header Bar -->
+    <div class="flex items-center gap-3 py-1 border-b border-slate-200/80 pb-3">
+        <a href="{{ route('mobile.petugas.pengiriman') }}" 
+           class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-700 flex items-center justify-center hover:bg-slate-100 transition-colors shadow-xs">
+            <i class="fa-solid fa-arrow-left text-sm"></i>
+        </a>
+        <div class="flex-1 min-w-0">
+            <span class="text-[9px] font-extrabold text-sky-600 uppercase tracking-wider block">DETAIL ORDER TRACKING</span>
+            <h1 class="text-sm font-extrabold text-navy-900 truncate">Pengiriman Mitra - Resto Qu</h1>
+        </div>
+    </div>
+
+    <!-- Stepper Status Timeline Card -->
+    <div class="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs space-y-3">
+        <span class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider block text-center">STATUS PENGIRIMAN</span>
+        
+        <!-- Timeline Steps -->
+        <div class="flex items-center justify-between relative px-4 py-2">
+            
+            <!-- Connecting Line -->
+            <div class="absolute left-10 right-10 top-5 h-1 bg-slate-200 -z-0"></div>
+            <div class="absolute left-10 top-5 h-1 bg-navy-800 transition-all duration-500 -z-0" :style="deliveryDone ? 'width: 80%' : 'width: 45%'"></div>
+
+            <!-- Step 1: Dikirimkan -->
+            <div class="flex flex-col items-center gap-1.5 relative z-10">
+                <div class="w-7 h-7 rounded-full bg-navy-800 text-white flex items-center justify-center text-xs font-bold ring-4 ring-white shadow-xs">
+                    <i class="fa-solid fa-check text-[10px]"></i>
+                </div>
+                <span class="text-[10px] font-bold text-navy-900">Dikirimkan</span>
+            </div>
+
+            <!-- Step 2: Diproses -->
+            <div class="flex flex-col items-center gap-1.5 relative z-10">
+                <div class="w-7 h-7 rounded-full bg-navy-800 text-white flex items-center justify-center text-xs font-bold ring-4 ring-white shadow-xs">
+                    <i class="fa-solid fa-truck-fast text-[10px]"></i>
+                </div>
+                <span class="text-[10px] font-bold text-navy-900">Diproses</span>
+            </div>
+
+            <!-- Step 3: Selesai -->
+            <div class="flex flex-col items-center gap-1.5 relative z-10">
+                <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ring-4 ring-white shadow-xs transition-all"
+                     :class="deliveryDone ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-500'">
+                    <i class="fa-solid" :class="deliveryDone ? 'fa-check text-[10px]' : 'fa-house-flag text-[10px]'"></i>
+                </div>
+                <span class="text-[10px] font-bold" :class="deliveryDone ? 'text-emerald-700 font-extrabold' : 'text-slate-400'">Selesai</span>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Main Item Information Card -->
+    <div class="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs flex items-center justify-between">
+        <div>
+            <span class="text-[10px] font-extrabold text-slate-400 uppercase block tracking-wider">KOMODITAS & ID ORDER</span>
+            <h2 class="text-base font-extrabold text-navy-900 mt-0.5">Ikan Nila Segar</h2>
+            <p class="text-xs text-slate-500 font-semibold mt-0.5">ID: <span class="text-navy-800 font-bold">ORD-2984A</span></p>
+        </div>
+        <div class="px-3.5 py-2 rounded-xl bg-sky-50 border border-sky-200 text-sky-800 font-extrabold text-sm text-center shadow-2xs">
+            <span>350 KG</span>
+            <span class="text-[9px] font-bold block text-sky-600">Netto</span>
+        </div>
+    </div>
+
+    <!-- Destination Address Box -->
+    <div class="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs space-y-2.5">
+        <div class="flex items-center gap-2">
+            <div class="w-6 h-6 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center text-xs">
+                <i class="fa-solid fa-location-dot"></i>
+            </div>
+            <span class="text-xs font-extrabold text-slate-900">Tujuan Pengiriman</span>
+        </div>
+
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs text-slate-700 leading-relaxed font-medium">
+            <strong class="text-slate-900 block font-bold text-xs mb-1">Resto Resto Qu (Pak Adi)</strong>
+            Jl. Mataram No. 12, Kel. Kebonagung, Kec. Sidomulyo, Kota Mataram, Nusa Tenggara Barat 83116
+        </div>
+    </div>
+
+    <!-- Interactive Action Buttons Stack -->
+    <div class="space-y-2.5 pt-1">
+        
+        <!-- Button 1: Navigasi via Maps -->
+        <button @click="mapModal = true" 
+                class="w-full py-3 rounded-2xl bg-navy-800 hover:bg-navy-900 active:scale-[0.99] text-white font-bold text-xs flex items-center justify-center gap-2.5 shadow-sm transition-all">
+            <i class="fa-solid fa-map-location-dot text-sm text-sky-300"></i>
+            <span>Navigasi via Maps</span>
+        </button>
+
+        <!-- Button 2: Chat Mitra via WA -->
+        <a href="https://wa.me/6281234567890?text=Halo%20Mitra%20Resto%20Qu,%20saya%20petugas%20distribusi%20SIM-BUDIDAYA%20sedang%20dalam%20perjalanan." 
+           target="_blank"
+           class="w-full py-3 rounded-2xl bg-white border border-slate-300 hover:bg-slate-50 active:scale-[0.99] text-slate-800 font-bold text-xs flex items-center justify-center gap-2.5 shadow-2xs transition-all">
+            <i class="fa-brands fa-whatsapp text-emerald-600 text-base"></i>
+            <span>Chat Mitra via WA</span>
+        </a>
+
+        <!-- Button 3: Upload Foto Serah Terima -->
+        <button @click="uploadModal = true" 
+                class="w-full py-3 rounded-2xl bg-white border border-slate-300 hover:bg-slate-50 active:scale-[0.99] text-slate-800 font-bold text-xs flex items-center justify-center gap-2.5 shadow-2xs transition-all">
+            <i class="fa-solid fa-camera text-sky-600 text-sm"></i>
+            <span x-text="uploadedImage ? 'Foto Serah Terima (Tergugah ✓)' : 'Upload Foto Serah Terima'">Upload Foto Serah Terima</span>
+        </button>
+
+    </div>
+
+    <!-- Sticky Bottom Completion Action Button / Bar -->
+    <div class="pt-2">
+        <template x-if="!deliveryDone">
+            <button @click="confirmArrived()" 
+                    class="w-full py-3.5 rounded-2xl bg-navy-800 hover:bg-navy-900 active:scale-[0.98] text-white font-extrabold text-xs flex items-center justify-between px-5 shadow-lg pulse-subtle transition-all">
+                <div class="flex items-center gap-3">
+                    <div class="w-7 h-7 rounded-xl bg-white/20 flex items-center justify-center text-white">
+                        <i class="fa-solid fa-circle-check text-xs"></i>
+                    </div>
+                    <span>Tandai Barang Sudah Tiba</span>
+                </div>
+                <div class="w-8 h-8 rounded-full bg-sky-500 flex items-center justify-center text-white shadow-xs">
+                    <i class="fa-solid fa-arrow-right text-xs"></i>
+                </div>
+            </button>
+        </template>
+
+        <template x-if="deliveryDone">
+            <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-center space-y-2">
+                <div class="w-10 h-10 rounded-full bg-emerald-600 text-white mx-auto flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+                <h3 class="font-extrabold text-emerald-900 text-sm">Pengiriman Selesai!</h3>
+                <p class="text-xs text-emerald-700 font-medium">Status order ORD-2984A telah diperbarui menjadi Selesai.</p>
+                <a href="{{ route('mobile.petugas.pengiriman') }}" class="inline-block mt-2 px-4 py-2 rounded-xl bg-emerald-700 text-white font-bold text-xs">
+                    Kembali ke Daftar Pengiriman
+                </a>
+            </div>
+        </template>
+    </div>
+
+    <!-- ================= MODALS ================= -->
+
+    <!-- Modal 1: Map Navigasi Modal -->
+    <div x-show="mapModal" 
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        
+        <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl space-y-4">
+            <div class="bg-navy-800 text-white p-4 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-map-location-dot text-sky-400"></i>
+                    <h3 class="text-xs font-bold">Peta Rute Delivery</h3>
+                </div>
+                <button @click="mapModal = false" class="text-slate-300 hover:text-white">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <div class="p-4 space-y-3">
+                <div class="w-full h-48 bg-slate-200 rounded-2xl overflow-hidden relative border border-slate-200 flex items-center justify-center">
+                    <!-- Leaflet map container iframe/placeholder simulation -->
+                    <iframe width="100%" height="100%" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" 
+                            src="https://maps.google.com/maps?q=-8.5833,116.1167&z=14&output=embed">
+                    </iframe>
+                </div>
+
+                <div class="bg-slate-50 p-3 rounded-xl text-xs space-y-1">
+                    <span class="text-slate-400 font-extrabold uppercase text-[9px] block">KOORDINAT TUJUAN</span>
+                    <p class="font-bold text-slate-800">-8.583333, 116.116667 (Mataram)</p>
+                </div>
+
+                <a href="https://maps.google.com/?q=-8.5833,116.1167" target="_blank"
+                   class="w-full py-2.5 rounded-xl bg-navy-800 text-white font-bold text-xs flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-up-right-from-square text-xs"></i>
+                    <span>Buka di Google Maps App</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 2: Upload Foto Serah Terima Modal -->
+    <div x-show="uploadModal" 
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        
+        <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl space-y-4">
+            <div class="bg-navy-800 text-white p-4 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-camera text-sky-400"></i>
+                    <h3 class="text-xs font-bold">Bukti Foto Serah Terima</h3>
+                </div>
+                <button @click="uploadModal = false" class="text-slate-300 hover:text-white">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <div class="p-4 space-y-4">
+                <template x-if="uploadedImage">
+                    <div class="space-y-3">
+                        <img :src="uploadedImage" class="w-full h-44 object-cover rounded-2xl border border-slate-200 shadow-xs">
+                        <button @click="uploadedImage = null" class="text-xs text-rose-600 font-bold flex items-center gap-1 mx-auto">
+                            <i class="fa-solid fa-trash text-xs"></i> Hapus & Foto Ulang
+                        </button>
+                    </div>
+                </template>
+
+                <template x-if="!uploadedImage">
+                    <label class="border-2 border-dashed border-slate-300 hover:border-navy-800 rounded-2xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer bg-slate-50 transition-colors">
+                        <div class="w-12 h-12 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                        </div>
+                        <span class="text-xs font-bold text-slate-800">Ambil Foto atau Pilih Gambar</span>
+                        <span class="text-[10px] text-slate-400">Format PNG, JPG max 5MB</span>
+                        <input type="file" accept="image/*" capture="environment" class="hidden" @change="handleImageUpload($event)">
+                    </label>
+                </template>
+
+                <button @click="uploadModal = false" 
+                        class="w-full py-2.5 rounded-xl bg-navy-800 text-white font-bold text-xs shadow-xs">
+                    Simpan Foto
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+@endsection

@@ -29,12 +29,23 @@ Aplikasi berbasis web untuk pengelolaan data mitra, sistem distribusi, serta pem
 - **Database:** MySQL 
 
 ---
-## fitur di Mobile 
+## fitur di Mobile web
  di dalam aplikasi mobile disini aku hanya akan membuat aplikasi untuk memonitoring area distribusi , yang dimana ada beberapa fitur yaitu:
  - ada fitur tracking barang saat pengiriman pada barang (detail barang)
  - ada fitur daftar barang yang siap dikirim(mirip sepeti daftar tugas konsepnya)
  - ada fitur riwayat pengiriman 
  - fitur account
+
+
+
+ ## hal yang menjadi outscope pada project kali ini 
+ - aku tidak akan menyertakan fitur absensi
+ - aku tidak akan menyertakan fitur monitoring kesehatan ikan (seperti kesehatan indukan)
+ - aku tidak membuat form atau pun role untuk petugas yang mengurus pembibitan  dan pembesaran , untuk role seperti ini akan diberikan seperti kertas \ board pencatatan di dalam ruangan pakan, karna kolam dan pakan selalu menyatu .
+
+
+ ## sebuah alasan kenapa web ini tidak menydiakan beberapa fitur di atas karna keterbatasan waktu , ketika aku ingin membuat beberapa fitur di atas , aplikasi akan menjadi lebih berat dan memakan waktu yang sangat lama , jadi untuk saat ini web  ini hanya akan menydiakan fitur yang tertera di atas.
+
 
 
 

@@ -159,7 +159,13 @@
                     </div>
                     <span class="text-xs font-bold pr-2">Manajer</span>
                 </div>
-            </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <a href="{{ route('login') }}" class="px-3.5 py-1.5 rounded-lg bg-[#E53E3E] hover:bg-red-600 text-white font-bold text-xs flex items-center gap-2 shadow-sm transition-all">
+                        <i class="fa-solid fa-right-from-bracket text-xs"></i>
+                        <span>Log Out</span>
+                    </a>
+                </div>
         </aside>
 
         <!-- Main Content Area -->
@@ -172,14 +178,6 @@
                         <i class="fa-solid fa-bars text-lg"></i>
                     </button>
                     <span class="text-xs sm:text-sm font-medium text-slate-600">Selamat Datang, Adi Darmawan</span>
-                </div>
-
-                <!-- Right Action Logout -->
-                <div class="flex items-center gap-3">
-                    <a href="{{ route('login') }}" class="px-3.5 py-1.5 rounded-lg bg-[#E53E3E] hover:bg-red-600 text-white font-bold text-xs flex items-center gap-2 shadow-sm transition-all">
-                        <i class="fa-solid fa-right-from-bracket text-xs"></i>
-                        <span>Log Out</span>
-                    </a>
                 </div>
             </header>
 
