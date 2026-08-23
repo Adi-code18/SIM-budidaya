@@ -65,11 +65,11 @@ Route::get('/petugas/libur/ajukan', function () {
 // Mobile Web Petugas Distribusi Routes
 Route::prefix('mobile-petugas')->name('mobile.petugas.')->group(function () {
     Route::get('/splash', function () {
-        return view('mobile_web_petugas.splash');
+        return view('mobile_web_petugas.splash', ['role' => 'distribusi']);
     })->name('splash');
 
     Route::get('/login', function () {
-        return view('mobile_web_petugas.login');
+        return view('mobile_web_petugas.login', ['role' => 'distribusi']);
     })->name('login');
 
     Route::get('/pengiriman', function () {
@@ -91,6 +91,14 @@ Route::prefix('mobile-petugas')->name('mobile.petugas.')->group(function () {
 
 // Mobile Web Petugas Pembibitan Routes
 Route::prefix('petugas-pembibitan')->name('petugas.pembibitan.')->group(function () {
+    Route::get('/splash', function () {
+        return view('mobile_web_petugas.splash', ['role' => 'pembibitan']);
+    })->name('splash');
+
+    Route::get('/login', function () {
+        return view('mobile_web_petugas.login', ['role' => 'pembibitan']);
+    })->name('login');
+
     Route::get('/', function () {
         return view('mobile_web_petugas.petugas_pembibitan.index');
     })->name('dashboard');
@@ -110,6 +118,14 @@ Route::prefix('petugas-pembibitan')->name('petugas.pembibitan.')->group(function
 
 // Mobile Web Petugas Pembesaran Routes
 Route::prefix('petugas-pembesaran')->name('petugas.pembesaran.')->group(function () {
+    Route::get('/splash', function () {
+        return view('mobile_web_petugas.splash', ['role' => 'pembesaran']);
+    })->name('splash');
+
+    Route::get('/login', function () {
+        return view('mobile_web_petugas.login', ['role' => 'pembesaran']);
+    })->name('login');
+
     Route::get('/', function () {
         return view('mobile_web_petugas.petugas_pembesaran.index');
     })->name('dashboard');

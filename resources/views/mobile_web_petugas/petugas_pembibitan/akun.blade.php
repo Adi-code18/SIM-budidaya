@@ -188,7 +188,7 @@
                 <button @click="logoutModal = false" class="py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs">
                     Batal
                 </button>
-                <a href="{{ route('login') }}" class="py-2.5 rounded-xl bg-rose-600 text-white font-bold text-xs flex items-center justify-center">
+                <a href="{{ route('petugas.pembibitan.login') }}" class="py-2.5 rounded-xl bg-rose-600 text-white font-bold text-xs flex items-center justify-center">
                     Ya, Keluar
                 </a>
             </div>

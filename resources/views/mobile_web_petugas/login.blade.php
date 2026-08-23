@@ -1,91 +1,194 @@
-@extends('mobile_web_petugas.petugas_distribusi.layout')
-
-@section('title', 'Login Mobile - SIM-BUDIDAYA')
-@section('hide_header', true)
-@section('hide_nav', true)
-
-@section('content')
-<div class="min-h-full px-6 py-8 flex flex-col justify-between bg-white" x-data="{
-    email: '',
-    password: '',
-    showPass: false,
-    handleLogin() {
-        if (!this.email || !this.password) {
-            triggerToast('Mohon isi Email/No. HP dan Kata Kunci', 'error');
-            return;
+<!DOCTYPE html>
+<html lang="id" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Mobile Petugas - SIM-BUDIDAYA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            700: '#1E3E62',
+                            800: '#0F2C59',
+                            900: '#0B192C',
+                            950: '#051120'
+                        }
+                    }
+                }
+            }
         }
-        triggerToast('Login berhasil! Selamat datang.', 'success');
-        setTimeout(() => {
-            window.location.href = '{{ route('mobile.petugas.pengiriman') }}';
-        }, 1000);
-    }
-}">
+    </script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="h-full bg-slate-100 flex items-center justify-center p-0 sm:p-4 antialiased">
 
-    <!-- Top Logo Section -->
-    <div class="pt-8 flex flex-col items-center text-center space-y-4">
-        <div class="w-16 h-16 rounded-2xl bg-navy-800 flex flex-col items-center justify-center text-white shadow-lg space-y-1">
-            <i class="fa-solid fa-fish-fins text-2xl text-sky-300"></i>
-        </div>
-        <div>
-            <h1 class="text-xl font-extrabold text-navy-900 tracking-tight">Selamat Datang Kembali</h1>
-            <p class="text-xs text-slate-500 font-medium mt-1 max-w-xs leading-relaxed">
-                Masuk untuk mengakses akun SIM-BUDIDAYA Anda untuk manajemen operasional.
-            </p>
-        </div>
-    </div>
+    @php
+        $initialRole = $role ?? 'distribusi';
+    @endphp
 
-    <!-- Login Form Section -->
-    <form @submit.prevent="handleLogin()" class="space-y-4 my-8">
-        
-        <!-- Input 1: Email / No. HP -->
-        <div class="space-y-1">
-            <label class="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider block">EMAIL / NO. HP</label>
-            <div class="relative">
-                <i class="fa-solid fa-user absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
-                <input type="text" 
-                       x-model="email"
-                       placeholder="Masukkan email atau no. hp"
-                       class="w-full pl-9 pr-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-navy-800 transition-all">
+    <div class="w-full sm:max-w-md h-full sm:h-[844px] bg-white flex flex-col justify-between p-6 overflow-y-auto sm:rounded-3xl sm:shadow-2xl border border-slate-200 relative" 
+         x-data="{
+             selectedRole: '{{ $initialRole }}',
+             email: '',
+             password: '',
+             showPass: false,
+             toastShow: false,
+             toastMsg: '',
+             toastType: 'info',
+             
+             triggerToast(msg, type = 'info') {
+                 this.toastMsg = msg;
+                 this.toastType = type;
+                 this.toastShow = true;
+                 setTimeout(() => { this.toastShow = false; }, 3000);
+             },
+
+             handleLogin() {
+                 if (!this.email || !this.password) {
+                     this.triggerToast('Mohon isi Email/No. HP dan Kata Kunci', 'error');
+                     return;
+                 }
+                 this.triggerToast('Login berhasil! Selamat datang.', 'success');
+                 setTimeout(() => {
+                     if (this.selectedRole === 'pembibitan') {
+                         window.location.href = '{{ route('petugas.pembibitan.dashboard') }}';
+                     } else if (this.selectedRole === 'pembesaran') {
+                         window.location.href = '{{ route('petugas.pembesaran.dashboard') }}';
+                     } else {
+                         window.location.href = '{{ route('mobile.petugas.pengiriman') }}';
+                     }
+                 }, 800);
+             }
+         }">
+
+        <!-- Toast Notification floating -->
+        <div x-show="toastShow"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 -translate-y-2"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 translate-y-0"
+             x-transition:leave-end="opacity-0 -translate-y-2"
+             class="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-2xl shadow-xl border text-xs font-bold flex items-center gap-2 max-w-xs w-full"
+             :class="{
+                 'bg-emerald-600 text-white border-emerald-500': toastType === 'success',
+                 'bg-rose-600 text-white border-rose-500': toastType === 'error',
+                 'bg-navy-900 text-white border-navy-800': toastType === 'info'
+             }" style="display: none;">
+            <i class="fa-solid" :class="{
+                'fa-circle-check': toastType === 'success',
+                'fa-triangle-exclamation': toastType === 'error',
+                'fa-circle-info': toastType === 'info'
+            }"></i>
+            <span x-text="toastMsg"></span>
+        </div>
+
+        <!-- Top Logo Section -->
+        <div class="pt-6 flex flex-col items-center text-center space-y-3">
+            <div class="w-16 h-16 rounded-2xl bg-navy-800 flex flex-col items-center justify-center text-white shadow-lg space-y-1">
+                <i class="fa-solid fa-fish-fins text-2xl text-sky-300"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-extrabold text-navy-900 tracking-tight">Selamat Datang Kembali</h1>
+                <p class="text-xs text-slate-500 font-medium mt-1 max-w-xs leading-relaxed">
+                    Masuk ke aplikasi SIM-BUDIDAYA Mobile sesuai peran petugas operasional Anda.
+                </p>
             </div>
         </div>
 
-        <!-- Input 2: Password -->
-        <div class="space-y-1">
-            <label class="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider block">KATA KUNCI</label>
-            <div class="relative">
-                <i class="fa-solid fa-lock absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
-                <input :type="showPass ? 'text' : 'password'" 
-                       x-model="password"
-                       placeholder="Masukkan kata kunci"
-                       class="w-full pl-9 pr-10 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-navy-800 transition-all">
-                <button type="button" @click="showPass = !showPass" class="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-600">
-                    <i class="fa-solid" :class="showPass ? 'fa-eye-slash text-xs' : 'fa-eye text-xs'"></i>
+        <!-- Role Switcher Tabs -->
+        <div class="my-4 space-y-1.5">
+            <label class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider block text-center">PILIH PERAN PETUGAS</label>
+            <div class="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-2xl text-[11px] font-bold">
+                <button type="button" @click="selectedRole = 'distribusi'"
+                        :class="selectedRole === 'distribusi' ? 'bg-navy-800 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'"
+                        class="py-2.5 rounded-xl transition-all text-center flex flex-col items-center gap-1">
+                    <i class="fa-solid fa-truck text-xs"></i>
+                    <span>Distribusi</span>
+                </button>
+
+                <button type="button" @click="selectedRole = 'pembesaran'"
+                        :class="selectedRole === 'pembesaran' ? 'bg-navy-800 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'"
+                        class="py-2.5 rounded-xl transition-all text-center flex flex-col items-center gap-1">
+                    <i class="fa-solid fa-bars-staggered text-xs"></i>
+                    <span>Pembesaran</span>
+                </button>
+
+                <button type="button" @click="selectedRole = 'pembibitan'"
+                        :class="selectedRole === 'pembibitan' ? 'bg-navy-800 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'"
+                        class="py-2.5 rounded-xl transition-all text-center flex flex-col items-center gap-1">
+                    <i class="fa-solid fa-droplet text-xs"></i>
+                    <span>Pembibitan</span>
                 </button>
             </div>
-            <div class="flex justify-end pt-1">
-                <a href="#" @click.prevent="triggerToast('Silakan hubungi administrator SIM-BUDIDAYA untuk reset password.', 'info')" 
-                   class="text-[11px] font-bold text-sky-700 hover:underline">
-                    Lupa Kata Sandi?
-                </a>
-            </div>
+            
+            <p class="text-[10px] text-sky-700 font-extrabold text-center pt-1" x-text="selectedRole === 'pembibitan' ? 'Akses Petugas Pembibitan & Hatchery' : (selectedRole === 'pembesaran' ? 'Akses Petugas Kolam Pembesaran' : 'Akses Petugas Distribusi & Pengiriman')"></p>
         </div>
 
-        <!-- Submit Button -->
-        <button type="submit" 
-                class="w-full py-3.5 rounded-2xl bg-navy-800 hover:bg-navy-900 active:scale-[0.99] text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-md transition-all">
-            <span>Masuk</span>
-            <i class="fa-solid fa-arrow-right text-xs"></i>
-        </button>
+        <!-- Login Form Section -->
+        <form @submit.prevent="handleLogin()" class="space-y-4 my-2">
+            
+            <!-- Input 1: Email / No. HP -->
+            <div class="space-y-1">
+                <label class="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider block">EMAIL / NO. HP</label>
+                <div class="relative">
+                    <i class="fa-solid fa-user absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
+                    <input type="text" 
+                           x-model="email"
+                           placeholder="Masukkan email atau no. hp"
+                           class="w-full pl-9 pr-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-navy-800 transition-all">
+                </div>
+            </div>
 
-    </form>
+            <!-- Input 2: Password -->
+            <div class="space-y-1">
+                <label class="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider block">KATA KUNCI</label>
+                <div class="relative">
+                    <i class="fa-solid fa-lock absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
+                    <input :type="showPass ? 'text' : 'password'" 
+                           x-model="password"
+                           placeholder="Masukkan kata kunci"
+                           class="w-full pl-9 pr-10 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-navy-800 transition-all">
+                    <button type="button" @click="showPass = !showPass" class="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-600">
+                        <i class="fa-solid" :class="showPass ? 'fa-eye-slash text-xs' : 'fa-eye text-xs'"></i>
+                    </button>
+                </div>
+                <div class="flex justify-end pt-1">
+                    <a href="#" @click.prevent="triggerToast('Silakan hubungi administrator SIM-BUDIDAYA untuk reset password.', 'info')" 
+                       class="text-[11px] font-bold text-sky-700 hover:underline">
+                        Lupa Kata Sandi?
+                    </a>
+                </div>
+            </div>
 
-    <!-- Footer Support Section -->
-    <div class="text-center pt-4 pb-2">
-        <p class="text-[11px] text-slate-400 font-medium">
-            Membutuhkan bantuan? 
-            <a href="https://wa.me/6281234567890" target="_blank" class="text-sky-700 font-bold hover:underline">Hubungi Support</a>
-        </p>
+            <!-- Submit Button -->
+            <button type="submit" 
+                    class="w-full py-3.5 rounded-2xl bg-navy-800 hover:bg-navy-900 active:scale-[0.99] text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-md transition-all">
+                <span>Masuk Petugas</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+
+        </form>
+
+        <!-- Footer Support Section -->
+        <div class="text-center pt-4 pb-2">
+            <p class="text-[11px] text-slate-400 font-medium">
+                Membutuhkan bantuan? 
+                <a href="https://wa.me/6281234567890" target="_blank" class="text-sky-700 font-bold hover:underline">Hubungi Support</a>
+            </p>
+        </div>
+
     </div>
 
-</div>
-@endsection
+</body>
+</html>
