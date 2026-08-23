@@ -115,7 +115,7 @@
                 </a>
 
                 <a href="{{ route('pembesaran') }}" 
-                   class="flex items-center gap-3.5 px-4 py-2.5 rounded-xl transition-all duration-200 text-xs font-semibold {{ request()->routeIs('pembesaran') ? 'bg-[#0284C7] text-white shadow-md shadow-sky-600/30' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}">
+                   class="flex items-center gap-3.5 px-4 py-2.5 rounded-xl transition-all duration-200 text-xs font-semibold {{ (request()->routeIs('pembesaran*') || request()->routeIs('pembudidaya*')) ? 'bg-[#0284C7] text-white shadow-md shadow-sky-600/30' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}">
                     <i class="fa-solid fa-bars-staggered text-sm w-5 text-center"></i>
                     <span>Pembesaran</span>
                 </a>
