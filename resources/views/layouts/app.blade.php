@@ -153,16 +153,19 @@
 
             <!-- User Profile Button Footer -->
             <div class="p-4 border-t border-white/10 flex items-center justify-between gap-2">
-                <div class="flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-white/10 text-white">
-                    <div class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-xs">
+                <div class="flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-white/10 text-white truncate">
+                    <div class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-xs shrink-0">
                         <i class="fa-solid fa-user"></i>
                     </div>
-                    <span class="text-xs font-bold pr-1">Manajer</span>
+                    <span class="text-xs font-bold truncate">{{ Auth::user()->nama ?? 'Manajer' }}</span>
                 </div>
-                <a href="{{ route('login') }}" class="px-3 py-1.5 rounded-lg bg-[#E53E3E] hover:bg-red-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all">
-                    <i class="fa-solid fa-right-from-bracket text-xs"></i>
-                    <span>Log Out</span>
-                </a>
+                <form action="{{ route('logout') }}" method="POST" class="inline">
+                    @csrf
+                    <button type="submit" class="px-3 py-1.5 rounded-lg bg-[#E53E3E] hover:bg-red-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer">
+                        <i class="fa-solid fa-right-from-bracket text-xs"></i>
+                        <span>Keluar</span>
+                    </button>
+                </form>
             </div>
         </aside>
 
@@ -175,7 +178,7 @@
                     <button @click="sidebarOpen = true" class="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
                         <i class="fa-solid fa-bars text-lg"></i>
                     </button>
-                    <span class="text-xs sm:text-sm font-medium text-slate-600">Selamat Datang, Adi Darmawan</span>
+                    <span class="text-xs sm:text-sm font-medium text-slate-600">Selamat Datang, <strong>{{ Auth::user()->nama ?? 'Manajer' }}</strong></span>
                 </div>
             </header>
 

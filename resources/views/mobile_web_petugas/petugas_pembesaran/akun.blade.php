@@ -3,15 +3,7 @@
 @section('title', 'Profile & Akun - SIM-BUDIDAYA Mobile')
 
 @section('content')
-<div class="p-4 space-y-4" x-data="{ 
-    editProfileModal: false,
-    langModal: false,
-    logoutModal: false,
-    userName: 'Budi Santoso',
-    userRole: 'Field Technician / Petugas Pembesaran',
-    userPhone: '+62 812-9876-5432',
-    selectedLang: 'Indonesia'
-}">
+<div class="p-4 space-y-4" x-data="akunPetugasPembesaran()">
 
     <!-- Profile Header Card (Matches Screen 4 Mockup) -->
     <div class="bg-white rounded-3xl border border-slate-200/90 p-5 shadow-xs flex flex-col items-center text-center relative overflow-hidden">
@@ -30,8 +22,9 @@
 
         <div class="mt-3 relative z-10 space-y-1">
             <h1 class="text-base font-extrabold text-navy-900" x-text="userName">Budi Santoso</h1>
-            <p class="text-xs text-slate-500 font-semibold" x-text="userRole">Field Technician</p>
-            <span class="inline-block mt-1 px-3 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <p class="text-xs text-slate-500 font-semibold" x-text="i18n[currentLang].role"></p>
+            <span class="inline-block mt-1 px-3 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200"
+                  x-text="i18n[currentLang].division">
                 Divisi Pembesaran Kolam
             </span>
         </div>
@@ -39,7 +32,7 @@
         <button @click="editProfileModal = true"
                 class="mt-4 px-4 py-1.5 rounded-full border border-emerald-600 text-emerald-700 hover:bg-emerald-50 text-xs font-extrabold flex items-center gap-1.5 transition-all">
             <i class="fa-solid fa-user-pen text-[11px]"></i>
-            <span>Edit Profil</span>
+            <span x-text="i18n[currentLang].editBtn">Edit Profil</span>
         </button>
 
     </div>
@@ -48,15 +41,15 @@
     <div class="bg-white rounded-3xl border border-slate-200/90 overflow-hidden shadow-xs divide-y divide-slate-100">
         
         <!-- Item 1: Pengaturan Notifikasi -->
-        <button @click="triggerToast('Pengaturan notifikasi berhasil disimpan', 'info')"
+        <button @click="triggerToast(i18n[currentLang].notifSaved, 'info')"
                 class="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors text-left">
             <div class="flex items-center gap-3.5">
                 <div class="w-9 h-9 rounded-xl bg-sky-50 text-sky-700 flex items-center justify-center text-sm">
                     <i class="fa-regular fa-bell"></i>
                 </div>
                 <div>
-                    <h3 class="text-xs font-bold text-slate-900">Pengaturan Notifikasi</h3>
-                    <p class="text-[10px] text-slate-400 font-medium">Alert biomassa, pH air & jadwal pakan</p>
+                    <h3 class="text-xs font-bold text-slate-900" x-text="i18n[currentLang].notifications">Pengaturan Notifikasi</h3>
+                    <p class="text-[10px] text-slate-400 font-medium" x-text="i18n[currentLang].notificationsSub">Alert biomassa, pH air & jadwal pakan</p>
                 </div>
             </div>
             <i class="fa-solid fa-chevron-right text-slate-400 text-xs"></i>
@@ -70,8 +63,8 @@
                     <i class="fa-regular fa-circle-question"></i>
                 </div>
                 <div>
-                    <h3 class="text-xs font-bold text-slate-900">Bantuan & Dukungan</h3>
-                    <p class="text-[10px] text-slate-400 font-medium">Panduan Pembesaran & CS Support</p>
+                    <h3 class="text-xs font-bold text-slate-900" x-text="i18n[currentLang].help">Bantuan & Dukungan</h3>
+                    <p class="text-[10px] text-slate-400 font-medium" x-text="i18n[currentLang].helpSub">Panduan Pembesaran & CS Support</p>
                 </div>
             </div>
             <i class="fa-solid fa-chevron-right text-slate-400 text-xs"></i>
@@ -85,11 +78,14 @@
                     <i class="fa-solid fa-globe"></i>
                 </div>
                 <div>
-                    <h3 class="text-xs font-bold text-slate-900">Bahasa</h3>
-                    <p class="text-[10px] text-slate-400 font-medium" x-text="selectedLang">Bahasa Indonesia</p>
+                    <h3 class="text-xs font-bold text-slate-900" x-text="i18n[currentLang].language">Bahasa</h3>
+                    <p class="text-[10px] text-slate-400 font-medium" x-text="currentLang === 'id' ? '🇮🇩 Bahasa Indonesia' : '🇬🇧 English'"></p>
                 </div>
             </div>
-            <i class="fa-solid fa-chevron-right text-slate-400 text-xs"></i>
+            <div class="flex items-center gap-2">
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 uppercase" x-text="currentLang"></span>
+                <i class="fa-solid fa-chevron-right text-slate-400 text-xs"></i>
+            </div>
         </button>
 
     </div>
@@ -99,7 +95,7 @@
         <button @click="logoutModal = true" 
                 class="w-full py-3 rounded-2xl bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-600 font-extrabold text-xs flex items-center justify-center gap-2 shadow-2xs transition-all">
             <i class="fa-solid fa-arrow-right-from-bracket text-xs"></i>
-            <span>Keluar</span>
+            <span x-text="i18n[currentLang].logout">Keluar</span>
         </button>
     </div>
 
@@ -113,7 +109,7 @@
         
         <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl p-5 space-y-4">
             <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-                <h3 class="text-xs font-bold text-navy-900">Edit Profile Petugas Pembesaran</h3>
+                <h3 class="text-xs font-bold text-navy-900" x-text="i18n[currentLang].editProfile">Edit Profile Petugas Pembesaran</h3>
                 <button @click="editProfileModal = false" class="text-slate-400 hover:text-slate-600">
                     <i class="fa-solid fa-xmark text-sm"></i>
                 </button>
@@ -121,45 +117,72 @@
 
             <div class="space-y-3">
                 <div>
-                    <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1">NAMA LENGKAP</label>
-                    <input type="text" x-model="userName" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800">
+                    <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1" x-text="i18n[currentLang].fullName">NAMA LENGKAP</label>
+                    <input type="text" x-model="userName" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:border-emerald-600">
                 </div>
                 <div>
-                    <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1">NOMOR HP</label>
-                    <input type="text" x-model="userPhone" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800">
+                    <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1" x-text="i18n[currentLang].phone">NOMOR HP</label>
+                    <input type="text" x-model="userPhone" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:border-emerald-600">
                 </div>
                 <div>
-                    <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1">JABATAN</label>
-                    <input type="text" x-model="userRole" readonly class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-400 bg-slate-100">
+                    <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1" x-text="i18n[currentLang].jobTitle">JABATAN</label>
+                    <input type="text" :value="i18n[currentLang].role" readonly class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-400 bg-slate-100 cursor-not-allowed">
                 </div>
             </div>
 
-            <button @click="editProfileModal = false; triggerToast('Profil berhasil diperbarui', 'success')" 
-                    class="w-full py-2.5 rounded-xl bg-navy-800 text-white font-bold text-xs shadow-xs">
+            <button @click="editProfileModal = false; triggerToast(i18n[currentLang].profileUpdated, 'success')" 
+                    class="w-full py-2.5 rounded-xl bg-navy-800 hover:bg-navy-900 text-white font-bold text-xs shadow-xs transition-colors"
+                    x-text="i18n[currentLang].saveChanges">
                 Simpan Perubahan
             </button>
         </div>
     </div>
 
-    <!-- Language Modal -->
+    <!-- Language Modal (Hanya Indonesia & English) -->
     <div x-show="langModal" 
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0"
          class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
         
         <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl p-5 space-y-4 text-center">
-            <h3 class="text-xs font-bold text-navy-900">Pilih Bahasa / Language</h3>
-            
-            <div class="space-y-2">
-                <button @click="selectedLang = 'Bahasa Indonesia'; langModal = false" 
-                        class="w-full p-3 rounded-xl border border-slate-200 flex items-center justify-between hover:bg-sky-50 font-bold text-xs">
-                    <span>🇮🇩 Bahasa Indonesia</span>
-                    <i class="fa-solid fa-check text-sky-600" x-show="selectedLang === 'Bahasa Indonesia'"></i>
+            <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                <h3 class="text-xs font-bold text-navy-900" x-text="i18n[currentLang].languageModalTitle">Pilih Bahasa / Language</h3>
+                <button @click="langModal = false" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-sm"></i>
                 </button>
-                <button @click="selectedLang = 'English'; langModal = false" 
-                        class="w-full p-3 rounded-xl border border-slate-200 flex items-center justify-between hover:bg-sky-50 font-bold text-xs">
-                    <span>🇬🇧 English</span>
-                    <i class="fa-solid fa-check text-sky-600" x-show="selectedLang === 'English'"></i>
+            </div>
+            
+            <div class="space-y-2.5 text-left">
+                <!-- Option 1: Bahasa Indonesia -->
+                <button @click="setLanguage('id')" 
+                        class="w-full p-3.5 rounded-2xl border transition-all flex items-center justify-between font-bold text-xs cursor-pointer"
+                        :class="currentLang === 'id' ? 'border-emerald-500 bg-emerald-50/70 text-navy-900 shadow-xs' : 'border-slate-200 hover:bg-slate-50 text-slate-700'">
+                    <div class="flex items-center gap-3">
+                        <span class="text-xl">🇮🇩</span>
+                        <div>
+                            <span class="block text-xs font-extrabold text-slate-900">Bahasa Indonesia</span>
+                            <span class="block text-[10px] text-slate-400 font-normal">Gunakan Bahasa Indonesia sebagai bahasa utama</span>
+                        </div>
+                    </div>
+                    <div class="w-6 h-6 rounded-full flex items-center justify-center" :class="currentLang === 'id' ? 'bg-emerald-500 text-white' : 'border border-slate-300 text-transparent'">
+                        <i class="fa-solid fa-check text-[11px]"></i>
+                    </div>
+                </button>
+
+                <!-- Option 2: English -->
+                <button @click="setLanguage('en')" 
+                        class="w-full p-3.5 rounded-2xl border transition-all flex items-center justify-between font-bold text-xs cursor-pointer"
+                        :class="currentLang === 'en' ? 'border-emerald-500 bg-emerald-50/70 text-navy-900 shadow-xs' : 'border-slate-200 hover:bg-slate-50 text-slate-700'">
+                    <div class="flex items-center gap-3">
+                        <span class="text-xl">🇬🇧</span>
+                        <div>
+                            <span class="block text-xs font-extrabold text-slate-900">English</span>
+                            <span class="block text-[10px] text-slate-400 font-normal">Use English as the primary interface language</span>
+                        </div>
+                    </div>
+                    <div class="w-6 h-6 rounded-full flex items-center justify-center" :class="currentLang === 'en' ? 'bg-emerald-500 text-white' : 'border border-slate-300 text-transparent'">
+                        <i class="fa-solid fa-check text-[11px]"></i>
+                    </div>
                 </button>
             </div>
         </div>
@@ -177,20 +200,103 @@
             </div>
             
             <div>
-                <h3 class="text-sm font-extrabold text-slate-900">Konfirmasi Keluar</h3>
-                <p class="text-xs text-slate-500 font-medium mt-1">Apakah Anda yakin ingin keluar dari aplikasi Petugas Pembesaran?</p>
+                <h3 class="text-sm font-extrabold text-slate-900" x-text="i18n[currentLang].logoutConfirm">Konfirmasi Keluar</h3>
+                <p class="text-xs text-slate-500 font-medium mt-1" x-text="i18n[currentLang].logoutMessage">Apakah Anda yakin ingin keluar dari aplikasi Petugas Pembesaran?</p>
             </div>
 
             <div class="grid grid-cols-2 gap-2 pt-2">
-                <button @click="logoutModal = false" class="py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs">
+                <button @click="logoutModal = false" 
+                        class="py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50"
+                        x-text="i18n[currentLang].cancel">
                     Batal
                 </button>
-                <a href="{{ route('petugas.pembesaran.login') }}" class="py-2.5 rounded-xl bg-rose-600 text-white font-bold text-xs flex items-center justify-center">
-                    Ya, Keluar
-                </a>
+                <form action="{{ route('mobile.petugas.logout') }}" method="POST" class="w-full">
+                    @csrf
+                    <button type="submit" 
+                            class="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center justify-center shadow-xs"
+                            x-text="i18n[currentLang].yesLogout">
+                        Ya, Keluar
+                    </button>
+                </form>
             </div>
         </div>
     </div>
 
 </div>
 @endsection
+
+@push('scripts')
+<script>
+function akunPetugasPembesaran() {
+    return {
+        editProfileModal: false,
+        langModal: false,
+        logoutModal: false,
+        userName: '{{ Auth::user()->nama ?? 'Tim Pembesaran' }}',
+        userPhone: '{{ Auth::user()->no_tlp ?? '+62 812-9876-5432' }}',
+        currentLang: localStorage.getItem('sim_lang') || 'id',
+
+        i18n: {
+            id: {
+                role: 'Petugas Lapangan Pembesaran',
+                division: 'Divisi Pembesaran Kolam',
+                editBtn: 'Edit Profil',
+                editProfile: 'Edit Profile Petugas Pembesaran',
+                fullName: 'NAMA LENGKAP',
+                phone: 'NOMOR HP',
+                jobTitle: 'JABATAN',
+                saveChanges: 'Simpan Perubahan',
+                profileUpdated: 'Profil berhasil diperbarui!',
+                notifications: 'Pengaturan Notifikasi',
+                notificationsSub: 'Alert biomassa, pH air & jadwal pakan',
+                notifSaved: 'Pengaturan notifikasi berhasil disimpan',
+                help: 'Bantuan & Dukungan',
+                helpSub: 'Panduan Pembesaran & CS Support',
+                language: 'Bahasa',
+                languageModalTitle: 'Pilih Bahasa / Language',
+                logout: 'Keluar',
+                logoutConfirm: 'Konfirmasi Keluar',
+                logoutMessage: 'Apakah Anda yakin ingin keluar dari aplikasi Petugas Pembesaran?',
+                cancel: 'Batal',
+                yesLogout: 'Ya, Keluar',
+                langChanged: 'Bahasa berhasil diubah ke Bahasa Indonesia (🇮🇩)'
+            },
+            en: {
+                role: 'Grow-Out Field Technician',
+                division: 'Grow-Out Pond Division',
+                editBtn: 'Edit Profile',
+                editProfile: 'Edit Grow-Out Officer Profile',
+                fullName: 'FULL NAME',
+                phone: 'PHONE NUMBER',
+                jobTitle: 'POSITION',
+                saveChanges: 'Save Changes',
+                profileUpdated: 'Profile successfully updated!',
+                notifications: 'Notification Settings',
+                notificationsSub: 'Biomass alerts, water pH & feeding schedule',
+                notifSaved: 'Notification settings saved successfully',
+                help: 'Help & Support',
+                helpSub: 'Grow-Out Guide & CS Support',
+                language: 'Language',
+                languageModalTitle: 'Select Language',
+                logout: 'Log Out',
+                logoutConfirm: 'Confirm Log Out',
+                logoutMessage: 'Are you sure you want to log out of Grow-Out Officer app?',
+                cancel: 'Cancel',
+                yesLogout: 'Yes, Log Out',
+                langChanged: 'Language successfully changed to English (🇬🇧)'
+            }
+        },
+
+        setLanguage(lang) {
+            this.currentLang = lang;
+            localStorage.setItem('sim_lang', lang);
+            this.langModal = false;
+            if (typeof triggerToast === 'function') {
+                triggerToast(this.i18n[lang].langChanged, 'success');
+            }
+        }
+    };
+}
+</script>
+@endpush
+

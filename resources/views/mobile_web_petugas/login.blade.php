@@ -10,6 +10,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    @if(!empty(config('services.recaptcha.site_key')))
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    @endif
     <script>
         tailwind.config = {
             theme: {
@@ -33,14 +36,12 @@
 <body class="h-full bg-slate-100 flex items-center justify-center p-0 sm:p-4 antialiased">
 
     @php
-        $initialRole = $role ?? 'distribusi';
+        $initialRole = old('selectedRole', $role ?? 'distribusi');
     @endphp
 
     <div class="w-full sm:max-w-md h-full sm:h-[844px] bg-white flex flex-col justify-between p-6 overflow-y-auto sm:rounded-3xl sm:shadow-2xl border border-slate-200 relative" 
          x-data="{
              selectedRole: '{{ $initialRole }}',
-             email: '',
-             password: '',
              showPass: false,
              toastShow: false,
              toastMsg: '',
@@ -51,23 +52,6 @@
                  this.toastType = type;
                  this.toastShow = true;
                  setTimeout(() => { this.toastShow = false; }, 3000);
-             },
-
-             handleLogin() {
-                 if (!this.email || !this.password) {
-                     this.triggerToast('Mohon isi Email/No. HP dan Kata Kunci', 'error');
-                     return;
-                 }
-                 this.triggerToast('Login berhasil! Selamat datang.', 'success');
-                 setTimeout(() => {
-                     if (this.selectedRole === 'pembibitan') {
-                         window.location.href = '{{ route('petugas.pembibitan.dashboard') }}';
-                     } else if (this.selectedRole === 'pembesaran') {
-                         window.location.href = '{{ route('petugas.pembesaran.dashboard') }}';
-                     } else {
-                         window.location.href = '{{ route('mobile.petugas.pengiriman') }}';
-                     }
-                 }, 800);
              }
          }">
 
@@ -93,98 +77,130 @@
             <span x-text="toastMsg"></span>
         </div>
 
-        <!-- Top Logo Section -->
-        <div class="pt-6 flex flex-col items-center text-center space-y-3">
-            <div class="w-16 h-16 rounded-2xl bg-navy-800 flex flex-col items-center justify-center text-white shadow-lg space-y-1">
-                <i class="fa-solid fa-fish-fins text-2xl text-sky-300"></i>
-            </div>
-            <div>
-                <h1 class="text-xl font-extrabold text-navy-900 tracking-tight">Selamat Datang Kembali</h1>
-                <p class="text-xs text-slate-500 font-medium mt-1 max-w-xs leading-relaxed">
-                    Masuk ke aplikasi SIM-BUDIDAYA Mobile sesuai peran petugas operasional Anda.
-                </p>
-            </div>
-        </div>
-
-        <!-- Role Switcher Tabs -->
-        <div class="my-4 space-y-1.5">
-            <label class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider block text-center">PILIH PERAN PETUGAS</label>
-            <div class="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-2xl text-[11px] font-bold">
-                <button type="button" @click="selectedRole = 'distribusi'"
-                        :class="selectedRole === 'distribusi' ? 'bg-navy-800 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'"
-                        class="py-2.5 rounded-xl transition-all text-center flex flex-col items-center gap-1">
-                    <i class="fa-solid fa-truck text-xs"></i>
-                    <span>Distribusi</span>
-                </button>
-
-                <button type="button" @click="selectedRole = 'pembesaran'"
-                        :class="selectedRole === 'pembesaran' ? 'bg-navy-800 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'"
-                        class="py-2.5 rounded-xl transition-all text-center flex flex-col items-center gap-1">
-                    <i class="fa-solid fa-bars-staggered text-xs"></i>
-                    <span>Pembesaran</span>
-                </button>
-
-                <button type="button" @click="selectedRole = 'pembibitan'"
-                        :class="selectedRole === 'pembibitan' ? 'bg-navy-800 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'"
-                        class="py-2.5 rounded-xl transition-all text-center flex flex-col items-center gap-1">
-                    <i class="fa-solid fa-droplet text-xs"></i>
-                    <span>Pembibitan</span>
-                </button>
-            </div>
-            
-            <p class="text-[10px] text-sky-700 font-extrabold text-center pt-1" x-text="selectedRole === 'pembibitan' ? 'Akses Petugas Pembibitan & Hatchery' : (selectedRole === 'pembesaran' ? 'Akses Petugas Kolam Pembesaran' : 'Akses Petugas Distribusi & Pengiriman')"></p>
-        </div>
-
-        <!-- Login Form Section -->
-        <form @submit.prevent="handleLogin()" class="space-y-4 my-2">
-            
-            <!-- Input 1: Email / No. HP -->
-            <div class="space-y-1">
-                <label class="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider block">EMAIL / NO. HP</label>
-                <div class="relative">
-                    <i class="fa-solid fa-user absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
-                    <input type="text" 
-                           x-model="email"
-                           placeholder="Masukkan email atau no. hp"
-                           class="w-full pl-9 pr-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-navy-800 transition-all">
+        <div>
+            <!-- Top Logo Section -->
+            <div class="pt-4 flex flex-col items-center text-center space-y-2.5">
+                <div class="w-14 h-14 rounded-2xl bg-navy-800 flex flex-col items-center justify-center text-white shadow-lg space-y-1">
+                    <i class="fa-solid fa-fish-fins text-xl text-sky-300"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-extrabold text-navy-900 tracking-tight">Selamat Datang Kembali</h1>
+                    <p class="text-[11px] text-slate-500 font-medium mt-0.5 max-w-xs leading-relaxed">
+                        Masuk ke aplikasi SIM-BUDIDAYA Mobile sesuai peran petugas operasional Anda.
+                    </p>
                 </div>
             </div>
 
-            <!-- Input 2: Password -->
-            <div class="space-y-1">
-                <label class="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider block">KATA KUNCI</label>
-                <div class="relative">
-                    <i class="fa-solid fa-lock absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
-                    <input :type="showPass ? 'text' : 'password'" 
-                           x-model="password"
-                           placeholder="Masukkan kata kunci"
-                           class="w-full pl-9 pr-10 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-navy-800 transition-all">
-                    <button type="button" @click="showPass = !showPass" class="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-600">
-                        <i class="fa-solid" :class="showPass ? 'fa-eye-slash text-xs' : 'fa-eye text-xs'"></i>
+            <!-- Error Alerts -->
+            @if ($errors->any())
+            <div class="my-3 p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2 shadow-xs">
+                <i class="fa-solid fa-circle-exclamation text-rose-500 text-sm mt-0.5 shrink-0"></i>
+                <div>
+                    <span class="font-bold block">Gagal Masuk:</span>
+                    <ul class="list-disc list-inside mt-0.5 space-y-0.5 text-[11px]">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+            @endif
+
+            <!-- Role Switcher Tabs -->
+            <div class="my-3 space-y-1">
+                <label class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider block text-center">PILIH PERAN PETUGAS</label>
+                <div class="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-2xl text-[11px] font-bold">
+                    <button type="button" @click="selectedRole = 'distribusi'"
+                            :class="selectedRole === 'distribusi' ? 'bg-navy-800 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'"
+                            class="py-2 rounded-xl transition-all text-center flex flex-col items-center gap-1">
+                        <i class="fa-solid fa-truck text-xs"></i>
+                        <span>Distribusi</span>
+                    </button>
+
+                    <button type="button" @click="selectedRole = 'pembesaran'"
+                            :class="selectedRole === 'pembesaran' ? 'bg-navy-800 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'"
+                            class="py-2 rounded-xl transition-all text-center flex flex-col items-center gap-1">
+                        <i class="fa-solid fa-bars-staggered text-xs"></i>
+                        <span>Pembesaran</span>
+                    </button>
+
+                    <button type="button" @click="selectedRole = 'pembibitan'"
+                            :class="selectedRole === 'pembibitan' ? 'bg-navy-800 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'"
+                            class="py-2 rounded-xl transition-all text-center flex flex-col items-center gap-1">
+                        <i class="fa-solid fa-droplet text-xs"></i>
+                        <span>Pembibitan</span>
                     </button>
                 </div>
-                <div class="flex justify-end pt-1">
-                    <a href="#" @click.prevent="triggerToast('Silakan hubungi administrator SIM-BUDIDAYA untuk reset password.', 'info')" 
-                       class="text-[11px] font-bold text-sky-700 hover:underline">
-                        Lupa Kata Sandi?
-                    </a>
-                </div>
+                
+                <p class="text-[10px] text-sky-700 font-extrabold text-center pt-0.5" 
+                   x-text="selectedRole === 'pembibitan' ? 'Akses Petugas Pembibitan & Hatchery' : (selectedRole === 'pembesaran' ? 'Akses Petugas Kolam Pembesaran' : 'Akses Petugas Distribusi & Pengiriman')"></p>
             </div>
 
-            <!-- Submit Button -->
-            <button type="submit" 
-                    class="w-full py-3.5 rounded-2xl bg-navy-800 hover:bg-navy-900 active:scale-[0.99] text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-md transition-all">
-                <span>Masuk Petugas</span>
-                <i class="fa-solid fa-arrow-right text-xs"></i>
-            </button>
+            <!-- Login Form Section -->
+            <form action="{{ route('mobile.petugas.login.post') }}" method="POST" class="space-y-3.5 my-2">
+                @csrf
+                
+                <!-- Hidden Selected Role Field -->
+                <input type="hidden" name="selectedRole" :value="selectedRole">
 
-        </form>
+                <!-- Input 1: Email / No. HP -->
+                <div class="space-y-1">
+                    <label class="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider block">EMAIL / NO. HP</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-user absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
+                        <input type="text" 
+                               name="email"
+                               value="{{ old('email') }}"
+                               placeholder="Contoh: distribusi@example.com / 0812..."
+                               required
+                               class="w-full pl-9 pr-4 py-2.5 rounded-2xl bg-slate-50 border {{ $errors->has('email') ? 'border-rose-300 ring-1 ring-rose-300' : 'border-slate-200' }} text-xs font-semibold text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-navy-800 transition-all">
+                    </div>
+                </div>
+
+                <!-- Input 2: Password -->
+                <div class="space-y-1">
+                    <label class="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider block">KATA KUNCI</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-lock absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
+                        <input :type="showPass ? 'text' : 'password'" 
+                               name="password"
+                               placeholder="Masukkan kata kunci"
+                               required
+                               class="w-full pl-9 pr-10 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-navy-800 transition-all">
+                        <button type="button" @click="showPass = !showPass" class="absolute right-3.5 top-3 text-slate-400 hover:text-slate-600">
+                            <i class="fa-solid" :class="showPass ? 'fa-eye-slash text-xs' : 'fa-eye text-xs'"></i>
+                        </button>
+                    </div>
+                    <div class="flex justify-end pt-0.5">
+                        <a href="#" @click.prevent="triggerToast('Silakan hubungi administrator SIM-BUDIDAYA untuk reset password.', 'info')" 
+                           class="text-[11px] font-bold text-sky-700 hover:underline">
+                            Lupa Kata Sandi?
+                        </a>
+                    </div>
+                </div>
+
+                <!-- reCAPTCHA Widget jika Key tersedia -->
+                @if(!empty(config('services.recaptcha.site_key')))
+                <div class="py-1 flex justify-center">
+                    <div class="g-recaptcha scale-90" data-sitekey="{{ config('services.recaptcha.site_key') }}"></div>
+                </div>
+                @endif
+
+                <!-- Submit Button -->
+                <button type="submit" 
+                        class="w-full py-3 rounded-2xl bg-navy-800 hover:bg-navy-900 active:scale-[0.99] text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-md transition-all">
+                    <span>Masuk Petugas</span>
+                    <i class="fa-solid fa-arrow-right text-xs"></i>
+                </button>
+
+            </form>
+        </div>
 
         <!-- Footer Support Section -->
-        <div class="text-center pt-4 pb-2">
+        <div class="text-center pt-2 pb-1 border-t border-slate-100">
             <p class="text-[11px] text-slate-400 font-medium">
-                Membutuhkan bantuan? 
-                <a href="https://wa.me/6281234567890" target="_blank" class="text-sky-700 font-bold hover:underline">Hubungi Support</a>
+                Admin / Manajer? 
+                <a href="{{ route('login') }}" class="text-sky-700 font-bold hover:underline">Portal Web Manajer</a>
             </p>
         </div>
 

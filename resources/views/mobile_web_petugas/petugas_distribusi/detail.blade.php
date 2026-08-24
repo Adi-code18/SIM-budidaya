@@ -3,31 +3,7 @@
 @section('title', 'Detail & Tracking Pengiriman - SIM-BUDIDAYA Mobile')
 
 @section('content')
-<div class="p-4 space-y-4" x-data="{ 
-    uploadModal: false, 
-    mapModal: false,
-    uploadedImage: null,
-    deliveryDone: false,
-    confirmArrived() {
-        if(!this.uploadedImage) {
-            $dispatch('toast', { msg: 'Harap upload foto serah terima terlebih dahulu!', type: 'error' });
-            this.uploadModal = true;
-            return;
-        }
-        this.deliveryDone = true;
-        triggerToast('Pengiriman berhasil diselesaikan!', 'success');
-    },
-    handleImageUpload(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (evt) => {
-                this.uploadedImage = evt.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-    }
-}">
+<div class="p-4 space-y-4" x-data="detailTrackingData()">
 
     <!-- Top Back Navigation Header Bar -->
     <div class="flex items-center gap-3 py-1 border-b border-slate-200/80 pb-3">
@@ -135,31 +111,62 @@
 
     </div>
 
-    <!-- Sticky Bottom Completion Action Button / Bar -->
+    <!-- Sticky Bottom Slide-to-Confirm Action Bar -->
     <div class="pt-2">
         <template x-if="!deliveryDone">
-            <button @click="confirmArrived()" 
-                    class="w-full py-3.5 rounded-2xl bg-navy-800 hover:bg-navy-900 active:scale-[0.98] text-white font-extrabold text-xs flex items-center justify-between px-5 shadow-lg pulse-subtle transition-all">
-                <div class="flex items-center gap-3">
-                    <div class="w-7 h-7 rounded-xl bg-white/20 flex items-center justify-center text-white">
-                        <i class="fa-solid fa-circle-check text-xs"></i>
+            <div class="relative w-full h-14 bg-[#0F2C59] rounded-2xl p-1.5 flex items-center select-none overflow-hidden shadow-lg border border-sky-950/40"
+                 style="touch-action: none; -webkit-user-select: none; user-select: none;"
+                 x-ref="sliderTrack"
+                 x-init="initSlider()">
+                
+                <!-- Dynamic Gradient Fill on Slide -->
+                <div class="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-sky-600 via-sky-500 to-emerald-500 rounded-2xl pointer-events-none"
+                     :class="isDragging ? '' : 'transition-all duration-300 ease-out'"
+                     :style="'width: ' + (currentX + 52) + 'px'">
+                </div>
+
+                <!-- Text & Animated Chevrons in Center -->
+                <div class="absolute inset-0 flex items-center justify-center pointer-events-none px-12 transition-opacity duration-200"
+                     :style="'opacity: ' + Math.max(0, 1 - progress * 1.6)">
+                    <div class="flex items-center gap-2 text-white font-extrabold text-xs tracking-wide">
+                        <div class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-white text-[10px]">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                        <span>Tandai Barang Sudah Tiba</span>
+                        <i class="fa-solid fa-angles-right text-[10px] text-sky-300 animate-pulse"></i>
                     </div>
-                    <span>Tandai Barang Sudah Tiba</span>
                 </div>
-                <div class="w-8 h-8 rounded-full bg-sky-500 flex items-center justify-center text-white shadow-xs">
-                    <i class="fa-solid fa-arrow-right text-xs"></i>
+
+                <!-- Draggable Slider Handle (Thumb) with Pointer Capture -->
+                <div x-ref="sliderThumb"
+                     @pointerdown="startDrag($event)"
+                     @pointermove="onDrag($event)"
+                     @pointerup="endDrag($event)"
+                     @pointercancel="endDrag($event)"
+                     class="relative z-10 w-11 h-11 rounded-xl bg-sky-500 hover:bg-sky-400 active:scale-95 flex items-center justify-center text-white shadow-md cursor-grab active:cursor-grabbing select-none"
+                     :class="isDragging ? 'shadow-sky-500/60 scale-105' : 'transition-transform duration-300 ease-out'"
+                     :style="'transform: translateX(' + currentX + 'px); touch-action: none;'">
+                    <i class="fa-solid" :class="progress > 0.7 ? 'fa-check text-base' : 'fa-arrow-right text-xs'"></i>
                 </div>
-            </button>
+
+                <!-- Right Hint Badge -->
+                <div class="absolute right-4 text-[9px] font-extrabold text-sky-200/60 pointer-events-none uppercase tracking-wider flex items-center gap-1"
+                     :style="'opacity: ' + Math.max(0, 1 - progress * 2)">
+                    <span>GESER</span>
+                    <i class="fa-solid fa-chevron-right text-[8px]"></i>
+                </div>
+
+            </div>
         </template>
 
         <template x-if="deliveryDone">
             <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-center space-y-2">
-                <div class="w-10 h-10 rounded-full bg-emerald-600 text-white mx-auto flex items-center justify-center text-lg">
+                <div class="w-10 h-10 rounded-full bg-emerald-600 text-white mx-auto flex items-center justify-center text-lg shadow-sm">
                     <i class="fa-solid fa-check"></i>
                 </div>
                 <h3 class="font-extrabold text-emerald-900 text-sm">Pengiriman Selesai!</h3>
                 <p class="text-xs text-emerald-700 font-medium">Status order ORD-2984A telah diperbarui menjadi Selesai.</p>
-                <a href="{{ route('mobile.petugas.pengiriman') }}" class="inline-block mt-2 px-4 py-2 rounded-xl bg-emerald-700 text-white font-bold text-xs">
+                <a href="{{ route('mobile.petugas.pengiriman') }}" class="inline-block mt-2 px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow-xs transition-colors">
                     Kembali ke Daftar Pengiriman
                 </a>
             </div>
@@ -263,3 +270,110 @@
 
 </div>
 @endsection
+
+@push('scripts')
+<script>
+function detailTrackingData() {
+    return {
+        uploadModal: false,
+        mapModal: false,
+        uploadedImage: null,
+        deliveryDone: false,
+        
+        // Slider Variables
+        isDragging: false,
+        startX: 0,
+        currentX: 0,
+        progress: 0,
+        maxSlide: 0,
+
+        initSlider() {
+            this.$nextTick(() => {
+                this.updateMax();
+            });
+            window.addEventListener('resize', () => this.updateMax());
+        },
+
+        updateMax() {
+            if (this.$refs.sliderTrack && this.$refs.sliderThumb) {
+                const trackW = this.$refs.sliderTrack.clientWidth;
+                const thumbW = this.$refs.sliderThumb.offsetWidth;
+                this.maxSlide = Math.max(0, trackW - thumbW - 12);
+            }
+        },
+
+        startDrag(e) {
+            if (this.deliveryDone) return;
+            this.updateMax();
+            this.isDragging = true;
+            this.startX = e.clientX - this.currentX;
+            if (e.currentTarget && e.currentTarget.setPointerCapture) {
+                try {
+                    e.currentTarget.setPointerCapture(e.pointerId);
+                } catch(err) {}
+            }
+        },
+
+        onDrag(e) {
+            if (!this.isDragging || this.deliveryDone) return;
+            const deltaX = e.clientX - this.startX;
+            this.currentX = Math.max(0, Math.min(deltaX, this.maxSlide));
+            this.progress = this.maxSlide > 0 ? (this.currentX / this.maxSlide) : 0;
+        },
+
+        endDrag(e) {
+            if (!this.isDragging || this.deliveryDone) return;
+            this.isDragging = false;
+            if (e.currentTarget && e.currentTarget.releasePointerCapture) {
+                try {
+                    e.currentTarget.releasePointerCapture(e.pointerId);
+                } catch(err) {}
+            }
+
+            if (this.progress >= 0.65) {
+                this.currentX = this.maxSlide;
+                this.progress = 1;
+                this.confirmArrived();
+            } else {
+                this.currentX = 0;
+                this.progress = 0;
+            }
+        },
+
+        resetSlider() {
+            this.isDragging = false;
+            this.currentX = 0;
+            this.progress = 0;
+        },
+
+        confirmArrived() {
+            if (!this.uploadedImage) {
+                if (typeof triggerToast === 'function') {
+                    triggerToast('Harap upload foto serah terima terlebih dahulu!', 'error');
+                }
+                this.uploadModal = true;
+                this.resetSlider();
+                return;
+            }
+            this.deliveryDone = true;
+            if (typeof triggerToast === 'function') {
+                triggerToast('Pengiriman berhasil diselesaikan!', 'success');
+            }
+        },
+
+        handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    this.uploadedImage = evt.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+    };
+}
+</script>
+@endpush
+
+

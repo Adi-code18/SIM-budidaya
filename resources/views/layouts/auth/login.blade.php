@@ -14,6 +14,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    @if(!empty(config('services.recaptcha.site_key')))
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    @endif
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -23,14 +26,14 @@
 
     <!-- Outer Login Card -->
     <div class="w-full max-w-5xl bg-white rounded-3xl shadow-xl shadow-slate-200/60 overflow-hidden grid grid-cols-1 lg:grid-cols-12 border border-slate-100 min-h-[580px]"
-         x-data="{ showPassword: false, username: '', password: '', remember: false }">
+         x-data="{ showPassword: false, username: '{{ old('username', '') }}', password: '', remember: {{ old('remember') ? 'true' : 'false' }} }">
         
         <!-- Left Side: Form Section -->
         <div class="lg:col-span-6 p-8 sm:p-12 lg:p-14 flex flex-col justify-center">
             <div class="max-w-md w-full mx-auto">
                 
                 <!-- Logo & Brand Header -->
-                <div class="flex items-center gap-3.5 mb-10">
+                <div class="flex items-center gap-3.5 mb-8">
                     <div class="w-11 h-11 rounded-xl bg-[#051B44] flex items-center justify-center text-white shadow-lg shadow-[#051B44]/20 flex-shrink-0">
                         <svg class="w-6 h-6 fill-current text-white" viewBox="0 0 24 24">
                             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14.5h-2v-2h2v2zm0-4h-2V7h2v5.5z" opacity="0.3"/>
@@ -39,16 +42,39 @@
                     </div>
                     <div>
                         <h1 class="font-extrabold text-xl text-[#051B44] tracking-tight leading-tight">SIM-BUDIDAYA</h1>
-                        <p class="text-[10px] font-bold text-slate-400 tracking-widest uppercase">AQUAFARM MANAGEMENT</p>
+                        <p class="text-[10px] font-bold text-slate-400 tracking-widest uppercase">PORTAL MANAJER</p>
                     </div>
                 </div>
 
+                <!-- Error Flash Messages -->
+                @if ($errors->any())
+                <div class="mb-5 p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2.5 shadow-xs">
+                    <i class="fa-solid fa-circle-exclamation text-rose-500 text-sm mt-0.5 shrink-0"></i>
+                    <div>
+                        <span class="font-bold block">Gagal Masuk:</span>
+                        <ul class="list-disc list-inside mt-0.5 space-y-0.5 text-[11px] font-medium">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+                @endif
+
+                @if (session('status'))
+                <div class="mb-5 p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs flex items-center gap-2.5">
+                    <i class="fa-solid fa-circle-check text-emerald-500"></i>
+                    <span>{{ session('status') }}</span>
+                </div>
+                @endif
+
                 <!-- Form -->
-                <form action="{{ route('dashboard') }}" method="GET" class="space-y-5">
+                <form action="{{ route('login.post') }}" method="POST" class="space-y-4">
+                    @csrf
                     
                     <!-- Field 1: Username or Email -->
                     <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">Username or Email Address</label>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">Email atau No. Handphone</label>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                                 <i class="fa-regular fa-user text-sm"></i>
@@ -56,17 +82,18 @@
                             <input type="text" 
                                    name="username"
                                    x-model="username"
-                                   placeholder="Enter your username"
+                                   placeholder="Contoh: manajer@example.com"
                                    required
-                                   class="w-full pl-10 pr-4 py-2.5 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-[#051B44] focus:ring-2 focus:ring-[#051B44]/10 transition-all">
+                                   autofocus
+                                   class="w-full pl-10 pr-4 py-2.5 bg-slate-50/50 border {{ $errors->has('username') ? 'border-rose-300 ring-1 ring-rose-300' : 'border-slate-200' }} rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-[#051B44] focus:ring-2 focus:ring-[#051B44]/10 transition-all">
                         </div>
                     </div>
 
                     <!-- Field 2: Password -->
                     <div>
                         <div class="flex items-center justify-between mb-1.5">
-                            <label class="block text-xs font-semibold text-slate-600">Password</label>
-                            <a href="#" class="text-xs font-semibold text-[#0077C6] hover:text-[#051B44] transition-colors">Forgot Password?</a>
+                            <label class="block text-xs font-semibold text-slate-600">Kata Sandi</label>
+                            <a href="#" class="text-xs font-semibold text-[#0077C6] hover:text-[#051B44] transition-colors">Lupa Sandi?</a>
                         </div>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -86,13 +113,21 @@
                         </div>
                     </div>
 
+                    <!-- reCAPTCHA Widget jika Key tersedia -->
+                    @if(!empty(config('services.recaptcha.site_key')))
+                    <div class="py-1 flex justify-center">
+                        <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.site_key') }}"></div>
+                    </div>
+                    @endif
+
                     <!-- Checkbox: Remember me -->
                     <div class="flex items-center pt-0.5">
                         <label class="flex items-center gap-2 cursor-pointer select-none">
                             <input type="checkbox" 
+                                   name="remember"
                                    x-model="remember"
                                    class="w-4 h-4 rounded border-slate-300 text-[#051B44] focus:ring-[#051B44]/20 cursor-pointer">
-                            <span class="text-xs text-slate-500 font-medium">Remember this device</span>
+                            <span class="text-xs text-slate-500 font-medium">Ingat perangkat ini</span>
                         </label>
                     </div>
 
@@ -100,11 +135,18 @@
                     <div class="pt-2">
                         <button type="submit" 
                                 class="w-full py-3 px-5 bg-[#051B44] hover:bg-[#09265c] text-white font-bold text-xs rounded-xl shadow-lg shadow-[#051B44]/25 hover:shadow-xl hover:shadow-[#051B44]/30 transition-all duration-200 flex items-center justify-center gap-2 group">
-                            <span>Login to Dashboard</span>
+                            <span>Masuk ke Dashboard Manajer</span>
                             <i class="fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
                         </button>
                     </div>
                 </form>
+
+                <div class="mt-6 pt-4 border-t border-slate-100 text-center">
+                    <p class="text-xs text-slate-400">
+                        Petugas operasional lapangan? 
+                        <a href="{{ route('mobile.petugas.login') }}" class="text-[#0077C6] font-bold hover:underline">Masuk ke Portal Petugas</a>
+                    </p>
+                </div>
 
             </div>
         </div>
@@ -117,22 +159,18 @@
                  class="absolute inset-0 w-full h-full object-cover">
 
             <!-- Soft Overlay Gradient -->
-            <div class="absolute inset-0 bg-gradient-to-t from-[#051B44]/80 via-transparent to-black/20"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-[#051B44]/85 via-transparent to-black/20"></div>
 
             <!-- Floating Informational Card -->
             <div class="absolute bottom-6 left-6 right-6 p-6 rounded-2xl bg-[#E9F0F8]/90 backdrop-blur-md border border-white/60 shadow-2xl">
-                <h3 class="text-xs font-bold text-slate-800 mb-1.5">Sistem Informasi Manjemen Budidaya</h3>
+                <h3 class="text-xs font-bold text-slate-800 mb-1.5">Sistem Informasi Manajemen Budidaya</h3>
                 <p class="text-[11px] text-slate-600 leading-relaxed mb-3">
-                    Mengatur tata kelola dan monitoring manajemen di dalam bidang <strong class="text-slate-900 font-extrabold">Budidaya ikan</strong> dengan media berupa WEB .
+                    Mengatur tata kelola dan monitoring manajemen di dalam bidang <strong class="text-slate-900 font-extrabold">Budidaya ikan</strong> terintegrasi berbasis WEB & Mobile.
                 </p>
                 <div class="flex items-center gap-4 text-[10px] font-bold text-slate-700">
                     <div class="flex items-center gap-1.5">
-                        <i class="fa-solid fa-circle-check text-[#38BDF8]"></i>
-                        <span>Manajer Role</span>
-                    </div>
-                    <div class="flex items-center gap-1.5">
-                        <i class="fa-solid fa-circle-check text-[#38BDF8]"></i>
-                        <span>Mengatur Pengelolaan</span>
+                        <i class="fa-solid fa-shield-halved text-[#38BDF8]"></i>
+                        <span>Keamanan Berlapis (One Session & Rate Limiter)</span>
                     </div>
                 </div>
             </div>
