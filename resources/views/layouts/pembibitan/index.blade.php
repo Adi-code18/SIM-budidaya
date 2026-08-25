@@ -9,68 +9,23 @@
     statusBatch: "inkubasi",
     selectedBatch: null,
 
-    batches: [
-        {
-            id: "#BT-00124",
-            inputDate: "12 Okt 2023",
-            fase: "TELUR",
-            faseClass: "bg-slate-100 text-slate-700",
-            usia: "2 Hari",
-            jumlah: "250,000",
-            jenisIkan: "GURAMI",
-            statusKesehatan: "Sehat",
-            statusClass: "bg-emerald-100 text-emerald-700",
-            dotClass: "bg-emerald-500",
-            kolam: "Kolam Pemijahan A-01",
-            phAir: "7.2",
-            suhuAir: "28°C"
-        },
-        {
-            id: "#BT-00121",
-            inputDate: "05 Okt 2023",
-            fase: "LARVA",
-            faseClass: "bg-sky-100 text-sky-700",
-            usia: "9 Hari",
-            jumlah: "480,000",
-            jenisIkan: "GURAMI",
-            statusKesehatan: "Sehat",
-            statusClass: "bg-emerald-100 text-emerald-700",
-            dotClass: "bg-emerald-500",
-            kolam: "Kolam Penetasan B-02",
-            phAir: "7.0",
-            suhuAir: "27.8°C"
-        },
-        {
-            id: "#BT-00118",
-            inputDate: "28 Sep 2023",
-            fase: "FINGERLING",
-            faseClass: "bg-sky-100 text-sky-700",
-            usia: "16 Hari",
-            jumlah: "310,000",
-            jenisIkan: "LELE",
-            statusKesehatan: "Perlu Atensi",
-            statusClass: "bg-rose-100 text-rose-700",
-            dotClass: "bg-rose-500",
-            kolam: "Kolam Pembibitan L-03",
-            phAir: "6.4",
-            suhuAir: "29.1°C"
-        },
-        {
-            id: "#BT-00115",
-            inputDate: "20 Sep 2023",
-            fase: "FINGERLING",
-            faseClass: "bg-sky-100 text-sky-700",
-            usia: "24 Hari",
-            jumlah: "200,500",
-            jenisIkan: "GURAMI",
-            statusKesehatan: "Sehat",
-            statusClass: "bg-emerald-100 text-emerald-700",
-            dotClass: "bg-emerald-500",
-            kolam: "Kolam Pembibitan G-01",
-            phAir: "7.1",
-            suhuAir: "28.0°C"
-        }
-    ],
+    batches: {!! isset($batches) && count($batches) > 0 ? json_encode($batches) : json_encode([
+        [
+            'id' => "#BT-00124",
+            'inputDate' => "12 Okt 2023",
+            'fase' => "TELUR",
+            'faseClass' => "bg-slate-100 text-slate-700",
+            'usia' => "2 Hari",
+            'jumlah' => "250,000",
+            'jenisIkan' => "GURAMI",
+            'statusKesehatan' => "Sehat",
+            'statusClass' => "bg-emerald-100 text-emerald-700",
+            'dotClass' => "bg-emerald-500",
+            'kolam' => "Kolam Pemijahan A-01",
+            'phAir' => "7.2",
+            'suhuAir' => "28°C"
+        ]
+    ]) !!},
 
     openDetail(item) {
         this.selectedBatch = item;
@@ -288,7 +243,7 @@
                     </div>
                 </div>
                 <div class="mt-3">
-                    <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">1,240,500</h3>
+                    <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{{ $kpis['totalBenih'] ?? '1,225,300' }}</h3>
                 </div>
             </div>
             <div class="mt-4 flex items-center gap-1.5 text-xs font-bold text-emerald-600">
@@ -307,12 +262,12 @@
                     </div>
                 </div>
                 <div class="mt-3">
-                    <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">94.2%</h3>
+                    <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{{ $kpis['srRate'] ?? '98.8' }}%</h3>
                 </div>
             </div>
             <div class="mt-4">
                 <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                    <div class="bg-emerald-500 h-full rounded-full w-[94.2%]"></div>
+                    <div class="bg-emerald-500 h-full rounded-full" style="width: {{ $kpis['srRate'] ?? '98.8' }}%"></div>
                 </div>
             </div>
         </div>
@@ -327,12 +282,12 @@
                     </div>
                 </div>
                 <div class="mt-3 flex items-baseline gap-1.5">
-                    <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">42</h3>
-                    <span class="text-xs font-extrabold text-slate-500">/ 60 Bak</span>
+                    <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{{ $kpis['bakTerpakai'] ?? 4 }}</h3>
+                    <span class="text-xs font-extrabold text-slate-500">/ {{ $kpis['totalBak'] ?? 12 }} Bak</span>
                 </div>
             </div>
             <div class="mt-4 text-xs font-semibold text-slate-500">
-                18 Bak tersedia (Siap Pakai)
+                {{ $kpis['bakTersedia'] ?? 8 }} Bak tersedia (Siap Pakai)
             </div>
         </div>
 
@@ -346,13 +301,13 @@
                     </div>
                 </div>
                 <div class="mt-3 flex items-baseline gap-2">
-                    <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">7.2</h3>
+                    <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{{ $kpis['avgPh'] ?? '7.2' }}</h3>
                     <span class="text-xs font-bold text-emerald-600">pH Normal</span>
                 </div>
             </div>
             <div class="mt-4 text-xs font-semibold text-slate-500 flex items-center justify-between">
                 <span>Suhu Rata-rata</span>
-                <span class="font-extrabold text-slate-800">28°C</span>
+                <span class="font-extrabold text-slate-800">{{ $kpis['suhu'] ?? '28°C' }}</span>
             </div>
         </div>
 

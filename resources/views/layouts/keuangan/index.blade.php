@@ -7,12 +7,9 @@
     showForm: false,
     formMode: "create",
     tipeTransaksi: "income",
-    transactions: [
-        { id: "#TRX-202310-0482", tanggal: "2026-08-06", tipe: "income", nominal: 45000000, kategori: "Pakan", ref: "INV/2023/10/099", kolam: "Kolam A-01", keterangan: "Pembelian pakan harian" },
-        { id: "#TRX-202310-0483", tanggal: "2026-08-05", tipe: "income", nominal: 128500000, kategori: "Penjualan", ref: "SO-2458", kolam: "Kolam B-02", keterangan: "Penjualan hasil panen mitra B" },
-        { id: "#TRX-202310-0484", tanggal: "2026-08-04", tipe: "expense", nominal: 12400000, kategori: "Bibit", ref: "PO-2204", kolam: "Kolam A-02", keterangan: "Pembelian bibit ikan" },
-        { id: "#TRX-202310-0485", tanggal: "2026-08-03", tipe: "expense", nominal: 5200000, kategori: "Operasional", ref: "UTIL-88", kolam: "Tidak dialokasikan", keterangan: "Listrik dan air" }
-    ],
+    transactions: {!! isset($transactions) && count($transactions) > 0 ? json_encode($transactions) : json_encode([
+        [ 'id' => "#TRX-202310-0482", 'tanggal' => "2026-08-06", 'tipe' => "income", 'nominal' => 45000000, 'kategori' => "Pakan", 'ref' => "INV/2023/10/099", 'kolam' => "Kolam A-01", 'keterangan' => "Pembelian pakan harian" ]
+    ]) !!},
     form: {
         id: "",
         tanggal: "",
@@ -275,21 +272,21 @@
 
                 <!-- Status Keuangan Summary Card -->
                 <div class="bg-[#051B44] p-5 rounded-2xl text-white space-y-4 shadow-xs">
-                    <h4 class="text-xs font-bold text-sky-200/80 uppercase tracking-wider">STATUS KEUANGAN BULAN INI</h4>
+                    <h4 class="text-xs font-bold text-sky-200/80 uppercase tracking-wider">STATUS KEUANGAN SAAT INI</h4>
 
                     <div class="space-y-3">
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-semibold text-sky-100/70">Pemasukan</span>
-                            <span class="text-xs font-extrabold text-emerald-400">+ Rp 44.2M</span>
+                            <span class="text-xs font-extrabold text-emerald-400">+ {{ $kpis['incomeFormatted'] ?? 'Rp54.500.000' }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-semibold text-sky-100/70">Pengeluaran</span>
-                            <span class="text-xs font-extrabold text-rose-400">- Rp 16.5M</span>
+                            <span class="text-xs font-extrabold text-rose-400">- {{ $kpis['expenseFormatted'] ?? 'Rp26.550.000' }}</span>
                         </div>
                         <hr class="border-white/10">
                         <div class="text-center">
-                            <span class="text-2xl font-extrabold text-white">Sehat</span>
-                            <span class="text-xs text-sky-200/80 block mt-0.5">Saldo positif terhadap target bulanan</span>
+                            <span class="text-2xl font-extrabold text-white">{{ ($saldo ?? 0) >= 0 ? 'Surplus / Sehat' : 'Defisit' }}</span>
+                            <span class="text-xs text-sky-200/80 block mt-0.5">Saldo Bersih: {{ $kpis['saldoFormatted'] ?? 'Rp27.950.000' }}</span>
                         </div>
                     </div>
                 </div>
@@ -303,15 +300,15 @@
                     <ul class="text-[11px] text-slate-600 space-y-2.5 leading-relaxed list-none">
                         <li class="flex items-start gap-2">
                             <span class="w-4 h-4 rounded-full bg-sky-200/80 text-sky-700 flex items-center justify-center shrink-0 text-[9px] font-extrabold mt-0.5">1</span>
-                            <span>Pastikan tipe transaksi sesuai dengan tarif hak atas masa sana.</span>
+                            <span>Pastikan tipe transaksi sesuai dengan bukti fisik kwitansi/faktur.</span>
                         </li>
                         <li class="flex items-start gap-2">
                             <span class="w-4 h-4 rounded-full bg-sky-200/80 text-sky-700 flex items-center justify-center shrink-0 text-[9px] font-extrabold mt-0.5">2</span>
-                            <span>Gunakan Ref ID yang valid seperti Nomor Invoice, Nota, atau Kode Struk untuk memudahkan audit.</span>
+                            <span>Gunakan Ref ID yang valid seperti Nomor Invoice, Nota, atau Kode Struk untuk audit.</span>
                         </li>
                         <li class="flex items-start gap-2">
                             <span class="w-4 h-4 rounded-full bg-sky-200/80 text-sky-700 flex items-center justify-center shrink-0 text-[9px] font-extrabold mt-0.5">3</span>
-                            <span>Alokasikan transaksi ke Kolam tertentu hanya jika 100% terkait kolam tersebut.</span>
+                            <span>Alokasikan transaksi ke unit Kolam jika beban biaya khusus untuk kolam tersebut.</span>
                         </li>
                     </ul>
                 </div>
@@ -329,53 +326,54 @@
         <!-- Card 1: Total Revenue -->
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
             <div class="flex items-center justify-between">
-                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">TOTAL REVENUE</span>
+                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">TOTAL REVENUE (PEMASUKAN)</span>
                 <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-[#C6F6D5] text-[#22543D]">
-                    <i class="fa-solid fa-arrow-trend-up text-[10px]"></i> +12.5%
+                    <i class="fa-solid fa-arrow-trend-up text-[10px]"></i> Aktif
                 </span>
             </div>
             <div class="mt-3">
-                <h3 class="text-xl font-extrabold text-slate-900 tracking-tight">Rp1.450.000.000</h3>
+                <h3 class="text-xl font-extrabold text-slate-900 tracking-tight">{{ $kpis['incomeFormatted'] ?? 'Rp54.500.000' }}</h3>
             </div>
         </div>
 
         <!-- Card 2: Total Expenses -->
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
             <div class="flex items-center justify-between">
-                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">TOTAL EXPENSES</span>
+                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">TOTAL EXPENSES (BIAYA)</span>
                 <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-[#FEE2E2] text-[#991B1B]">
-                    <i class="fa-solid fa-arrow-trend-down text-[10px]"></i> -4.2%
+                    <i class="fa-solid fa-arrow-trend-down text-[10px]"></i> Terkendali
                 </span>
             </div>
             <div class="mt-3">
-                <h3 class="text-xl font-extrabold text-slate-900 tracking-tight">Rp842.200.000</h3>
+                <h3 class="text-xl font-extrabold text-slate-900 tracking-tight">{{ $kpis['expenseFormatted'] ?? 'Rp26.550.000' }}</h3>
             </div>
         </div>
 
         <!-- Card 3: Net Profit -->
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
             <div class="flex items-center justify-between">
-                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">NET PROFIT</span>
+                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">NET PROFIT (SALDO KAS)</span>
                 <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-[#E0F2FE] text-[#0284C7]">
-                    <i class="fa-solid fa-chart-pie text-[10px]"></i> +18.0%
+                    <i class="fa-solid fa-chart-pie text-[10px]"></i> {{ $kpis['netMargin'] ?? 51.3 }}% Margin
                 </span>
             </div>
             <div class="mt-3">
-                <h3 class="text-xl font-extrabold text-slate-900 tracking-tight">Rp607.800.000</h3>
-                <span class="text-[10px] font-medium text-slate-400 block mt-0.5">(+38.4% vs last quarter)</span>
+                <h3 class="text-xl font-extrabold text-slate-900 tracking-tight">{{ $kpis['saldoFormatted'] ?? 'Rp27.950.000' }}</h3>
+                <span class="text-[10px] font-medium text-emerald-600 block mt-0.5">Surplus Kas Operasional</span>
             </div>
         </div>
 
-        <!-- Card 4: Pending Payments -->
+        <!-- Card 4: Total Transaksi -->
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
             <div class="flex items-center justify-between">
-                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">PENDING PAYMENTS</span>
+                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">TOTAL TRANSAKSI</span>
                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#E2E8F0] text-[#475569]">
-                    12 Items
+                    {{ $kpis['totalTrx'] ?? 7 }} Transaksi
                 </span>
             </div>
             <div class="mt-3">
-                <h3 class="text-xl font-extrabold text-slate-900 tracking-tight">Rp125.400.000</h3>
+                <h3 class="text-xl font-extrabold text-slate-900 tracking-tight">{{ $kpis['totalTrx'] ?? 7 }} <span class="text-xs font-semibold text-slate-500">Record</span></h3>
+                <span class="text-[10px] font-medium text-slate-400 block mt-0.5">Tercatat di sistem buku kas</span>
             </div>
         </div>
 

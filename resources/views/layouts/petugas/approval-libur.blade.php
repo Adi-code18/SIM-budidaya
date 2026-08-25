@@ -18,9 +18,13 @@
         </div>
         
         <div>
-            <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-xs">
-                <i class="fa-solid fa-circle-check text-emerald-600"></i>
-                <span>Cuti</span>
+            @php
+                $statusText = $pengajuan ? ucfirst($pengajuan->status) : 'Cuti';
+                $isApproved = !$pengajuan || $pengajuan->status === 'disetujui';
+            @endphp
+            <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-extrabold {{ $isApproved ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200' }} border shadow-xs">
+                <i class="fa-solid fa-circle-check {{ $isApproved ? 'text-emerald-600' : 'text-amber-600' }}"></i>
+                <span>{{ $statusText }}</span>
             </span>
         </div>
     </div>
@@ -37,28 +41,33 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100">
             <div class="flex items-center gap-4">
                 <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=160" 
-                     alt="Budi Santoso" 
+                     alt="{{ $pengajuan && $pengajuan->user ? $pengajuan->user->nama : 'Petugas' }}" 
                      class="w-14 h-14 rounded-full object-cover border-2 border-white shadow-xs">
                 <div>
                     <div class="flex items-center gap-2">
-                        <h3 class="text-base font-extrabold text-slate-900">Budi Santoso</h3>
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-700 uppercase">Cuti</span>
+                        <h3 class="text-base font-extrabold text-slate-900">{{ $pengajuan && $pengajuan->user ? $pengajuan->user->nama : 'Budi Santoso' }}</h3>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold {{ $isApproved ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700' }} uppercase">{{ $statusText }}</span>
                     </div>
-                    <p class="text-xs text-slate-500 font-medium">Teknisi Kolam Pembesaran - Sektor A</p>
+                    <p class="text-xs text-slate-500 font-medium">{{ $pengajuan && $pengajuan->user ? ucfirst(str_replace('_', ' ', $pengajuan->user->role)) : 'Teknisi Kolam' }}</p>
                 </div>
             </div>
 
             <div class="flex items-center gap-2 text-xs">
                 <span class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-600 font-bold">
-                    ID: EMP-2023-047
+                    ID: EMP-{{ str_pad($pengajuan ? $pengajuan->id_user : 1, 4, '0', STR_PAD_LEFT) }}
                 </span>
                 <span class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-600 font-bold">
-                    Bergabung: 01 Jan 2022
+                    Bergabung: {{ $pengajuan && $pengajuan->user && $pengajuan->user->created_at ? $pengajuan->user->created_at->translatedFormat('d M Y') : '01 Jan 2024' }}
                 </span>
             </div>
         </div>
 
         <!-- Detail Grid Fields -->
+        @php
+            $tglMulai = $pengajuan && $pengajuan->tgl_mulai ? \Carbon\Carbon::parse($pengajuan->tgl_mulai) : now();
+            $tglSelesai = $pengajuan && $pengajuan->tgl_selesai ? \Carbon\Carbon::parse($pengajuan->tgl_selesai) : now()->addDays(2);
+            $durasi = $tglMulai->diffInDays($tglSelesai) + 1;
+        @endphp
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
             <div class="p-3.5 rounded-xl bg-slate-50/70 border border-slate-100">
                 <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">JENIS IZIN</span>
@@ -72,7 +81,7 @@
                 <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">DURASI LIBUR</span>
                 <div class="flex items-center gap-2 text-xs font-extrabold text-slate-800">
                     <i class="fa-regular fa-clock text-sky-600"></i>
-                    <span>3 Hari Kerja</span>
+                    <span>{{ $durasi }} Hari Kerja</span>
                 </div>
             </div>
 
@@ -80,7 +89,7 @@
                 <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">TANGGAL MULAI</span>
                 <div class="flex items-center gap-2 text-xs font-extrabold text-slate-800">
                     <i class="fa-regular fa-calendar-check text-emerald-600"></i>
-                    <span>12 Oktober 2026</span>
+                    <span>{{ $tglMulai->translatedFormat('d F Y') }}</span>
                 </div>
             </div>
 
@@ -88,7 +97,7 @@
                 <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">TANGGAL SELESAI</span>
                 <div class="flex items-center gap-2 text-xs font-extrabold text-slate-800">
                     <i class="fa-regular fa-calendar-xmark text-sky-600"></i>
-                    <span>14 Oktober 2026</span>
+                    <span>{{ $tglSelesai->translatedFormat('d F Y') }}</span>
                 </div>
             </div>
         </div>
@@ -97,7 +106,7 @@
         <div>
             <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1.5">Alasan &amp; Keterangan Libur</label>
             <div class="p-4 rounded-xl bg-slate-50/80 border border-slate-200 text-xs font-medium text-slate-700 leading-relaxed">
-                "Mengikuti acara pernikahan keluarga di Sumedang, jadwal pemeliharaan kolam sektor A sudah diserahkan sementara ke Sdr. Fajar untuk penanganan harian."
+                "{{ $pengajuan ? $pengajuan->alasan : 'Keperluan keluarga dan izin telah dikoordinasikan dengan tim shift.' }}"
             </div>
         </div>
 

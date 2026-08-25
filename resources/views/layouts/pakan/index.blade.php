@@ -65,9 +65,15 @@
                         <i class="fa-solid fa-water absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                         <select x-model="kolam" class="w-full pl-9 pr-8 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all appearance-none cursor-pointer">
                             <option value="">Pilih unit kolam...</option>
-                            <option value="A1">Kolam A1 (Ikan Nila Hitam)</option>
-                            <option value="A2">Kolam A2 (Ikan Nila Merah)</option>
-                            <option value="B3">Kolam B3 (Ikan Lele Sangkuriang)</option>
+                            @if(isset($kolams))
+                                @foreach($kolams as $k)
+                                    <option value="{{ $k->id_kolam }}">{{ $k->nama_kolam }} ({{ $k->tipe_kolam }})</option>
+                                @endforeach
+                            @else
+                                <option value="A1">Kolam A1 (Ikan Nila Hitam)</option>
+                                <option value="A2">Kolam A2 (Ikan Nila Merah)</option>
+                                <option value="B3">Kolam B3 (Ikan Lele Sangkuriang)</option>
+                            @endif
                         </select>
                         <i class="fa-solid fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"></i>
                     </div>

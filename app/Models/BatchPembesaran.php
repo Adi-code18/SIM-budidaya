@@ -19,6 +19,7 @@ class BatchPembesaran extends Model
         'biomassa_est',
         'fcr',
         'target_panen_kg',
+        'jumlah_panen_kg',
         'jenis_ikan',
         'status_siklus',
     ];

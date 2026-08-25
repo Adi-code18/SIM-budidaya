@@ -12,60 +12,21 @@
     toastMessage: "",
     showToast: false,
 
-    mitras: [
-        {
-            id: "MTR-2023-081",
-            nama: "The Ocean Grill",
-            tipe: "Restoran",
-            tipeKey: "restoran",
-            alamat: "Jl. Sudirman No. 45, Jakarta Pusat",
-            wilayah: "jakarta",
-            lat: "-6.208800",
-            lng: "106.845600",
-            kontak: "+62 812-3456-7890",
-            email: "info@oceangrill.com",
-            image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&q=80&w=120"
-        },
-        {
-            id: "MTR-2023-102",
-            nama: "IndoFrozen Supply",
-            tipe: "Supplier Frozen Food",
-            tipeKey: "supplier",
-            alamat: "Kawasan Industri Jababeka, Bekasi",
-            wilayah: "jabar",
-            lat: "-6.285000",
-            lng: "107.170000",
-            kontak: "+62 813-9876-5432",
-            email: "contact@indofrozen.co.id",
-            image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80&w=120"
-        },
-        {
-            id: "MTR-2022-045",
-            nama: "Pasar Ikan Muara Baru",
-            tipe: "Pasar Tradisional",
-            tipeKey: "pasar",
-            alamat: "Jl. Muara Baru Raya, Jakarta Utara",
-            wilayah: "jakarta",
-            lat: "-6.111000",
-            lng: "106.804000",
-            kontak: "+62 811-2233-4455",
-            email: "muarabaru@pasarikan.id",
-            image: ""
-        },
-        {
-            id: "MTR-2023-156",
-            nama: "Global Seafood Corp",
-            tipe: "Eksportir",
-            tipeKey: "eksportir",
-            alamat: "Pelabuhan Tanjung Priok, Jakarta",
-            wilayah: "jakarta",
-            lat: "-6.103000",
-            lng: "106.880000",
-            kontak: "+62 818-5544-3322",
-            email: "export@globalseafood.com",
-            image: "https://images.unsplash.com/photo-1541888946425-d0fbb186a5b3?auto=format&fit=crop&q=80&w=120"
-        }
-    ],
+    mitras: {!! isset($mitras) && count($mitras) > 0 ? json_encode($mitras) : json_encode([
+        [
+            'id' => "MTR-2023-081",
+            'nama' => "The Ocean Grill",
+            'tipe' => "Restoran",
+            'tipeKey' => "restoran",
+            'alamat' => "Jl. Sudirman No. 45, Jakarta Pusat",
+            'wilayah' => "jakarta",
+            'lat' => "-6.208800",
+            'lng' => "106.845600",
+            'kontak' => "+62 812-3456-7890",
+            'email' => "info@oceangrill.com",
+            'image' => "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&q=80&w=120"
+        ]
+    ]) !!},
 
     form: {
         id: "",

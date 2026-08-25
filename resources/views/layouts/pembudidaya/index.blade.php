@@ -23,50 +23,22 @@
         status: "Optimal"
     },
 
-    kolams: [
-        {
-            id: "KOLAM-NW-01",
-            lokasi: "Sektor Barat - Magelang",
-            pembudidaya: "Budi Santoso",
-            initials: "BS",
-            colorClass: "bg-sky-100 text-sky-700",
-            jenisIkan: "Ikan Nila Hitam",
-            tebarBenih: "12 Mei 2026",
-            populasi: "25,000",
-            populasiRaw: 25000,
-            status: "Optimal",
-            statusClass: "bg-emerald-100 text-emerald-700",
-            dotClass: "bg-emerald-500"
-        },
-        {
-            id: "KOLAM-SL-04",
-            lokasi: "Sektor Selatan - Solo",
-            pembudidaya: "Ahmad Fauzi",
-            initials: "AF",
-            colorClass: "bg-amber-100 text-amber-700",
-            jenisIkan: "Ikan Lele Sangkuriang",
-            tebarBenih: "01 Jun 2026",
-            populasi: "40,000",
-            populasiRaw: 40000,
-            status: "Siap Panen",
-            statusClass: "bg-amber-100 text-amber-700",
-            dotClass: "bg-amber-500"
-        },
-        {
-            id: "KOLAM-KL-02",
-            lokasi: "Sektor Timur - Klaten",
-            pembudidaya: "Siti Rahmawati",
-            initials: "SR",
-            colorClass: "bg-purple-100 text-purple-700",
-            jenisIkan: "Ikan Gurame Super",
-            tebarBenih: "10 Mar 2026",
-            populasi: "15,000",
-            populasiRaw: 15000,
-            status: "Optimal",
-            statusClass: "bg-emerald-100 text-emerald-700",
-            dotClass: "bg-emerald-500"
-        }
-    ],
+    kolams: {!! isset($kolams) && count($kolams) > 0 ? json_encode($kolams) : json_encode([
+        [
+            'id' => "Kolam A1",
+            'lokasi' => "Beton / Pembesaran",
+            'pembudidaya' => "Budi Santoso",
+            'initials' => "BS",
+            'colorClass' => "bg-sky-100 text-sky-700",
+            'jenisIkan' => "Ikan Nila Hitam Super",
+            'tebarBenih' => "12 Mei 2026",
+            'populasi' => "5,000",
+            'populasiRaw' => 5000,
+            'status' => "Optimal",
+            'statusClass' => "bg-emerald-100 text-emerald-700",
+            'dotClass' => "bg-emerald-500"
+        ]
+    ]) !!},
 
     get filteredKolams() {
         return this.kolams.filter(item => {

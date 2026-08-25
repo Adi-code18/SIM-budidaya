@@ -365,7 +365,7 @@
                 </div>
                 <div>
                     <h4 class="text-sm font-bold text-white">Stok Gudang Pakan</h4>
-                    <p class="text-xs text-sky-100/80 mt-0.5">Sisa stok 1,240 kg. Estimasi cukup untuk 14 hari kedepan.</p>
+                    <p class="text-xs text-sky-100/80 mt-0.5">Total konsumsi tercatat <span class="font-bold text-white" x-text="metrics.totalPakan">1,240</span> kg. Estimasi persediaan pakan aman.</p>
                 </div>
             </div>
             <a href="{{ route('log-pakan') }}" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-colors shrink-0">
@@ -381,7 +381,7 @@
                 </div>
                 <div>
                     <h4 class="text-sm font-bold text-slate-900">Kualitas Air</h4>
-                    <p class="text-xs text-slate-600 mt-0.5">Semua kolam dalam parameter normal (pH 7.2 - 7.5).</p>
+                    <p class="text-xs text-slate-600 mt-0.5">Rata-rata pH seluruh unit kolam normal (<span class="font-bold text-slate-800" x-text="metrics.avgPh">7.3</span> pH).</p>
                 </div>
             </div>
             <button type="button" @click="triggerToast('Semua sensor IoT Kolam beroperasi optimal!', 'success')" class="px-3 py-1.5 rounded-xl bg-white text-slate-700 hover:bg-slate-100 text-xs font-bold transition-colors shadow-xs shrink-0">
@@ -524,84 +524,32 @@
             },
 
             // KPI Metrics
-            metrics: {
-                totalStok: '1,250',
-                totalStokTrend: '+4.2% dari minggu lalu',
-                fcr: '1.12',
-                fcrStatus: 'Efisiensi Pakan Optimal',
-                targetPanen: '450',
-                targetPanenNote: 'Restoran Madani',
-                targetPanenTag: 'CATATAN H-3'
-            },
+            metrics: {!! isset($metrics) ? json_encode($metrics) : json_encode([
+                'totalStok' => '1,250',
+                'totalStokTrend' => '+4.2% dari minggu lalu',
+                'fcr' => '1.12',
+                'fcrStatus' => 'Efisiensi Pakan Optimal',
+                'targetPanen' => '450',
+                'targetPanenNote' => 'Restoran Madani',
+                'targetPanenTag' => 'CATATAN H-3'
+            ]) !!},
 
             // Data Stok Kolam
-            stokList: [
-                {
-                    id: 'Kolam A1',
-                    jenisIkan: 'Ikan Nila Hitam Super',
-                    bobot: '150 kg',
-                    bobotNum: 150,
-                    tujuan: 'Restoran Madani',
-                    status: 'READY',
-                    ph: '7.3',
-                    suhu: '28.5°C',
-                    populasi: '2,500 Ekor',
-                    tglTebar: '15 Mei 2026',
-                    fcr: '1.10'
-                },
-                {
-                    id: 'Kolam B3',
-                    jenisIkan: 'Ikan Gurami Padang',
-                    bobot: '210 kg',
-                    bobotNum: 210,
-                    tujuan: 'Pasar Modern BSD',
-                    status: 'READY',
-                    ph: '7.4',
-                    suhu: '29.0°C',
-                    populasi: '3,200 Ekor',
-                    tglTebar: '01 April 2026',
-                    fcr: '1.14'
-                },
-                {
-                    id: 'Kolam A4',
-                    jenisIkan: 'Ikan Lele Sangkuriang',
-                    bobot: '90 kg',
-                    bobotNum: 90,
-                    tujuan: 'Warung Seafood 88',
-                    status: 'HOLD',
-                    ph: '6.9',
-                    suhu: '27.8°C',
-                    populasi: '1,800 Ekor',
-                    tglTebar: '20 Juni 2026',
-                    fcr: '1.08'
-                },
-                {
-                    id: 'Kolam C2',
-                    jenisIkan: 'Ikan Patin Siam Ekspor',
-                    bobot: '320 kg',
-                    bobotNum: 320,
-                    tujuan: 'Supplier Ekspor PT Bahari',
-                    status: 'READY',
-                    ph: '7.2',
-                    suhu: '28.2°C',
-                    populasi: '4,000 Ekor',
-                    tglTebar: '10 Maret 2026',
-                    fcr: '1.15'
-                },
-                {
-                    id: 'Kolam B1',
-                    jenisIkan: 'Ikan Nila Merah',
-                    bobot: '180 kg',
-                    bobotNum: 180,
-                    tujuan: 'RM Padang Berkah Utama',
-                    status: 'READY',
-                    ph: '7.5',
-                    suhu: '28.8°C',
-                    populasi: '2,800 Ekor',
-                    tglTebar: '18 Mei 2026',
-                    fcr: '1.11'
-                }
-            ],
+            stokList: {!! isset($stokList) && count($stokList) > 0 ? json_encode($stokList) : json_encode([
+                [
+                    'id' => 'Kolam A1',
+                    'jenisIkan' => 'Ikan Nila Hitam Super',
+                    'bobot' => '150 kg',
+                    'bobotNum' => 150,
+                    'tujuan' => 'Restoran Madani',
+                    'status' => 'READY',
+                    'ph' => '7.3',
+                    'suhu' => '28.5°C',
+                    'populasi' => '2,500 Ekor',
+                    'tglTebar' => '15 Mei 2026',
+                    'fcr' => '1.10'
+                ]
+            ]) !!},
 
             // Pilih Filter Periode Tanggal
             selectPeriod(label, stok, fcr, target, note) {

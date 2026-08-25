@@ -1,6 +1,16 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DistribusiController;
+use App\Http\Controllers\KeuanganWebController;
+use App\Http\Controllers\MitraController;
+use App\Http\Controllers\MobilePetugasController;
+use App\Http\Controllers\PakanController;
+use App\Http\Controllers\PembesaranController;
+use App\Http\Controllers\PembibitanController;
+use App\Http\Controllers\PembudidayaController;
+use App\Http\Controllers\PetugasController;
 use Illuminate\Support\Facades\Route;
 
 // Redirect root to dashboard or login
@@ -15,57 +25,19 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Web Manajer Terproteksi (Wajib Login & Peran 'manajer')
 Route::middleware(['auth', 'role:manajer'])->group(function () {
-    Route::get('/dashboard', function () {
-        return view('layouts.dashboard.index');
-    })->name('dashboard');
-
-    Route::get('/pembibitan', function () {
-        return view('layouts.pembibitan.index');
-    })->name('pembibitan');
-
-    Route::get('/pembesaran', function () {
-        return view('layouts.pembesaran.index');
-    })->name('pembesaran');
-
-    Route::get('/pembudidaya', function () {
-        return view('layouts.pembudidaya.index');
-    })->name('pembudidaya');
-
-    Route::get('/log-pakan', function () {
-        return view('layouts.pakan.index');
-    })->name('log-pakan');
-
-    Route::get('/distribusi', function () {
-        return view('layouts.distribusi.index');
-    })->name('distribusi');
-
-    Route::get('/keuangan', function () {
-        return view('layouts.keuangan.index');
-    })->name('keuangan');
-
-    Route::get('/mitra', function () {
-        return view('layouts.mitra.index');
-    })->name('mitra');
-
-    Route::get('/petugas', function () {
-        return view('layouts.petugas.index');
-    })->name('petugas');
-
-    Route::get('/petugas/create', function () {
-        return view('layouts.petugas.create');
-    })->name('petugas.create');
-
-    Route::get('/petugas/{id}/edit', function () {
-        return view('layouts.petugas.edit');
-    })->name('petugas.edit');
-
-    Route::get('/petugas/libur/approval', function () {
-        return view('layouts.petugas.approval-libur');
-    })->name('petugas.libur.approval');
-
-    Route::get('/petugas/libur/ajukan', function () {
-        return view('layouts.petugas.ajukan-libur');
-    })->name('petugas.libur.ajukan');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/pembibitan', [PembibitanController::class, 'index'])->name('pembibitan');
+    Route::get('/pembesaran', [PembesaranController::class, 'index'])->name('pembesaran');
+    Route::get('/pembudidaya', [PembudidayaController::class, 'index'])->name('pembudidaya');
+    Route::get('/log-pakan', [PakanController::class, 'index'])->name('log-pakan');
+    Route::get('/distribusi', [DistribusiController::class, 'index'])->name('distribusi');
+    Route::get('/keuangan', [KeuanganWebController::class, 'index'])->name('keuangan');
+    Route::get('/mitra', [MitraController::class, 'index'])->name('mitra');
+    Route::get('/petugas', [PetugasController::class, 'index'])->name('petugas');
+    Route::get('/petugas/create', [PetugasController::class, 'create'])->name('petugas.create');
+    Route::get('/petugas/{id}/edit', [PetugasController::class, 'edit'])->name('petugas.edit');
+    Route::get('/petugas/libur/approval', [PetugasController::class, 'approvalLibur'])->name('petugas.libur.approval');
+    Route::get('/petugas/libur/ajukan', [PetugasController::class, 'ajukanLibur'])->name('petugas.libur.ajukan');
 });
 
 // Mobile Web Petugas Routes
@@ -80,18 +52,9 @@ Route::prefix('mobile-petugas')->name('mobile.petugas.')->group(function () {
 
     // Terproteksi Peran Petugas Distribusi
     Route::middleware(['auth', 'role:petugas_distribusi'])->group(function () {
-        Route::get('/pengiriman', function () {
-            return view('mobile_web_petugas.petugas_distribusi.index');
-        })->name('pengiriman');
-
-        Route::get('/detail/{id?}', function ($id = 'ORD-9924A') {
-            return view('mobile_web_petugas.petugas_distribusi.detail', compact('id'));
-        })->name('detail');
-
-        Route::get('/riwayat', function () {
-            return view('mobile_web_petugas.petugas_distribusi.riwayat');
-        })->name('riwayat');
-
+        Route::get('/pengiriman', [MobilePetugasController::class, 'distribusiIndex'])->name('pengiriman');
+        Route::get('/detail/{id?}', [MobilePetugasController::class, 'distribusiDetail'])->name('detail');
+        Route::get('/riwayat', [MobilePetugasController::class, 'distribusiRiwayat'])->name('riwayat');
         Route::get('/akun', function () {
             return view('mobile_web_petugas.petugas_distribusi.akun');
         })->name('akun');
@@ -110,18 +73,9 @@ Route::prefix('petugas-pembibitan')->name('petugas.pembibitan.')->group(function
 
     // Terproteksi Peran Pembibitan
     Route::middleware(['auth', 'role:pembibitan'])->group(function () {
-        Route::get('/', function () {
-            return view('mobile_web_petugas.petugas_pembibitan.index');
-        })->name('dashboard');
-
-        Route::get('/form', function () {
-            return view('mobile_web_petugas.petugas_pembibitan.log_pembibitan');
-        })->name('form');
-
-        Route::get('/log-pakan', function () {
-            return view('mobile_web_petugas.petugas_pembibitan.log_pakan');
-        })->name('log-pakan');
-
+        Route::get('/', [MobilePetugasController::class, 'pembibitanIndex'])->name('dashboard');
+        Route::get('/form', [MobilePetugasController::class, 'pembibitanForm'])->name('form');
+        Route::get('/log-pakan', [MobilePetugasController::class, 'pembibitanLogPakan'])->name('log-pakan');
         Route::get('/akun', function () {
             return view('mobile_web_petugas.petugas_pembibitan.akun');
         })->name('akun');
@@ -140,18 +94,9 @@ Route::prefix('petugas-pembesaran')->name('petugas.pembesaran.')->group(function
 
     // Terproteksi Peran Pembesaran
     Route::middleware(['auth', 'role:pembesaran'])->group(function () {
-        Route::get('/', function () {
-            return view('mobile_web_petugas.petugas_pembesaran.index');
-        })->name('dashboard');
-
-        Route::get('/create-batch', function () {
-            return view('mobile_web_petugas.petugas_pembesaran.create_batch');
-        })->name('create-batch');
-
-        Route::get('/log-pakan', function () {
-            return view('mobile_web_petugas.petugas_pembesaran.log_pakan');
-        })->name('log-pakan');
-
+        Route::get('/', [MobilePetugasController::class, 'pembesaranIndex'])->name('dashboard');
+        Route::get('/create-batch', [MobilePetugasController::class, 'pembesaranCreateBatch'])->name('create-batch');
+        Route::get('/log-pakan', [MobilePetugasController::class, 'pembesaranLogPakan'])->name('log-pakan');
         Route::get('/akun', function () {
             return view('mobile_web_petugas.petugas_pembesaran.akun');
         })->name('akun');

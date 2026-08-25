@@ -67,11 +67,15 @@
                 <label class="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider block">PENETASAN HATCHERY</label>
                 <select x-model="kolam" 
                         class="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 text-xs font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-navy-800">
-                    <option value="">Pilih kolam...</option>
-                    <option value="Tank Hatchery H-01">Tank Hatchery H-01</option>
-                    <option value="Tank Hatchery H-02">Tank Hatchery H-02</option>
-                    <option value="Tank Hatchery H-03">Tank Hatchery H-03</option>
-                    <option value="Tank Hatchery H-04">Tank Hatchery H-04</option>
+                    <option value="">Pilih unit kolam...</option>
+                    @if(isset($kolams))
+                        @foreach($kolams as $k)
+                            <option value="{{ $k->nama_kolam }}">{{ $k->nama_kolam }} ({{ $k->tipe_kolam }})</option>
+                        @endforeach
+                    @else
+                        <option value="Tank Hatchery H-01">Tank Hatchery H-01</option>
+                        <option value="Tank Hatchery H-02">Tank Hatchery H-02</option>
+                    @endif
                 </select>
             </div>
 

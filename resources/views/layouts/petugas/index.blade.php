@@ -86,219 +86,100 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
-
-                        <!-- Row 1: Ahmad Rifat (Cuti) -->
-                        <tr class="hover:bg-slate-50/50 transition-colors">
-                            <td class="py-4 px-6">
-                                <div class="flex items-center gap-3">
-                                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=120"
-                                         alt="Ahmad Rifat"
-                                         class="w-10 h-10 rounded-full object-cover border border-slate-200 shadow-xs">
-                                    <div>
-                                        <h4 class="font-extrabold text-slate-900 text-xs">Ahmad Rifat</h4>
-                                        <span class="text-[10px] text-slate-400 block font-normal">rifat23@gmail.com</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="py-4 px-6">
-                                <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-sky-100 text-sky-700 uppercase">
-                                    Logistik Pasar
-                                </span>
-                            </td>
-                            <td class="py-4 px-6 font-semibold text-slate-600">
-                                081234567890
-                            </td>
-                            <td class="py-4 px-6 text-slate-500">
-                                15 Okt 2022
-                            </td>
-                            <td class="py-4 px-6 text-slate-500">
-                                06 Nov 2025
-                            </td>
-                            <td class="py-4 px-6 text-slate-600 font-semibold">
-                                Cuti
-                            </td>
-                            <td class="py-4 px-6">
-                                <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-700 uppercase">
-                                    Cuti
-                                </span>
-                            </td>
-                            <td class="py-4 px-6 text-center">
-                                <div class="relative inline-block text-left" x-data="{ open: false }">
-                                    <button @click="open = !open" @click.away="open = false"
-                                            class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors">
-                                        <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
-                                    </button>
-                                    <div x-show="open"
-                                         x-transition:enter="transition ease-out duration-100"
-                                         x-transition:enter-start="transform opacity-0 scale-95"
-                                         x-transition:enter-end="transform opacity-100 scale-100"
-                                         x-transition:leave="transition ease-in duration-75"
-                                         x-transition:leave-start="transform opacity-100 scale-100"
-                                         x-transition:leave-end="transform opacity-0 scale-95"
-                                         class="absolute right-0 mt-2 w-48 rounded-xl bg-white border border-slate-200 shadow-xl py-1.5 z-50 text-left">
-                                        <button @click="open = false; activeTab = 'edit'" class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
-                                            <i class="fa-solid fa-pen-to-square text-sky-600 w-4"></i>
-                                            <span>Edit Data</span>
-                                        </button>
-                                        <button @click="open = false; activeTab = 'approval'" class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
-                                            <i class="fa-solid fa-calendar-check text-emerald-600 w-4"></i>
-                                            <span>Tinjau Persetujuan Libur</span>
-                                        </button>
-                                        <button @click="open = false; activeTab = 'ajukan'" class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
-                                            <i class="fa-solid fa-calendar-plus text-amber-600 w-4"></i>
-                                            <span>Ajukan Cuti / Libur</span>
-                                        </button>
-                                        <div class="my-1 border-t border-slate-100"></div>
-                                        <button @click="open = false; if(confirm('Apakah Anda yakin ingin menghapus petugas ini?')) { alert('Data petugas berhasil dihapus!'); }" class="w-full px-3.5 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2.5">
-                                            <i class="fa-solid fa-trash-can text-red-500 w-4"></i>
-                                            <span>Hapus Petugas</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <!-- Row 2: Budi Santoso (Aktif) -->
-                        <tr class="hover:bg-slate-50/50 transition-colors">
-                            <td class="py-4 px-6">
-                                <div class="flex items-center gap-3">
-                                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=120"
-                                         alt="Budi Santoso"
-                                         class="w-10 h-10 rounded-full object-cover border border-slate-200 shadow-xs">
-                                    <div>
-                                        <h4 class="font-extrabold text-slate-900 text-xs">Budi Santoso</h4>
-                                        <span class="text-[10px] text-slate-400 block font-normal">budi.santoso@agribisnis.id</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="py-4 px-6">
-                                <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-cyan-100 text-cyan-800 uppercase">
-                                    Petugas kolam pembesaran
-                                </span>
-                            </td>
-                            <td class="py-4 px-6 font-semibold text-slate-600">
-                                089876543210
-                            </td>
-                            <td class="py-4 px-6 text-slate-500">
-                                01 Jan 2022
-                            </td>
-                            <td class="py-4 px-6 text-slate-400">
-                                -
-                            </td>
-                            <td class="py-4 px-6 text-slate-600 font-semibold">
-                                Cuti
-                            </td>
-                            <td class="py-4 px-6">
-                                <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-700 uppercase">
-                                    Cuti
-                                </span>
-                            </td>
-                            <td class="py-4 px-6 text-center">
-                                <div class="relative inline-block text-left" x-data="{ open: false }">
-                                    <button @click="open = !open" @click.away="open = false"
-                                            class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors">
-                                        <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
-                                    </button>
-                                    <div x-show="open"
-                                         x-transition:enter="transition ease-out duration-100"
-                                         x-transition:enter-start="transform opacity-0 scale-95"
-                                         x-transition:enter-end="transform opacity-100 scale-100"
-                                         x-transition:leave="transition ease-in duration-75"
-                                         x-transition:leave-start="transform opacity-100 scale-100"
-                                         x-transition:leave-end="transform opacity-0 scale-95"
-                                         class="absolute right-0 mt-2 w-48 rounded-xl bg-white border border-slate-200 shadow-xl py-1.5 z-50 text-left">
-                                        <button @click="open = false; activeTab = 'edit'" class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
-                                            <i class="fa-solid fa-pen-to-square text-sky-600 w-4"></i>
-                                            <span>Edit Data</span>
-                                        </button>
-                                        <button @click="open = false; activeTab = 'approval'" class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
-                                            <i class="fa-solid fa-calendar-check text-emerald-600 w-4"></i>
-                                            <span>Tinjau Persetujuan Libur</span>
-                                        </button>
-                                        <button @click="open = false; activeTab = 'ajukan'" class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
-                                            <i class="fa-solid fa-calendar-plus text-amber-600 w-4"></i>
-                                            <span>Ajukan Cuti / Libur</span>
-                                        </button>
-                                        <div class="my-1 border-t border-slate-100"></div>
-                                        <button @click="open = false; if(confirm('Apakah Anda yakin ingin menghapus petugas ini?')) { alert('Data petugas berhasil dihapus!'); }" class="w-full px-3.5 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2.5">
-                                            <i class="fa-solid fa-trash-can text-red-500 w-4"></i>
-                                            <span>Hapus Petugas</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <!-- Row 3: Siti Rahma -->
-                        <tr class="hover:bg-slate-50/50 transition-colors">
-                            <td class="py-4 px-6">
-                                <div class="flex items-center gap-3">
-                                    <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=120"
-                                         alt="Siti Rahma"
-                                         class="w-10 h-10 rounded-full object-cover border border-slate-200 shadow-xs">
-                                    <div>
-                                        <h4 class="font-extrabold text-slate-900 text-xs">Siti Rahma</h4>
-                                        <span class="text-[10px] text-slate-400 block font-normal">siti.rahma@agribisnis.id</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="py-4 px-6">
-                                <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-purple-100 text-purple-700 uppercase">
-                                    Pengawas Pembibitan
-                                </span>
-                            </td>
-                            <td class="py-4 px-6 font-semibold text-slate-600">
-                                081987654321
-                            </td>
-                            <td class="py-4 px-6 text-slate-500">
-                                10 Mar 2023
-                            </td>
-                            <td class="py-4 px-6 text-slate-400">
-                                -
-                            </td>
-                            <td class="py-4 px-6 text-slate-600 font-semibold">
-                                Cuti
-                            </td>
-                            <td class="py-4 px-6">
-                                <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-700 uppercase">
-                                    Cuti
-                                </span>
-                            </td>
-                            <td class="py-4 px-6 text-center">
-                                <div class="relative inline-block text-left" x-data="{ open: false }">
-                                    <button @click="open = !open" @click.away="open = false"
-                                            class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors">
-                                        <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
-                                    </button>
-                                    <div x-show="open"
-                                         x-transition:enter="transition ease-out duration-100"
-                                         x-transition:enter-start="transform opacity-0 scale-95"
-                                         x-transition:enter-end="transform opacity-100 scale-100"
-                                         x-transition:leave="transition ease-in duration-75"
-                                         x-transition:leave-start="transform opacity-100 scale-100"
-                                         x-transition:leave-end="transform opacity-0 scale-95"
-                                         class="absolute right-0 mt-2 w-48 rounded-xl bg-white border border-slate-200 shadow-xl py-1.5 z-50 text-left">
-                                        <button @click="open = false; activeTab = 'edit'" class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
-                                            <i class="fa-solid fa-pen-to-square text-sky-600 w-4"></i>
-                                            <span>Edit Data</span>
-                                        </button>
-                                        <button @click="open = false; activeTab = 'approval'" class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
-                                            <i class="fa-solid fa-calendar-check text-emerald-600 w-4"></i>
-                                            <span>Tinjau Persetujuan Libur</span>
-                                        </button>
-                                        <button @click="open = false; activeTab = 'ajukan'" class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
-                                            <i class="fa-solid fa-calendar-plus text-amber-600 w-4"></i>
-                                            <span>Ajukan Cuti / Libur</span>
-                                        </button>
-                                        <div class="my-1 border-t border-slate-100"></div>
-                                        <button @click="open = false; if(confirm('Apakah Anda yakin ingin menghapus petugas ini?')) { alert('Data petugas berhasil dihapus!'); }" class="w-full px-3.5 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2.5">
-                                            <i class="fa-solid fa-trash-can text-red-500 w-4"></i>
-                                            <span>Hapus Petugas</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
+                        @if(isset($users) && count($users) > 0)
+                            @php
+                                $roleBadges = [
+                                    'manajer'            => ['bg' => 'bg-indigo-100 text-indigo-700', 'label' => 'Manajer Operasional'],
+                                    'pembibitan'         => ['bg' => 'bg-purple-100 text-purple-700', 'label' => 'Teknisi Pembibitan'],
+                                    'pembesaran'         => ['bg' => 'bg-cyan-100 text-cyan-800', 'label' => 'Teknisi Pembesaran'],
+                                    'petugas_distribusi' => ['bg' => 'bg-sky-100 text-sky-700', 'label' => 'Logistik & Distribusi'],
+                                ];
+                                $avatars = [
+                                    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=120',
+                                    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=120',
+                                    'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=120',
+                                    'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=120'
+                                ];
+                            @endphp
+                            @foreach($users as $idx => $u)
+                                @php
+                                    $roleInfo = $roleBadges[$u->role] ?? ['bg' => 'bg-slate-100 text-slate-700', 'label' => ucfirst(str_replace('_', ' ', $u->role))];
+                                    $avatar = $avatars[$idx % count($avatars)];
+                                    $latestLibur = $u->pengajuanLibur ? $u->pengajuanLibur->first() : null;
+                                    $statusPetugas = $latestLibur && $latestLibur->status === 'disetujui' ? 'Cuti' : 'Aktif';
+                                @endphp
+                                <tr class="hover:bg-slate-50/50 transition-colors">
+                                    <td class="py-4 px-6">
+                                        <div class="flex items-center gap-3">
+                                            <img src="{{ $avatar }}"
+                                                 alt="{{ $u->nama }}"
+                                                 class="w-10 h-10 rounded-full object-cover border border-slate-200 shadow-xs">
+                                            <div>
+                                                <h4 class="font-extrabold text-slate-900 text-xs">{{ $u->nama }}</h4>
+                                                <span class="text-[10px] text-slate-400 block font-normal">{{ $u->email }}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-6">
+                                        <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold {{ $roleInfo['bg'] }} uppercase">
+                                            {{ $roleInfo['label'] }}
+                                        </span>
+                                    </td>
+                                    <td class="py-4 px-6 font-semibold text-slate-600">
+                                        {{ $u->no_hp ?? '081234567890' }}
+                                    </td>
+                                    <td class="py-4 px-6 text-slate-500">
+                                        {{ $u->created_at ? $u->created_at->translatedFormat('d M Y') : '01 Jan 2024' }}
+                                    </td>
+                                    <td class="py-4 px-6 text-slate-400">
+                                        -
+                                    </td>
+                                    <td class="py-4 px-6 text-slate-600 font-semibold">
+                                        {{ $statusPetugas }}
+                                    </td>
+                                    <td class="py-4 px-6">
+                                        <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold {{ $statusPetugas === 'Cuti' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700' }} uppercase">
+                                            {{ $statusPetugas }}
+                                        </span>
+                                    </td>
+                                    <td class="py-4 px-6 text-center">
+                                        <div class="relative inline-block text-left" x-data="{ open: false }">
+                                            <button @click="open = !open" @click.away="open = false"
+                                                    class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors">
+                                                <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
+                                            </button>
+                                            <div x-show="open"
+                                                 x-transition:enter="transition ease-out duration-100"
+                                                 x-transition:enter-start="transform opacity-0 scale-95"
+                                                 x-transition:enter-end="transform opacity-100 scale-100"
+                                                 x-transition:leave="transition ease-in duration-75"
+                                                 x-transition:leave-start="transform opacity-100 scale-100"
+                                                 x-transition:leave-end="transform opacity-0 scale-95"
+                                                 class="absolute right-0 mt-2 w-48 rounded-xl bg-white border border-slate-200 shadow-xl py-1.5 z-50 text-left">
+                                                <button @click="open = false; activeTab = 'edit'" class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
+                                                    <i class="fa-solid fa-pen-to-square text-sky-600 w-4"></i>
+                                                    <span>Edit Data</span>
+                                                </button>
+                                                <a href="{{ route('petugas.libur.approval') }}" class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
+                                                    <i class="fa-solid fa-calendar-check text-emerald-600 w-4"></i>
+                                                    <span>Tinjau Persetujuan Libur</span>
+                                                </a>
+                                                <a href="{{ route('petugas.libur.ajukan') }}" class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
+                                                    <i class="fa-solid fa-calendar-plus text-amber-600 w-4"></i>
+                                                    <span>Ajukan Cuti / Libur</span>
+                                                </a>
+                                                <div class="my-1 border-t border-slate-100"></div>
+                                                <button @click="open = false; if(confirm('Apakah Anda yakin ingin menghapus petugas ini?')) { alert('Data petugas berhasil dihapus!'); }" class="w-full px-3.5 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2.5">
+                                                    <i class="fa-solid fa-trash-can text-red-500 w-4"></i>
+                                                    <span>Hapus Petugas</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        @endif
+                    </tbody>
 
                     </tbody>
                 </table>

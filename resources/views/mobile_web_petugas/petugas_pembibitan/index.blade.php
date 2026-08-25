@@ -8,14 +8,25 @@
     filterStatus: 'semua',
     searchQuery: '',
 
-    allBatches: [
-        { id: 'Batch-H-042', status: 'SEHAT', statusClass: 'bg-emerald-50 text-emerald-700 border-emerald-200', dotColor: 'bg-emerald-500', detail: 'Pembibitan 4 / Nila Merah', populasi: '250.000 Ekor', umur: '14 Hari (DOC)', icon: 'fa-fish', iconBg: 'bg-slate-100 text-slate-600' },
-        { id: 'Batch-H-041', status: 'SEHAT', statusClass: 'bg-emerald-50 text-emerald-700 border-emerald-200', dotColor: 'bg-emerald-500', detail: 'Fase Penyerapan / Umur 28 Hari', populasi: '480.000 Ekor', umur: '28 Hari (DOC)', icon: 'fa-circle-dot', iconBg: 'bg-slate-100 text-slate-600' },
-        { id: 'Batch-H-039', status: 'WASPADA', statusClass: 'bg-rose-50 text-rose-700 border-rose-200', dotColor: 'bg-rose-500', detail: 'Fase Menetas / pH + Suhu Tinggi', populasi: '310.000 Ekor', umur: '3 Hari (DOC)', icon: 'fa-triangle-exclamation', iconBg: 'bg-rose-50 text-rose-600' },
-        { id: 'Batch-H-038', status: 'SEHAT', statusClass: 'bg-emerald-50 text-emerald-700 border-emerald-200', dotColor: 'bg-emerald-500', detail: 'Inkubasi Telur / Tank A-02', populasi: '500.000 Ekor', umur: '2 Hari (DOC)', icon: 'fa-egg', iconBg: 'bg-sky-50 text-sky-600' },
-        { id: 'Batch-H-035', status: 'SEHAT', statusClass: 'bg-emerald-50 text-emerald-700 border-emerald-200', dotColor: 'bg-emerald-500', detail: 'Fase Larva / Kolam Pemijahan 1', populasi: '180.000 Ekor', umur: '10 Hari (DOC)', icon: 'fa-water', iconBg: 'bg-indigo-50 text-indigo-600' },
-        { id: 'Batch-H-032', status: 'WASPADA', statusClass: 'bg-amber-50 text-amber-700 border-amber-200', dotColor: 'bg-amber-500', detail: 'Fingerling / Tank L-02', populasi: '210.000 Ekor', umur: '35 Hari (DOC)', icon: 'fa-triangle-exclamation', iconBg: 'bg-amber-50 text-amber-600' }
-    ],
+    allBatches: {!! isset($batches) && count($batches) > 0 ? json_encode(
+        $batches->map(function($b) {
+            $days = $b->tgl_pemijahan ? \Carbon\Carbon::parse($b->tgl_pemijahan)->diffInDays(now()) : 2;
+            $isWaspada = $b->jumlah_kematian > 3000;
+            return [
+                'id' => 'Batch-H-' . str_pad($b->id_batch, 3, '0', STR_PAD_LEFT),
+                'status' => $isWaspada ? 'WASPADA' : 'SEHAT',
+                'statusClass' => $isWaspada ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                'dotColor' => $isWaspada ? 'bg-rose-500' : 'bg-emerald-500',
+                'detail' => ($b->kolam ? $b->kolam->nama_kolam : 'Hatchery') . ' / ' . $b->jenis_ikan,
+                'populasi' => number_format($b->jumlah_bibitAwal - $b->jumlah_kematian, 0, ',', '.') . ' Ekor',
+                'umur' => $days . ' Hari (DOC)',
+                'icon' => 'fa-fish',
+                'iconBg' => 'bg-slate-100 text-slate-600'
+            ];
+        })
+    ) : json_encode([
+        [ 'id' => 'Batch-H-042', 'status' => 'SEHAT', 'statusClass' => 'bg-emerald-50 text-emerald-700 border-emerald-200', 'dotColor' => 'bg-emerald-500', 'detail' => 'Pembibitan 4 / Nila Merah', 'populasi' => '250.000 Ekor', 'umur' => '14 Hari (DOC)', 'icon' => 'fa-fish', 'iconBg' => 'bg-slate-100 text-slate-600' ]
+    ]) !!},
 
     get filteredBatches() {
         return this.allBatches.filter(b => {
@@ -52,7 +63,7 @@
                     +4.1% bulan ini
                 </span>
             </div>
-            <h2 class="text-3xl font-extrabold text-navy-900 tracking-tight">2.4M</h2>
+            <h2 class="text-3xl font-extrabold text-navy-900 tracking-tight">{{ isset($totalBenih) && $totalBenih > 0 ? (number_format($totalBenih / 1000000, 1) . 'M') : '1.2M' }}</h2>
         </div>
 
         <!-- Metrics Grid (FCR Air & Kapasitas Tank) -->
@@ -74,8 +85,8 @@
                     <i class="fa-solid fa-life-ring text-xs text-sky-600"></i>
                     <span class="text-[9px] font-extrabold uppercase text-slate-400">KAPASITAS TANK</span>
                 </div>
-                <h3 class="text-lg font-extrabold text-navy-900">42</h3>
-                <span class="text-[9px] text-slate-500 font-medium block">Tank Aktif</span>
+                <h3 class="text-lg font-extrabold text-navy-900">{{ $totalTank ?? 12 }}</h3>
+                <span class="text-[9px] text-slate-500 font-medium block">Tank / Kolam Aktif</span>
             </div>
 
         </div>

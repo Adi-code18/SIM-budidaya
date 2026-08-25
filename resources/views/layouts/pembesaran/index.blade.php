@@ -194,7 +194,7 @@
                     </div>
                 </div>
                 <div class="mt-3">
-                    <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight">12.4 <span class="text-xs font-semibold text-slate-500">Ton</span></h3>
+                    <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight">{{ number_format($totalBiomassa ?? 12.4, 1) }} <span class="text-xs font-semibold text-slate-500">Ton</span></h3>
                 </div>
             </div>
             <div class="mt-4 flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
@@ -213,7 +213,7 @@
                     </div>
                 </div>
                 <div class="mt-3">
-                    <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight">1.42 <span class="text-xs font-semibold text-slate-500">Ratio</span></h3>
+                    <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight">{{ number_format($avgFcr ?? 1.42, 2) }} <span class="text-xs font-semibold text-slate-500">Ratio</span></h3>
                 </div>
             </div>
             <div class="mt-4 flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
@@ -255,138 +255,107 @@
             </h3>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                
-                <!-- Kolam Card 1: Kolam A-01 -->
-                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
-                    <div>
-                        <div class="flex items-start justify-between">
+                @if(isset($batchRecords) && count($batchRecords) > 0)
+                    @foreach($batchRecords as $b)
+                        @php
+                            $doc = $b->tgl_tebar ? \Carbon\Carbon::parse($b->tgl_tebar)->diffInDays(now()) : 30;
+                            $targetPercent = $b->target_panen_kg > 0 ? min(100, round(($b->biomassa_est / $b->target_panen_kg) * 100)) : 65;
+                            $isOptimal = ($b->fcr ?? 1.2) <= 1.25;
+                        @endphp
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between hover:shadow-md transition-all">
                             <div>
-                                <h4 class="font-bold text-slate-900 text-sm">Kolam A-01</h4>
-                                <span class="text-[10px] text-slate-400 block mt-0.5">Batch: BD-2023-09-01</span>
+                                <div class="flex items-start justify-between">
+                                    <div>
+                                        <h4 class="font-bold text-slate-900 text-sm">{{ $b->kolam ? $b->kolam->nama_kolam : 'Kolam #' . $b->id_kolam }}</h4>
+                                        <span class="text-[10px] text-slate-400 block mt-0.5">{{ $b->jenis_ikan }}</span>
+                                    </div>
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold {{ $isOptimal ? 'bg-[#C6F6D5] text-[#22543D]' : 'bg-[#FEFCBF] text-[#744210]' }} uppercase">
+                                        {{ $isOptimal ? 'SEHAT' : 'PERHATIAN' }}
+                                    </span>
+                                </div>
+
+                                <div class="mt-4 grid grid-cols-2 gap-2 text-xs">
+                                    <div>
+                                        <span class="text-[10px] text-slate-400 font-bold uppercase block">BIOMASSA EST.</span>
+                                        <span class="font-extrabold text-slate-900 text-sm">{{ number_format($b->biomassa_est, 0, ',', '.') }} kg</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-[10px] text-slate-400 font-bold uppercase block">MASA BUDIDAYA</span>
+                                        <span class="font-extrabold text-slate-900 text-sm">{{ $doc }} Hari <span class="text-[10px] font-medium text-slate-500">(DOC)</span></span>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3">
+                                    <span class="text-xs font-semibold {{ $isOptimal ? 'text-slate-600' : 'text-rose-600' }} block">FCR: {{ number_format($b->fcr ?? 1.10, 2) }}</span>
+                                    <div class="mt-1.5 flex items-center justify-between text-[10px] font-bold text-slate-500">
+                                        <span>TARGET PANEN</span>
+                                        <span>{{ $targetPercent }}%</span>
+                                    </div>
+                                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mt-1">
+                                        <div class="bg-[#0055CC] h-full rounded-full" style="width: {{ $targetPercent }}%"></div>
+                                    </div>
+                                </div>
                             </div>
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#C6F6D5] text-[#22543D] uppercase">
-                                SEHAT
-                            </span>
+
+                            <a href="{{ route('pembudidaya') }}" class="text-xs font-bold text-[#0055CC] hover:underline text-right block mt-4">
+                                Detail &gt;
+                            </a>
+                        </div>
+                    @endforeach
+                @else
+                    <!-- Fallback Kolam Card 1: Kolam A-01 -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <h4 class="font-bold text-slate-900 text-sm">Kolam A-01</h4>
+                                    <span class="text-[10px] text-slate-400 block mt-0.5">Batch: BD-2023-09-01</span>
+                                </div>
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#C6F6D5] text-[#22543D] uppercase">
+                                    SEHAT
+                                </span>
+                            </div>
+
+                            <div class="mt-4 grid grid-cols-2 gap-2 text-xs">
+                                <div>
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block">BIOMASSA EST.</span>
+                                    <span class="font-extrabold text-slate-900 text-sm">1,450 kg</span>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block">MASA BUDIDAYA</span>
+                                    <span class="font-extrabold text-slate-900 text-sm">45 Hari <span class="text-[10px] font-medium text-slate-500">(DOC)</span></span>
+                                </div>
+                            </div>
+
+                            <div class="mt-3">
+                                <span class="text-xs font-semibold text-slate-600 block">FCR: 1.38</span>
+                                <div class="mt-1.5 flex items-center justify-between text-[10px] font-bold text-slate-500">
+                                    <span>TARGET PANEN</span>
+                                    <span>65%</span>
+                                </div>
+                                <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mt-1">
+                                    <div class="bg-[#0055CC] h-full rounded-full w-[65%]"></div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="mt-4 grid grid-cols-2 gap-2 text-xs">
-                            <div>
-                                <span class="text-[10px] text-slate-400 font-bold uppercase block">BIOMASSA EST.</span>
-                                <span class="font-extrabold text-slate-900 text-sm">1,450 kg</span>
-                            </div>
-                            <div>
-                                <span class="text-[10px] text-slate-400 font-bold uppercase block">MASA BUDIDAYA</span>
-                                <span class="font-extrabold text-slate-900 text-sm">45 Hari <span class="text-[10px] font-medium text-slate-500">(DOC)</span></span>
-                            </div>
-                        </div>
-
-                        <div class="mt-3">
-                            <span class="text-xs font-semibold text-slate-600 block">FCR: 1.38</span>
-                            <div class="mt-1.5 flex items-center justify-between text-[10px] font-bold text-slate-500">
-                                <span>TARGET PANEN</span>
-                                <span>65%</span>
-                            </div>
-                            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mt-1">
-                                <div class="bg-[#0055CC] h-full rounded-full w-[65%]"></div>
-                            </div>
-                        </div>
+                        <a href="{{ route('pembudidaya') }}" class="text-xs font-bold text-[#0055CC] hover:underline text-right block mt-4">
+                            Detail &gt;
+                        </a>
                     </div>
+                @endif
 
-                    <a href="{{ route('pembudidaya') }}" class="text-xs font-bold text-[#0055CC] hover:underline text-right block mt-4">
-                        Detail &gt;
-                    </a>
-                </div>
-
-                <!-- Kolam Card 2: Kolam A-02 -->
-                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
-                    <div>
-                        <div class="flex items-start justify-between">
-                            <div>
-                                <h4 class="font-bold text-slate-900 text-sm">Kolam A-02</h4>
-                                <span class="text-[10px] text-slate-400 block mt-0.5">Batch: BD-2023-09-02</span>
-                            </div>
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#FEFCBF] text-[#744210] uppercase">
-                                PERHATIAN
-                            </span>
-                        </div>
-
-                        <div class="mt-4 grid grid-cols-2 gap-2 text-xs">
-                            <div>
-                                <span class="text-[10px] text-slate-400 font-bold uppercase block">BIOMASSA EST.</span>
-                                <span class="font-extrabold text-slate-900 text-sm">920 kg</span>
-                            </div>
-                            <div>
-                                <span class="text-[10px] text-slate-400 font-bold uppercase block">MASA BUDIDAYA</span>
-                                <span class="font-extrabold text-slate-900 text-sm">32 Hari <span class="text-[10px] font-medium text-slate-500">(DOC)</span></span>
-                            </div>
-                        </div>
-
-                        <div class="mt-3">
-                            <span class="text-xs font-semibold text-rose-600 block">FCR: 1.62</span>
-                            <div class="mt-1.5 flex items-center justify-between text-[10px] font-bold text-slate-500">
-                                <span>TARGET PANEN</span>
-                                <span>43%</span>
-                            </div>
-                            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mt-1">
-                                <div class="bg-[#0055CC] h-full rounded-full w-[43%]"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <a href="{{ route('pembudidaya') }}" class="text-xs font-bold text-[#0055CC] hover:underline text-right block mt-4">
-                        Detail &gt;
-                    </a>
-                </div>
-
-                <!-- Kolam Card 3: Kolam B-01 -->
-                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
-                    <div>
-                        <div class="flex items-start justify-between">
-                            <div>
-                                <h4 class="font-bold text-slate-900 text-sm">Kolam B-01</h4>
-                                <span class="text-[10px] text-slate-400 block mt-0.5">Batch: BD-2023-10-01</span>
-                            </div>
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#C6F6D5] text-[#22543D] uppercase">
-                                SEHAT
-                            </span>
-                        </div>
-
-                        <div class="mt-4 grid grid-cols-2 gap-2 text-xs">
-                            <div>
-                                <span class="text-[10px] text-slate-400 font-bold uppercase block">BIOMASSA EST.</span>
-                                <span class="font-extrabold text-slate-900 text-sm">340 kg</span>
-                            </div>
-                            <div>
-                                <span class="text-[10px] text-slate-400 font-bold uppercase block">MASA BUDIDAYA</span>
-                                <span class="font-extrabold text-slate-900 text-sm">12 Hari <span class="text-[10px] font-medium text-slate-500">(DOC)</span></span>
-                            </div>
-                        </div>
-
-                        <div class="mt-3">
-                            <span class="text-xs font-semibold text-slate-600 block">FCR: 1.15</span>
-                            <div class="mt-1.5 flex items-center justify-between text-[10px] font-bold text-slate-500">
-                                <span>TARGET PANEN</span>
-                                <span>15%</span>
-                            </div>
-                            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mt-1">
-                                <div class="bg-[#0055CC] h-full rounded-full w-[15%]"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <a href="{{ route('pembudidaya') }}" class="text-xs font-bold text-[#0055CC] hover:underline text-right block mt-4">
-                        Detail &gt;
-                    </a>
-                </div>
-
-                <!-- Card 4: Tambah Lokasi Budidaya Card -->
-                <div class="border-2 border-dashed border-slate-200 bg-slate-50/50 hover:bg-slate-50 rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-colors min-h-[180px]">
+                <!-- Tambah Lokasi Budidaya Card -->
+                <div @click="showForm = true" class="border-2 border-dashed border-slate-200 bg-slate-50/50 hover:bg-slate-50 rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-colors min-h-[180px]">
                     <div class="w-10 h-10 rounded-full bg-slate-200/80 text-slate-600 flex items-center justify-center text-lg mb-2">
                         <i class="fa-solid fa-plus"></i>
                     </div>
                     <h4 class="text-xs font-bold text-slate-800">Tambah Lokasi Budidaya</h4>
                     <p class="text-[10px] text-slate-400 mt-0.5">Inisiasi kolam baru atau pindah batch</p>
                 </div>
+
+            </div>
+        </div>
 
             </div>
         </div>

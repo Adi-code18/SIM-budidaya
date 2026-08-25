@@ -19,12 +19,9 @@
         totalBerat: "",
         totalHarga: ""
     },
-    orders: [
-        { id: "#ORD-2023-9021", customer: "CV. Bahari Makmur", volume: "250 kg", status: "pemberokian", alamat: "Panjalu, Ciamis, Jalan HJ Abdul Hamid", tanggal: "5/8/26", label: true },
-        { id: "#ORD-2023-9025", customer: "Sinar Mas Frozen", volume: "1,200 kg", status: "siap_kirim", alamat: "Ciamis, Buniseuri, Jalan HJ Nurjamil", tanggal: "5/8/26", label: true },
-        { id: "#ORD-2023-9030", customer: "Indo Seafood Utama", volume: "500 kg", status: "pending", alamat: "Pelabuhan Tanjung Priok Jakarta Pusat", tanggal: "4/8/26", label: true },
-        { id: "#ORD-2023-8999", customer: "Koperasi Nelayan Jaya", volume: "400 kg", status: "selesai", alamat: "-", tanggal: "12/4/26", label: false }
-    ],
+    orders: {!! isset($orders) && count($orders) > 0 ? json_encode($orders) : json_encode([
+        [ 'id' => "#ORD-2023-9021", 'customer' => "CV. Bahari Makmur", 'volume' => "250 kg", 'status' => "pemberokian", 'alamat' => "Panjalu, Ciamis, Jalan HJ Abdul Hamid", 'tanggal' => "5/8/26", 'label' => true ]
+    ]) !!},
     statusOptions: [
         { value: "pending", label: "Pending / Menunggu Konfirmasi" },
         { value: "pemberokian", label: "Dalam Pemberokian" },
@@ -269,7 +266,7 @@
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
             <div>
                 <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">TOTAL PESANAN</span>
-                <h3 class="text-3xl font-extrabold text-slate-900 mt-1">124</h3>
+                <h3 class="text-3xl font-extrabold text-slate-900 mt-1">{{ $kpis['total'] ?? 4 }}</h3>
             </div>
             <div class="w-10 h-10 rounded-xl bg-[#BEE3F8]/60 text-[#006699] flex items-center justify-center">
                 <i class="fa-solid fa-box text-base"></i>
@@ -280,7 +277,7 @@
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
             <div>
                 <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">DALAM PEMBEROKIAN</span>
-                <h3 class="text-3xl font-extrabold text-slate-900 mt-1">42</h3>
+                <h3 class="text-3xl font-extrabold text-slate-900 mt-1">{{ $kpis['pemberokian'] ?? 1 }}</h3>
             </div>
             <div class="w-10 h-10 rounded-xl bg-[#BEE3F8]/60 text-[#006699] flex items-center justify-center">
                 <i class="fa-solid fa-hourglass-half text-base"></i>
@@ -291,7 +288,7 @@
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
             <div>
                 <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">SIAP KIRIM</span>
-                <h3 class="text-3xl font-extrabold text-slate-900 mt-1">18</h3>
+                <h3 class="text-3xl font-extrabold text-slate-900 mt-1">{{ $kpis['siapKirim'] ?? 2 }}</h3>
             </div>
             <div class="w-10 h-10 rounded-xl bg-[#BEE3F8]/60 text-[#006699] flex items-center justify-center">
                 <i class="fa-solid fa-truck text-base"></i>
@@ -301,8 +298,8 @@
         <!-- Card 4: Selesai Hari Ini -->
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
             <div>
-                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">SELESAI (HARI INI)</span>
-                <h3 class="text-3xl font-extrabold text-slate-900 mt-1">64</h3>
+                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">SELESAI (TERKIRIM)</span>
+                <h3 class="text-3xl font-extrabold text-slate-900 mt-1">{{ $kpis['selesai'] ?? 1 }}</h3>
             </div>
             <div class="w-10 h-10 rounded-xl bg-[#D1FAE5] text-[#059669] flex items-center justify-center">
                 <i class="fa-regular fa-circle-check text-base"></i>

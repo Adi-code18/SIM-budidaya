@@ -15,6 +15,7 @@ class TransaksiDistribusi extends Model
     protected $fillable = [
         'id_user',
         'id_mitra',
+        'id_pembesaran',
         'tanggal_order',
         'Total_kg',
         'harga_total',
@@ -31,5 +32,10 @@ class TransaksiDistribusi extends Model
     public function mitra()
     {
         return $this->belongsTo(MitraDistributor::class, 'id_mitra', 'id_mitra');
+    }
+
+    public function batchPembesaran()
+    {
+        return $this->belongsTo(BatchPembesaran::class, 'id_pembesaran', 'id_pembesaran');
     }
 }
