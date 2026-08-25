@@ -13,7 +13,7 @@
         </a>
         <div class="flex-1 min-w-0">
             <span class="text-[9px] font-extrabold text-sky-600 uppercase tracking-wider block">DETAIL ORDER TRACKING</span>
-            <h1 class="text-sm font-extrabold text-navy-900 truncate">Pengiriman Mitra - Resto Qu</h1>
+            <h1 class="text-sm font-extrabold text-navy-900 truncate">Pengiriman Mitra - {{ $transaksi->mitra ? $transaksi->mitra->nama_mitra : 'Mitra Distribusi' }}</h1>
         </div>
     </div>
 
@@ -60,11 +60,11 @@
     <div class="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs flex items-center justify-between">
         <div>
             <span class="text-[10px] font-extrabold text-slate-400 uppercase block tracking-wider">KOMODITAS & ID ORDER</span>
-            <h2 class="text-base font-extrabold text-navy-900 mt-0.5">Ikan Nila Segar</h2>
-            <p class="text-xs text-slate-500 font-semibold mt-0.5">ID: <span class="text-navy-800 font-bold">ORD-2984A</span></p>
+            <h2 class="text-base font-extrabold text-navy-900 mt-0.5">{{ $transaksi->batchPembesaran ? $transaksi->batchPembesaran->jenis_ikan : 'Ikan Konsumsi Segar' }}</h2>
+            <p class="text-xs text-slate-500 font-semibold mt-0.5">ID: <span class="text-navy-800 font-bold">#ORD-{{ str_pad($transaksi->id_transaksi, 4, '0', STR_PAD_LEFT) }}</span></p>
         </div>
         <div class="px-3.5 py-2 rounded-xl bg-sky-50 border border-sky-200 text-sky-800 font-extrabold text-sm text-center shadow-2xs">
-            <span>350 KG</span>
+            <span>{{ number_format($transaksi->Total_kg, 0, ',', '.') }} KG</span>
             <span class="text-[9px] font-bold block text-sky-600">Netto</span>
         </div>
     </div>
@@ -79,8 +79,8 @@
         </div>
 
         <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs text-slate-700 leading-relaxed font-medium">
-            <strong class="text-slate-900 block font-bold text-xs mb-1">Resto Resto Qu (Pak Adi)</strong>
-            Jl. Mataram No. 12, Kel. Kebonagung, Kec. Sidomulyo, Kota Mataram, Nusa Tenggara Barat 83116
+            <strong class="text-slate-900 block font-bold text-xs mb-1">{{ $transaksi->mitra ? $transaksi->mitra->nama_mitra : 'Mitra Distribusi' }} ({{ $transaksi->mitra ? ($transaksi->mitra->penanggung_jawab ?? 'Penerima') : 'Penerima' }})</strong>
+            {{ $transaksi->mitra ? $transaksi->mitra->alamat : 'Kota Mataram, Nusa Tenggara Barat' }}
         </div>
     </div>
 
@@ -95,7 +95,7 @@
         </button>
 
         <!-- Button 2: Chat Mitra via WA -->
-        <a href="https://wa.me/6281234567890?text=Halo%20Mitra%20Resto%20Qu,%20saya%20petugas%20distribusi%20SIM-BUDIDAYA%20sedang%20dalam%20perjalanan." 
+        <a href="https://wa.me/{{ $transaksi->mitra ? preg_replace('/[^0-9]/', '', $transaksi->mitra->no_hp) : '6281234567890' }}?text=Halo%20{{ urlencode($transaksi->mitra ? $transaksi->mitra->nama_mitra : 'Mitra') }},%20saya%20petugas%20distribusi%20SIM-BUDIDAYA%20sedang%20dalam%20perjalanan." 
            target="_blank"
            class="w-full py-3 rounded-2xl bg-white border border-slate-300 hover:bg-slate-50 active:scale-[0.99] text-slate-800 font-bold text-xs flex items-center justify-center gap-2.5 shadow-2xs transition-all">
             <i class="fa-brands fa-whatsapp text-emerald-600 text-base"></i>
@@ -165,10 +165,16 @@
                     <i class="fa-solid fa-check"></i>
                 </div>
                 <h3 class="font-extrabold text-emerald-900 text-sm">Pengiriman Selesai!</h3>
-                <p class="text-xs text-emerald-700 font-medium">Status order ORD-2984A telah diperbarui menjadi Selesai.</p>
-                <a href="{{ route('mobile.petugas.pengiriman') }}" class="inline-block mt-2 px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow-xs transition-colors">
-                    Kembali ke Daftar Pengiriman
-                </a>
+                <p class="text-xs text-emerald-700 font-medium">Status order #ORD-{{ str_pad($transaksi->id_transaksi, 4, '0', STR_PAD_LEFT) }} telah dipindahkan ke Riwayat Pengiriman.</p>
+                <div class="pt-2 flex items-center justify-center gap-2">
+                    <a href="{{ route('mobile.petugas.riwayat') }}" class="px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow-xs transition-colors flex items-center gap-1.5">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                        <span>Lihat di Riwayat</span>
+                    </a>
+                    <a href="{{ route('mobile.petugas.pengiriman') }}" class="px-4 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-700 font-bold text-xs hover:bg-slate-50 transition-colors">
+                        Daftar Tugas
+                    </a>
+                </div>
             </div>
         </template>
     </div>
@@ -346,18 +352,24 @@ function detailTrackingData() {
             this.progress = 0;
         },
 
-        confirmArrived() {
-            if (!this.uploadedImage) {
-                if (typeof triggerToast === 'function') {
-                    triggerToast('Harap upload foto serah terima terlebih dahulu!', 'error');
-                }
-                this.uploadModal = true;
-                this.resetSlider();
-                return;
-            }
+        async confirmArrived() {
             this.deliveryDone = true;
-            if (typeof triggerToast === 'function') {
-                triggerToast('Pengiriman berhasil diselesaikan!', 'success');
+            try {
+                const res = await fetch('{{ route('mobile.petugas.complete', ['id' => $transaksi->id_transaksi ?? 1]) }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
+                });
+                const data = await res.json();
+                if (typeof triggerToast === 'function') {
+                    triggerToast(data.message || 'Pengiriman berhasil diselesaikan dan masuk ke riwayat!', 'success');
+                }
+            } catch (err) {
+                if (typeof triggerToast === 'function') {
+                    triggerToast('Pengiriman berhasil diselesaikan!', 'success');
+                }
             }
         },
 

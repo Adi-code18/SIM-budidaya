@@ -27,15 +27,24 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::middleware(['auth', 'role:manajer'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/pembibitan', [PembibitanController::class, 'index'])->name('pembibitan');
+    Route::post('/pembibitan', [PembibitanController::class, 'store'])->name('pembibitan.store');
+    Route::put('/pembibitan/{id}', [PembibitanController::class, 'update'])->name('pembibitan.update');
+    Route::delete('/pembibitan/{id}', [PembibitanController::class, 'destroy'])->name('pembibitan.destroy');
     Route::get('/pembesaran', [PembesaranController::class, 'index'])->name('pembesaran');
+    Route::post('/pembesaran', [PembesaranController::class, 'store'])->name('pembesaran.store');
+    Route::put('/pembesaran/{id}', [PembesaranController::class, 'update'])->name('pembesaran.update');
+    Route::delete('/pembesaran/{id}', [PembesaranController::class, 'destroy'])->name('pembesaran.destroy');
     Route::get('/pembudidaya', [PembudidayaController::class, 'index'])->name('pembudidaya');
     Route::get('/log-pakan', [PakanController::class, 'index'])->name('log-pakan');
     Route::get('/distribusi', [DistribusiController::class, 'index'])->name('distribusi');
     Route::get('/keuangan', [KeuanganWebController::class, 'index'])->name('keuangan');
     Route::get('/mitra', [MitraController::class, 'index'])->name('mitra');
     Route::get('/petugas', [PetugasController::class, 'index'])->name('petugas');
+    Route::post('/petugas', [PetugasController::class, 'store'])->name('petugas.store');
     Route::get('/petugas/create', [PetugasController::class, 'create'])->name('petugas.create');
     Route::get('/petugas/{id}/edit', [PetugasController::class, 'edit'])->name('petugas.edit');
+    Route::put('/petugas/{id}', [PetugasController::class, 'update'])->name('petugas.update');
+    Route::delete('/petugas/{id}', [PetugasController::class, 'destroy'])->name('petugas.destroy');
     Route::get('/petugas/libur/approval', [PetugasController::class, 'approvalLibur'])->name('petugas.libur.approval');
     Route::get('/petugas/libur/ajukan', [PetugasController::class, 'ajukanLibur'])->name('petugas.libur.ajukan');
 });
@@ -54,6 +63,7 @@ Route::prefix('mobile-petugas')->name('mobile.petugas.')->group(function () {
     Route::middleware(['auth', 'role:petugas_distribusi'])->group(function () {
         Route::get('/pengiriman', [MobilePetugasController::class, 'distribusiIndex'])->name('pengiriman');
         Route::get('/detail/{id?}', [MobilePetugasController::class, 'distribusiDetail'])->name('detail');
+        Route::post('/complete/{id}', [MobilePetugasController::class, 'distribusiComplete'])->name('complete');
         Route::get('/riwayat', [MobilePetugasController::class, 'distribusiRiwayat'])->name('riwayat');
         Route::get('/akun', function () {
             return view('mobile_web_petugas.petugas_distribusi.akun');
@@ -75,6 +85,7 @@ Route::prefix('petugas-pembibitan')->name('petugas.pembibitan.')->group(function
     Route::middleware(['auth', 'role:pembibitan'])->group(function () {
         Route::get('/', [MobilePetugasController::class, 'pembibitanIndex'])->name('dashboard');
         Route::get('/form', [MobilePetugasController::class, 'pembibitanForm'])->name('form');
+        Route::post('/form', [MobilePetugasController::class, 'pembibitanStoreBatch'])->name('store-batch');
         Route::get('/log-pakan', [MobilePetugasController::class, 'pembibitanLogPakan'])->name('log-pakan');
         Route::get('/akun', function () {
             return view('mobile_web_petugas.petugas_pembibitan.akun');
@@ -96,6 +107,7 @@ Route::prefix('petugas-pembesaran')->name('petugas.pembesaran.')->group(function
     Route::middleware(['auth', 'role:pembesaran'])->group(function () {
         Route::get('/', [MobilePetugasController::class, 'pembesaranIndex'])->name('dashboard');
         Route::get('/create-batch', [MobilePetugasController::class, 'pembesaranCreateBatch'])->name('create-batch');
+        Route::post('/create-batch', [MobilePetugasController::class, 'pembesaranStoreBatch'])->name('store-batch');
         Route::get('/log-pakan', [MobilePetugasController::class, 'pembesaranLogPakan'])->name('log-pakan');
         Route::get('/akun', function () {
             return view('mobile_web_petugas.petugas_pembesaran.akun');

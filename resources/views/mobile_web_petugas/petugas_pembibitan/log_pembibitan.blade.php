@@ -73,8 +73,9 @@
                             <option value="{{ $k->nama_kolam }}">{{ $k->nama_kolam }} ({{ $k->tipe_kolam }})</option>
                         @endforeach
                     @else
-                        <option value="Tank Hatchery H-01">Tank Hatchery H-01</option>
-                        <option value="Tank Hatchery H-02">Tank Hatchery H-02</option>
+                        <option value="Kolam Pemijahan A-01">Kolam Pemijahan A-01 (Hatchery / Pemijahan)</option>
+                        <option value="Kolam Penetasan B-02">Kolam Penetasan B-02 (Hatchery / Penetasan)</option>
+                        <option value="Kolam Pembibitan L-03">Kolam Pembibitan L-03 (Hatchery / Pendederan)</option>
                     @endif
                 </select>
             </div>

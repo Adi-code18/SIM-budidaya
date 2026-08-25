@@ -3,136 +3,7 @@
 @section('title', 'Manajemen Pembudidaya & Kolam - SIM-BUDIDAYA')
 
 @section('content')
-<div class="space-y-6" x-data='{
-    modalOpen: false,
-    detailModalOpen: false,
-    editModalOpen: false,
-    search: "",
-    statusFilter: "semua",
-    komoditasFilter: "semua",
-    selectedKolam: null,
-    
-    newKolam: {
-        id: "",
-        lokasi: "",
-        pembudidaya: "",
-        initials: "",
-        jenisIkan: "Ikan Nila Hitam",
-        tebarBenih: "23 Aug 2026",
-        populasi: 20000,
-        status: "Optimal"
-    },
-
-    kolams: {!! isset($kolams) && count($kolams) > 0 ? json_encode($kolams) : json_encode([
-        [
-            'id' => "Kolam A1",
-            'lokasi' => "Beton / Pembesaran",
-            'pembudidaya' => "Budi Santoso",
-            'initials' => "BS",
-            'colorClass' => "bg-sky-100 text-sky-700",
-            'jenisIkan' => "Ikan Nila Hitam Super",
-            'tebarBenih' => "12 Mei 2026",
-            'populasi' => "5,000",
-            'populasiRaw' => 5000,
-            'status' => "Optimal",
-            'statusClass' => "bg-emerald-100 text-emerald-700",
-            'dotClass' => "bg-emerald-500"
-        ]
-    ]) !!},
-
-    get filteredKolams() {
-        return this.kolams.filter(item => {
-            const matchSearch = !this.search || 
-                item.id.toLowerCase().includes(this.search.toLowerCase()) ||
-                item.pembudidaya.toLowerCase().includes(this.search.toLowerCase()) ||
-                item.lokasi.toLowerCase().includes(this.search.toLowerCase()) ||
-                item.jenisIkan.toLowerCase().includes(this.search.toLowerCase());
-            
-            const matchStatus = this.statusFilter === "semua" || 
-                (this.statusFilter === "optimal" && item.status.toLowerCase().includes("optimal")) ||
-                (this.statusFilter === "siap_panen" && item.status.toLowerCase().includes("panen")) ||
-                (this.statusFilter === "perhatian" && item.status.toLowerCase().includes("perhatian"));
-
-            const matchKomoditas = this.komoditasFilter === "semua" ||
-                item.jenisIkan.toLowerCase().includes(this.komoditasFilter.toLowerCase());
-
-            return matchSearch && matchStatus && matchKomoditas;
-        });
-    },
-
-    openDetail(item) {
-        this.selectedKolam = item;
-        this.detailModalOpen = true;
-    },
-
-    openEdit(item) {
-        this.selectedKolam = JSON.parse(JSON.stringify(item));
-        this.editModalOpen = true;
-    },
-
-    saveEdit() {
-        if (!this.selectedKolam) return;
-        const index = this.kolams.findIndex(k => k.id === this.selectedKolam.id);
-        if (index !== -1) {
-            this.kolams[index] = { ...this.selectedKolam };
-        }
-        this.editModalOpen = false;
-    },
-
-    deleteKolam(item) {
-        if (confirm("Apakah Anda yakin ingin menghapus data kolam " + item.id + "?")) {
-            this.kolams = this.kolams.filter(k => k.id !== item.id);
-        }
-    },
-
-    submitNewKolam() {
-        if (!this.newKolam.id || !this.newKolam.pembudidaya) {
-            alert("ID Kolam dan Pembudidaya wajib diisi!");
-            return;
-        }
-        const names = this.newKolam.pembudidaya.trim().split(" ");
-        const initials = names.length > 1 ? (names[0][0] + names[1][0]).toUpperCase() : names[0].substring(0, 2).toUpperCase();
-        
-        let statusClass = "bg-emerald-100 text-emerald-700";
-        let dotClass = "bg-emerald-500";
-        if (this.newKolam.status === "Siap Panen") {
-            statusClass = "bg-amber-100 text-amber-700";
-            dotClass = "bg-amber-500";
-        } else if (this.newKolam.status === "Perlu Perhatian") {
-            statusClass = "bg-rose-100 text-rose-700";
-            dotClass = "bg-rose-500";
-        }
-
-        const formattedPopulasi = Number(this.newKolam.populasi || 0).toLocaleString("en-US");
-
-        this.kolams.unshift({
-            id: this.newKolam.id.toUpperCase(),
-            lokasi: this.newKolam.lokasi || "Sektor Utama",
-            pembudidaya: this.newKolam.pembudidaya,
-            initials: initials,
-            colorClass: "bg-sky-100 text-sky-700",
-            jenisIkan: this.newKolam.jenisIkan,
-            tebarBenih: this.newKolam.tebarBenih,
-            populasi: formattedPopulasi,
-            populasiRaw: Number(this.newKolam.populasi || 0),
-            status: this.newKolam.status,
-            statusClass: statusClass,
-            dotClass: dotClass
-        });
-
-        this.modalOpen = false;
-        this.newKolam = {
-            id: "",
-            lokasi: "",
-            pembudidaya: "",
-            initials: "",
-            jenisIkan: "Ikan Nila Hitam",
-            tebarBenih: "23 Aug 2026",
-            populasi: 20000,
-            status: "Optimal"
-        };
-    }
-}'>
+<div class="space-y-6" x-data="pembudidayaComponent()">
 
     <!-- Breadcrumb & Back Navigation -->
     <div>
@@ -477,3 +348,140 @@
 
 </div>
 @endsection
+
+@push('scripts')
+<script>
+function pembudidayaComponent() {
+    return {
+        modalOpen: false,
+        detailModalOpen: false,
+        editModalOpen: false,
+        search: "",
+        statusFilter: "semua",
+        komoditasFilter: "semua",
+        selectedKolam: null,
+        
+        newKolam: {
+            id: "",
+            lokasi: "",
+            pembudidaya: "",
+            initials: "",
+            jenisIkan: "Ikan Nila Hitam",
+            tebarBenih: "23 Aug 2026",
+            populasi: 20000,
+            status: "Optimal"
+        },
+
+        kolams: {!! isset($kolams) && count($kolams) > 0 ? json_encode($kolams) : json_encode([
+            [
+                'id' => "Kolam A1",
+                'lokasi' => "Beton / Pembesaran",
+                'pembudidaya' => "Budi Santoso",
+                'initials' => "BS",
+                'colorClass' => "bg-sky-100 text-sky-700",
+                'jenisIkan' => "Ikan Nila Hitam Super",
+                'tebarBenih' => "12 Mei 2026",
+                'populasi' => "5,000",
+                'populasiRaw' => 5000,
+                'status' => "Optimal",
+                'statusClass' => "bg-emerald-100 text-emerald-700",
+                'dotClass' => "bg-emerald-500"
+            ]
+        ]) !!},
+
+        get filteredKolams() {
+            return this.kolams.filter(item => {
+                const matchSearch = !this.search || 
+                    item.id.toLowerCase().includes(this.search.toLowerCase()) ||
+                    item.pembudidaya.toLowerCase().includes(this.search.toLowerCase()) ||
+                    item.lokasi.toLowerCase().includes(this.search.toLowerCase()) ||
+                    item.jenisIkan.toLowerCase().includes(this.search.toLowerCase());
+                
+                const matchStatus = this.statusFilter === "semua" || 
+                    (this.statusFilter === "optimal" && item.status.toLowerCase().includes("optimal")) ||
+                    (this.statusFilter === "siap_panen" && item.status.toLowerCase().includes("panen")) ||
+                    (this.statusFilter === "perhatian" && item.status.toLowerCase().includes("perhatian"));
+
+                const matchKomoditas = this.komoditasFilter === "semua" ||
+                    item.jenisIkan.toLowerCase().includes(this.komoditasFilter.toLowerCase());
+
+                return matchSearch && matchStatus && matchKomoditas;
+            });
+        },
+
+        openDetail(item) {
+            this.selectedKolam = item;
+            this.detailModalOpen = true;
+        },
+
+        openEdit(item) {
+            this.selectedKolam = JSON.parse(JSON.stringify(item));
+            this.editModalOpen = true;
+        },
+
+        saveEdit() {
+            if (!this.selectedKolam) return;
+            const index = this.kolams.findIndex(k => k.id === this.selectedKolam.id);
+            if (index !== -1) {
+                this.kolams[index] = { ...this.selectedKolam };
+            }
+            this.editModalOpen = false;
+        },
+
+        deleteKolam(item) {
+            if (confirm("Apakah Anda yakin ingin menghapus data kolam " + item.id + "?")) {
+                this.kolams = this.kolams.filter(k => k.id !== item.id);
+            }
+        },
+
+        submitNewKolam() {
+            if (!this.newKolam.id || !this.newKolam.pembudidaya) {
+                alert("ID Kolam dan Pembudidaya wajib diisi!");
+                return;
+            }
+            const names = this.newKolam.pembudidaya.trim().split(" ");
+            const initials = names.length > 1 ? (names[0][0] + names[1][0]).toUpperCase() : names[0].substring(0, 2).toUpperCase();
+            
+            let statusClass = "bg-emerald-100 text-emerald-700";
+            let dotClass = "bg-emerald-500";
+            if (this.newKolam.status === "Siap Panen") {
+                statusClass = "bg-amber-100 text-amber-700";
+                dotClass = "bg-amber-500";
+            } else if (this.newKolam.status === "Perlu Perhatian") {
+                statusClass = "bg-rose-100 text-rose-700";
+                dotClass = "bg-rose-500";
+            }
+
+            const formattedPopulasi = Number(this.newKolam.populasi || 0).toLocaleString("en-US");
+
+            this.kolams.unshift({
+                id: this.newKolam.id.toUpperCase(),
+                lokasi: this.newKolam.lokasi || "Sektor Utama",
+                pembudidaya: this.newKolam.pembudidaya,
+                initials: initials,
+                colorClass: "bg-sky-100 text-sky-700",
+                jenisIkan: this.newKolam.jenisIkan,
+                tebarBenih: this.newKolam.tebarBenih,
+                populasi: formattedPopulasi,
+                populasiRaw: Number(this.newKolam.populasi || 0),
+                status: this.newKolam.status,
+                statusClass: statusClass,
+                dotClass: dotClass
+            });
+
+            this.modalOpen = false;
+            this.newKolam = {
+                id: "",
+                lokasi: "",
+                pembudidaya: "",
+                initials: "",
+                jenisIkan: "Ikan Nila Hitam",
+                tebarBenih: "23 Aug 2026",
+                populasi: 20000,
+                status: "Optimal"
+            };
+        }
+    };
+}
+</script>
+@endpush

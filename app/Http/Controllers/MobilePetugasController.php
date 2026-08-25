@@ -18,12 +18,18 @@ class MobilePetugasController extends Controller
 
     public function distribusiIndex()
     {
-        $orders = TransaksiDistribusi::with(['mitra', 'batchPembesaran'])->latest('id_transaksi')->get();
+        // Only active tasks (not yet completed)
+        $orders = TransaksiDistribusi::where('status_order', '!=', 'selesai')
+            ->with(['mitra', 'batchPembesaran'])
+            ->latest('id_transaksi')
+            ->get();
+
+        $allOrders = TransaksiDistribusi::all();
         $user = Auth::user();
 
-        $activeCount = $orders->where('status_order', 'dalam_pengiriman')->count();
-        $siapCount = $orders->where('status_order', 'siap_kirim')->count();
-        $selesaiCount = $orders->where('status_order', 'selesai')->count();
+        $activeCount = $allOrders->where('status_order', 'dalam_pengiriman')->count();
+        $siapCount = $allOrders->whereIn('status_order', ['siap_kirim', 'pending'])->count();
+        $selesaiCount = $allOrders->where('status_order', 'selesai')->count();
         $totalCount = $orders->count();
 
         return view('mobile_web_petugas.petugas_distribusi.index', compact(
@@ -33,8 +39,14 @@ class MobilePetugasController extends Controller
 
     public function distribusiRiwayat()
     {
-        $riwayats = TransaksiDistribusi::where('status_order', 'selesai')->with(['mitra', 'batchPembesaran'])->latest('tanggal_order')->get();
-        return view('mobile_web_petugas.petugas_distribusi.riwayat', compact('riwayats'));
+        $riwayats = TransaksiDistribusi::where('status_order', 'selesai')
+            ->with(['mitra', 'batchPembesaran'])
+            ->latest('tanggal_order')
+            ->get();
+
+        $totalSelesai = $riwayats->count();
+
+        return view('mobile_web_petugas.petugas_distribusi.riwayat', compact('riwayats', 'totalSelesai'));
     }
 
     public function distribusiDetail($id = null)
@@ -53,6 +65,30 @@ class MobilePetugasController extends Controller
         return view('mobile_web_petugas.petugas_distribusi.detail', compact('id', 'transaksi'));
     }
 
+    public function distribusiComplete(Request $request, $id)
+    {
+        $transaksi = TransaksiDistribusi::find($id);
+        if (!$transaksi) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Transaksi pengiriman tidak ditemukan.'], 404);
+            }
+            return redirect()->route('mobile.petugas.pengiriman')->with('error', 'Transaksi tidak ditemukan.');
+        }
+
+        $transaksi->status_order = 'selesai';
+        $transaksi->save();
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Pengiriman #' . str_pad($transaksi->id_transaksi, 4, '0', STR_PAD_LEFT) . ' telah selesai dan dipindahkan ke Riwayat!',
+                'redirect' => route('mobile.petugas.riwayat')
+            ]);
+        }
+
+        return redirect()->route('mobile.petugas.riwayat')->with('success', 'Pengiriman telah selesai!');
+    }
+
     // ========================================================
     // 2. PETUGAS PEMBIBITAN
     // ========================================================
@@ -68,8 +104,46 @@ class MobilePetugasController extends Controller
 
     public function pembibitanForm()
     {
-        $kolams = Kolam::all();
+        $kolams = Kolam::where(function($q) {
+            $q->where('tipe_kolam', 'like', '%Hatchery%')
+              ->orWhere('tipe_kolam', 'like', '%Pemijahan%')
+              ->orWhere('tipe_kolam', 'like', '%Penetasan%')
+              ->orWhere('tipe_kolam', 'like', '%Pendederan%')
+              ->orWhere('tipe_kolam', 'like', '%Pembibitan%');
+        })->get();
+
         return view('mobile_web_petugas.petugas_pembibitan.log_pembibitan', compact('kolams'));
+    }
+
+    public function pembibitanStoreBatch(Request $request)
+    {
+        $request->validate([
+            'jenis_ikan'         => 'required|string',
+            'id_kolam'           => 'required',
+            'jumlah_bibitAwal'   => 'nullable|numeric',
+        ]);
+
+        $kolam = Kolam::where('nama_kolam', $request->id_kolam)->orWhere('id_kolam', $request->id_kolam)->first();
+
+        $batch = BatchPembibitan::create([
+            'id_kolam'           => $kolam ? $kolam->id_kolam : 10,
+            'id_user'            => Auth::id() ?? 1,
+            'tgl_pemijahan'      => $request->tgl_pemijahan ?? $request->tgl_tebar ?? now(),
+            'jumlah_bibitAwal'   => $request->jumlah_bibitAwal ?? 100000,
+            'jenis_ikan'         => $request->jenis_ikan,
+            'jumlah_kematian'    => 0,
+            'status'             => 'aktif',
+        ]);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Log pembibitan baru berhasil disimpan!',
+                'batch'   => $batch
+            ]);
+        }
+
+        return redirect()->route('petugas.pembibitan.dashboard')->with('success', 'Log pembibitan baru berhasil disimpan!');
     }
 
     public function pembibitanLogPakan(Request $request)
@@ -98,6 +172,40 @@ class MobilePetugasController extends Controller
     {
         $kolams = Kolam::all();
         return view('mobile_web_petugas.petugas_pembesaran.create_batch', compact('kolams'));
+    }
+
+    public function pembesaranStoreBatch(Request $request)
+    {
+        $request->validate([
+            'jenis_ikan'       => 'required|string',
+            'id_kolam'         => 'required',
+            'tgl_tebar'        => 'required|date',
+            'biomassa_est'     => 'required|numeric',
+            'target_panen_kg'  => 'required|numeric',
+        ]);
+
+        $kolam = Kolam::where('nama_kolam', $request->id_kolam)->orWhere('id_kolam', $request->id_kolam)->first();
+
+        $batch = BatchPembesaran::create([
+            'id_kolam'         => $kolam ? $kolam->id_kolam : 1,
+            'id_user'          => Auth::id() ?? 1,
+            'tgl_tebar'        => $request->tgl_tebar,
+            'biomassa_est'     => $request->biomassa_est,
+            'fcr'              => 1.12,
+            'target_panen_kg'  => $request->target_panen_kg,
+            'jenis_ikan'       => $request->jenis_ikan,
+            'status_siklus'    => 'aktif',
+        ]);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Siklus pembesaran berhasil dimulai!',
+                'batch'   => $batch
+            ]);
+        }
+
+        return redirect()->route('petugas.pembesaran.dashboard')->with('success', 'Siklus pembesaran berhasil dimulai!');
     }
 
     public function pembesaranLogPakan(Request $request)

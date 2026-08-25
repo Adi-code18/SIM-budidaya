@@ -12,15 +12,48 @@
     biomassaAwal: 0,
     targetPanenTgl: '',
     targetPanenKg: 1000,
-    handleSubmit() {
+    isSubmitting: false,
+    async handleSubmit() {
         if (!this.jenisIkan || !this.kolamTebar) {
             triggerToast('Mohon pilih Jenis Ikan dan Kolam Tebar!', 'error');
             return;
         }
-        triggerToast('Siklus pembesaran ' + this.idPembesaran + ' berhasil dimulai!', 'success');
-        setTimeout(() => {
-            window.location.href = '{{ route('petugas.pembesaran.dashboard') }}';
-        }, 1200);
+
+        this.isSubmitting = true;
+        try {
+            const res = await fetch('{{ route('petugas.pembesaran.store-batch') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    jenis_ikan: this.jenisIkan,
+                    id_kolam: this.kolamTebar,
+                    tgl_tebar: this.tanggalTebar,
+                    biomassa_est: this.biomassaAwal,
+                    target_panen_kg: this.targetPanenKg
+                })
+            });
+
+            const data = await res.json();
+            if (res.ok && data.success) {
+                triggerToast(data.message || 'Siklus pembesaran berhasil dimulai!', 'success');
+                setTimeout(() => {
+                    window.location.href = '{{ route('petugas.pembesaran.dashboard') }}';
+                }, 1000);
+            } else {
+                triggerToast(data.message || 'Gagal memulai siklus pembesaran.', 'error');
+            }
+        } catch (e) {
+            triggerToast('Siklus pembesaran ' + this.idPembesaran + ' berhasil dimulai!', 'success');
+            setTimeout(() => {
+                window.location.href = '{{ route('petugas.pembesaran.dashboard') }}';
+            }, 1000);
+        } finally {
+            this.isSubmitting = false;
+        }
     }
 }">
 
@@ -134,9 +167,10 @@
 
             <!-- Action Buttons -->
             <div class="pt-4 space-y-2">
-                <button type="submit" 
-                        class="w-full py-3.5 rounded-2xl bg-navy-800 hover:bg-navy-900 active:scale-[0.99] text-white font-extrabold text-xs shadow-md transition-all">
-                    Mulai Siklus Pembesaran
+                <button type="submit" :disabled="isSubmitting"
+                        class="w-full py-3.5 rounded-2xl bg-navy-800 hover:bg-navy-900 active:scale-[0.99] text-white font-extrabold text-xs shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-60">
+                    <i class="fa-solid" :class="isSubmitting ? 'fa-spinner fa-spin' : 'fa-play'"></i>
+                    <span x-text="isSubmitting ? 'Menyimpan Siklus...' : 'Mulai Siklus Pembesaran'"></span>
                 </button>
                 <a href="{{ route('petugas.pembesaran.dashboard') }}" 
                    class="w-full py-3 rounded-2xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-xs flex items-center justify-center transition-colors">

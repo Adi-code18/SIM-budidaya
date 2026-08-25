@@ -3,112 +3,7 @@
 @section('title', 'Distribusi & Order - SIM-BUDIDAYA')
 
 @section('content')
-<div class="space-y-6" x-data='{
-    activeTab: "semua",
-    showForm: false,
-    showInvoice: false,
-    formMode: "create",
-    jenisOrder: "reguler",
-    selectedInvoice: null,
-    form: {
-        id: "#TRX-202310-001",
-        tanggal: "",
-        mitra: "",
-        jenisOrder: "reguler",
-        status: "pending",
-        totalBerat: "",
-        totalHarga: ""
-    },
-    orders: {!! isset($orders) && count($orders) > 0 ? json_encode($orders) : json_encode([
-        [ 'id' => "#ORD-2023-9021", 'customer' => "CV. Bahari Makmur", 'volume' => "250 kg", 'status' => "pemberokian", 'alamat' => "Panjalu, Ciamis, Jalan HJ Abdul Hamid", 'tanggal' => "5/8/26", 'label' => true ]
-    ]) !!},
-    statusOptions: [
-        { value: "pending", label: "Pending / Menunggu Konfirmasi" },
-        { value: "pemberokian", label: "Dalam Pemberokian" },
-        { value: "siap_kirim", label: "Siap Kirim / Dikirim" }
-    ],
-    nextStatusMap: {
-        pending: "pemberokian",
-        pemberokian: "siap_kirim",
-        siap_kirim: "siap_kirim",
-        selesai: "selesai"
-    },
-    statusLabel(status) {
-        const map = {
-            pending: "Pending",
-            pemberokian: "Pemberokian",
-            siap_kirim: "Siap Kirim",
-            selesai: "Selesai"
-        };
-        return map[status] || status;
-    },
-    statusClass(status) {
-        const map = {
-            pending: "bg-[#FEE2E2] text-[#991B1B]",
-            pemberokian: "bg-[#E0F2FE] text-[#0284C7]",
-            siap_kirim: "bg-[#C6F6D5] text-[#22543D]",
-            selesai: "bg-[#E2E8F0] text-[#475569]"
-        };
-        return map[status] || "bg-[#E2E8F0] text-[#475569]";
-    },
-    openCreateForm() {
-        this.formMode = "create";
-        this.showForm = true;
-        this.form = {
-            id: "#TRX-202310-001",
-            tanggal: "",
-            mitra: "",
-            jenisOrder: "reguler",
-            status: "pending",
-            totalBerat: "",
-            totalHarga: ""
-        };
-        this.jenisOrder = "reguler";
-    },
-    openEditForm(order) {
-        this.formMode = "edit";
-        this.showForm = true;
-        this.form = {
-            id: order.id,
-            tanggal: order.tanggal,
-            mitra: order.customer,
-            jenisOrder: "reguler",
-            status: order.status,
-            totalBerat: order.volume.replace(/[^0-9.]/g, ""),
-            totalHarga: ""
-        };
-        this.jenisOrder = "reguler";
-    },
-    saveForm() {
-        if (this.formMode === "edit") {
-            const target = this.orders.find(item => item.id === this.form.id);
-            if (target) {
-                target.status = this.form.status;
-            }
-        }
-        this.showForm = false;
-        this.formMode = "create";
-    },
-    openInvoice(order) {
-        this.selectedInvoice = {
-            id: order.id,
-            customer: order.customer,
-            volume: order.volume,
-            tanggal: order.tanggal,
-            alamat: order.alamat,
-            status: order.status,
-            total: order.volume
-        };
-        this.showInvoice = true;
-    },
-    closeInvoice() {
-        this.showInvoice = false;
-        this.selectedInvoice = null;
-    },
-    updateStatus(order) {
-        this.openEditForm(order);
-    }
-}' >
+<div class="space-y-6" x-data="distribusiComponent()">
 
     <!-- Subtitle & Page Title Header -->
     <div class="flex items-center gap-3">
@@ -347,8 +242,8 @@
     <!-- Order Cards Grid -->
     <div x-show="!showForm" class="grid grid-cols-1 md:grid-cols-3 gap-5">
         
-        <template x-for="order in orders" :key="order.id">
-            <div x-show="activeTab === 'semua' || activeTab === order.status || (activeTab === 'siap_kirim' && order.status === 'siap_kirim') || (activeTab === 'pemberokian' && order.status === 'pemberokian') || (activeTab === 'pending' && order.status === 'pending') || (activeTab === 'selesai' && order.status === 'selesai')" class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs flex flex-col justify-between space-y-4">
+        <template x-for="order in filteredOrders" :key="order.id">
+            <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs flex flex-col justify-between space-y-4">
                 <div class="space-y-3">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-bold text-[#0055CC]" x-text="order.id"></span>
@@ -387,35 +282,18 @@
             </div>
         </template>
 
-    </div>
-
-    <!-- Selesai Order Card Row -->
-    <div x-show="!showForm" class="max-w-xs">
-        <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs space-y-4">
-            <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-slate-400">#ORD-2023-8999</span>
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#E2E8F0] text-[#475569] uppercase">
-                    Selesai
-                </span>
+        <!-- Empty State -->
+        <div x-show="filteredOrders.length === 0" class="col-span-full bg-white rounded-2xl border border-slate-200/80 p-12 text-center">
+            <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 mx-auto flex items-center justify-center text-xl mb-3">
+                <i class="fa-solid fa-inbox"></i>
             </div>
-            <h4 class="font-extrabold text-slate-900 text-sm">Koperasi Nelayan Jaya</h4>
-
-            <div class="flex items-center justify-between text-xs text-slate-500 font-medium">
-                <div class="flex items-center gap-1">
-                    <i class="fa-regular fa-circle-check text-emerald-600"></i>
-                    <span>TANGGAL ORDER: 12/4/26</span>
-                </div>
-                <span class="font-extrabold text-slate-800">400 kg</span>
-            </div>
-
-            <button type="button" @click="openInvoice({ id: '#ORD-2023-8999', customer: 'Koperasi Nelayan Jaya', volume: '400 kg', tanggal: '12/4/26', alamat: '-', status: 'selesai' })" class="w-full py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 font-bold text-xs flex items-center justify-center gap-2 transition-colors">
-                <i class="fa-regular fa-file-lines text-xs"></i>
-                <span>Lihat Invoice</span>
-            </button>
+            <h4 class="text-sm font-bold text-slate-700">Tidak ada pesanan</h4>
+            <p class="text-xs text-slate-400 mt-1">Belum ada data pesanan untuk kategori status yang dipilih.</p>
         </div>
+
     </div>
 
-    <div x-show="showInvoice" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+    <div x-show="showInvoice" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4" style="display: none;">
         <div class="w-full max-w-lg rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden">
             <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200 bg-slate-50">
                 <div>
@@ -467,25 +345,147 @@
 
 @push('scripts')
 <script>
-    function printLabel(order) {
-        const content = [
-            'ORDER LABEL',
-            '-------------------',
-            'ID: ' + order.id,
-            'Customer: ' + order.customer,
-            'Volume: ' + order.volume,
-            'Alamat: ' + order.alamat,
-            'Status: ' + (order.status === 'pending' ? 'Pending' : order.status === 'pemberokian' ? 'Pemberokian' : order.status === 'siap_kirim' ? 'Siap Kirim' : 'Selesai')
-        ].join('\n');
+function distribusiComponent() {
+    return {
+        activeTab: 'semua',
+        showForm: false,
+        showInvoice: false,
+        formMode: 'create',
+        jenisOrder: 'reguler',
+        selectedInvoice: null,
 
-        const printWindow = window.open('', '_blank');
-        if (!printWindow) return;
+        form: {
+            id: '#TRX-202310-001',
+            tanggal: '',
+            mitra: '',
+            jenisOrder: 'reguler',
+            status: 'pending',
+            totalBerat: '',
+            totalHarga: ''
+        },
 
-        const printable = '<html><head><title>Label Order</title></head><body><pre style="font-family: sans-serif; padding: 24px; line-height: 1.6;">' + content.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</pre></body></html>';
-        printWindow.document.write(printable);
-        printWindow.document.close();
-        printWindow.focus();
-        setTimeout(() => printWindow.print(), 300);
-    }
+        orders: {!! isset($orders) && count($orders) > 0 ? json_encode($orders) : json_encode([
+            [ 'id' => '#ORD-2023-9021', 'customer' => 'CV. Bahari Makmur', 'volume' => '250 kg', 'status' => 'pemberokian', 'alamat' => 'Panjalu, Ciamis, Jalan HJ Abdul Hamid', 'tanggal' => '5/8/26', 'label' => true ]
+        ]) !!},
+
+        get filteredOrders() {
+            if (this.activeTab === 'semua') {
+                return this.orders;
+            }
+            return this.orders.filter(order => order.status === this.activeTab);
+        },
+
+        statusOptions: [
+            { value: 'pending', label: 'Pending / Menunggu Konfirmasi' },
+            { value: 'pemberokian', label: 'Dalam Pemberokian' },
+            { value: 'siap_kirim', label: 'Siap Kirim / Dikirim' }
+        ],
+
+        statusLabel(status) {
+            const map = {
+                pending: 'Pending',
+                pemberokian: 'Pemberokian',
+                siap_kirim: 'Siap Kirim',
+                selesai: 'Selesai'
+            };
+            return map[status] || status;
+        },
+
+        statusClass(status) {
+            const map = {
+                pending: 'bg-[#FEE2E2] text-[#991B1B]',
+                pemberokian: 'bg-[#E0F2FE] text-[#0284C7]',
+                siap_kirim: 'bg-[#C6F6D5] text-[#22543D]',
+                selesai: 'bg-[#E2E8F0] text-[#475569]'
+            };
+            return map[status] || 'bg-[#E2E8F0] text-[#475569]';
+        },
+
+        openCreateForm() {
+            this.formMode = 'create';
+            this.showForm = true;
+            this.form = {
+                id: '#TRX-202310-001',
+                tanggal: '',
+                mitra: '',
+                jenisOrder: 'reguler',
+                status: 'pending',
+                totalBerat: '',
+                totalHarga: ''
+            };
+            this.jenisOrder = 'reguler';
+        },
+
+        openEditForm(order) {
+            this.formMode = 'edit';
+            this.showForm = true;
+            this.form = {
+                id: order.id,
+                tanggal: order.tanggal,
+                mitra: order.customer,
+                jenisOrder: 'reguler',
+                status: order.status,
+                totalBerat: order.volume.replace(/[^0-9.]/g, ''),
+                totalHarga: ''
+            };
+            this.jenisOrder = 'reguler';
+        },
+
+        saveForm() {
+            if (this.formMode === 'edit') {
+                const target = this.orders.find(item => item.id === this.form.id);
+                if (target) {
+                    target.status = this.form.status;
+                }
+            }
+            this.showForm = false;
+            this.formMode = 'create';
+        },
+
+        openInvoice(order) {
+            this.selectedInvoice = {
+                id: order.id,
+                customer: order.customer,
+                volume: order.volume,
+                tanggal: order.tanggal,
+                alamat: order.alamat,
+                status: order.status,
+                total: order.volume
+            };
+            this.showInvoice = true;
+        },
+
+        closeInvoice() {
+            this.showInvoice = false;
+            this.selectedInvoice = null;
+        },
+
+        updateStatus(order) {
+            this.openEditForm(order);
+        }
+    };
+}
+
+function printLabel(order) {
+    if (!order) return;
+    const content = [
+        'ORDER LABEL',
+        '-------------------',
+        'ID: ' + order.id,
+        'Customer: ' + order.customer,
+        'Volume: ' + order.volume,
+        'Alamat: ' + order.alamat,
+        'Status: ' + (order.status === 'pending' ? 'Pending' : order.status === 'pemberokian' ? 'Pemberokian' : order.status === 'siap_kirim' ? 'Siap Kirim' : 'Selesai')
+    ].join('\n');
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const printable = '<html><head><title>Label Order</title></head><body><pre style="font-family: sans-serif; padding: 24px; line-height: 1.6;">' + content.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</pre></body></html>';
+    printWindow.document.write(printable);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => printWindow.print(), 300);
+}
 </script>
 @endpush

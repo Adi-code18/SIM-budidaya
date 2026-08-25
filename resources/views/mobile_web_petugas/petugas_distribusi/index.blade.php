@@ -120,45 +120,22 @@
                 </div>
             @endforeach
         @else
-            <!-- Card 1: Dalam Pengiriman -->
-            <div x-show="activeFilter === 'semua' || activeFilter === 'dalam_pengiriman'"
-                 class="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs space-y-3.5 hover:shadow-md transition-all">
-                
-                <div class="flex items-center justify-between">
-                    <div>
-                        <span class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">ID PENGIRIMAN</span>
-                        <h3 class="text-sm font-extrabold text-navy-900">#ORD-9924A</h3>
-                    </div>
-                    <span class="px-3 py-1 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1.5">
-                        <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
-                        DALAM PENGIRIMAN
-                    </span>
+            <!-- Empty State for Active Tasks -->
+            <div class="bg-white rounded-2xl border border-slate-200/90 p-8 text-center space-y-3">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 mx-auto flex items-center justify-center text-xl shadow-xs">
+                    <i class="fa-solid fa-circle-check"></i>
                 </div>
-
-                <!-- Destination Info Box -->
-                <div class="bg-slate-50 rounded-xl p-3 border border-slate-100 space-y-2">
-                    <div class="flex items-start gap-2.5">
-                        <div class="w-7 h-7 rounded-lg bg-navy-800/10 text-navy-800 flex items-center justify-center shrink-0 mt-0.5">
-                            <i class="fa-solid fa-store text-xs"></i>
-                        </div>
-                        <div>
-                            <h4 class="text-xs font-bold text-slate-900">Resto Kurama Jaya</h4>
-                            <p class="text-[11px] text-slate-500 font-medium leading-snug">Jl. Merdeka No. 45, Kecamatan Sidomulyo, Kota Mataram</p>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-between pt-2 border-t border-slate-200/60 text-[11px]">
-                        <span class="text-slate-500 font-medium"><i class="fa-regular fa-clock text-sky-600 mr-1"></i>Estimasi Tiba: <strong class="text-slate-800">14:30 WIB</strong></span>
-                        <span class="font-extrabold text-navy-800 bg-sky-50 px-2 py-0.5 rounded-lg border border-sky-100">350 KG</span>
-                    </div>
+                <div>
+                    <h3 class="text-sm font-bold text-slate-800">Semua Pengiriman Selesai!</h3>
+                    <p class="text-xs text-slate-400 mt-1">Tidak ada tugas pengiriman aktif saat ini. Seluruh pengiriman telah berhasil diselesaikan dan masuk ke riwayat.</p>
                 </div>
-
-                <!-- Action Button -->
-                <a href="{{ route('mobile.petugas.detail', ['id' => 'ORD-9924A']) }}" 
-                   class="w-full py-2.5 rounded-xl bg-navy-800 hover:bg-navy-900 active:scale-[0.99] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all">
-                    <span>Detail & Navigasi Pengiriman</span>
-                    <i class="fa-solid fa-arrow-right text-xs"></i>
-                </a>
+                <div class="pt-2">
+                    <a href="{{ route('mobile.petugas.riwayat') }}" 
+                       class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-navy-800 hover:bg-navy-900 text-white font-bold text-xs shadow-xs transition-all">
+                        <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+                        <span>Buka Riwayat Pengiriman</span>
+                    </a>
+                </div>
             </div>
         @endif
     </div>

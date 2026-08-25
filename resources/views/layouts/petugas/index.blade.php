@@ -3,7 +3,96 @@
 @section('title', 'Manajemen Petugas - SIM-BUDIDAYA')
 
 @section('content')
-<div class="space-y-6" x-data="{ activeTab: 'daftar' }">
+<div class="space-y-6" x-data="{
+    activeTab: 'daftar',
+    deleteModalOpen: false,
+    selectedUser: null,
+    isDeleting: false,
+    toastMessage: '',
+    toastType: 'success',
+    showToast: false,
+
+    formCreate: {
+        nama: '',
+        email: '',
+        password: '',
+        role: 'pembesaran',
+        no_tlp: ''
+    },
+
+    formEdit: {
+        id_user: null,
+        nama: '',
+        email: '',
+        role: 'pembesaran',
+        no_tlp: '',
+        password: ''
+    },
+
+    openEdit(user) {
+        this.formEdit = {
+            id_user: user.id_user,
+            nama: user.nama,
+            email: user.email,
+            role: user.role,
+            no_tlp: user.no_tlp || '',
+            password: ''
+        };
+        this.activeTab = 'edit';
+    },
+
+    confirmDelete(user) {
+        this.selectedUser = user;
+        this.deleteModalOpen = true;
+    },
+
+    async executeDelete() {
+        if (!this.selectedUser || this.isDeleting) return;
+        this.isDeleting = true;
+        const id = this.selectedUser.id_user;
+        const name = this.selectedUser.nama;
+
+        try {
+            const res = await fetch('{{ url('/petugas') }}/' + id, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                this.deleteModalOpen = false;
+                const rowEl = document.getElementById('user-row-' + id);
+                if (rowEl) {
+                    rowEl.style.transition = 'all 0.4s ease';
+                    rowEl.style.opacity = '0';
+                    rowEl.style.transform = 'scale(0.95)';
+                    setTimeout(() => rowEl.remove(), 400);
+                }
+                this.triggerToast(data.message || 'Data petugas ' + name + ' berhasil dihapus!', 'success');
+            } else {
+                this.triggerToast(data.message || 'Gagal menghapus data petugas.', 'error');
+            }
+        } catch (err) {
+            this.triggerToast('Terjadi kesalahan jaringan saat menghapus data.', 'error');
+        } finally {
+            this.isDeleting = false;
+            this.selectedUser = null;
+        }
+    },
+
+    triggerToast(message, type = 'success') {
+        this.toastMessage = message;
+        this.toastType = type;
+        this.showToast = true;
+        setTimeout(() => {
+            this.showToast = false;
+        }, 4000);
+    }
+}">
 
     <!-- ========================================================================= -->
     <!-- TAB 1: TABEL UTAMA MANAJEMEN PETUGAS                                      -->
@@ -108,7 +197,7 @@
                                     $latestLibur = $u->pengajuanLibur ? $u->pengajuanLibur->first() : null;
                                     $statusPetugas = $latestLibur && $latestLibur->status === 'disetujui' ? 'Cuti' : 'Aktif';
                                 @endphp
-                                <tr class="hover:bg-slate-50/50 transition-colors">
+                                <tr id="user-row-{{ $u->id_user }}" class="hover:bg-slate-50/50 transition-colors">
                                     <td class="py-4 px-6">
                                         <div class="flex items-center gap-3">
                                             <img src="{{ $avatar }}"
@@ -156,7 +245,7 @@
                                                  x-transition:leave-start="transform opacity-100 scale-100"
                                                  x-transition:leave-end="transform opacity-0 scale-95"
                                                  class="absolute right-0 mt-2 w-48 rounded-xl bg-white border border-slate-200 shadow-xl py-1.5 z-50 text-left">
-                                                <button @click="open = false; activeTab = 'edit'" class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
+                                                <button @click="open = false; openEdit({{ json_encode($u) }})" class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
                                                     <i class="fa-solid fa-pen-to-square text-sky-600 w-4"></i>
                                                     <span>Edit Data</span>
                                                 </button>
@@ -169,7 +258,7 @@
                                                     <span>Ajukan Cuti / Libur</span>
                                                 </a>
                                                 <div class="my-1 border-t border-slate-100"></div>
-                                                <button @click="open = false; if(confirm('Apakah Anda yakin ingin menghapus petugas ini?')) { alert('Data petugas berhasil dihapus!'); }" class="w-full px-3.5 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2.5">
+                                                <button @click="open = false; confirmDelete({ id_user: {{ $u->id_user }}, nama: '{{ addslashes($u->nama) }}' })" class="w-full px-3.5 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2.5">
                                                     <i class="fa-solid fa-trash-can text-red-500 w-4"></i>
                                                     <span>Hapus Petugas</span>
                                                 </button>
@@ -179,8 +268,6 @@
                                 </tr>
                             @endforeach
                         @endif
-                    </tbody>
-
                     </tbody>
                 </table>
             </div>
@@ -566,6 +653,79 @@
                 </div>
             </form>
         </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- CUSTOM CONFIRMATION MODAL (MODERN ALERT)                                  -->
+    <!-- ========================================================================= -->
+    <div x-show="deleteModalOpen" 
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4"
+         style="display: none;">
+        
+        <div @click.outside="deleteModalOpen = false" 
+             x-show="deleteModalOpen"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95 translate-y-3"
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+             x-transition:leave-end="opacity-0 scale-95 translate-y-3"
+             class="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-slate-100 p-6 space-y-5 text-center">
+            
+            <!-- Warning Icon -->
+            <div class="w-16 h-16 rounded-2xl bg-rose-50 text-rose-600 border border-rose-100 mx-auto flex items-center justify-center text-2xl shadow-xs">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+
+            <div class="space-y-1.5">
+                <h3 class="text-lg font-extrabold text-slate-900">Hapus Data Petugas?</h3>
+                <p class="text-xs text-slate-500 font-medium leading-relaxed">
+                    Apakah Anda yakin ingin menghapus petugas <strong class="text-slate-800" x-text="selectedUser?.nama"></strong>? Seluruh catatan akun dan penugasan terkait akan dihapus dari sistem.
+                </p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="grid grid-cols-2 gap-3 pt-2">
+                <button type="button" @click="deleteModalOpen = false" :disabled="isDeleting"
+                        class="w-full py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition-colors disabled:opacity-50">
+                    Batalkan
+                </button>
+                <button type="button" @click="executeDelete()" :disabled="isDeleting"
+                        class="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white font-bold text-xs shadow-md shadow-rose-950/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
+                    <i class="fa-solid text-xs" :class="isDeleting ? 'fa-spinner fa-spin' : 'fa-trash-can'"></i>
+                    <span x-text="isDeleting ? 'Menghapus...' : 'Ya, Hapus'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TOAST NOTIFICATION                                                        -->
+    <!-- ========================================================================= -->
+    <div x-show="showToast"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 -translate-y-4 scale-95"
+         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+         x-transition:leave-end="opacity-0 -translate-y-4 scale-95"
+         class="fixed top-6 right-6 z-50 max-w-sm rounded-2xl shadow-xl border p-4 flex items-center gap-3 backdrop-blur-md"
+         :class="toastType === 'success' ? 'bg-[#051B44] text-white border-sky-500/50 shadow-sky-950/20' : 'bg-rose-900/95 text-white border-rose-500/50 shadow-rose-950/20'"
+         style="display: none;">
+        <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+             :class="toastType === 'success' ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'">
+            <i class="fa-solid" :class="toastType === 'success' ? 'fa-check text-sm' : 'fa-xmark text-sm'"></i>
+        </div>
+        <div class="flex-1 text-xs font-bold leading-snug" x-text="toastMessage"></div>
+        <button @click="showToast = false" class="text-white/70 hover:text-white transition-colors">
+            <i class="fa-solid fa-xmark text-xs"></i>
+        </button>
     </div>
 
 </div>
