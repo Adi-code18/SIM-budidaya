@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Rules\Recaptcha;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
@@ -15,28 +14,23 @@ class AuthController extends Controller
 {
     public function login(Request $request)
     {
-        $throttleKey = Str::transliterate('api_login|' . Str::lower($request->input('email', '')) . '|' . $request->ip());
+        $throttleKey = Str::transliterate('api_login|' . Str::lower(trim($request->input('email', ''))) . '|' . $request->ip());
 
         // 1. Rate Limiting Check
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
-            $seconds = RateLimiter::availableIn($throttleKey);
+            $seconds = max(1, RateLimiter::availableIn($throttleKey));
             return response()->json([
                 'status' => 'error',
                 'message' => "Terlalu banyak percobaan login gagal. Silakan coba lagi dalam {$seconds} detik.",
+                'retry_after_seconds' => $seconds,
             ], 429);
         }
 
         // 2. Validation
-        $rules = [
+        $request->validate([
             'email'    => 'required|string',
             'password' => 'required|string',
-        ];
-
-        if (!empty(config('services.recaptcha.secret_key')) && $request->has('g-recaptcha-response')) {
-            $rules['g-recaptcha-response'] = ['required', new Recaptcha];
-        }
-
-        $request->validate($rules);
+        ]);
 
         $loginInput = trim($request->email);
 

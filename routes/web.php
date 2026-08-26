@@ -23,6 +23,16 @@ Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+// 2FA Routes (Pre-login & Authenticated)
+Route::get('/login/2fa', [\App\Http\Controllers\TwoFactorController::class, 'show2faForm'])->name('2fa.login');
+Route::post('/login/2fa', [\App\Http\Controllers\TwoFactorController::class, 'verify2fa'])->name('2fa.verify');
+Route::get('/2fa/setup', [\App\Http\Controllers\TwoFactorController::class, 'showSetup'])->name('2fa.setup');
+Route::post('/2fa/confirm', [\App\Http\Controllers\TwoFactorController::class, 'confirm'])->name('2fa.confirm');
+
+Route::middleware(['auth'])->group(function () {
+    Route::post('/2fa/disable', [\App\Http\Controllers\TwoFactorController::class, 'disable'])->name('2fa.disable');
+});
+
 // Web Manajer Terproteksi (Wajib Login & Peran 'manajer')
 Route::middleware(['auth', 'role:manajer'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

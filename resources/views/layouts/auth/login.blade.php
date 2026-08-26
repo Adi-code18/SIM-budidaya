@@ -14,9 +14,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    @if(!empty(config('services.recaptcha.site_key')))
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-    @endif
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -26,7 +23,26 @@
 
     <!-- Outer Login Card -->
     <div class="w-full max-w-5xl bg-white rounded-3xl shadow-xl shadow-slate-200/60 overflow-hidden grid grid-cols-1 lg:grid-cols-12 border border-slate-100 min-h-[580px]"
-         x-data="{ showPassword: false, username: '{{ old('username', '') }}', password: '', remember: {{ old('remember') ? 'true' : 'false' }} }">
+         x-data="{ 
+             showPassword: false, 
+             username: '{{ old('username', '') }}', 
+             password: '', 
+             remember: {{ old('remember') ? 'true' : 'false' }},
+             lockoutSeconds: {{ $errors->any() && preg_match('/(\d+)\s*detik/', implode(' ', $errors->all()), $m) ? (int)$m[1] : 0 }},
+             timer: null,
+             init() {
+                 if (this.lockoutSeconds > 0) {
+                     this.timer = setInterval(() => {
+                         if (this.lockoutSeconds > 1) {
+                             this.lockoutSeconds--;
+                         } else {
+                             this.lockoutSeconds = 0;
+                             clearInterval(this.timer);
+                         }
+                     }, 1000);
+                 }
+             }
+         }">
         
         <!-- Left Side: Form Section -->
         <div class="lg:col-span-6 p-8 sm:p-12 lg:p-14 flex flex-col justify-center">
@@ -54,7 +70,14 @@
                         <span class="font-bold block">Gagal Masuk:</span>
                         <ul class="list-disc list-inside mt-0.5 space-y-0.5 text-[11px] font-medium">
                             @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
+                                <li>
+                                    @if (str_contains($error, 'detik'))
+                                        <span x-show="lockoutSeconds > 0">Terlalu banyak percobaan login gagal. Silakan tunggu <strong class="font-extrabold underline decoration-rose-400" x-text="lockoutSeconds"></strong> detik lagi.</span>
+                                        <span x-show="lockoutSeconds === 0" class="text-emerald-700 font-bold">Waktu tunggu telah selesai. Silakan coba login kembali.</span>
+                                    @else
+                                        <span>{{ $error }}</span>
+                                    @endif
+                                </li>
                             @endforeach
                         </ul>
                     </div>
@@ -113,13 +136,6 @@
                         </div>
                     </div>
 
-                    <!-- reCAPTCHA Widget jika Key tersedia -->
-                    @if(!empty(config('services.recaptcha.site_key')))
-                    <div class="py-1 flex justify-center">
-                        <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.site_key') }}"></div>
-                    </div>
-                    @endif
-
                     <!-- Checkbox: Remember me -->
                     <div class="flex items-center pt-0.5">
                         <label class="flex items-center gap-2 cursor-pointer select-none">
@@ -134,9 +150,11 @@
                     <!-- Submit Button -->
                     <div class="pt-2">
                         <button type="submit" 
-                                class="w-full py-3 px-5 bg-[#051B44] hover:bg-[#09265c] text-white font-bold text-xs rounded-xl shadow-lg shadow-[#051B44]/25 hover:shadow-xl hover:shadow-[#051B44]/30 transition-all duration-200 flex items-center justify-center gap-2 group">
-                            <span>Masuk ke Dashboard Manajer</span>
-                            <i class="fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
+                                :disabled="lockoutSeconds > 0"
+                                :class="lockoutSeconds > 0 ? 'opacity-60 cursor-not-allowed bg-slate-400 shadow-none' : 'bg-[#051B44] hover:bg-[#09265c] shadow-lg shadow-[#051B44]/25 hover:shadow-xl hover:shadow-[#051B44]/30'"
+                                class="w-full py-3 px-5 text-white font-bold text-xs rounded-xl transition-all duration-200 flex items-center justify-center gap-2 group">
+                            <span x-text="lockoutSeconds > 0 ? 'Coba lagi dalam (' + lockoutSeconds + 's)' : 'Masuk ke Dashboard Manajer'"></span>
+                            <i class="fa-solid text-xs group-hover:translate-x-1 transition-transform" :class="lockoutSeconds > 0 ? 'fa-clock' : 'fa-arrow-right'"></i>
                         </button>
                     </div>
                 </form>

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Rules\Recaptcha;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -38,26 +37,19 @@ class AuthController extends Controller
 
         // 1. Rate Limiting Check
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
-            $seconds = RateLimiter::availableIn($throttleKey);
+            $seconds = max(1, RateLimiter::availableIn($throttleKey));
             return back()->withInput($request->only('username', 'remember'))->withErrors([
                 'username' => "Terlalu banyak percobaan login gagal. Silakan tunggu {$seconds} detik lagi.",
             ]);
         }
 
-        // 2. Form & reCAPTCHA Validation
-        $rules = [
+        // 2. Form Validation
+        $request->validate([
             'username' => ['required', 'string'],
             'password' => ['required', 'string'],
-        ];
-
-        if (!empty(config('services.recaptcha.secret_key'))) {
-            $rules['g-recaptcha-response'] = ['required', new Recaptcha];
-        }
-
-        $request->validate($rules, [
+        ], [
             'username.required' => 'Email atau Username wajib diisi.',
             'password.required' => 'Kata sandi wajib diisi.',
-            'g-recaptcha-response.required' => 'Mohon selesaikan verifikasi reCAPTCHA.',
         ]);
 
         $loginInput = trim($request->input('username'));
@@ -85,14 +77,25 @@ class AuthController extends Controller
             ]);
         }
 
-        // 6. Login & One-Session Enforcement (Hapus sesi perangkat lain)
-        Auth::login($user, $remember);
-        $request->session()->regenerate();
-        $this->enforceSingleSession($user, $password, $request);
-
+        // 6. Mandatory 2FA Enforcement (Wajib 2FA untuk SEMUA user)
+        session([
+            '2fa:user_id'  => $user->id_user ?? $user->id,
+            '2fa:remember' => $remember,
+            '2fa:role'     => 'manajer'
+        ]);
         RateLimiter::clear($throttleKey);
 
-        return redirect()->intended(route('dashboard'));
+        if (!$user->two_factor_confirmed_at) {
+            if (!$user->two_factor_secret) {
+                $google2fa = new \PragmaRX\Google2FA\Google2FA();
+                $user->update([
+                    'two_factor_secret' => encrypt($google2fa->generateSecretKey()),
+                ]);
+            }
+            return redirect()->route('2fa.setup');
+        }
+
+        return redirect()->route('2fa.login');
     }
 
     /**
@@ -125,28 +128,21 @@ class AuthController extends Controller
 
         // 1. Rate Limiting Check
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
-            $seconds = RateLimiter::availableIn($throttleKey);
+            $seconds = max(1, RateLimiter::availableIn($throttleKey));
             return back()->withInput($request->only('email', 'selectedRole'))->withErrors([
                 'email' => "Terlalu banyak percobaan login gagal. Silakan tunggu {$seconds} detik lagi.",
             ]);
         }
 
-        // 2. Form & reCAPTCHA Validation
-        $rules = [
+        // 2. Form Validation
+        $request->validate([
             'email'        => ['required', 'string'],
             'password'     => ['required', 'string'],
             'selectedRole' => ['required', 'string', 'in:distribusi,pembesaran,pembibitan'],
-        ];
-
-        if (!empty(config('services.recaptcha.secret_key'))) {
-            $rules['g-recaptcha-response'] = ['required', new Recaptcha];
-        }
-
-        $request->validate($rules, [
+        ], [
             'email.required' => 'Email atau Nomor Handphone wajib diisi.',
             'password.required' => 'Kata sandi wajib diisi.',
             'selectedRole.required' => 'Pilihan peran petugas wajib dipilih.',
-            'g-recaptcha-response.required' => 'Mohon selesaikan verifikasi reCAPTCHA.',
         ]);
 
         $loginInput = trim($request->input('email'));
@@ -183,21 +179,25 @@ class AuthController extends Controller
             ]);
         }
 
-        // 6. Login & One-Session Enforcement
-        Auth::login($user, false);
-        $request->session()->regenerate();
-        $this->enforceSingleSession($user, $password, $request);
-
+        // 6. Mandatory 2FA Enforcement (Wajib 2FA untuk SEMUA user)
+        session([
+            '2fa:user_id'      => $user->id_user ?? $user->id,
+            '2fa:remember'     => false,
+            '2fa:selectedRole' => $selectedRole
+        ]);
         RateLimiter::clear($throttleKey);
 
-        // 7. Redirect ke dashboard operasional sesuai perannya
-        if ($selectedRole === 'pembibitan') {
-            return redirect()->route('petugas.pembibitan.dashboard');
-        } elseif ($selectedRole === 'pembesaran') {
-            return redirect()->route('petugas.pembesaran.dashboard');
-        } else {
-            return redirect()->route('mobile.petugas.pengiriman');
+        if (!$user->two_factor_confirmed_at) {
+            if (!$user->two_factor_secret) {
+                $google2fa = new \PragmaRX\Google2FA\Google2FA();
+                $user->update([
+                    'two_factor_secret' => encrypt($google2fa->generateSecretKey()),
+                ]);
+            }
+            return redirect()->route('2fa.setup');
         }
+
+        return redirect()->route('2fa.login');
     }
 
     /**
@@ -256,7 +256,7 @@ class AuthController extends Controller
      */
     protected function getThrottleKey(Request $request, string $prefix): string
     {
-        $input = $request->input('username') ?? $request->input('email') ?? '';
+        $input = trim($request->input('username') ?? $request->input('email') ?? '');
         return Str::transliterate($prefix . '|' . Str::lower($input) . '|' . $request->ip());
     }
 }

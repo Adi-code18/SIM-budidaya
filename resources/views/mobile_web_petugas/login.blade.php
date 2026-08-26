@@ -10,9 +10,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    @if(!empty(config('services.recaptcha.site_key')))
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-    @endif
     <script>
         tailwind.config = {
             theme: {
@@ -46,6 +43,21 @@
              toastShow: false,
              toastMsg: '',
              toastType: 'info',
+             lockoutSeconds: {{ $errors->any() && preg_match('/(\d+)\s*detik/', implode(' ', $errors->all()), $m) ? (int)$m[1] : 0 }},
+             timer: null,
+             
+             init() {
+                 if (this.lockoutSeconds > 0) {
+                     this.timer = setInterval(() => {
+                         if (this.lockoutSeconds > 1) {
+                             this.lockoutSeconds--;
+                         } else {
+                             this.lockoutSeconds = 0;
+                             clearInterval(this.timer);
+                         }
+                     }, 1000);
+                 }
+             },
              
              triggerToast(msg, type = 'info') {
                  this.toastMsg = msg;
@@ -99,7 +111,14 @@
                     <span class="font-bold block">Gagal Masuk:</span>
                     <ul class="list-disc list-inside mt-0.5 space-y-0.5 text-[11px]">
                         @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
+                            <li>
+                                @if (str_contains($error, 'detik'))
+                                    <span x-show="lockoutSeconds > 0">Terlalu banyak percobaan login gagal. Silakan tunggu <strong class="font-extrabold underline decoration-rose-400" x-text="lockoutSeconds"></strong> detik lagi.</span>
+                                    <span x-show="lockoutSeconds === 0" class="text-emerald-700 font-bold">Waktu tunggu telah selesai. Silakan coba login kembali.</span>
+                                @else
+                                    <span>{{ $error }}</span>
+                                @endif
+                            </li>
                         @endforeach
                     </ul>
                 </div>
@@ -179,18 +198,13 @@
                     </div>
                 </div>
 
-                <!-- reCAPTCHA Widget jika Key tersedia -->
-                @if(!empty(config('services.recaptcha.site_key')))
-                <div class="py-1 flex justify-center">
-                    <div class="g-recaptcha scale-90" data-sitekey="{{ config('services.recaptcha.site_key') }}"></div>
-                </div>
-                @endif
-
                 <!-- Submit Button -->
                 <button type="submit" 
-                        class="w-full py-3 rounded-2xl bg-navy-800 hover:bg-navy-900 active:scale-[0.99] text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-md transition-all">
-                    <span>Masuk Petugas</span>
-                    <i class="fa-solid fa-arrow-right text-xs"></i>
+                        :disabled="lockoutSeconds > 0"
+                        :class="lockoutSeconds > 0 ? 'opacity-60 cursor-not-allowed bg-slate-400 shadow-none' : 'bg-navy-800 hover:bg-navy-900 active:scale-[0.99] shadow-md'"
+                        class="w-full py-3 rounded-2xl text-white font-extrabold text-xs flex items-center justify-center gap-2 transition-all">
+                    <span x-text="lockoutSeconds > 0 ? 'Coba lagi dalam (' + lockoutSeconds + 's)' : 'Masuk Petugas'"></span>
+                    <i class="fa-solid text-xs" :class="lockoutSeconds > 0 ? 'fa-clock' : 'fa-arrow-right'"></i>
                 </button>
 
             </form>

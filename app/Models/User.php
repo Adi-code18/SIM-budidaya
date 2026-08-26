@@ -6,6 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use PragmaRX\Google2FA\Google2FA;
+use BaconQrCode\Writer;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\Style\RendererStyle;
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 
 class User extends Authenticatable
 {
@@ -20,11 +25,14 @@ class User extends Authenticatable
         'password',
         'role',
         'no_tlp',
+        'two_factor_secret',
+        'two_factor_confirmed_at',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+        'two_factor_secret',
     ];
 
     protected function casts(): array
@@ -32,7 +40,13 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'two_factor_confirmed_at' => 'datetime',
         ];
+    }
+
+    public function hasTwoFactorEnabled(): bool
+    {
+        return !is_null($this->two_factor_confirmed_at);
     }
 
     public function pengajuanLibur()
@@ -73,5 +87,28 @@ class User extends Authenticatable
     public function transaksiDistribusi()
     {
         return $this->hasMany(TransaksiDistribusi::class, 'id_user', 'id_user');
+    }
+
+    public function getTwoFactorQrCodeSvgAttribute(): string
+    {
+        if (!$this->two_factor_secret) {
+            return '';
+        }
+
+        $google2fa = new Google2FA();
+        $qrCodeUrl = $google2fa->getQRCodeUrl(
+            config('app.name'),
+            $this->email,
+            decrypt($this->two_factor_secret)
+        );
+
+        $writer = new Writer(
+            new ImageRenderer(
+                new RendererStyle(200),
+                new SvgImageBackEnd()
+            )
+        );
+
+        return $writer->writeString($qrCodeUrl);
     }
 }
