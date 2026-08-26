@@ -1,23 +1,26 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Auth;
 
+use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\Google2FA;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use PragmaRX\Google2FA\Google2FA;
 
 class TwoFactorController extends Controller
 {
-    // Tampilkan setup QR code untuk 2FA wajib
+    /**
+     * Tampilkan setup QR code untuk 2FA wajib.
+     */
     public function showSetup(Request $request)
     {
         $user = $request->user();
 
         if (!$user && session()->has('2fa:user_id')) {
             $userId = session('2fa:user_id');
-            $user = User::where('id_user', $userId)->orWhere('id', $userId)->first();
+            $user = User::find($userId);
         }
 
         if (!$user) {
@@ -33,13 +36,34 @@ class TwoFactorController extends Controller
             ]);
         }
 
-        return view('auth.two_factor_setup', [
-            'qrSvg' => $user->two_factor_qr_code_svg,
-            'secretKey' => decrypt($user->two_factor_secret),
-        ]);
+        return view('auth.two_factor_setup');
     }
 
-    // Konfirmasi bahwa user sukses scan dan memasukkan kode 6 digit pertama
+    /**
+     * Helper untuk mendapatkan secret key yang terdekripsi secara aman.
+     */
+    protected function getSecretKey(User $user): string
+    {
+        if (!$user->two_factor_secret) {
+            $google2fa = new Google2FA();
+            $secret = $google2fa->generateSecretKey();
+            $user->update(['two_factor_secret' => encrypt($secret)]);
+            return $secret;
+        }
+
+        try {
+            return decrypt($user->two_factor_secret);
+        } catch (\Throwable $e) {
+            $google2fa = new Google2FA();
+            $secret = $google2fa->generateSecretKey();
+            $user->update(['two_factor_secret' => encrypt($secret)]);
+            return $secret;
+        }
+    }
+
+    /**
+     * Konfirmasi bahwa user sukses scan dan memasukkan kode 6 digit pertama.
+     */
     public function confirm(Request $request)
     {
         $request->validate(['code' => 'required|digits:6'], [
@@ -50,7 +74,7 @@ class TwoFactorController extends Controller
         $user = $request->user();
         if (!$user && session()->has('2fa:user_id')) {
             $userId = session('2fa:user_id');
-            $user = User::where('id_user', $userId)->orWhere('id', $userId)->first();
+            $user = User::find($userId);
         }
 
         if (!$user) {
@@ -58,7 +82,7 @@ class TwoFactorController extends Controller
         }
 
         $google2fa = new Google2FA();
-        $secret = decrypt($user->two_factor_secret);
+        $secret = $this->getSecretKey($user);
 
         $valid = $google2fa->verifyKey($secret, $request->code);
 
@@ -94,7 +118,9 @@ class TwoFactorController extends Controller
         return redirect()->route('dashboard')->with('status', 'Autentikasi dua langkah (2FA) berhasil diaktifkan!');
     }
 
-    // Nonaktifkan 2FA untuk akun user yang sedang login
+    /**
+     * Nonaktifkan 2FA untuk akun user yang sedang login.
+     */
     public function disable(Request $request)
     {
         $user = $request->user();
@@ -117,7 +143,9 @@ class TwoFactorController extends Controller
         return back()->with('status', '2FA berhasil dinonaktifkan.');
     }
 
-    // Tampilkan form tantangan OTP saat login
+    /**
+     * Tampilkan form tantangan OTP saat login.
+     */
     public function show2faForm()
     {
         if (!session()->has('2fa:user_id')) {
@@ -127,7 +155,9 @@ class TwoFactorController extends Controller
         return view('auth.two_factor_login');
     }
 
-    // Verifikasi OTP saat login
+    /**
+     * Verifikasi OTP saat login.
+     */
     public function verify2fa(Request $request)
     {
         if (!session()->has('2fa:user_id')) {
@@ -140,7 +170,7 @@ class TwoFactorController extends Controller
         ]);
 
         $userId = session('2fa:user_id');
-        $user = User::where('id_user', $userId)->orWhere('id', $userId)->first();
+        $user = User::find($userId);
 
         if (!$user || !$user->two_factor_secret) {
             session()->forget(['2fa:user_id', '2fa:remember', '2fa:role', '2fa:selectedRole']);
@@ -148,7 +178,7 @@ class TwoFactorController extends Controller
         }
 
         $google2fa = new Google2FA();
-        $secret = decrypt($user->two_factor_secret);
+        $secret = $this->getSecretKey($user);
         $valid = $google2fa->verifyKey($secret, $request->code);
 
         if (!$valid) {
@@ -174,5 +204,24 @@ class TwoFactorController extends Controller
         }
 
         return redirect()->intended(route('dashboard'));
+    }
+
+    /**
+     * Batalkan alur 2FA dan kembali ke login dengan membersihkan sesi.
+     */
+    public function cancel(Request $request)
+    {
+        $selectedRole = session('2fa:selectedRole');
+        $role = session('2fa:role');
+
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        if ($selectedRole || $role === 'petugas') {
+            return redirect()->route('mobile.petugas.login');
+        }
+
+        return redirect()->route('login');
     }
 }

@@ -1,15 +1,16 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Auth;
 
+use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\Google2FA;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -56,7 +57,7 @@ class AuthController extends Controller
         $password = $request->input('password');
         $remember = $request->boolean('remember');
 
-        // 3. Lookup user via email or no_tlp (menggunakan query builder parameterized untuk keamanan terhadap SQL injection)
+        // 3. Lookup user via email or no_tlp
         $user = User::where('email', $loginInput)
             ->orWhere('no_tlp', $loginInput)
             ->first();
@@ -87,7 +88,7 @@ class AuthController extends Controller
 
         if (!$user->two_factor_confirmed_at) {
             if (!$user->two_factor_secret) {
-                $google2fa = new \PragmaRX\Google2FA\Google2FA();
+                $google2fa = new Google2FA();
                 $user->update([
                     'two_factor_secret' => encrypt($google2fa->generateSecretKey()),
                 ]);
@@ -189,7 +190,7 @@ class AuthController extends Controller
 
         if (!$user->two_factor_confirmed_at) {
             if (!$user->two_factor_secret) {
-                $google2fa = new \PragmaRX\Google2FA\Google2FA();
+                $google2fa = new Google2FA();
                 $user->update([
                     'two_factor_secret' => encrypt($google2fa->generateSecretKey()),
                 ]);
@@ -227,16 +228,14 @@ class AuthController extends Controller
     /**
      * Enforce single session per user (One Session).
      */
-    protected function enforceSingleSession(User $user, string $password, Request $request)
+    public function enforceSingleSession(User $user, string $password, Request $request)
     {
-        // 1. Invalidate session via Auth method jika memungkinkan (rehashes password hash in session)
         try {
             Auth::logoutOtherDevices($password);
         } catch (\Throwable $e) {
-            // Silently continue jika ada exception
+            // Silently continue
         }
 
-        // 2. Hapus semua sesi lain dari tabel sessions jika menggunakan session database
         if (config('session.driver') === 'database') {
             try {
                 $currentSessionId = $request->session()->getId();
@@ -246,7 +245,7 @@ class AuthController extends Controller
                     ->where('id', '!=', $currentSessionId)
                     ->delete();
             } catch (\Throwable $e) {
-                // Ignore jika session table belum dibuat
+                // Ignore jika tabel belum ada
             }
         }
     }

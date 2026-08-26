@@ -6,11 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use PragmaRX\Google2FA\Google2FA;
-use BaconQrCode\Writer;
-use BaconQrCode\Renderer\ImageRenderer;
-use BaconQrCode\Renderer\Style\RendererStyle;
-use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use App\Services\Google2FA;
 
 class User extends Authenticatable
 {
@@ -95,20 +91,33 @@ class User extends Authenticatable
             return '';
         }
 
+        try {
+            $secret = decrypt($this->two_factor_secret);
+        } catch (\Throwable $e) {
+            $secret = (string) $this->two_factor_secret;
+        }
+
         $google2fa = new Google2FA();
         $qrCodeUrl = $google2fa->getQRCodeUrl(
-            config('app.name'),
+            config('app.name', 'SIM-BUDIDAYA'),
             $this->email,
-            decrypt($this->two_factor_secret)
+            $secret
         );
 
-        $writer = new Writer(
-            new ImageRenderer(
-                new RendererStyle(200),
-                new SvgImageBackEnd()
-            )
-        );
+        if (class_exists(\BaconQrCode\Writer::class)) {
+            try {
+                $writer = new \BaconQrCode\Writer(
+                    new \BaconQrCode\Renderer\ImageRenderer(
+                        new \BaconQrCode\Renderer\Style\RendererStyle(200),
+                        new \BaconQrCode\Renderer\Image\SvgImageBackEnd()
+                    )
+                );
+                return $writer->writeString($qrCodeUrl);
+            } catch (\Throwable $e) {
+                // Fallback to inline HTML QR code
+            }
+        }
 
-        return $writer->writeString($qrCodeUrl);
+        return $google2fa->getQRCodeInlineHtml($qrCodeUrl, 180);
     }
 }

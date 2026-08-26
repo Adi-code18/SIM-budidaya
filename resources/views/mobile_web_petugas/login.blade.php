@@ -36,7 +36,7 @@
         $initialRole = old('selectedRole', $role ?? 'distribusi');
     @endphp
 
-    <div class="w-full sm:max-w-md h-full sm:h-[844px] bg-white flex flex-col justify-between p-6 overflow-y-auto sm:rounded-3xl sm:shadow-2xl border border-slate-200 relative" 
+    <div class="w-full sm:max-w-md min-h-screen sm:min-h-0 bg-white flex flex-col justify-between p-6 sm:p-8 overflow-y-auto sm:rounded-3xl sm:shadow-xl border border-slate-200 relative sm:my-8" 
          x-data="{
              selectedRole: '{{ $initialRole }}',
              showPass: false,

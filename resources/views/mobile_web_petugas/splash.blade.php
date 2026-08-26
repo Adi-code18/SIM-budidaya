@@ -46,7 +46,7 @@
         }
     @endphp
 
-    <div class="w-full sm:max-w-md h-full sm:h-[844px] bg-gradient-to-b from-navy-800 via-navy-900 to-navy-950 text-white flex flex-col items-center justify-between p-8 relative overflow-hidden sm:rounded-3xl sm:shadow-2xl"
+    <div class="w-full sm:max-w-md min-h-screen sm:min-h-[560px] bg-gradient-to-b from-navy-800 via-navy-900 to-navy-950 text-white flex flex-col items-center justify-between p-8 relative overflow-hidden sm:rounded-3xl sm:shadow-2xl sm:my-8"
          x-data="{ 
              init() {
                  setTimeout(() => {

@@ -58,7 +58,7 @@
         </form>
 
         <div class="mt-6 text-center border-t border-slate-100 pt-4">
-            <a href="{{ route('login') }}" class="text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors">
+            <a href="{{ route('2fa.cancel') }}" class="text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors">
                 <i class="fa-solid fa-arrow-left mr-1"></i> Kembali ke Login
             </a>
         </div>

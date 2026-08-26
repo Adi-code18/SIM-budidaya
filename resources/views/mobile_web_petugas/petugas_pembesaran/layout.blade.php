@@ -62,26 +62,25 @@
             border-radius: 9999px;
         }
 
+        /* Responsive Wrapper for Mobile & Desktop */
         .mobile-screen-wrapper {
-            max-w: 480px;
+            width: 100%;
             min-height: 100vh;
             margin: 0 auto;
             background-color: #f8fafc;
             position: relative;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
         }
 
         @media (min-width: 640px) {
             body {
-                padding: 1.5rem 0;
-                background: linear-gradient(135deg, #091322 0%, #11233e 100%);
+                background-color: #f1f5f9;
             }
             .mobile-screen-wrapper {
-                min-height: 844px;
-                max-height: 920px;
-                border-radius: 40px;
-                overflow: hidden;
-                border: 10px solid #1e293b;
+                max-width: 48rem; /* max-w-3xl */
+                min-height: 100vh;
+                box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+                border-left: 1px solid #e2e8f0;
+                border-right: 1px solid #e2e8f0;
             }
         }
 
@@ -180,7 +179,7 @@
         <!-- Bottom Navigation Bar (Dashboard, Pakan, Profile) -->
         @hasSection('hide_nav')
         @else
-        <nav class="fixed sm:absolute bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/80 px-6 py-2 flex items-center justify-around shadow-lg">
+        <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/80 px-6 py-2 flex items-center justify-around shadow-lg max-w-full sm:max-w-3xl sm:mx-auto sm:border-x sm:rounded-t-2xl">
             
             <!-- Tab 1: Dashboard -->
             <a href="{{ route('petugas.pembesaran.dashboard') }}" 

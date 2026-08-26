@@ -11,7 +11,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        if (!class_exists(\PragmaRX\Google2FA\Google2FA::class, false)) {
+            class_alias(\App\Services\Google2FA::class, \PragmaRX\Google2FA\Google2FA::class);
+        }
     }
 
     /**

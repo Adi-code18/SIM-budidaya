@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Manajer;
 
+use App\Http\Controllers\Controller;
 use App\Models\Kolam;
 use App\Models\ManajemenPakan;
 use Illuminate\Http\Request;

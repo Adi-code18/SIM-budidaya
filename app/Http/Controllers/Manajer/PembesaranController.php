@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Manajer;
 
+use App\Http\Controllers\Controller;
 use App\Models\BatchPembesaran;
 use App\Models\Kolam;
 use Illuminate\Http\Request;
