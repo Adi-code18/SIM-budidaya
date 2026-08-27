@@ -11,6 +11,7 @@ use App\Http\Controllers\Manajer\PembesaranController;
 use App\Http\Controllers\Manajer\PembibitanController;
 use App\Http\Controllers\Manajer\PembudidayaController;
 use App\Http\Controllers\Manajer\PetugasController;
+use App\Http\Controllers\Manajer\PengaturanController;
 use App\Http\Controllers\Petugas\PetugasDistribusiController;
 use App\Http\Controllers\Petugas\PetugasPembesaranController;
 use App\Http\Controllers\Petugas\PetugasPembibitanController;
@@ -58,6 +59,7 @@ Route::middleware(['auth', 'role:manajer'])->group(function () {
     Route::post('/pembibitan', [PembibitanController::class, 'store'])->name('pembibitan.store');
     Route::put('/pembibitan/{id}', [PembibitanController::class, 'update'])->name('pembibitan.update');
     Route::delete('/pembibitan/{id}', [PembibitanController::class, 'destroy'])->name('pembibitan.destroy');
+    Route::post('/pembibitan/{id}/transfer', [PembibitanController::class, 'transferKePembesaran'])->name('pembibitan.transfer');
 
     // Manajemen Batch Pembesaran
     Route::get('/pembesaran', [PembesaranController::class, 'index'])->name('pembesaran');
@@ -89,6 +91,11 @@ Route::middleware(['auth', 'role:manajer'])->group(function () {
     Route::delete('/petugas/{id}', [PetugasController::class, 'destroy'])->name('petugas.destroy');
     Route::get('/petugas/libur/approval', [PetugasController::class, 'approvalLibur'])->name('petugas.libur.approval');
     Route::get('/petugas/libur/ajukan', [PetugasController::class, 'ajukanLibur'])->name('petugas.libur.ajukan');
+
+    // Halaman Pengaturan & Profil
+    Route::get('/pengaturan', [PengaturanController::class, 'index'])->name('pengaturan');
+    Route::put('/pengaturan/profile', [PengaturanController::class, 'updateProfile'])->name('pengaturan.update-profile');
+    Route::put('/pengaturan/preferences', [PengaturanController::class, 'updatePreferences'])->name('pengaturan.update-preferences');
 });
 
 // =========================================================================

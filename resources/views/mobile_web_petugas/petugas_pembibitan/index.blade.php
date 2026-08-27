@@ -3,40 +3,7 @@
 @section('title', 'Dashboard Petugas Pembibitan - SIM-BUDIDAYA Mobile')
 
 @section('content')
-<div class="p-4 space-y-4" x-data="{
-    showAllModal: false,
-    filterStatus: 'semua',
-    searchQuery: '',
-
-    allBatches: {!! isset($batches) && count($batches) > 0 ? json_encode(
-        $batches->map(function($b) {
-            $days = $b->tgl_pemijahan ? \Carbon\Carbon::parse($b->tgl_pemijahan)->diffInDays(now()) : 2;
-            $isWaspada = $b->jumlah_kematian > 3000;
-            return [
-                'id' => 'Batch-H-' . str_pad($b->id_batch, 3, '0', STR_PAD_LEFT),
-                'status' => $isWaspada ? 'WASPADA' : 'SEHAT',
-                'statusClass' => $isWaspada ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                'dotColor' => $isWaspada ? 'bg-rose-500' : 'bg-emerald-500',
-                'detail' => ($b->kolam ? $b->kolam->nama_kolam : 'Hatchery') . ' / ' . $b->jenis_ikan,
-                'populasi' => number_format($b->jumlah_bibitAwal - $b->jumlah_kematian, 0, ',', '.') . ' Ekor',
-                'umur' => $days . ' Hari (DOC)',
-                'icon' => 'fa-fish',
-                'iconBg' => 'bg-slate-100 text-slate-600'
-            ];
-        })
-    ) : json_encode([
-        [ 'id' => 'Batch-H-042', 'status' => 'SEHAT', 'statusClass' => 'bg-emerald-50 text-emerald-700 border-emerald-200', 'dotColor' => 'bg-emerald-500', 'detail' => 'Pembibitan 4 / Nila Merah', 'populasi' => '250.000 Ekor', 'umur' => '14 Hari (DOC)', 'icon' => 'fa-fish', 'iconBg' => 'bg-slate-100 text-slate-600' ]
-    ]) !!},
-
-    get filteredBatches() {
-        return this.allBatches.filter(b => {
-            const matchSearch = b.id.toLowerCase().includes(this.searchQuery.toLowerCase()) || 
-                                b.detail.toLowerCase().includes(this.searchQuery.toLowerCase());
-            const matchStatus = this.filterStatus === 'semua' || b.status.toLowerCase() === this.filterStatus.toLowerCase();
-            return matchSearch && matchStatus;
-        });
-    }
-}">
+<div class="p-4 space-y-4" x-data="petugasPembibitanComponent()">
 
     <!-- Header Section -->
     <div class="text-center pt-2 pb-1 space-y-1">
@@ -265,4 +232,43 @@
     </div>
 
 </div>
+
+<script>
+function petugasPembibitanComponent() {
+    return {
+        showAllModal: false,
+        filterStatus: 'semua',
+        searchQuery: '',
+
+        allBatches: {!! isset($batches) && count($batches) > 0 ? json_encode(
+            $batches->map(function($b) {
+                $days = $b->tgl_pemijahan ? \Carbon\Carbon::parse($b->tgl_pemijahan)->diffInDays(now()) : 2;
+                $isWaspada = $b->jumlah_kematian > 3000;
+                return [
+                    'id' => 'Batch-H-' . str_pad($b->id_batch, 3, '0', STR_PAD_LEFT),
+                    'status' => $isWaspada ? 'WASPADA' : 'SEHAT',
+                    'statusClass' => $isWaspada ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                    'dotColor' => $isWaspada ? 'bg-rose-500' : 'bg-emerald-500',
+                    'detail' => ($b->kolam ? $b->kolam->nama_kolam : 'Hatchery') . ' / ' . $b->jenis_ikan,
+                    'populasi' => number_format($b->jumlah_bibitAwal - $b->jumlah_kematian, 0, ',', '.') . ' Ekor',
+                    'umur' => $days . ' Hari (DOC)',
+                    'icon' => 'fa-fish',
+                    'iconBg' => 'bg-slate-100 text-slate-600'
+                ];
+            })
+        ) : json_encode([
+            [ 'id' => 'Batch-H-042', 'status' => 'SEHAT', 'statusClass' => 'bg-emerald-50 text-emerald-700 border-emerald-200', 'dotColor' => 'bg-emerald-500', 'detail' => 'Pembibitan 4 / Nila Merah', 'populasi' => '250.000 Ekor', 'umur' => '14 Hari (DOC)', 'icon' => 'fa-fish', 'iconBg' => 'bg-slate-100 text-slate-600' ]
+        ]) !!},
+
+        get filteredBatches() {
+            return this.allBatches.filter(b => {
+                const matchSearch = b.id.toLowerCase().includes(this.searchQuery.toLowerCase()) || 
+                                    b.detail.toLowerCase().includes(this.searchQuery.toLowerCase());
+                const matchStatus = this.filterStatus === 'semua' || b.status.toLowerCase() === this.filterStatus.toLowerCase();
+                return matchSearch && matchStatus;
+            });
+        }
+    };
+}
+</script>
 @endsection

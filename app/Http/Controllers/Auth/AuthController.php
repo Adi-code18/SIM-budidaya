@@ -258,4 +258,29 @@ class AuthController extends Controller
         $input = trim($request->input('username') ?? $request->input('email') ?? '');
         return Str::transliterate($prefix . '|' . Str::lower($input) . '|' . $request->ip());
     }
+
+    /**
+     * Verifikasi token Cloudflare Turnstile dari client.
+     */
+    protected function verifyTurnstile(Request $request): bool
+    {
+        $turnstileResponse = $request->input('cf-turnstile-response');
+        $secretKey = config('services.turnstile.secret_key');
+
+        if (!$turnstileResponse || !$secretKey) {
+            return false;
+        }
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::asForm()->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
+                'secret'   => $secretKey,
+                'response' => $turnstileResponse,
+                'remoteip' => $request->ip(),
+            ]);
+
+            return $response->json('success') === true;
+        } catch (\Throwable $e) {
+            return true;
+        }
+    }
 }

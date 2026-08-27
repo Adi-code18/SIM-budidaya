@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureSingleSession;
 use App\Http\Middleware\RoleMiddleware;
 use App\Http\Middleware\SecurityHeadersMiddleware;
 use Illuminate\Database\QueryException;
@@ -22,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             SecurityHeadersMiddleware::class,
             AuthenticateSession::class,
+            EnsureSingleSession::class,
         ]);
 
         // Daftarkan middleware alias untuk otorisasi peran

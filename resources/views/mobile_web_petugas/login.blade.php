@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -196,6 +197,11 @@
                             Lupa Kata Sandi?
                         </a>
                     </div>
+                </div>
+
+                <!-- Cloudflare Turnstile Widget -->
+                <div class="py-1 flex justify-center">
+                    <div class="cf-turnstile" data-sitekey="{{ config('services.turnstile.site_key') }}" data-[#051120] data-theme="light"></div>
                 </div>
 
                 <!-- Submit Button -->

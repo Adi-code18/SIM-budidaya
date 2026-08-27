@@ -43,35 +43,20 @@
     <!-- Menu Items List Card -->
     <div class="bg-white rounded-3xl border border-slate-200/90 overflow-hidden shadow-xs divide-y divide-slate-100">
         
-        <!-- Item 1: Pengaturan Notifikasi -->
-        <button @click="triggerToast(i18n[currentLang].notifSaved, 'info')"
+        <!-- Item 1: Pengaturan -->
+        <button @click="settingsModal = true"
                 class="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors text-left">
             <div class="flex items-center gap-3.5">
                 <div class="w-9 h-9 rounded-xl bg-sky-50 text-sky-700 flex items-center justify-center text-sm">
-                    <i class="fa-regular fa-bell"></i>
+                    <i class="fa-solid fa-gear"></i>
                 </div>
                 <div>
-                    <h3 class="text-xs font-bold text-slate-900" x-text="i18n[currentLang].notifications">Pengaturan Notifikasi</h3>
-                    <p class="text-[10px] text-slate-400 font-medium" x-text="i18n[currentLang].notificationsSub">Alert suhu, pH & jadwal pakan</p>
+                    <h3 class="text-xs font-bold text-slate-900" x-text="i18n[currentLang].settings || 'Pengaturan'">Pengaturan</h3>
+                    <p class="text-[10px] text-slate-400 font-medium" x-text="i18n[currentLang].settingsSub || 'Keamanan 2FA, notifikasi & preferensi'">Keamanan 2FA, notifikasi & preferensi</p>
                 </div>
             </div>
             <i class="fa-solid fa-chevron-right text-slate-400 text-xs"></i>
         </button>
-
-        <!-- Item 2: Bantuan & Dukungan -->
-        <a href="https://wa.me/6281234567890?text=Halo%20Admin%20SIM-BUDIDAYA,%20saya%20petugas%20pembibitan%20butuh%20bantuan." target="_blank"
-           class="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors text-left">
-            <div class="flex items-center gap-3.5">
-                <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center text-sm">
-                    <i class="fa-regular fa-circle-question"></i>
-                </div>
-                <div>
-                    <h3 class="text-xs font-bold text-slate-900" x-text="i18n[currentLang].help">Bantuan & Dukungan</h3>
-                    <p class="text-[10px] text-slate-400 font-medium" x-text="i18n[currentLang].helpSub">Panduan Hatchery & Support CS</p>
-                </div>
-            </div>
-            <i class="fa-solid fa-chevron-right text-slate-400 text-xs"></i>
-        </a>
 
         <!-- Item 3: Bahasa -->
         <button @click="langModal = true"
@@ -137,6 +122,64 @@
                     class="w-full py-2.5 rounded-xl bg-navy-800 hover:bg-navy-900 text-white font-bold text-xs shadow-xs transition-colors"
                     x-text="i18n[currentLang].saveChanges">
                 Simpan Perubahan
+            </button>
+        </div>
+    </div>
+
+    <!-- Pengaturan Modal (2FA & Notifikasi) -->
+    <div x-show="settingsModal" 
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
+         style="display: none;">
+        
+        <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl p-5 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-gear text-sky-600"></i>
+                    <h3 class="text-xs font-bold text-navy-900">Pengaturan Akun & Sistem</h3>
+                </div>
+                <button @click="settingsModal = false" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3.5 text-xs">
+                <!-- 2FA Status -->
+                <div class="p-3.5 bg-slate-50 border border-slate-100 rounded-2xl space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-extrabold text-navy-900 flex items-center gap-1.5">
+                            <i class="fa-solid fa-shield-halved text-sky-600"></i> Autentikasi 2FA
+                        </span>
+                        <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            Aktif
+                        </span>
+                    </div>
+                    <p class="text-[10px] text-slate-500 font-medium">Verifikasi 6-digit OTP Google Authenticator saat login.</p>
+                </div>
+
+                <!-- Notifikasi Toggle -->
+                <div class="p-3.5 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-between">
+                    <div>
+                        <span class="font-extrabold text-navy-900 block">Notifikasi Push & Sound</span>
+                        <span class="text-[10px] text-slate-400 font-medium">Alert suhu, pH & pakan</span>
+                    </div>
+                    <input type="checkbox" checked class="w-4 h-4 accent-navy-800 rounded cursor-pointer">
+                </div>
+
+                <!-- Alert Kematian WhatsApp -->
+                <div class="p-3.5 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-between">
+                    <div>
+                        <span class="font-extrabold text-navy-900 block">Alert WhatsApp</span>
+                        <span class="text-[10px] text-slate-400 font-medium">Laporan kematian bibit</span>
+                    </div>
+                    <input type="checkbox" checked class="w-4 h-4 accent-navy-800 rounded cursor-pointer">
+                </div>
+            </div>
+
+            <button @click="settingsModal = false; if(typeof triggerToast==='function') triggerToast('Pengaturan berhasil disimpan!', 'success')" 
+                    class="w-full py-2.5 rounded-xl bg-navy-800 hover:bg-navy-900 text-white font-bold text-xs shadow-xs transition-colors">
+                Simpan Pengaturan
             </button>
         </div>
     </div>
@@ -233,6 +276,7 @@
 function akunPetugasPembibitan() {
     return {
         editProfileModal: false,
+        settingsModal: false,
         langModal: false,
         logoutModal: false,
         userName: '{{ Auth::user()->nama ?? 'Tim Pembibitan' }}',

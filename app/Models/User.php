@@ -23,6 +23,7 @@ class User extends Authenticatable
         'no_tlp',
         'two_factor_secret',
         'two_factor_confirmed_at',
+        'last_session_id',
     ];
 
     protected $hidden = [
@@ -100,24 +101,23 @@ class User extends Authenticatable
         $google2fa = new Google2FA();
         $qrCodeUrl = $google2fa->getQRCodeUrl(
             config('app.name', 'SIM-BUDIDAYA'),
-            $this->email,
+            $this->email ?? 'user@sim-budidaya.id',
             $secret
         );
 
         if (class_exists(\BaconQrCode\Writer::class)) {
             try {
-                $writer = new \BaconQrCode\Writer(
-                    new \BaconQrCode\Renderer\ImageRenderer(
-                        new \BaconQrCode\Renderer\Style\RendererStyle(200),
-                        new \BaconQrCode\Renderer\Image\SvgImageBackEnd()
-                    )
+                $renderer = new \BaconQrCode\Renderer\ImageRenderer(
+                    new \BaconQrCode\Renderer\RendererStyle\RendererStyle(190),
+                    new \BaconQrCode\Renderer\Image\SvgImageBackEnd()
                 );
+                $writer = new \BaconQrCode\Writer($renderer);
                 return $writer->writeString($qrCodeUrl);
             } catch (\Throwable $e) {
                 // Fallback to inline HTML QR code
             }
         }
 
-        return $google2fa->getQRCodeInlineHtml($qrCodeUrl, 180);
+        return $google2fa->getQRCodeInlineHtml($qrCodeUrl, 190);
     }
 }

@@ -378,6 +378,11 @@
                                             <span>Edit Batch</span>
                                         </button>
 
+                                        <button @click="open = false; openTransferModal(item)" class="w-full px-3.5 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 flex items-center gap-2.5">
+                                            <i class="fa-solid fa-right-left text-emerald-600 w-4"></i>
+                                            <span>Pindah ke Pembesaran</span>
+                                        </button>
+
                                         <div class="my-1 border-t border-slate-100"></div>
 
                                         <button @click="open = false; deleteBatch(item)" class="w-full px-3.5 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2.5">
@@ -491,6 +496,92 @@
                 </button>
             </div>
 
+        </div>
+    </div>
+
+    <!-- Modal Transfer Batch ke Pembesaran -->
+    <div x-show="transferModalOpen" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 scale-95"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs"
+         style="display: none;">
+        
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 border border-slate-200" @click.outside="transferModalOpen = false">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm">
+                        <i class="fa-solid fa-right-left"></i>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider block">MUTASI BATCH HASIL PEMBIBITAN</span>
+                        <h3 class="text-base font-extrabold text-slate-900">Pindah Ke Kolam Pembesaran</h3>
+                    </div>
+                </div>
+                <button @click="transferModalOpen = false" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <!-- Batch Summary Banner -->
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-xs">
+                <div>
+                    <span class="text-[10px] font-extrabold uppercase text-slate-400 block">BATCH PEMBIBITAN</span>
+                    <span class="font-extrabold text-[#031B4E]" x-text="selectedBatchToTransfer?.id"></span>
+                    <span class="text-slate-500 block font-semibold mt-0.5" x-text="selectedBatchToTransfer?.jenisIkan"></span>
+                </div>
+                <div class="text-right">
+                    <span class="text-[10px] font-extrabold uppercase text-slate-400 block">SISA BIBIT HIDUP</span>
+                    <span class="font-extrabold text-emerald-600 text-sm" x-text="(selectedBatchToTransfer?.jumlah || 0) + ' Ekor'"></span>
+                </div>
+            </div>
+
+            <form @submit.prevent="submitTransfer()" class="space-y-4">
+                <div>
+                    <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">PILIH KOLAM PEMBESARAN TUJUAN *</label>
+                    <select x-model="transferForm.id_kolam_pembesaran" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/10">
+                        <option value="">Pilih Kolam Pembesaran...</option>
+                        @if(isset($kolamPembesaran) && count($kolamPembesaran) > 0)
+                            @foreach($kolamPembesaran as $kp)
+                                <option value="{{ $kp->nama_kolam }}">{{ $kp->nama_kolam }} ({{ $kp->tipe_kolam ?? 'Pembesaran' }} - Kapasitas: {{ number_format($kp->kapasitas, 0, ',', '.') }} kg)</option>
+                            @endforeach
+                        @else
+                            <option value="Kolam Pembesaran A-01">Kolam Pembesaran A-01 (Beton - Kapasitas: 2.000 kg)</option>
+                            <option value="Kolam Pembesaran B-02">Kolam Pembesaran B-02 (Terpal - Kapasitas: 1.500 kg)</option>
+                            <option value="Kolam Pembesaran Bioflok C-03">Kolam Pembesaran Bioflok C-03 (Bioflok - Kapasitas: 3.000 kg)</option>
+                        @endif
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">ESTIMASI BIOMASSA AWAL (KG)</label>
+                        <input type="number" step="0.1" x-model="transferForm.biomassa_est" required
+                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:border-emerald-600">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">TARGET PANEN (KG) *</label>
+                        <input type="number" step="1" x-model="transferForm.target_panen_kg" required
+                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:border-emerald-600">
+                    </div>
+                </div>
+
+                <div class="pt-3 flex items-center justify-end gap-2.5 border-t border-slate-100">
+                    <button type="button" @click="transferModalOpen = false"
+                            class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50">
+                        Batal
+                    </button>
+                    <button type="submit" :disabled="isSubmitting"
+                            class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-emerald-600/20">
+                        <i class="fa-solid" :class="isSubmitting ? 'fa-spinner fa-spin' : 'fa-check'"></i>
+                        <span>Konfirmasi Pindah ke Pembesaran</span>
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -610,6 +701,13 @@ function pembibitanComponent() {
 
         deleteModalOpen: false,
         selectedBatchToDelete: null,
+        transferModalOpen: false,
+        selectedBatchToTransfer: null,
+        transferForm: {
+            id_kolam_pembesaran: '',
+            target_panen_kg: 500,
+            biomassa_est: 50
+        },
         showToast: false,
         toastMessage: '',
 
@@ -838,6 +936,67 @@ function pembibitanComponent() {
             this.showToast = true;
             setTimeout(() => { this.showToast = false; }, 3500);
             this.selectedBatchToDelete = null;
+        },
+
+        openTransferModal(item) {
+            this.selectedBatchToTransfer = item;
+            const sisaBibit = item.jumlahRaw || (item.jumlahBibitAwal - item.jumlahKematian) || 1000;
+            this.transferForm = {
+                id_kolam_pembesaran: '',
+                target_panen_kg: 500,
+                biomassa_est: Math.max(10, Math.round(sisaBibit * 0.02))
+            };
+            this.transferModalOpen = true;
+        },
+
+        async submitTransfer() {
+            if (!this.selectedBatchToTransfer) return;
+            if (!this.transferForm.id_kolam_pembesaran) {
+                alert('Silakan pilih Kolam Pembesaran tujuan!');
+                return;
+            }
+
+            this.isSubmitting = true;
+            const item = this.selectedBatchToTransfer;
+            const rawId = item.id_batch || item.id.replace(/[^0-9]/g, '');
+
+            try {
+                const res = await fetch('/pembibitan/' + rawId + '/transfer', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        id_kolam_pembesaran: this.transferForm.id_kolam_pembesaran,
+                        target_panen_kg: this.transferForm.target_panen_kg,
+                        biomassa_est: this.transferForm.biomassa_est
+                    })
+                });
+
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    const targetIdx = this.batches.findIndex(b => b.id === item.id || b.id_batch === rawId);
+                    if (targetIdx !== -1) {
+                        this.batches[targetIdx].status = 'selesai';
+                        this.batches[targetIdx].statusLabel = 'Selesai (Dipindahkan)';
+                        this.batches[targetIdx].statusClass = 'bg-slate-100 text-slate-700';
+                        this.batches[targetIdx].dotClass = 'bg-slate-500';
+                    }
+
+                    this.transferModalOpen = false;
+                    this.toastMessage = data.message || 'Batch berhasil dipindahkan ke Pembesaran!';
+                    this.showToast = true;
+                    setTimeout(() => { this.showToast = false; }, 4500);
+                } else {
+                    alert(data.message || 'Gagal memindahkan batch ke pembesaran.');
+                }
+            } catch (e) {
+                alert('Terjadi kesalahan saat memindahkan batch.');
+            } finally {
+                this.isSubmitting = false;
+            }
         }
     };
 }

@@ -13,45 +13,31 @@ class UserSeeder extends Seeder
         $users = [
             [
                 'nama' => 'Manajer SIM-Budidaya',
-                'email' => 'manajer@example.com',
-                'password' => Hash::make('password123'),
+                'email' => 'Manajer@gmail.com',
+                'password' => Hash::make('Manajer123'),
                 'role' => 'manajer',
                 'no_tlp' => '081234567890'
             ],
             [
                 'nama' => 'Petugas Distribusi',
-                'email' => 'distribusi@example.com',
-                'password' => Hash::make('password123'),
+                'email' => 'distribusi@gmail.com',
+                'password' => Hash::make('distribusi123'),
                 'role' => 'petugas_distribusi',
                 'no_tlp' => '081234567891'
             ],
             [
                 'nama' => 'Tim Pembesaran',
-                'email' => 'pembesaran@example.com',
-                'password' => Hash::make('password123'),
+                'email' => 'pembesaran@gmail.com',
+                'password' => Hash::make('pembesaran123'),
                 'role' => 'pembesaran',
                 'no_tlp' => '081234567892'
             ],
             [
                 'nama' => 'Tim Pembibitan',
-                'email' => 'pembibitan@example.com',
-                'password' => Hash::make('password123'),
+                'email' => 'pembibitan@gmail.com',
+                'password' => Hash::make('pembibitan123'),
                 'role' => 'pembibitan',
                 'no_tlp' => '081234567893'
-            ],
-            [
-                'nama' => 'Budi Santoso (Pekerja Lapangan)',
-                'email' => 'budi@example.com',
-                'password' => Hash::make('password123'),
-                'role' => 'pekerja',
-                'no_tlp' => '081234567894'
-            ],
-            [
-                'nama' => 'Eko Prasetyo (Teknisi Kolam)',
-                'email' => 'eko@example.com',
-                'password' => Hash::make('password123'),
-                'role' => 'pekerja',
-                'no_tlp' => '081234567895'
             ],
         ];
 

@@ -12,6 +12,7 @@
         "laravel/sanctum": "^4.3",
         "laravel/tinker": "^3.0",
         "pragmarx/google2fa": "^9.1",
+        "ryangjchandler/laravel-cloudflare-turnstile": "^3.0",
         "silviolleite/laravelpwa": "^2.0"
     },
     "require-dev": {

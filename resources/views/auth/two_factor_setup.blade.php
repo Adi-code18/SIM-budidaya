@@ -27,8 +27,15 @@
 
         @if ($errors->any())
         <div class="mb-5 p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2.5">
-            <i class="fa-solid fa-circle-exclamation text-rose-500 shrink-0"></i>
+            <i class="fa-solid fa-circle-exclamation text-rose-500 shrink-0 text-base"></i>
             <span>{{ $errors->first() }}</span>
+        </div>
+        @endif
+
+        @if (session('status'))
+        <div class="mb-5 p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs flex items-center gap-2.5">
+            <i class="fa-solid fa-circle-check text-emerald-500 shrink-0 text-base"></i>
+            <span>{{ session('status') }}</span>
         </div>
         @endif
 
@@ -46,19 +53,20 @@
                            placeholder="123456" 
                            required 
                            autofocus
+                           autocomplete="one-time-code"
                            class="w-full text-center tracking-[0.6em] text-2xl font-extrabold py-3 px-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:bg-white focus:border-[#051B44] focus:ring-2 focus:ring-[#051B44]/10 transition-all">
                 </div>
             </div>
 
-            <button type="submit" class="w-full py-3 bg-[#051B44] hover:bg-[#09265c] text-white font-bold text-xs rounded-xl shadow-lg shadow-[#051B44]/20 transition-all flex items-center justify-center gap-2">
+            <button type="submit" class="w-full py-3.5 bg-[#051B44] hover:bg-[#09265c] text-white font-bold text-xs rounded-xl shadow-lg shadow-[#051B44]/20 transition-all flex items-center justify-center gap-2">
                 <span>Verifikasi & Masuk</span>
                 <i class="fa-solid fa-arrow-right text-xs"></i>
             </button>
         </form>
 
         <div class="mt-6 text-center border-t border-slate-100 pt-4">
-            <a href="{{ route('2fa.cancel') }}" class="text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors">
-                <i class="fa-solid fa-arrow-left mr-1"></i> Kembali ke Login
+            <a href="{{ route('2fa.cancel') }}" class="text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors inline-flex items-center gap-1">
+                <i class="fa-solid fa-arrow-left"></i> Kembali ke Login
             </a>
         </div>
 

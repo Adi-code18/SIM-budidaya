@@ -36,7 +36,10 @@ class TwoFactorController extends Controller
             ]);
         }
 
-        return view('auth.two_factor_setup');
+        $secretKey = $this->getSecretKey($user);
+        $qrCodeSvg = $user->two_factor_qr_code_svg;
+
+        return view('auth.two_factor_setup', compact('user', 'secretKey', 'qrCodeSvg'));
     }
 
     /**
@@ -101,6 +104,10 @@ class TwoFactorController extends Controller
 
             Auth::login($user, $remember);
             $request->session()->regenerate();
+
+            $currentSessionId = session()->getId();
+            $user->update(['last_session_id' => $currentSessionId]);
+            session(['user_session_id' => $currentSessionId]);
 
             if ($selectedRole) {
                 if ($selectedRole === 'pembibitan') {
@@ -192,6 +199,10 @@ class TwoFactorController extends Controller
 
         Auth::login($user, $remember);
         $request->session()->regenerate();
+
+        $currentSessionId = session()->getId();
+        $user->update(['last_session_id' => $currentSessionId]);
+        session(['user_session_id' => $currentSessionId]);
 
         if ($selectedRole) {
             if ($selectedRole === 'pembibitan') {

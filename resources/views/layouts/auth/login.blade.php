@@ -14,6 +14,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Cloudflare Turnstile -->
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -145,6 +147,11 @@
                                    class="w-4 h-4 rounded border-slate-300 text-[#051B44] focus:ring-[#051B44]/20 cursor-pointer">
                             <span class="text-xs text-slate-500 font-medium">Ingat perangkat ini</span>
                         </label>
+                    </div>
+
+                    <!-- Cloudflare Turnstile Widget -->
+                    <div class="py-1 flex justify-center">
+                        <div class="cf-turnstile" data-sitekey="{{ config('services.turnstile.site_key') }}" data-theme="light"></div>
                     </div>
 
                     <!-- Submit Button -->

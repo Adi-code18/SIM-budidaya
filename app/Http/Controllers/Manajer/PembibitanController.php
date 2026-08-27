@@ -130,7 +130,78 @@ class PembibitanController extends Controller
             ];
         }
 
-        return view('layouts.pembibitan.index', compact('batches', 'kolams', 'kpis'));
+        $kolamPembesaran = Kolam::where('tipe_kolam', 'like', '%Pembesaran%')->orWhere('tipe_kolam', 'like', '%Besar%')->get();
+        if ($kolamPembesaran->isEmpty()) {
+            $kolamPembesaran = Kolam::all();
+        }
+
+        return view('layouts.pembibitan.index', compact('batches', 'kolams', 'kolamPembesaran', 'kpis'));
+    }
+
+    public function transferKePembesaran(Request $request, $id)
+    {
+        $cleanId = is_numeric($id) ? $id : (int) preg_replace('/[^0-9]/', '', $id);
+        $batchPembibitan = BatchPembibitan::find($cleanId);
+
+        if (!$batchPembibitan) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Data batch pembibitan tidak ditemukan.'], 404);
+            }
+            return redirect()->route('pembibitan')->with('error', 'Data batch pembibitan tidak ditemukan.');
+        }
+
+        $request->validate([
+            'id_kolam_pembesaran' => 'required',
+            'target_panen_kg'     => 'required|numeric|min:1',
+            'biomassa_est'        => 'nullable|numeric|min:0.1',
+        ], [
+            'id_kolam_pembesaran.required' => 'Kolam pembesaran tujuan wajib dipilih.',
+            'target_panen_kg.required'     => 'Target panen (kg) wajib diisi.',
+        ]);
+
+        $kolamTujuan = Kolam::where('nama_kolam', $request->id_kolam_pembesaran)
+            ->orWhere('id_kolam', $request->id_kolam_pembesaran)
+            ->first();
+
+        if (!$kolamTujuan) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Kolam pembesaran tujuan tidak ditemukan.'], 404);
+            }
+            return redirect()->route('pembibitan')->with('error', 'Kolam pembesaran tujuan tidak ditemukan.');
+        }
+
+        $sisaBibit = max(0, $batchPembibitan->jumlah_bibitAwal - $batchPembibitan->jumlah_kematian);
+        $biomassaEst = $request->biomassa_est ?? round(($sisaBibit * 0.02), 2); // 20 gr/ekor est
+        if ($biomassaEst <= 0) {
+            $biomassaEst = 50.00;
+        }
+
+        // Create Batch Pembesaran
+        $batchPembesaran = \App\Models\BatchPembesaran::create([
+            'id_kolam'        => $kolamTujuan->id_kolam,
+            'id_user'         => Auth::id() ?? 1,
+            'tgl_tebar'       => now(),
+            'biomassa_est'    => $biomassaEst,
+            'fcr'             => 1.10,
+            'target_panen_kg' => $request->target_panen_kg,
+            'jumlah_panen_kg' => 0.00,
+            'jenis_ikan'      => $batchPembibitan->jenis_ikan,
+            'status_siklus'   => 'berjalan',
+        ]);
+
+        // Mark Pembibitan Batch as finished (selesai)
+        $batchPembibitan->status = 'selesai';
+        $batchPembibitan->save();
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success'          => true,
+                'message'          => "Sukses! Batch Pembibitan #BT-" . str_pad($cleanId, 5, '0', STR_PAD_LEFT) . " ({$batchPembibitan->jenis_ikan}) berhasil dipindahkan ke Kolam Pembesaran '{$kolamTujuan->nama_kolam}'! Batch Pembesaran #PB-" . str_pad($batchPembesaran->id_pembesaran, 5, '0', STR_PAD_LEFT) . " telah aktif.",
+                'batch_pembesaran' => $batchPembesaran
+            ]);
+        }
+
+        return redirect()->route('pembesaran')->with('success', "Batch berhasil dipindahkan ke Pembesaran!");
     }
 
     public function store(Request $request)

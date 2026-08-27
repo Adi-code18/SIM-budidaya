@@ -186,3 +186,6 @@ flowchart TD
    - Optimasi aset CSS/JS termonifikasi via Vite.
 3. **Integritas Data:**
    - Transaksi keuangan dan pencatatan pakan menggunakan validasi ketat di sisi server untuk mencegah inkonsistensi stok atau nilai negatif.
+   site key:0x4AAAAAAEdjd7gXP6zJ1anD
+   secret:0x4AAAAAAEdjd1rePL43TdlZq4Pog4wNKQU
+   
