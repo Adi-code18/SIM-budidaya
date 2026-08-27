@@ -61,8 +61,20 @@ class RoleMiddleware
                 ], 403);
             }
 
-            // Jika manajer mencoba akses mobile atau sebaliknya, beri pesan error terarah
-            abort(403, 'Akses ditolak. Peran akun Anda (' . e($user->role) . ') tidak diizinkan mengakses halaman ini.');
+            // Dialihkan secara otomatis ke dashboard yang sesuai dengan peran user saat ini
+            if ($userRole === 'manajer') {
+                return redirect()->route('dashboard')->with('status', 'Dialihkan ke Dashboard Manajer (Peran akun Anda: Manajer).');
+            } elseif ($userRole === 'pembibitan') {
+                return redirect()->route('petugas.pembibitan.dashboard')->with('status', 'Dialihkan ke Dashboard Petugas Pembibitan (Peran akun Anda: Pembibitan).');
+            } elseif ($userRole === 'pembesaran') {
+                return redirect()->route('petugas.pembesaran.dashboard')->with('status', 'Dialihkan ke Dashboard Petugas Pembesaran (Peran akun Anda: Pembesaran).');
+            } elseif ($userRole === 'petugas_distribusi' || $userRole === 'distribusi') {
+                return redirect()->route('mobile.petugas.pengiriman')->with('status', 'Dialihkan ke Halaman Petugas Distribusi (Peran akun Anda: Distribusi).');
+            }
+
+            Auth::logout();
+            $request->session()->invalidate();
+            return redirect()->route('login')->withErrors(['username' => 'Akses ditolak. Silakan login kembali dengan akun yang sesuai.']);
         }
 
         return $next($request);

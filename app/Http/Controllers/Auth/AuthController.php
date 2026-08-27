@@ -17,13 +17,27 @@ class AuthController extends Controller
     /**
      * Tampilkan halaman login web manajer.
      */
-    public function showLoginForm()
+    public function showLoginForm(Request $request)
     {
+        if ($request->has('switch')) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            return redirect()->route('login');
+        }
+
         if (Auth::check()) {
             if (Auth::user()->role === 'manajer') {
                 return redirect()->route('dashboard');
             }
-            return redirect()->route('mobile.petugas.login');
+            $userRole = Auth::user()->role;
+            if ($userRole === 'petugas_distribusi' || $userRole === 'distribusi') {
+                return redirect()->route('mobile.petugas.pengiriman');
+            } elseif ($userRole === 'pembesaran') {
+                return redirect()->route('petugas.pembesaran.dashboard');
+            } elseif ($userRole === 'pembibitan') {
+                return redirect()->route('petugas.pembibitan.dashboard');
+            }
         }
 
         return view('layouts.auth.login');
@@ -78,6 +92,13 @@ class AuthController extends Controller
             ]);
         }
 
+        // Reset session jika ada akun lain yang sedang terhubung di browser ini
+        if (Auth::check() && Auth::id() !== ($user->id_user ?? $user->id)) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
+
         // 6. Mandatory 2FA Enforcement (Wajib 2FA untuk SEMUA user)
         session([
             '2fa:user_id'  => $user->id_user ?? $user->id,
@@ -104,6 +125,13 @@ class AuthController extends Controller
      */
     public function showMobileLoginForm(Request $request)
     {
+        if ($request->has('switch')) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            return redirect()->route('mobile.petugas.login');
+        }
+
         $role = $request->query('role', 'distribusi');
 
         if (Auth::check()) {
@@ -114,6 +142,8 @@ class AuthController extends Controller
                 return redirect()->route('petugas.pembesaran.dashboard');
             } elseif ($userRole === 'pembibitan') {
                 return redirect()->route('petugas.pembibitan.dashboard');
+            } elseif ($userRole === 'manajer') {
+                return redirect()->route('dashboard');
             }
         }
 
@@ -178,6 +208,13 @@ class AuthController extends Controller
             return back()->withInput($request->only('email', 'selectedRole'))->withErrors([
                 'email' => 'Peran akun ini (' . e($user->role) . ') tidak cocok dengan tab peran yang dipilih (' . e($selectedRole) . ').',
             ]);
+        }
+
+        // Reset session jika ada akun lain yang sedang terhubung di browser ini
+        if (Auth::check() && Auth::id() !== ($user->id_user ?? $user->id)) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
         }
 
         // 6. Mandatory 2FA Enforcement (Wajib 2FA untuk SEMUA user)
