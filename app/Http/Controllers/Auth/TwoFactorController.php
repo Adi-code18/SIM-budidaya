@@ -159,7 +159,17 @@ class TwoFactorController extends Controller
             return redirect()->route('login');
         }
 
-        return view('auth.two_factor_login');
+        $userId = session('2fa:user_id');
+        $user = User::find($userId);
+
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        $secretKey = $this->getSecretKey($user);
+        $qrCodeSvg = $user->two_factor_qr_code_svg;
+
+        return view('auth.two_factor_login', compact('user', 'secretKey', 'qrCodeSvg'));
     }
 
     /**

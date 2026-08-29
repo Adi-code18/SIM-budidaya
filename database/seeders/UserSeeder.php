@@ -13,7 +13,7 @@ class UserSeeder extends Seeder
         $users = [
             [
                 'nama' => 'Manajer SIM-Budidaya',
-                'email' => 'Manajer@gmail.com',
+                'email' => 'adi2618e@gmail.com',
                 'password' => Hash::make('Manajer123'),
                 'role' => 'manajer',
                 'no_tlp' => '081234567890'

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\EmailOtpController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Manajer\DashboardController;
 use App\Http\Controllers\Manajer\DistribusiController;
@@ -30,13 +31,19 @@ Route::get('/', function () {
 });
 
 // =========================================================================
-// 1. AUTENTIKASI & KEAMANAN 2FA (AUTH)
+// 1. AUTENTIKASI & KEAMANAN 2FA / EMAIL OTP (AUTH)
 // =========================================================================
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// 2FA Routes (Pre-login Challenge & Setup)
+// Email OTP Routes (Role Manajer)
+Route::get('/login/otp', [EmailOtpController::class, 'showForm'])->name('email.otp.show');
+Route::post('/login/otp', [EmailOtpController::class, 'verify'])->name('email.otp.verify');
+Route::post('/login/otp/resend', [EmailOtpController::class, 'resend'])->name('email.otp.resend');
+Route::get('/login/otp/cancel', [EmailOtpController::class, 'cancel'])->name('email.otp.cancel');
+
+// Google Authenticator 2FA Routes (Role Petugas)
 Route::get('/login/2fa', [TwoFactorController::class, 'show2faForm'])->name('2fa.login');
 Route::post('/login/2fa', [TwoFactorController::class, 'verify2fa'])->name('2fa.verify');
 Route::get('/2fa/setup', [TwoFactorController::class, 'showSetup'])->name('2fa.setup');

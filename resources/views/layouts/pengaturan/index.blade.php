@@ -190,16 +190,10 @@
                     </div>
 
                     <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-100">
-                        <span class="font-bold text-slate-500">Status 2FA</span>
-                        @if($user->two_factor_secret && $user->two_factor_confirmed_at)
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-100 text-emerald-800 border border-emerald-200">
-                                Aktif (Aman)
-                            </span>
-                        @else
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-100 text-amber-800 border border-amber-200">
-                                Nonaktif
-                            </span>
-                        @endif
+                        <span class="font-bold text-slate-500">Proteksi Login</span>
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            Email OTP (Aktif)
+                        </span>
                     </div>
 
                     <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-100">
@@ -216,13 +210,13 @@
                     <span>Tips Keamanan</span>
                 </div>
                 <p class="text-slate-600 font-medium leading-relaxed">
-                    Gunakan password yang kuat dan kombinasikan dengan <strong>Autentikasi Dua Langkah (2FA)</strong> untuk melindungi data budidaya dan keuangan dari akses tak berizin.
+                    Setiap proses login akun Manajer wajib diverifikasi menggunakan <strong>Kode OTP 6-digit</strong> yang dikirimkan secara otomatis ke alamat email resmi Anda.
                 </p>
             </div>
         </div>
     </div>
 
-    <!-- TAB 2: KEAMANAN & 2FA -->
+    <!-- TAB 2: KEAMANAN & EMAIL OTP -->
     <div x-show="activeTab === 'keamanan'" 
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0 translate-y-1"
@@ -234,51 +228,31 @@
                 <i class="fa-solid fa-shield-halved"></i>
             </div>
             <div>
-                <h3 class="text-base font-extrabold text-[#051B44]">Autentikasi Dua Langkah (2FA)</h3>
-                <p class="text-xs text-slate-500 font-medium">Lindungi akun manajer dengan verifikasi OTP menggunakan Google Authenticator atau aplikasi sejenis.</p>
+                <h3 class="text-base font-extrabold text-[#051B44]">Proteksi Keamanan Email OTP</h3>
+                <p class="text-xs text-slate-500 font-medium">Akun Manajer dilindungi secara otomatis dengan verifikasi kode OTP setiap kali proses login.</p>
             </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
             <div class="md:col-span-2 space-y-3">
                 <div class="flex items-center gap-3">
-                    <span class="text-xs font-bold text-slate-700">Status Proteksi 2FA:</span>
-                    @if($user->two_factor_secret && $user->two_factor_confirmed_at)
-                        <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1.5">
-                            <i class="fa-solid fa-circle-check text-emerald-600"></i>
-                            <span>AKTIF</span>
-                        </span>
-                    @else
-                        <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800 border border-amber-200 flex items-center gap-1.5">
-                            <i class="fa-solid fa-circle-exclamation text-amber-600"></i>
-                            <span>BELUM AKTIF</span>
-                        </span>
-                    @endif
+                    <span class="text-xs font-bold text-slate-700">Status Proteksi:</span>
+                    <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                        <span>AKTIF (Email OTP)</span>
+                    </span>
                 </div>
 
                 <p class="text-xs text-slate-600 leading-relaxed font-medium">
-                    Jika 2FA diaktifkan, Anda akan diminta memasukkan 6 digit kode OTP dari aplikasi autentikator setiap kali melakukan proses login ke dalam portal manajemen SIM-BUDIDAYA.
+                    Kode verifikasi 6 digit akan otomatis dikirimkan ke email <strong>{{ $user->email ?? '-' }}</strong> saat login. Pastikan email ini selalu aktif dan hanya Anda yang memiliki akses.
                 </p>
             </div>
 
             <div class="flex flex-col items-start md:items-end justify-center gap-3">
-                @if($user->two_factor_secret && $user->two_factor_confirmed_at)
-                    <form action="{{ route('2fa.disable') }}" method="POST">
-                        @csrf
-                        <button type="submit" 
-                                onclick="return confirm('Apakah Anda yakin ingin menonaktifkan 2FA? Risiko keamanan akun akan meningkat.')"
-                                class="px-5 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs flex items-center gap-2 transition-all cursor-pointer">
-                            <i class="fa-solid fa-lock-open text-xs"></i>
-                            <span>Nonaktifkan 2FA</span>
-                        </button>
-                    </form>
-                @else
-                    <a href="{{ route('2fa.setup') }}" 
-                       class="px-5 py-2.5 rounded-xl bg-[#051B44] hover:bg-[#09265c] text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-[#051B44]/20 transition-all">
-                        <i class="fa-solid fa-qrcode text-xs"></i>
-                        <span>Setup & Aktifkan 2FA Sekarang</span>
-                    </a>
-                @endif
+                <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200 text-center w-full md:w-auto">
+                    <span class="text-[11px] text-slate-400 font-semibold block">Email Terdaftar</span>
+                    <span class="text-xs font-mono font-bold text-[#051B44]">{{ $user->email ?? '-' }}</span>
+                </div>
             </div>
         </div>
     </div>

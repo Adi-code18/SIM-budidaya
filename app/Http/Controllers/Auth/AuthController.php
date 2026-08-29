@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\SendOtpMail;
 use App\Models\User;
 use App\Services\Google2FA;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 
@@ -99,25 +102,34 @@ class AuthController extends Controller
             $request->session()->regenerateToken();
         }
 
-        // 6. Mandatory 2FA Enforcement (Wajib 2FA untuk SEMUA user)
-        session([
-            '2fa:user_id'  => $user->id_user ?? $user->id,
-            '2fa:remember' => $remember,
-            '2fa:role'     => 'manajer'
-        ]);
+        // 6. Email OTP Enforcement untuk Manajer
         RateLimiter::clear($throttleKey);
 
-        if (!$user->two_factor_confirmed_at) {
-            if (!$user->two_factor_secret) {
-                $google2fa = new Google2FA();
-                $user->update([
-                    'two_factor_secret' => encrypt($google2fa->generateSecretKey()),
-                ]);
-            }
-            return redirect()->route('2fa.setup');
+        if (empty($user->email)) {
+            return back()->withInput($request->only('username', 'remember'))->withErrors([
+                'username' => 'Akun Manajer ini tidak memiliki alamat email yang valid untuk pengiriman OTP. Silakan hubungi admin.',
+            ]);
         }
 
-        return redirect()->route('2fa.login');
+        $otpCode = sprintf("%06d", mt_rand(1, 999999));
+        $expiresAt = now()->addMinutes(5)->timestamp;
+
+        session([
+            'email_otp:user_id'      => $user->id_user ?? $user->id,
+            'email_otp:code'         => $otpCode,
+            'email_otp:expires_at'   => $expiresAt,
+            'email_otp:remember'     => $remember,
+            'email_otp:attempts'     => 0,
+            'email_otp:last_sent_at' => now()->timestamp,
+        ]);
+
+        try {
+            Mail::to($user->email)->send(new SendOtpMail($otpCode, $user->nama ?? 'Manajer', 5));
+        } catch (\Throwable $e) {
+            Log::error('Gagal mengirim Email OTP ke Manajer saat login: ' . $e->getMessage());
+        }
+
+        return redirect()->route('email.otp.show');
     }
 
     /**

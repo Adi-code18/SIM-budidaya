@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verifikasi 2FA - SIM-BUDIDAYA</title>
+    <title>Verifikasi OTP Email - SIM-BUDIDAYA</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -17,23 +17,34 @@
 <body class="bg-[#f4f6f9] min-h-screen flex items-center justify-center p-4">
 
     <div class="w-full max-w-md bg-white rounded-3xl shadow-xl border border-slate-100 p-6 sm:p-8 my-6"
-         x-data="{ 
-             copied: false,
-             showQr: true,
-             copyKey() {
-                 navigator.clipboard.writeText('{{ $secretKey ?? '' }}');
-                 this.copied = true;
-                 setTimeout(() => this.copied = false, 2000);
+         x-data="{
+             cooldown: {{ $resendCooldown ?? 0 }},
+             timer: null,
+             init() {
+                 if (this.cooldown > 0) {
+                     this.timer = setInterval(() => {
+                         if (this.cooldown > 1) {
+                             this.cooldown--;
+                         } else {
+                             this.cooldown = 0;
+                             clearInterval(this.timer);
+                         }
+                     }, 1000);
+                 }
              }
          }">
         
         <!-- Header -->
         <div class="text-center mb-6">
             <div class="w-14 h-14 rounded-2xl bg-[#051B44] text-white flex items-center justify-center mx-auto mb-3 shadow-lg shadow-[#051B44]/20">
-                <i class="fa-solid fa-shield-halved text-2xl text-sky-400"></i>
+                <i class="fa-solid fa-envelope-open-text text-2xl text-sky-400"></i>
             </div>
-            <h1 class="text-xl font-extrabold text-[#051B44]">Verifikasi Google Authenticator</h1>
-            <p class="text-xs text-slate-500 font-medium mt-1">Pindai kode QR atau masukkan 6 digit kode OTP dari aplikasi untuk masuk.</p>
+            <h1 class="text-xl font-extrabold text-[#051B44]">Verifikasi OTP Email</h1>
+            <p class="text-xs text-slate-500 font-medium mt-1.5 leading-relaxed">
+                Kode keamanan 6-digit telah dikirimkan dari <strong class="text-slate-700">ad8101058@gmail.com</strong> ke email akun Manajer:
+                <br>
+                <span class="font-bold text-[#051B44] bg-slate-100 px-2.5 py-1 rounded-lg inline-block mt-1 border border-slate-200">{{ $user->email ?? $maskedEmail }}</span>
+            </p>
         </div>
 
         @if ($errors->any())
@@ -50,36 +61,20 @@
         </div>
         @endif
 
-        @if(!empty($qrCodeSvg))
-        <!-- QR Code Card -->
-        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/90 flex flex-col items-center justify-center mb-5">
-            <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-center max-w-[180px] max-h-[180px] mb-3 overflow-hidden [&>svg]:w-full [&>svg]:h-full [&>img]:w-full [&>img]:h-full">
-                {!! $qrCodeSvg !!}
-            </div>
-
-            @if(!empty($secretKey))
-            <p class="text-[11px] text-slate-500 font-semibold mb-1 text-center">Atau kunci rahasia manual:</p>
-            <div class="inline-flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-3 py-1.5 shadow-xs max-w-full">
-                <code class="text-xs font-mono font-bold text-slate-800 tracking-wider truncate">{{ $secretKey }}</code>
-                <button type="button" 
-                        @click="copyKey()" 
-                        class="text-xs px-2 py-0.5 rounded-lg font-bold transition-all text-slate-500 hover:text-[#051B44] hover:bg-slate-100 flex items-center gap-1 cursor-pointer"
-                        title="Salin Kunci">
-                    <i class="fa-regular" :class="copied ? 'fa-circle-check text-emerald-600' : 'fa-copy'"></i>
-                    <span x-text="copied ? 'Tersalin' : 'Salin'"></span>
-                </button>
-            </div>
-            @endif
+        <div class="mb-5 p-3 rounded-2xl bg-sky-50/80 border border-sky-200/70 text-sky-900 text-xs flex items-start gap-2.5">
+            <i class="fa-solid fa-circle-info text-sky-600 shrink-0 text-base mt-0.5"></i>
+            <span class="leading-relaxed">
+                Silakan buka aplikasi/web <strong>Gmail</strong> untuk akun email di atas. Jika belum muncul di <em>Kotak Masuk (Inbox)</em>, mohon periksa folder <em>Spam</em> atau <em>Promosi</em>.
+            </span>
         </div>
-        @endif
 
         <!-- OTP Form -->
-        <form action="{{ route('2fa.verify') }}" method="POST" class="space-y-4">
+        <form action="{{ route('email.otp.verify') }}" method="POST" class="space-y-5">
             @csrf
 
             <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1.5 text-center">
-                    Kode OTP 6-Digit
+                <label class="block text-xs font-bold text-slate-700 mb-2 text-center">
+                    Masukkan 6-Digit Kode OTP
                 </label>
                 <div class="relative max-w-xs mx-auto">
                     <input type="text" 
@@ -96,16 +91,34 @@
             </div>
 
             <button type="submit" class="w-full py-3.5 bg-[#051B44] hover:bg-[#09265c] text-white font-bold text-xs rounded-xl shadow-lg shadow-[#051B44]/20 transition-all flex items-center justify-center gap-2 cursor-pointer">
-                <span>Verifikasi & Masuk</span>
+                <span>Verifikasi & Masuk Dashboard</span>
                 <i class="fa-solid fa-arrow-right text-xs"></i>
             </button>
         </form>
 
+        <!-- Resend OTP Section -->
+        <div class="mt-6 pt-5 border-t border-slate-100 flex flex-col items-center gap-3">
+            <p class="text-xs text-slate-500 font-medium">
+                Tidak menerima email kode verifikasi?
+            </p>
+
+            <form action="{{ route('email.otp.resend') }}" method="POST">
+                @csrf
+                <button type="submit" 
+                        :disabled="cooldown > 0"
+                        :class="cooldown > 0 ? 'opacity-50 cursor-not-allowed text-slate-400' : 'text-[#051B44] hover:underline cursor-pointer'"
+                        class="text-xs font-extrabold flex items-center gap-1.5 transition-all">
+                    <i class="fa-solid fa-rotate-right" :class="cooldown > 0 ? 'animate-spin' : ''"></i>
+                    <span x-text="cooldown > 0 ? 'Kirim ulang dalam (' + cooldown + 'd)' : 'Kirim Ulang Kode OTP'"></span>
+                </button>
+            </form>
+        </div>
+
         <!-- Back Link -->
-        <div class="mt-6 text-center border-t border-slate-100 pt-4">
-            <a href="{{ route('2fa.cancel') }}" class="text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors inline-flex items-center gap-1.5">
+        <div class="mt-5 text-center">
+            <a href="{{ route('email.otp.cancel') }}" class="text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors inline-flex items-center gap-1.5">
                 <i class="fa-solid fa-arrow-left"></i>
-                <span>Kembali ke Login</span>
+                <span>Kembali ke Halaman Login</span>
             </a>
         </div>
 
