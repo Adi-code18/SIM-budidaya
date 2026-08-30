@@ -63,7 +63,19 @@
                         <div class="w-8 h-8 rounded-xl bg-[#051B44] text-white flex items-center justify-center">
                             <i class="fa-solid fa-layer-group text-xs"></i>
                         </div>
-                        <span>Lokasi Kolam Pembesaran &amp; Tanggal Tebar</span>
+                        <span>Sumber Bibit &amp; Kolam Pembesaran</span>
+                    </div>
+
+                    <!-- Pilih dari Pembibitan (Integrasi Alur) -->
+                    <div x-show="formMode === 'create'" class="p-3.5 bg-sky-50/70 rounded-xl border border-sky-100 space-y-1.5">
+                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-sky-900 block">AMBIL DARI BATCH PEMBIBITAN (OPSIONAL - MENCEGAH DOUBLE INPUT)</label>
+                        <select x-model="form.id_batch_pembibitan" @change="onPembibitanChange()" class="w-full px-3.5 py-2 rounded-xl border border-sky-200 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
+                            <option value="">-- Input Manual (Bukan dari Pembibitan) --</option>
+                            <template x-for="bp in availablePembibitan" :key="bp.id_batch">
+                                <option :value="bp.id_batch" x-text="bp.label"></option>
+                            </template>
+                        </select>
+                        <p class="text-[10px] text-sky-700 italic">Memilih batch pembibitan akan otomatis mengisi jenis ikan dan mengalihkan status pembibitan menjadi Selesai/Dipindahkan.</p>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -104,10 +116,15 @@
                                 <option value="">Pilih jenis ikan...</option>
                                 <option value="Nila Hitam Super">Ikan Nila Hitam Super</option>
                                 <option value="Nila Merah">Ikan Nila Merah</option>
+                                <option value="Nila">Ikan Nila</option>
                                 <option value="Gurami Padang">Ikan Gurami Padang</option>
+                                <option value="Gurami">Ikan Gurami</option>
                                 <option value="Lele Sangkuriang">Ikan Lele Sangkuriang</option>
+                                <option value="Lele">Ikan Lele</option>
                                 <option value="Patin Siam">Ikan Patin Siam</option>
+                                <option value="Patin">Ikan Patin</option>
                                 <option value="Bawal Air Tawar">Ikan Bawal Air Tawar</option>
+                                <option value="Bawal">Ikan Bawal</option>
                             </select>
                         </div>
                         <div>
@@ -239,20 +256,36 @@
         
         <!-- Left 2 Columns: Visualisasi Kolam Grid -->
         <div class="lg:col-span-2 space-y-4">
-            <div class="flex items-center justify-between">
-                <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-                    <i class="fa-solid fa-grip text-sky-600"></i>
-                    <span>Daftar Kolam &amp; Batch Pembesaran Aktif</span>
-                </h3>
-                <span class="text-xs text-slate-400 font-semibold" x-text="batches.length + ' Batch Terdata'"></span>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-grip text-sky-600"></i>
+                        <span>Daftar Kolam &amp; Batch Pembesaran Aktif</span>
+                    </h3>
+                    <p class="text-xs text-slate-500 font-medium">Hanya menampilkan kolam dengan siklus pembesaran yang sedang berjalan.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="inline-flex p-1 bg-slate-100 rounded-xl text-[11px] font-bold">
+                        <button type="button" @click="activeFilter = 'aktif'"
+                                :class="activeFilter === 'aktif' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'"
+                                class="px-3 py-1 rounded-lg transition-all">
+                            Aktif (<span x-text="batches.filter(b => b.status_siklus !== 'selesai').length"></span>)
+                        </button>
+                        <button type="button" @click="activeFilter = 'selesai'"
+                                :class="activeFilter === 'selesai' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'"
+                                class="px-3 py-1 rounded-lg transition-all">
+                            Riwayat Panen (<span x-text="batches.filter(b => b.status_siklus === 'selesai').length"></span>)
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 
-                <template x-for="item in batches" :key="item.id">
+                <template x-for="item in filteredBatches" :key="item.id">
                     <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between hover:shadow-md transition-all relative group">
                         <div>
-                            <div class="flex items-start justify-between">
+                            <div class="flex items-start justify-between gap-2">
                                 <div>
                                     <div class="flex items-center gap-2">
                                         <h4 class="font-extrabold text-slate-900 text-sm" x-text="item.nama_kolam"></h4>
@@ -260,10 +293,29 @@
                                     </div>
                                     <span class="text-[10px] text-slate-400 block mt-0.5" x-text="item.jenis_ikan + ' • ' + item.tipe_kolam"></span>
                                 </div>
-                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase"
-                                      :class="item.status_class"
-                                      x-text="item.status_label">
-                                </span>
+                                <div class="flex flex-col items-end gap-1">
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase"
+                                          :class="item.status_class"
+                                          x-text="item.status_label">
+                                    </span>
+                                    <!-- Tag Status Pemberian Pakan Hari Ini (Reset Tiap Hari) -->
+                                    <template x-if="item.status_siklus !== 'selesai'">
+                                        <div>
+                                            <template x-if="item.is_fed_today">
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                    <i class="fa-solid fa-check text-[9px]"></i>
+                                                    <span>Sudah Diberi Pakan</span>
+                                                </span>
+                                            </template>
+                                            <template x-if="!item.is_fed_today">
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200">
+                                                    <i class="fa-solid fa-clock text-[9px]"></i>
+                                                    <span>Belum Diberi Pakan</span>
+                                                </span>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
                             </div>
 
                             <div class="mt-4 grid grid-cols-2 gap-2 text-xs">
@@ -303,16 +355,34 @@
                                      x-transition:leave="transition ease-in duration-75" 
                                      x-transition:leave-start="transform opacity-100 scale-100" 
                                      x-transition:leave-end="transform opacity-0 scale-95" 
-                                     class="absolute right-0 bottom-full mb-1 w-44 rounded-xl bg-white border border-slate-200 shadow-xl py-1.5 z-50 text-left origin-bottom-right"
+                                     class="absolute right-0 bottom-full mb-1 w-48 rounded-xl bg-white border border-slate-200 shadow-xl py-1.5 z-50 text-left origin-bottom-right"
                                      style="display: none;">
                                     
-                                    <button type="button" @click="open = false; openEdit(item)" class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
-                                        <i class="fa-solid fa-pen-to-square text-amber-600 w-4"></i>
-                                        <span>Edit Batch</span>
+                                    <!-- Detail Batch -->
+                                    <button type="button" @click="open = false; openDetail(item)" class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
+                                        <i class="fa-solid fa-eye text-sky-600 w-4"></i>
+                                        <span>Detail Batch</span>
                                     </button>
+
+                                    <!-- Edit Batch (Hanya aktif jika belum selesai) -->
+                                    <template x-if="item.status_siklus !== 'selesai'">
+                                        <button type="button" @click="open = false; openEdit(item)" class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
+                                            <i class="fa-solid fa-pen-to-square text-amber-600 w-4"></i>
+                                            <span>Edit Batch</span>
+                                        </button>
+                                    </template>
+
+                                    <!-- Selesaikan Panen (Hanya aktif jika belum selesai) -->
+                                    <template x-if="item.status_siklus !== 'selesai'">
+                                        <button type="button" @click="open = false; triggerFinishHarvest(item)" class="w-full px-3.5 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 flex items-center gap-2.5">
+                                            <i class="fa-solid fa-circle-check text-emerald-600 w-4"></i>
+                                            <span>Selesaikan Panen</span>
+                                        </button>
+                                    </template>
 
                                     <div class="my-1 border-t border-slate-100"></div>
 
+                                    <!-- Hapus Batch -->
                                     <button type="button" @click="open = false; deleteBatch(item)" class="w-full px-3.5 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2.5">
                                         <i class="fa-solid fa-trash-can text-red-500 w-4"></i>
                                         <span>Hapus Batch</span>
@@ -320,6 +390,17 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </template>
+
+                <!-- Empty State jika tidak ada batch pada filter yang dipilih -->
+                <template x-if="filteredBatches.length === 0">
+                    <div class="col-span-full p-8 bg-slate-50 rounded-2xl border border-slate-200/80 text-center space-y-2">
+                        <div class="w-12 h-12 rounded-2xl bg-white text-slate-400 border border-slate-200 mx-auto flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-water"></i>
+                        </div>
+                        <h4 class="text-xs font-bold text-slate-700" x-text="activeFilter === 'aktif' ? 'Tidak Ada Batch Pembesaran Aktif' : 'Belum Ada Riwayat Selesai Panen'"></h4>
+                        <p class="text-[11px] text-slate-400 max-w-sm mx-auto" x-text="activeFilter === 'aktif' ? 'Semua kolam pembesaran sedang kosong / tersedia. Silakan buat batch baru dari pembibitan atau input manual.' : 'Batch yang telah selesai dipanen akan diarsipkan di sini.'"></p>
                     </div>
                 </template>
 
@@ -366,7 +447,258 @@
 
     </div>
 
-    <!-- Custom Confirmation Modal -->
+    <!-- Modal Detail Batch Pembesaran (Dengan Tabel Bibit Hatchery Asal) -->
+    <div x-show="detailModalOpen" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 scale-95"
+         class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4"
+         style="display: none;">
+        
+        <div @click.outside="detailModalOpen = false" 
+             class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[90vh]">
+            
+            <!-- Modal Header Solid Navy -->
+            <div class="p-6 bg-[#051B44] text-white flex items-center justify-between">
+                <div class="flex items-center gap-3.5">
+                    <div class="w-11 h-11 rounded-2xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-sky-300 text-xl shrink-0">
+                        <i class="fa-solid fa-fish-fins"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2.5">
+                            <h3 class="font-extrabold text-lg text-white tracking-tight" x-text="selectedBatch?.id"></h3>
+                            <span class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full"
+                                  :class="selectedBatch?.status_class"
+                                  x-text="selectedBatch?.status_label"></span>
+                        </div>
+                        <p class="text-xs text-sky-200/90 font-medium mt-0.5" x-text="selectedBatch?.jenis_ikan + ' • ' + selectedBatch?.nama_kolam"></p>
+                    </div>
+                </div>
+                <button type="button" @click="detailModalOpen = false" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body (Scrollable) -->
+            <div class="p-6 space-y-4 overflow-y-auto text-xs">
+                
+                <!-- Ringkasan Info Kolam & Parameter -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-0.5">LOKASI KOLAM</span>
+                        <span class="font-extrabold text-slate-900 text-xs block" x-text="selectedBatch?.nama_kolam"></span>
+                        <span class="text-[10px] text-slate-500" x-text="selectedBatch?.tipe_kolam + ' (' + selectedBatch?.kapasitas_kolam + ' Ekor)'"></span>
+                    </div>
+
+                    <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-0.5">TANGGAL TEBAR & DOC</span>
+                        <span class="font-extrabold text-slate-900 text-xs block" x-text="selectedBatch?.tgl_tebar_format || selectedBatch?.tgl_tebar"></span>
+                        <span class="text-[10px] text-emerald-600 font-bold" x-text="selectedBatch?.doc + ' Hari Budidaya (DOC)'"></span>
+                    </div>
+
+                    <div class="p-3 bg-sky-50/60 rounded-2xl border border-sky-100">
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-sky-800 block mb-0.5">KUALITAS AIR</span>
+                        <span class="font-extrabold text-[#0B2570] text-xs block" x-text="'pH ' + selectedBatch?.ph_air + ' • ' + (selectedBatch?.suhu_air || '28.5°C')"></span>
+                        <span class="text-[10px] text-emerald-700 font-bold">Kondisi Optimal</span>
+                    </div>
+                </div>
+
+                <!-- Metrik Biomassa, Target & FCR Banner -->
+                <div class="p-4 bg-slate-900 text-white rounded-2xl space-y-3">
+                    <div class="grid grid-cols-3 gap-2 text-center">
+                        <div class="p-2 bg-white/10 rounded-xl">
+                            <span class="text-[9px] uppercase tracking-wider text-slate-300 font-bold block">BIOMASSA SAAT INI</span>
+                            <span class="text-base font-extrabold text-emerald-400 mt-0.5 block" x-text="selectedBatch?.biomassa_format + ' kg'"></span>
+                        </div>
+                        <div class="p-2 bg-white/10 rounded-xl">
+                            <span class="text-[9px] uppercase tracking-wider text-slate-300 font-bold block">TARGET PANEN</span>
+                            <span class="text-base font-extrabold text-sky-300 mt-0.5 block" x-text="selectedBatch?.target_format + ' kg'"></span>
+                        </div>
+                        <div class="p-2 bg-white/10 rounded-xl">
+                            <span class="text-[9px] uppercase tracking-wider text-slate-300 font-bold block">TARGET FCR</span>
+                            <span class="text-base font-extrabold text-amber-300 mt-0.5 block" x-text="selectedBatch?.fcr"></span>
+                        </div>
+                    </div>
+
+                    <!-- Progress Capaian Target -->
+                    <div>
+                        <div class="flex items-center justify-between text-[11px] font-bold mb-1">
+                            <span class="text-slate-300">Capaian Target Panen</span>
+                            <span class="text-emerald-400" x-text="selectedBatch?.target_percent + '%'"></span>
+                        </div>
+                        <div class="w-full bg-white/20 h-2 rounded-full overflow-hidden">
+                            <div class="bg-gradient-to-r from-sky-400 to-emerald-400 h-full rounded-full transition-all"
+                                 :style="'width: ' + selectedBatch?.target_percent + '%'"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TABEL RINCIAN MASING-MASING BIBIT DARI BATCH PEMBIBITAN -->
+                <div class="bg-white rounded-2xl border border-slate-200/90 overflow-hidden shadow-xs space-y-0">
+                    <div class="p-3.5 bg-slate-50 border-b border-slate-200/80 flex items-center justify-between">
+                        <div class="flex items-center gap-2 font-bold text-slate-800 text-xs">
+                            <i class="fa-solid fa-table-list text-sky-600"></i>
+                            <span>Daftar Benih dari Batch Pembibitan Asal (Hatchery)</span>
+                        </div>
+                        <span class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-md bg-sky-100 text-sky-800"
+                              x-text="(selectedBatch?.bibit_list ? selectedBatch.bibit_list.length : 1) + ' Sumber Bibit'"></span>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-50/80 text-[10px] uppercase font-extrabold text-slate-400 border-b border-slate-100">
+                                <tr>
+                                    <th class="py-2.5 px-4">Batch Asal</th>
+                                    <th class="py-2.5 px-4">Kolam Asal</th>
+                                    <th class="py-2.5 px-4">Komoditas &amp; Fase</th>
+                                    <th class="py-2.5 px-4">Populasi Tebar</th>
+                                    <th class="py-2.5 px-4">Bobot Awal</th>
+                                    <th class="py-2.5 px-4 text-right">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+                                <template x-for="(bibit, bIdx) in (selectedBatch?.bibit_list || [])" :key="bIdx">
+                                    <tr class="hover:bg-slate-50/60 transition-colors">
+                                        <td class="py-3 px-4">
+                                            <span class="font-extrabold text-[#0B2570] block text-xs" x-text="bibit.id_batch"></span>
+                                            <span class="text-[10px] text-slate-400 block" x-text="bibit.tgl_pemijahan"></span>
+                                        </td>
+                                        <td class="py-3 px-4">
+                                            <span class="font-bold text-slate-800 block" x-text="bibit.kolam_asal"></span>
+                                            <span class="text-[10px] text-slate-400 block" x-text="bibit.tipe_kolam_asal"></span>
+                                        </td>
+                                        <td class="py-3 px-4">
+                                            <span class="font-extrabold text-slate-900 block" x-text="bibit.jenis_ikan"></span>
+                                            <span class="inline-block mt-0.5 px-2 py-0.5 rounded-md text-[9px] font-extrabold bg-sky-50 text-sky-700 border border-sky-200" x-text="bibit.fase"></span>
+                                        </td>
+                                        <td class="py-3 px-4 font-bold text-slate-900">
+                                            <span x-text="bibit.jumlah_bibit"></span> <span class="text-[10px] font-normal text-slate-400">Ekor</span>
+                                        </td>
+                                        <td class="py-3 px-4">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-200" x-text="bibit.total_bobot_kg + ' kg'"></span>
+                                        </td>
+                                        <td class="py-3 px-4 text-right">
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                                <span x-text="bibit.status"></span>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Realisasi Panen jika status Selesai -->
+                <template x-if="selectedBatch?.status_siklus === 'selesai'">
+                    <div class="p-3.5 bg-emerald-50 rounded-2xl border border-emerald-200 flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 block">TOTAL HASIL PANEN</span>
+                            <span class="text-sm font-extrabold text-emerald-900" x-text="(selectedBatch?.jumlah_panen_format || selectedBatch?.target_format) + ' kg'"></span>
+                        </div>
+                        <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                            Selesai &amp; Diarsipkan
+                        </span>
+                    </div>
+                </template>
+
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-4 border-t border-slate-100 flex items-center justify-end gap-2.5 bg-slate-50/50">
+                <template x-if="selectedBatch?.status_siklus !== 'selesai'">
+                    <div class="flex items-center gap-2">
+                        <button type="button" @click="detailModalOpen = false; triggerFinishHarvest(selectedBatch)" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-colors">
+                            <i class="fa-solid fa-circle-check text-xs"></i>
+                            <span>Selesaikan Panen</span>
+                        </button>
+                        <button type="button" @click="detailModalOpen = false; openEdit(selectedBatch)" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-2 transition-colors">
+                            <i class="fa-solid fa-pen-to-square text-amber-600 text-xs"></i>
+                            <span>Edit Batch</span>
+                        </button>
+                    </div>
+                </template>
+                <button type="button" @click="detailModalOpen = false" class="px-5 py-2 rounded-xl bg-[#031B4E] text-white font-bold hover:bg-navy-900 text-xs shadow-md shadow-sky-950/20 transition-all">
+                    Tutup
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Alert Modal Verifikasi Konfirmasi Selesai Panen & Pengosongan Kolam -->
+    <div x-show="harvestConfirmModalOpen" 
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4"
+         style="display: none;">
+        
+        <div @click.outside="harvestConfirmModalOpen = false" 
+             x-show="harvestConfirmModalOpen"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95 translate-y-3"
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+             x-transition:leave-end="opacity-0 scale-95 translate-y-3"
+             class="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-slate-100 p-6 space-y-4 text-center">
+            
+            <div class="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 mx-auto flex items-center justify-center text-2xl shadow-xs">
+                <i class="fa-solid fa-boxes-packing"></i>
+            </div>
+
+            <div class="space-y-1.5">
+                <span class="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase bg-emerald-100 text-emerald-800 inline-block">
+                    Verifikasi Selesai Panen
+                </span>
+                <h3 class="text-lg font-extrabold text-slate-900">Selesaikan Panen &amp; Kosongkan Kolam?</h3>
+                <p class="text-xs text-slate-600 font-medium leading-relaxed">
+                    Selesaikan siklus panen batch <strong class="text-slate-900" x-text="selectedBatchToHarvest?.id"></strong> di <strong class="text-slate-900" x-text="selectedBatchToHarvest?.nama_kolam"></strong>.
+                </p>
+            </div>
+
+            <!-- Input Realisasi Berat Panen (KG) -->
+            <div class="text-left bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
+                <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 block">TOTAL BERAT HASIL PANEN (KG) *</label>
+                <input type="number" step="0.1" x-model="harvestForm.jumlah_panen_kg"
+                       placeholder="Contoh: 500"
+                       class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-extrabold text-emerald-700 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <div class="flex items-center justify-between text-[10px] text-slate-500 pt-1">
+                    <span>Target: <strong x-text="selectedBatchToHarvest?.target_format + ' kg'"></strong></span>
+                    <span>Biomassa: <strong x-text="selectedBatchToHarvest?.biomassa_format + ' kg'"></strong></span>
+                </div>
+            </div>
+
+            <div class="p-3 bg-amber-50 rounded-xl border border-amber-200/70 text-left text-xs text-amber-900 flex items-start gap-2.5">
+                <i class="fa-solid fa-circle-info text-amber-600 text-sm mt-0.5 shrink-0"></i>
+                <p class="text-[11px] leading-relaxed">
+                    Setelah berstatus <strong>Selesai Panen</strong>, batch diarsipkan ke riwayat panen dan kolam <strong x-text="selectedBatchToHarvest?.nama_kolam"></strong> otomatis <strong>dikosongkan / tersedia</strong> kembali.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 pt-1">
+                <button type="button" @click="harvestConfirmModalOpen = false" 
+                        class="w-full py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition-colors">
+                    Batalkan
+                </button>
+                <button type="button" @click="executeFinishHarvest()" :disabled="isSubmitting"
+                        class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold text-xs shadow-md shadow-emerald-950/20 transition-all flex items-center justify-center gap-2 disabled:opacity-60">
+                    <i class="fa-solid" :class="isSubmitting ? 'fa-spinner fa-spin' : 'fa-check'"></i>
+                    <span>Ya, Selesaikan Panen</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Confirmation Delete Modal -->
     <div x-show="deleteModalOpen" 
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0"
@@ -446,6 +778,7 @@ function pembesaranComponent() {
         form: {
             id: '',
             id_pembesaran: null,
+            id_batch_pembibitan: '',
             kolam: '',
             tglTebar: new Date().toISOString().split('T')[0],
             jenisIkan: '',
@@ -455,13 +788,47 @@ function pembesaranComponent() {
             statusSiklus: 'berjalan'
         },
 
+        availablePembibitan: {!! json_encode($availablePembibitan ?? []) !!},
         kolamList: {!! json_encode($kolamList ?? []) !!},
         batches: {!! json_encode($batches ?? []) !!},
+        activeFilter: 'aktif',
 
+        get filteredBatches() {
+            if (this.activeFilter === 'selesai') {
+                return this.batches.filter(b => b.status_siklus === 'selesai');
+            }
+            // Default: hanya tampilkan batch aktif yang sedang berjalan / siap panen
+            return this.batches.filter(b => b.status_siklus !== 'selesai');
+        },
+
+        detailModalOpen: false,
         deleteModalOpen: false,
         selectedBatchToDelete: null,
+        harvestConfirmModalOpen: false,
+        selectedBatchToHarvest: null,
+        harvestForm: {
+            jumlah_panen_kg: 0
+        },
         showToast: false,
         toastMessage: '',
+
+        openDetail(item) {
+            this.selectedBatch = item;
+            this.detailModalOpen = true;
+        },
+
+        onPembibitanChange() {
+            if (!this.form.id_batch_pembibitan) return;
+            const sel = this.availablePembibitan.find(b => b.id_batch == this.form.id_batch_pembibitan);
+            if (sel) {
+                let clean = sel.jenis_ikan.replace(/^Ikan\s+/i, '');
+                this.form.jenisIkan = clean;
+                if (sel.est_biomassa && sel.est_biomassa > 0) {
+                    this.form.biomassaEst = Math.max(10, sel.est_biomassa);
+                }
+                this.form.targetPanenKg = Math.round(this.form.biomassaEst * 1.5);
+            }
+        },
 
         openCreateForm() {
             this.formMode = 'create';
@@ -476,6 +843,7 @@ function pembesaranComponent() {
             this.form = {
                 id: item.id,
                 id_pembesaran: item.id_pembesaran,
+                id_batch_pembibitan: item.id_batch_pembibitan || '',
                 kolam: item.nama_kolam,
                 tglTebar: item.tgl_tebar || new Date().toISOString().split('T')[0],
                 jenisIkan: item.clean_jenis || (item.jenis_ikan ? item.jenis_ikan.replace(/^Ikan\s+/i, '') : ''),
@@ -492,6 +860,7 @@ function pembesaranComponent() {
             this.form = {
                 id: '',
                 id_pembesaran: null,
+                id_batch_pembibitan: '',
                 kolam: '',
                 tglTebar: new Date().toISOString().split('T')[0],
                 jenisIkan: '',
@@ -500,6 +869,63 @@ function pembesaranComponent() {
                 fcr: 1.15,
                 statusSiklus: 'berjalan'
             };
+        },
+
+        triggerFinishHarvest(item) {
+            this.selectedBatchToHarvest = item;
+            this.harvestForm.jumlah_panen_kg = item.target_panen_kg || item.biomassa_est || 100;
+            this.harvestConfirmModalOpen = true;
+        },
+
+        async executeFinishHarvest() {
+            if (!this.selectedBatchToHarvest) return;
+            const item = this.selectedBatchToHarvest;
+            const idPB = item.id_pembesaran || item.id.replace(/[^0-9]/g, '');
+            const jumlahPanen = Number(this.harvestForm.jumlah_panen_kg) || item.target_panen_kg || item.biomassa_est;
+
+            this.isSubmitting = true;
+            try {
+                const res = await fetch('/pembesaran/' + idPB, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        status_siklus: 'selesai',
+                        jumlah_panen_kg: jumlahPanen
+                    })
+                });
+
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    // Update batch locally
+                    const targetIdx = this.batches.findIndex(b => b.id_pembesaran === item.id_pembesaran || b.id === item.id);
+                    if (targetIdx !== -1) {
+                        this.batches[targetIdx].status_siklus = 'selesai';
+                        this.batches[targetIdx].status_label = 'Selesai Panen';
+                        this.batches[targetIdx].status_class = 'bg-slate-100 text-slate-700';
+                        this.batches[targetIdx].jumlah_panen_kg = jumlahPanen;
+                        this.batches[targetIdx].jumlah_panen_format = jumlahPanen.toLocaleString('id-ID');
+                    }
+
+                    // Refresh pond occupancy (pond becomes available)
+                    this.refreshPondOccupancy();
+
+                    this.harvestConfirmModalOpen = false;
+                    this.toastMessage = "Sukses! Panen batch " + item.id + " (" + jumlahPanen.toLocaleString('id-ID') + " kg) selesai dicatat & kolam " + item.nama_kolam + " telah siap digunakan kembali.";
+                    this.showToast = true;
+                    setTimeout(() => { this.showToast = false; }, 5000);
+                    this.selectedBatchToHarvest = null;
+                } else {
+                    alert(data.message || 'Gagal menyelesaikan panen batch.');
+                }
+            } catch (err) {
+                alert('Terjadi kesalahan saat menyelesaikan panen.');
+            } finally {
+                this.isSubmitting = false;
+            }
         },
 
         async submitBatch() {
@@ -517,6 +943,13 @@ function pembesaranComponent() {
             }
             if (!this.form.targetPanenKg || Number(this.form.targetPanenKg) <= 0) {
                 alert('Silakan masukkan Target Panen!');
+                return;
+            }
+
+            // If user selects 'selesai' during edit mode, ask confirmation first
+            if (this.formMode === 'edit' && this.form.statusSiklus === 'selesai' && this.selectedBatch && this.selectedBatch.status_siklus !== 'selesai') {
+                this.selectedBatchToHarvest = this.selectedBatch;
+                this.harvestConfirmModalOpen = true;
                 return;
             }
 
@@ -610,6 +1043,7 @@ function pembesaranComponent() {
                     },
                     body: JSON.stringify({
                         id_kolam: this.form.kolam,
+                        id_batch_pembibitan: this.form.id_batch_pembibitan || null,
                         jenis_ikan: this.form.jenisIkan,
                         tgl_tebar: this.form.tglTebar,
                         biomassa_est: biomassaNum,

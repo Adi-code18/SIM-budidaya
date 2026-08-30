@@ -13,7 +13,7 @@ class PembibitanController extends Controller
 {
     public function index()
     {
-        $batchRecords = BatchPembibitan::with(['kolam', 'user'])->latest('id_batch')->get();
+        $batchRecords = BatchPembibitan::with(['kolam', 'user', 'batchPembesaran.kolam'])->latest('id_batch')->get();
         $kolams = Kolam::where(function($q) {
             $q->where('tipe_kolam', 'like', '%Hatchery%')
               ->orWhere('tipe_kolam', 'like', '%Pemijahan%')
@@ -64,14 +64,25 @@ class PembibitanController extends Controller
         foreach ($batchRecords as $b) {
             $days = $b->tgl_pemijahan ? (int) abs(Carbon::parse($b->tgl_pemijahan)->startOfDay()->diffInDays(now()->startOfDay())) : 0;
 
-            $fase = 'LARVA';
-            $faseClass = 'bg-sky-100 text-sky-700';
+            // Use DB fase_pertumbuhan if available, otherwise calculate by age
+            $dbFase = strtoupper(trim($b->fase_pertumbuhan ?? ''));
+            if (in_array($dbFase, ['TELUR', 'LARVA', 'FINGERLING'])) {
+                $fase = $dbFase;
+            } else {
+                if ($days <= 3) {
+                    $fase = 'TELUR';
+                } elseif ($days <= 14) {
+                    $fase = 'LARVA';
+                } else {
+                    $fase = 'FINGERLING';
+                }
+            }
 
-            if ($days <= 3) {
-                $fase = 'TELUR';
+            if ($fase === 'TELUR') {
                 $faseClass = 'bg-slate-100 text-slate-700';
-            } elseif ($days > 14) {
-                $fase = 'FINGERLING';
+            } elseif ($fase === 'LARVA') {
+                $faseClass = 'bg-sky-100 text-sky-700';
+            } else {
                 $faseClass = 'bg-indigo-100 text-indigo-700';
             }
 
@@ -90,7 +101,7 @@ class PembibitanController extends Controller
                 $statusClass = 'bg-sky-100 text-sky-700';
                 $dotClass = 'bg-sky-500';
             } elseif ($rawStatus === 'selesai') {
-                $statusLabel = 'Selesai';
+                $statusLabel = 'Selesai (Dipindahkan)';
                 $statusClass = 'bg-slate-100 text-slate-700';
                 $dotClass = 'bg-slate-500';
             } elseif ($rawStatus === 'gagal' || $rawStatus === 'dibatalkan') {
@@ -106,27 +117,48 @@ class PembibitanController extends Controller
             }
             $cleanJenis = explode(' ', $cleanJenis)[0];
 
+            $firstPb = $b->batchPembesaran ? $b->batchPembesaran->first() : null;
+            $sisaEkor = max(0, $b->jumlah_bibitAwal - $b->jumlah_kematian);
+            
+            $rawBobotKg = (float) ($b->total_bobot_kg ?? 0);
+            if ($rawBobotKg <= 0) {
+                if ($fase === 'TELUR') {
+                    $rawBobotKg = round($sisaEkor * 0.0001, 2);
+                } elseif ($fase === 'LARVA') {
+                    $rawBobotKg = round($sisaEkor * 0.0008, 2);
+                } else {
+                    $rawBobotKg = round($sisaEkor * 0.02, 2);
+                }
+            }
+            $bobotKgFormat = number_format($rawBobotKg, $rawBobotKg >= 100 ? 1 : 2, ',', '.') . ' kg';
+
             $batches[] = [
-                'id_batch'        => $b->id_batch,
-                'id'              => '#BT-' . str_pad($b->id_batch, 5, '0', STR_PAD_LEFT),
-                'inputDate'       => $b->tgl_pemijahan ? Carbon::parse($b->tgl_pemijahan)->translatedFormat('d M Y') : '-',
-                'tglPemijahan'    => $b->tgl_pemijahan,
-                'fase'            => $fase,
-                'faseClass'       => $faseClass,
-                'usia'            => $days . ' Hari',
-                'jumlahBibitAwal' => $b->jumlah_bibitAwal,
-                'jumlahKematian'  => $b->jumlah_kematian,
-                'jumlah'          => number_format(max(0, $b->jumlah_bibitAwal - $b->jumlah_kematian), 0, ',', '.'),
-                'jumlahRaw'       => max(0, $b->jumlah_bibitAwal - $b->jumlah_kematian),
-                'jenisIkan'       => strtoupper($cleanJenis),
-                'rawJenisIkan'    => $cleanJenis,
-                'status'          => $rawStatus,
-                'statusLabel'     => $statusLabel,
-                'statusClass'     => $statusClass,
-                'dotClass'        => $dotClass,
-                'kolam'           => $b->kolam ? $b->kolam->nama_kolam : 'Kolam #' . $b->id_kolam,
-                'phAir'           => $b->kolam ? ($b->kolam->kesehatan_ph_air ?? '7.2') : '7.2',
-                'suhuAir'         => '28.0°C'
+                'id_batch'            => $b->id_batch,
+                'id'                  => '#BT-' . str_pad($b->id_batch, 5, '0', STR_PAD_LEFT),
+                'inputDate'           => $b->tgl_pemijahan ? Carbon::parse($b->tgl_pemijahan)->translatedFormat('d M Y') : '-',
+                'tglPemijahan'        => $b->tgl_pemijahan,
+                'fase'                => $fase,
+                'faseClass'           => $faseClass,
+                'usia'                => $days . ' Hari',
+                'usiaDays'            => $days,
+                'jumlahBibitAwal'     => $b->jumlah_bibitAwal,
+                'jumlahKematian'      => $b->jumlah_kematian,
+                'jumlah'              => number_format($sisaEkor, 0, ',', '.'),
+                'jumlahRaw'           => $sisaEkor,
+                'totalBobotKg'        => $rawBobotKg,
+                'totalBobotFormat'    => $bobotKgFormat,
+                'jenisIkan'           => strtoupper($cleanJenis),
+                'rawJenisIkan'        => $cleanJenis,
+                'status'              => $rawStatus,
+                'statusLabel'         => $statusLabel,
+                'statusClass'         => $statusClass,
+                'dotClass'            => $dotClass,
+                'kolam'               => $b->kolam ? $b->kolam->nama_kolam : 'Kolam #' . $b->id_kolam,
+                'phAir'               => $b->kolam ? ($b->kolam->kesehatan_ph_air ?? '7.2') : '7.2',
+                'suhuAir'             => '28.0°C',
+                'batch_pembesaran_id' => $firstPb ? '#PB-' . str_pad($firstPb->id_pembesaran, 5, '0', STR_PAD_LEFT) : null,
+                'kolam_pembesaran'    => $firstPb && $firstPb->kolam ? $firstPb->kolam->nama_kolam : ($firstPb ? 'Kolam #' . $firstPb->id_kolam : null),
+                'tgl_pindah'          => $firstPb && $firstPb->tgl_tebar ? Carbon::parse($firstPb->tgl_tebar)->translatedFormat('d M Y') : null,
             ];
         }
 
@@ -171,26 +203,28 @@ class PembibitanController extends Controller
         }
 
         $sisaBibit = max(0, $batchPembibitan->jumlah_bibitAwal - $batchPembibitan->jumlah_kematian);
-        $biomassaEst = $request->biomassa_est ?? round(($sisaBibit * 0.02), 2); // 20 gr/ekor est
+        $biomassaEst = $request->biomassa_est ?? ($batchPembibitan->total_bobot_kg > 0 ? $batchPembibitan->total_bobot_kg : round(($sisaBibit * 0.02), 2)); // 20 gr/ekor est
         if ($biomassaEst <= 0) {
             $biomassaEst = 50.00;
         }
 
-        // Create Batch Pembesaran
+        // Create Batch Pembesaran connected with id_batch_pembibitan
         $batchPembesaran = \App\Models\BatchPembesaran::create([
-            'id_kolam'        => $kolamTujuan->id_kolam,
-            'id_user'         => Auth::id() ?? 1,
-            'tgl_tebar'       => now(),
-            'biomassa_est'    => $biomassaEst,
-            'fcr'             => 1.10,
-            'target_panen_kg' => $request->target_panen_kg,
-            'jumlah_panen_kg' => 0.00,
-            'jenis_ikan'      => $batchPembibitan->jenis_ikan,
-            'status_siklus'   => 'berjalan',
+            'id_kolam'            => $kolamTujuan->id_kolam,
+            'id_user'             => Auth::id() ?? 1,
+            'id_batch_pembibitan' => $batchPembibitan->id_batch,
+            'tgl_tebar'           => now(),
+            'biomassa_est'        => $biomassaEst,
+            'fcr'                 => 1.10,
+            'target_panen_kg'     => $request->target_panen_kg,
+            'jumlah_panen_kg'     => 0.00,
+            'jenis_ikan'          => $batchPembibitan->jenis_ikan,
+            'status_siklus'       => 'berjalan',
         ]);
 
-        // Mark Pembibitan Batch as finished (selesai)
+        // Mark Pembibitan Batch as finished and fingerling phase
         $batchPembibitan->status = 'selesai';
+        $batchPembibitan->fase_pertumbuhan = 'FINGERLING';
         $batchPembibitan->save();
 
         if ($request->wantsJson() || $request->ajax()) {
@@ -207,29 +241,48 @@ class PembibitanController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'jenis_ikan'       => 'required|string',
-            'id_kolam'         => 'required',
-            'tgl_pemijahan'    => 'nullable|date',
-            'jumlah_bibitAwal' => 'required|numeric|min:1',
-            'jumlah_kematian'  => 'nullable|numeric|min:0',
+            'jenis_ikan'        => 'required|string',
+            'id_kolam'          => 'required',
+            'tgl_pemijahan'     => 'nullable|date',
+            'fase_pertumbuhan'  => 'nullable|string',
+            'jumlah_bibitAwal'  => 'required|numeric|min:1',
+            'jumlah_kematian'   => 'nullable|numeric|min:0',
+            'total_bobot_kg'    => 'nullable|numeric|min:0',
         ]);
 
         $kolam = Kolam::where('nama_kolam', $request->id_kolam)->orWhere('id_kolam', $request->id_kolam)->first();
 
+        $tglPemijahan = $request->tgl_pemijahan ?? now();
+        $fase = $request->fase_pertumbuhan;
+        if (!$fase) {
+            $days = (int) abs(Carbon::parse($tglPemijahan)->startOfDay()->diffInDays(now()->startOfDay()));
+            $fase = $days <= 3 ? 'TELUR' : ($days <= 14 ? 'LARVA' : 'FINGERLING');
+        } else {
+            $fase = strtoupper($fase);
+        }
+
+        $rawBobot = $request->total_bobot_kg;
+        if (!$rawBobot || $rawBobot <= 0) {
+            $sisa = max(0, $request->jumlah_bibitAwal - ($request->jumlah_kematian ?? 0));
+            $rawBobot = $fase === 'TELUR' ? ($sisa * 0.0001) : ($fase === 'LARVA' ? ($sisa * 0.0008) : ($sisa * 0.02));
+        }
+
         $batch = BatchPembibitan::create([
             'id_kolam'         => $kolam ? $kolam->id_kolam : 1,
             'id_user'          => Auth::id() ?? 1,
-            'tgl_pemijahan'    => $request->tgl_pemijahan ?? now(),
+            'tgl_pemijahan'    => $tglPemijahan,
             'jumlah_bibitAwal' => $request->jumlah_bibitAwal,
             'jumlah_kematian'  => $request->jumlah_kematian ?? 0,
+            'total_bobot_kg'   => round($rawBobot, 2),
             'jenis_ikan'       => 'Ikan ' . $request->jenis_ikan,
+            'fase_pertumbuhan' => $fase,
             'status'           => strtolower($request->status ?? 'aktif'),
         ]);
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => "Data batch {$batch->jenis_ikan} (" . number_format($batch->jumlah_bibitAwal, 0, ',', '.') . " ekor) berhasil disimpan!",
+                'message' => "Data batch {$batch->jenis_ikan} (" . number_format($batch->jumlah_bibitAwal, 0, ',', '.') . " ekor, " . number_format($batch->total_bobot_kg, 2, ',', '.') . " kg) berhasil disimpan!",
                 'batch'   => $batch
             ]);
         }
@@ -250,12 +303,14 @@ class PembibitanController extends Controller
         }
 
         $request->validate([
-            'jenis_ikan'       => 'nullable|string',
-            'id_kolam'         => 'nullable',
-            'tgl_pemijahan'    => 'nullable|date',
-            'jumlah_bibitAwal' => 'nullable|numeric',
-            'jumlah_kematian'  => 'nullable|numeric',
-            'status'           => 'nullable|string',
+            'jenis_ikan'        => 'nullable|string',
+            'id_kolam'          => 'nullable',
+            'tgl_pemijahan'     => 'nullable|date',
+            'fase_pertumbuhan'  => 'nullable|string',
+            'jumlah_bibitAwal'  => 'nullable|numeric',
+            'jumlah_kematian'   => 'nullable|numeric',
+            'total_bobot_kg'    => 'nullable|numeric',
+            'status'            => 'nullable|string',
         ]);
 
         if ($request->filled('id_kolam')) {
@@ -277,12 +332,20 @@ class PembibitanController extends Controller
             $batch->tgl_pemijahan = $request->tgl_pemijahan;
         }
 
+        if ($request->filled('fase_pertumbuhan')) {
+            $batch->fase_pertumbuhan = strtoupper($request->fase_pertumbuhan);
+        }
+
         if ($request->has('jumlah_bibitAwal')) {
             $batch->jumlah_bibitAwal = $request->jumlah_bibitAwal;
         }
 
         if ($request->has('jumlah_kematian')) {
             $batch->jumlah_kematian = $request->jumlah_kematian;
+        }
+
+        if ($request->has('total_bobot_kg')) {
+            $batch->total_bobot_kg = $request->total_bobot_kg;
         }
 
         if ($request->filled('status')) {

@@ -18,7 +18,9 @@ class BatchPembibitan extends Model
         'tgl_pemijahan',
         'jumlah_bibitAwal',
         'jenis_ikan',
+        'fase_pertumbuhan',
         'jumlah_kematian',
+        'total_bobot_kg',
         'status',
     ];
 
@@ -30,5 +32,10 @@ class BatchPembibitan extends Model
     public function kolam()
     {
         return $this->belongsTo(Kolam::class, 'id_kolam', 'id_kolam');
+    }
+
+    public function batchPembesaran()
+    {
+        return $this->hasMany(BatchPembesaran::class, 'id_batch_pembibitan', 'id_batch');
     }
 }

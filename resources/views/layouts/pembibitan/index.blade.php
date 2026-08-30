@@ -32,93 +32,106 @@
             <p class="text-xs text-sky-200/80 font-medium mt-1">Catat data penjadian dan pembuatan batch baru. Pastikan semua parameter lingkungan sesuai standar operasional.</p>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
 
-            <!-- Left 2 Cols: Form Fields -->
-            <div class="lg:col-span-2 space-y-5">
-
-                <!-- Section 1: Data Utama Batch -->
-                <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
-                    <div class="flex items-center gap-2.5 text-sm font-bold text-slate-900">
-                        <div class="w-8 h-8 rounded-xl bg-[#051B44] text-white flex items-center justify-center">
-                            <i class="fa-solid fa-fish text-xs"></i>
-                        </div>
-                        <span>Data Utama Batch</span>
+            <!-- Section 1: Data Utama Batch & Fase Pertumbuhan -->
+            <div class="space-y-4">
+                <div class="flex items-center gap-2.5 text-sm font-bold text-slate-900 pb-2 border-b border-slate-100">
+                    <div class="w-8 h-8 rounded-xl bg-[#051B44] text-white flex items-center justify-center">
+                        <i class="fa-solid fa-fish text-xs"></i>
                     </div>
+                    <span>Data Utama Batch &amp; Fase Pertumbuhan</span>
+                </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div>
-                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">ID BATCH (OTOMATIS)</label>
-                            <input type="text" x-model="form.id" readonly
-                                   class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-extrabold text-slate-500 bg-slate-100 cursor-not-allowed">
-                        </div>
-                        <div>
-                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">JENIS IKAN *</label>
-                            <select x-model="form.jenisIkan" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
-                                <option value="">Pilih Spesies...</option>
-                                <option value="Gurami">Gurami</option>
-                                <option value="Lele">Lele</option>
-                                <option value="Nila">Nila</option>
-                                <option value="Patin">Patin</option>
-                                <option value="Bawal">Bawal</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">JUMLAH BIBIT / TELUR AWAL *</label>
-                            <div class="flex items-center gap-2">
-                                <input type="number" x-model="form.jumlahBibitAwal" min="100" step="500" placeholder="Contoh: 250000"
-                                       class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
-                                <span class="text-xs font-bold text-slate-400">ekor/btr</span>
-                            </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">ID BATCH (OTOMATIS)</label>
+                        <input type="text" x-model="form.id" readonly
+                               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-extrabold text-slate-500 bg-slate-100 cursor-not-allowed">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">JENIS IKAN *</label>
+                        <select x-model="form.jenisIkan" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                            <option value="">Pilih Spesies...</option>
+                            <option value="Gurami">Gurami</option>
+                            <option value="Lele">Lele</option>
+                            <option value="Nila">Nila</option>
+                            <option value="Patin">Patin</option>
+                            <option value="Bawal">Bawal</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">FASE PERTUMBUHAN *</label>
+                        <select x-model="form.fase_pertumbuhan" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-sky-800 bg-sky-50/60 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                            <option value="TELUR">TELUR (Masa Pemijahan &amp; Penetasan Awal)</option>
+                            <option value="LARVA">LARVA (Benih Kecil / Post-Larva)</option>
+                            <option value="FINGERLING">FINGERLING (Benih Siap Pembesaran)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">JUMLAH BIBIT / TELUR AWAL *</label>
+                        <div class="flex items-center gap-2">
+                            <input type="number" x-model="form.jumlahBibitAwal" min="100" step="500" placeholder="Contoh: 250000"
+                                   class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                            <span class="text-xs font-bold text-slate-400">ekor/btr</span>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Section 2: Timeline & Estimasi -->
-                <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
-                    <div class="flex items-center gap-2.5 text-sm font-bold text-slate-900">
-                        <div class="w-8 h-8 rounded-xl bg-[#10B981] text-white flex items-center justify-center">
-                            <i class="fa-regular fa-calendar text-xs"></i>
-                        </div>
-                        <span>Timeline &amp; Estimasi</span>
+            <!-- Section 2: Timeline, Mortalitas & Bobot Biomassa -->
+            <div class="space-y-4">
+                <div class="flex items-center gap-2.5 text-sm font-bold text-slate-900 pb-2 border-b border-slate-100">
+                    <div class="w-8 h-8 rounded-xl bg-[#10B981] text-white flex items-center justify-center">
+                        <i class="fa-regular fa-calendar text-xs"></i>
                     </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">TANGGAL PEMIJAHAN</label>
-                            <input type="date" x-model="form.tglPemijahan"
-                                   class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
-                        </div>
-                        <div>
-                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">PREDIKSI PENETASAN (HARI)</label>
-                            <div class="flex items-center gap-2">
-                                <button type="button" @click="form.prediksiHari = Math.max(1, Number(form.prediksiHari) - 1)" class="w-9 h-9 rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 flex items-center justify-center font-bold text-sm transition-colors">−</button>
-                                <input type="number" x-model="form.prediksiHari" min="1" max="30"
-                                       class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-extrabold text-center text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
-                                <button type="button" @click="form.prediksiHari = Number(form.prediksiHari) + 1" class="w-9 h-9 rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 flex items-center justify-center font-bold text-sm transition-colors">+</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-between gap-4">
-                        <div class="flex-1">
-                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">JUMLAH KEMATIAN TELUR (ESTIMASI)</label>
-                            <input type="number" x-model="form.jumlahKematian" min="0" placeholder="Masukkan angka..."
-                                   class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
-                        </div>
-                        <span class="text-xs font-bold text-slate-400 mt-5">butir</span>
-                    </div>
+                    <span>Timeline Tanggal, Mortalitas &amp; Estimasi Bobot</span>
                 </div>
 
-                <!-- Section 3: Status & Lokasi -->
-                <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
-                    <div class="flex items-center gap-2.5 text-sm font-bold text-slate-900">
-                        <div class="w-8 h-8 rounded-xl bg-[#0284C7] text-white flex items-center justify-center">
-                            <i class="fa-solid fa-location-dot text-xs"></i>
-                        </div>
-                        <span>Status &amp; Lokasi</span>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">TANGGAL PEMIJAHAN / TEBAR AWAL *</label>
+                        <input type="date" x-model="form.tglPemijahan"
+                               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
                     </div>
+                    <div>
+                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">PREDIKSI PENETASAN (HARI)</label>
+                        <div class="flex items-center gap-2">
+                            <button type="button" @click="form.prediksiHari = Math.max(1, Number(form.prediksiHari) - 1)" class="w-9 h-9 rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 flex items-center justify-center font-bold text-sm transition-colors">−</button>
+                            <input type="number" x-model="form.prediksiHari" min="1" max="30"
+                                   class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-extrabold text-center text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                            <button type="button" @click="form.prediksiHari = Number(form.prediksiHari) + 1" class="w-9 h-9 rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 flex items-center justify-center font-bold text-sm transition-colors">+</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">JUMLAH KEMATIAN</label>
+                        <div class="flex items-center gap-2">
+                            <input type="number" x-model="form.jumlahKematian" min="0" placeholder="0"
+                                   class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                            <span class="text-xs font-bold text-slate-400">ekor</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">TOTAL BOBOT / BIOMASSA (KG) *</label>
+                        <div class="flex items-center gap-2">
+                            <input type="number" step="0.1" min="0.1" x-model="form.totalBobotKg" placeholder="Contoh: 25.0"
+                                   class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-emerald-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all">
+                            <span class="text-xs font-extrabold text-emerald-700">Kg</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
+            <!-- Section 3: Status & Lokasi Kolam Hatchery -->
+            <div class="space-y-4">
+                <div class="flex items-center gap-2.5 text-sm font-bold text-slate-900 pb-2 border-b border-slate-100">
+                    <div class="w-8 h-8 rounded-xl bg-[#0284C7] text-white flex items-center justify-center">
+                        <i class="fa-solid fa-location-dot text-xs"></i>
+                    </div>
+                    <span>Status Siklus &amp; Lokasi Kolam Hatchery</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1.5">STATUS BATCH</label>
                         <div class="flex flex-wrap items-center gap-2">
@@ -140,12 +153,12 @@
                             <button type="button" @click="form.statusBatch = 'selesai'"
                                     :class="form.statusBatch === 'selesai' ? 'bg-slate-700 text-white border-transparent shadow-xs' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'"
                                     class="px-3 py-1.5 rounded-xl border text-xs font-bold transition-all">
-                                Selesai
+                                Selesai (Siap Pindah)
                             </button>
                             <button type="button" @click="form.statusBatch = 'gagal'"
                                     :class="form.statusBatch === 'gagal' ? 'bg-rose-600 text-white border-transparent shadow-xs' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'"
                                     class="px-3 py-1.5 rounded-xl border text-xs font-bold transition-all">
-                                Gagal / Dibatalkan
+                                Gagal
                             </button>
                         </div>
                     </div>
@@ -164,59 +177,26 @@
                                 <option value="Kolam Pembibitan L-03">Kolam Pembibitan L-03 (Hatchery / Pendederan - Kapasitas: 20.000 Ekor)</option>
                             @endif
                         </select>
-                        <p class="text-[10px] text-slate-400 mt-1 italic">Khusus fasilitas Hatchery Pembibitan: Kolam Pemijahan A-01, Kolam Penetasan B-02, Kolam Pembibitan L-03.</p>
+                        <p class="text-[10px] text-slate-400 mt-1 italic">Khusus fasilitas Hatchery Pembibitan: Kolam Pemijahan, Penetasan, atau Pendederan.</p>
                     </div>
                 </div>
-
-                <!-- Form Actions -->
-                <div class="flex items-center justify-end gap-3">
-                    <button type="button" @click="showForm = false; formMode = 'create'; resetForm()"
-                            class="px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors">
-                        Batal
-                    </button>
-                    <button type="button" @click="resetForm()"
-                            class="px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors">
-                        Reset
-                    </button>
-                    <button type="button" @click="submitBatch()" :disabled="isSubmitting"
-                            class="px-5 py-2.5 rounded-xl bg-[#031B4E] hover:bg-navy-900 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-2 disabled:opacity-60">
-                        <i class="fa-solid" :class="isSubmitting ? 'fa-spinner fa-spin' : 'fa-floppy-disk'" class="text-xs"></i>
-                        <span x-text="isSubmitting ? 'MENYIMPAN...' : (formMode === 'edit' ? 'SIMPAN PERUBAHAN' : 'SIMPAN DATA BATCH')"></span>
-                    </button>
-                </div>
-
             </div>
 
-            <!-- Right 1 Col: Suhu Air Optimal Widget -->
-            <div class="space-y-5">
-                <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs text-center space-y-4">
-                    <div class="flex items-center justify-center gap-2 text-sm font-bold text-slate-900">
-                        <i class="fa-solid fa-temperature-half text-sky-600"></i>
-                        <span>Suhu Air Optimal</span>
-                    </div>
-
-                    <!-- Gauge Circle -->
-                    <div class="relative w-36 h-36 mx-auto">
-                        <svg class="w-full h-full -rotate-90" viewBox="0 0 120 120">
-                            <circle cx="60" cy="60" r="52" fill="none" stroke="#F1F5F9" stroke-width="12"/>
-                            <circle cx="60" cy="60" r="52" fill="none" stroke="#0284C7" stroke-width="12"
-                                    stroke-dasharray="326.73" stroke-dashoffset="60"
-                                    stroke-linecap="round"/>
-                        </svg>
-                        <div class="absolute inset-0 flex flex-col items-center justify-center">
-                            <span class="text-3xl font-extrabold text-[#0B2570]">28</span>
-                            <span class="text-xs font-bold text-slate-400">°C</span>
-                        </div>
-                    </div>
-
-                    <!-- Params -->
-                    <div class="space-y-2 text-xs">
-                        <div class="flex items-center justify-between p-2 bg-slate-50 rounded-lg border border-slate-100">
-                            <span class="font-semibold text-slate-500">pH Air</span>
-                            <span class="font-extrabold text-[#0B2570]">6.5 - 7.5</span>
-                        </div>
-                    </div>
-                </div>
+            <!-- Form Actions -->
+            <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                <button type="button" @click="showForm = false; formMode = 'create'; resetForm()"
+                        class="px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+                    Batal
+                </button>
+                <button type="button" @click="resetForm()"
+                        class="px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+                    Reset Form
+                </button>
+                <button type="button" @click="submitBatch()" :disabled="isSubmitting"
+                        class="px-6 py-2.5 rounded-xl bg-[#031B4E] hover:bg-navy-900 text-white font-bold text-xs shadow-md shadow-sky-950/20 transition-all flex items-center gap-2 disabled:opacity-60">
+                    <i class="fa-solid" :class="isSubmitting ? 'fa-spinner fa-spin' : 'fa-floppy-disk'" class="text-xs"></i>
+                    <span x-text="isSubmitting ? 'MENYIMPAN...' : (formMode === 'edit' ? 'SIMPAN PERUBAHAN' : 'SIMPAN DATA BATCH')"></span>
+                </button>
             </div>
 
         </div>
@@ -309,15 +289,25 @@
 
     <!-- Table Section: Batch Hatchery Aktif -->
     <div x-show="!showForm" class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-visible">
-        <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+        <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-                <h3 class="text-base font-extrabold text-slate-900">Batch Hatchery Aktif</h3>
-                <p class="text-xs text-slate-500 font-medium">Daftar kelompok benih yang sedang dalam masa pemijahan dan penetasan.</p>
+                <h3 class="text-base font-extrabold text-slate-900" x-text="activeFilter === 'aktif' ? 'Batch Hatchery Aktif' : 'Batch Telah Dipindahkan ke Pembesaran'"></h3>
+                <p class="text-xs text-slate-500 font-medium" x-text="activeFilter === 'aktif' ? 'Daftar kelompok benih yang sedang dalam masa pemijahan dan penetasan aktif.' : 'Daftar kelompok bibit yang telah selesai dibudidayakan di hatchery dan dialihkan ke pembesaran (View Only).'"></p>
             </div>
-            <button class="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-bold text-slate-700 transition-colors">
-                <i class="fa-solid fa-sliders text-xs"></i>
-                <span>Filter</span>
-            </button>
+            <div class="flex items-center gap-2">
+                <div class="inline-flex p-1 bg-slate-100 rounded-xl text-[11px] font-bold">
+                    <button type="button" @click="activeFilter = 'aktif'"
+                            :class="activeFilter === 'aktif' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'"
+                            class="px-3 py-1.5 rounded-lg transition-all">
+                        Batch Aktif (<span x-text="batches.filter(b => b.status !== 'selesai' && b.status !== 'gagal').length"></span>)
+                    </button>
+                    <button type="button" @click="activeFilter = 'selesai'"
+                            :class="activeFilter === 'selesai' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'"
+                            class="px-3 py-1.5 rounded-lg transition-all">
+                        Dipindahkan (<span x-text="batches.filter(b => b.status === 'selesai').length"></span>)
+                    </button>
+                </div>
+            </div>
         </div>
 
         <div class="overflow-x-auto overflow-y-visible">
@@ -328,6 +318,7 @@
                         <th class="py-4 px-6">FASE PERTUMBUHAN</th>
                         <th class="py-4 px-6">USIA (HARI)</th>
                         <th class="py-4 px-6">JUMLAH (EKOR)</th>
+                        <th class="py-4 px-6">TOTAL BOBOT (KG)</th>
                         <th class="py-4 px-6">JENIS IKAN</th>
                         <th class="py-4 px-6">STATUS BATCH</th>
                         <th class="py-4 px-6 text-right">AKSI</th>
@@ -335,7 +326,7 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
                     
-                    <template x-for="item in batches" :key="item.id">
+                    <template x-for="item in filteredBatches" :key="item.id">
                         <tr class="hover:bg-slate-50/70 transition-colors">
                             <td class="py-4 px-6">
                                 <span class="font-extrabold text-[#0055CC] block cursor-pointer hover:underline" @click="openDetail(item)" x-text="item.id"></span>
@@ -346,6 +337,9 @@
                             </td>
                             <td class="py-4 px-6 text-slate-700 font-bold" x-text="item.usia"></td>
                             <td class="py-4 px-6 text-slate-900 font-extrabold" x-text="item.jumlah"></td>
+                            <td class="py-4 px-6">
+                                <span class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-800 px-2.5 py-1 rounded-lg text-xs font-extrabold border border-emerald-200/60" x-text="item.totalBobotFormat || (item.totalBobotKg + ' kg')"></span>
+                            </td>
                             <td class="py-4 px-6 font-extrabold text-slate-800" x-text="item.jenisIkan"></td>
                             <td class="py-4 px-6">
                                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold" :class="item.statusClass">
@@ -366,31 +360,55 @@
                                          x-transition:leave="transition ease-in duration-75" 
                                          x-transition:leave-start="transform opacity-100 scale-100" 
                                          x-transition:leave-end="transform opacity-0 scale-95" 
-                                         class="absolute right-0 top-full mt-1 w-44 rounded-xl bg-white border border-slate-200 shadow-xl py-1.5 z-50 text-left origin-top-right">
+                                         class="absolute right-0 top-full mt-1 w-48 rounded-xl bg-white border border-slate-200 shadow-xl py-1.5 z-50 text-left origin-top-right">
                                         
+                                        <!-- Opsi 1: Detail Batch (Selalu Ada) -->
                                         <button @click="open = false; openDetail(item)" class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
                                             <i class="fa-solid fa-eye text-sky-600 w-4"></i>
                                             <span>Detail Batch</span>
                                         </button>
 
-                                        <button @click="open = false; openEdit(item)" class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
-                                            <i class="fa-solid fa-pen-to-square text-amber-600 w-4"></i>
-                                            <span>Edit Batch</span>
-                                        </button>
+                                        <!-- JIKA BATCH STATUS SELESAI (DIPINDAHKAN): CUMA VIEW DOANG & LIHAT DETAIL DI PEMBESARAN -->
+                                        <template x-if="item.status === 'selesai'">
+                                            <a href="{{ route('pembesaran') }}" class="w-full px-3.5 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 flex items-center gap-2.5">
+                                                <i class="fa-solid fa-arrow-up-right-from-square text-emerald-600 w-4"></i>
+                                                <span>Lihat di Pembesaran</span>
+                                            </a>
+                                        </template>
 
-                                        <button @click="open = false; openTransferModal(item)" class="w-full px-3.5 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 flex items-center gap-2.5">
-                                            <i class="fa-solid fa-right-left text-emerald-600 w-4"></i>
-                                            <span>Pindah ke Pembesaran</span>
-                                        </button>
+                                        <!-- JIKA BATCH MASIH AKTIF: EDIT, SELESAIKAN BIBIT, DAN HAPUS -->
+                                        <template x-if="item.status !== 'selesai'">
+                                            <div>
+                                                <button @click="open = false; openEdit(item)" class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
+                                                    <i class="fa-solid fa-pen-to-square text-amber-600 w-4"></i>
+                                                    <span>Edit Batch</span>
+                                                </button>
 
-                                        <div class="my-1 border-t border-slate-100"></div>
+                                                <button @click="open = false; markBatchFinished(item)" class="w-full px-3.5 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 flex items-center gap-2.5">
+                                                    <i class="fa-solid fa-circle-check text-emerald-600 w-4"></i>
+                                                    <span>Selesaikan Bibit (Siap Pindah)</span>
+                                                </button>
 
-                                        <button @click="open = false; deleteBatch(item)" class="w-full px-3.5 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2.5">
-                                            <i class="fa-solid fa-trash-can text-red-500 w-4"></i>
-                                            <span>Hapus Batch</span>
-                                        </button>
+                                                <div class="my-1 border-t border-slate-100"></div>
+
+                                                <button @click="open = false; deleteBatch(item)" class="w-full px-3.5 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2.5">
+                                                    <i class="fa-solid fa-trash-can text-red-500 w-4"></i>
+                                                    <span>Hapus Batch</span>
+                                                </button>
+                                            </div>
+                                        </template>
                                     </div>
                                 </div>
+                            </td>
+                        </tr>
+                    </template>
+
+                    <!-- Empty state jika tidak ada baris data -->
+                    <template x-if="filteredBatches.length === 0">
+                        <tr>
+                            <td colspan="8" class="py-8 text-center text-slate-400">
+                                <i class="fa-solid fa-fish text-2xl mb-2 block text-slate-300"></i>
+                                <span x-text="activeFilter === 'aktif' ? 'Tidak ada batch pembibitan aktif saat ini. Semua telah dipindahkan atau belum ada batch baru.' : 'Belum ada data batch yang dipindahkan.'"></span>
                             </td>
                         </tr>
                     </template>
@@ -401,12 +419,10 @@
 
         <!-- Table Footer Pagination -->
         <div class="p-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-slate-500">
-            <span x-text="'Menampilkan 1 - ' + batches.length + ' dari ' + batches.length + ' Batch'"></span>
+            <span x-text="'Menampilkan ' + filteredBatches.length + ' dari ' + batches.length + ' Batch Total'"></span>
             <div class="flex items-center gap-1">
                 <button class="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-50">&lt;</button>
                 <button class="w-7 h-7 rounded-lg bg-[#031B4E] text-white font-bold flex items-center justify-center">1</button>
-                <button class="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50">2</button>
-                <button class="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50">3</button>
                 <button class="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-50">&gt;</button>
             </div>
         </div>
@@ -441,33 +457,58 @@
                 </button>
             </div>
 
+            <!-- Banner info jika sudah dipindahkan -->
+            <template x-if="selectedBatch?.status === 'selesai'">
+                <div class="p-3.5 bg-emerald-50/80 border border-emerald-200/80 rounded-xl space-y-1 text-xs">
+                    <div class="flex items-center gap-2 font-bold text-emerald-800">
+                        <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                        <span>Batch Telah Dipindahkan ke Pembesaran</span>
+                    </div>
+                    <p class="text-[11px] text-emerald-700">
+                        Siklus pembibitan telah selesai dan bibit telah dipindahkan ke kolam pembesaran. Batch ini bersifat arsip (view-only).
+                    </p>
+                    <template x-if="selectedBatch?.kolam_pembesaran">
+                        <div class="pt-1 text-[11px] text-emerald-900 font-semibold flex items-center gap-1.5">
+                            <i class="fa-solid fa-location-dot text-emerald-600"></i>
+                            <span>Kolam Tujuan: <strong x-text="selectedBatch?.kolam_pembesaran"></strong></span>
+                            <span class="text-slate-400">•</span>
+                            <span x-show="selectedBatch?.batch_pembesaran_id" x-text="'Batch: ' + selectedBatch?.batch_pembesaran_id"></span>
+                        </div>
+                    </template>
+                </div>
+            </template>
+
             <!-- Modal Content Info Grid -->
-            <div class="grid grid-cols-2 gap-3 text-xs">
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
                 <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
                     <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">FASE PERTUMBUHAN</span>
                     <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase inline-block" :class="selectedBatch?.faseClass" x-text="selectedBatch?.fase"></span>
                 </div>
                 <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
-                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">STATUS KESEHATAN</span>
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">STATUS BATCH</span>
                     <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold" :class="selectedBatch?.statusClass">
                         <span class="w-1.5 h-1.5 rounded-full" :class="selectedBatch?.dotClass"></span>
-                        <span x-text="selectedBatch?.statusKesehatan"></span>
+                        <span x-text="selectedBatch?.statusLabel || selectedBatch?.status"></span>
                     </span>
                 </div>
-
                 <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
                     <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">USIA BATCH (DOC)</span>
                     <span class="font-extrabold text-slate-900 text-sm" x-text="selectedBatch?.usia"></span>
                 </div>
+
                 <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
                     <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">POPULASI (EKOR)</span>
                     <span class="font-extrabold text-slate-900 text-sm" x-text="selectedBatch?.jumlah + ' Ekor'"></span>
                 </div>
-
+                <div class="p-3.5 bg-emerald-50/80 rounded-xl border border-emerald-200/80">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 block mb-1">TOTAL BOBOT (KG)</span>
+                    <span class="font-extrabold text-emerald-800 text-sm" x-text="selectedBatch?.totalBobotFormat || (selectedBatch?.totalBobotKg + ' kg')"></span>
+                </div>
                 <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
                     <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">JENIS IKAN</span>
                     <span class="font-extrabold text-slate-900" x-text="selectedBatch?.jenisIkan"></span>
                 </div>
+
                 <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
                     <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">TANGGAL INPUT</span>
                     <span class="font-bold text-slate-700" x-text="selectedBatch?.inputDate"></span>
@@ -475,7 +516,7 @@
 
                 <div class="col-span-2 p-3.5 bg-sky-50/60 rounded-xl border border-sky-100 flex items-center justify-between">
                     <div>
-                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">LOKASI KOLAM</span>
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">LOKASI KOLAM ASAL</span>
                         <span class="font-extrabold text-[#0B2570] text-xs" x-text="selectedBatch?.kolam"></span>
                     </div>
                     <div class="text-right">
@@ -487,15 +528,22 @@
 
             <!-- Modal Footer -->
             <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
-                <button type="button" @click="openEdit(selectedBatch)" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition-colors text-xs flex items-center gap-2">
-                    <i class="fa-solid fa-pen-to-square text-amber-600"></i>
-                    <span>Edit Batch</span>
-                </button>
+                <template x-if="selectedBatch?.status !== 'selesai'">
+                    <button type="button" @click="openEdit(selectedBatch)" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition-colors text-xs flex items-center gap-2">
+                        <i class="fa-solid fa-pen-to-square text-amber-600"></i>
+                        <span>Edit Batch</span>
+                    </button>
+                </template>
+                <template x-if="selectedBatch?.status === 'selesai'">
+                    <a href="{{ route('pembesaran') }}" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition-colors text-xs flex items-center gap-2 shadow-xs">
+                        <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+                        <span>Buka Menu Pembesaran</span>
+                    </a>
+                </template>
                 <button type="button" @click="detailModalOpen = false" class="px-5 py-2 rounded-xl bg-[#031B4E] text-white font-extrabold hover:bg-navy-900 text-xs shadow-md shadow-sky-950/20 transition-all">
                     Tutup
                 </button>
             </div>
-
         </div>
     </div>
 
@@ -527,16 +575,20 @@
                 </button>
             </div>
 
-            <!-- Batch Summary Banner -->
-            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-xs">
+            <!-- Batch Summary Banner with Kg weight -->
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 grid grid-cols-3 gap-2 text-xs">
                 <div>
-                    <span class="text-[10px] font-extrabold uppercase text-slate-400 block">BATCH PEMBIBITAN</span>
+                    <span class="text-[10px] font-extrabold uppercase text-slate-400 block">BATCH ASAL</span>
                     <span class="font-extrabold text-[#031B4E]" x-text="selectedBatchToTransfer?.id"></span>
                     <span class="text-slate-500 block font-semibold mt-0.5" x-text="selectedBatchToTransfer?.jenisIkan"></span>
                 </div>
+                <div>
+                    <span class="text-[10px] font-extrabold uppercase text-slate-400 block">SISA BIBIT</span>
+                    <span class="font-extrabold text-slate-800 text-sm" x-text="(selectedBatchToTransfer?.jumlah || 0) + ' Ekor'"></span>
+                </div>
                 <div class="text-right">
-                    <span class="text-[10px] font-extrabold uppercase text-slate-400 block">SISA BIBIT HIDUP</span>
-                    <span class="font-extrabold text-emerald-600 text-sm" x-text="(selectedBatchToTransfer?.jumlah || 0) + ' Ekor'"></span>
+                    <span class="text-[10px] font-extrabold uppercase text-slate-400 block">BOBOT AWAL SAAT INI</span>
+                    <span class="font-extrabold text-emerald-600 text-sm" x-text="selectedBatchToTransfer?.totalBobotFormat || (selectedBatchToTransfer?.totalBobotKg + ' kg')"></span>
                 </div>
             </div>
 
@@ -559,9 +611,10 @@
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">ESTIMASI BIOMASSA AWAL (KG)</label>
+                        <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">ESTIMASI BIOMASSA AWAL (KG) *</label>
                         <input type="number" step="0.1" x-model="transferForm.biomassa_est" required
-                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:border-emerald-600">
+                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-emerald-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-emerald-600">
+                        <p class="text-[10px] text-slate-400 mt-1">Otomatis sinkron dengan total bobot batch pembibitan.</p>
                     </div>
                     <div>
                         <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">TARGET PANEN (KG) *</label>
@@ -667,7 +720,9 @@ function pembibitanComponent() {
             id: 'BCH-' + new Date().getFullYear() + '-' + String(Math.floor(10 + Math.random() * 90)) + '-A01',
             id_batch: null,
             jenisIkan: 'Lele',
+            fase_pertumbuhan: 'TELUR',
             jumlahBibitAwal: 250000,
+            totalBobotKg: 25.0,
             tglPemijahan: new Date().toISOString().split('T')[0],
             prediksiHari: 3,
             jumlahKematian: 0,
@@ -687,6 +742,8 @@ function pembibitanComponent() {
                 'jumlahBibitAwal' => 250000,
                 'jumlahKematian' => 0,
                 'jumlah' => '250,000',
+                'totalBobotKg' => 25.0,
+                'totalBobotFormat' => '25,0 kg',
                 'jenisIkan' => 'GURAMI',
                 'rawJenisIkan' => 'Gurami',
                 'status' => 'menetas',
@@ -698,6 +755,18 @@ function pembibitanComponent() {
                 'suhuAir' => '28°C'
             ]
         ]) !!},
+        activeFilter: 'aktif',
+
+        get filteredBatches() {
+            if (this.activeFilter === 'selesai') {
+                return this.batches.filter(b => b.status === 'selesai');
+            }
+            if (this.activeFilter === 'all') {
+                return this.batches;
+            }
+            // Default: hanya tampilkan batch hatchery aktif (bukan selesai / gagal)
+            return this.batches.filter(b => b.status !== 'selesai' && b.status !== 'gagal');
+        },
 
         deleteModalOpen: false,
         selectedBatchToDelete: null,
@@ -725,7 +794,9 @@ function pembibitanComponent() {
                 id: item.id,
                 id_batch: item.id_batch,
                 jenisIkan: item.rawJenisIkan || (item.jenisIkan ? item.jenisIkan.charAt(0) + item.jenisIkan.slice(1).toLowerCase() : 'Lele'),
+                fase_pertumbuhan: item.fase || 'TELUR',
                 jumlahBibitAwal: item.jumlahBibitAwal || 250000,
+                totalBobotKg: item.totalBobotKg || 25.0,
                 tglPemijahan: item.tglPemijahan || new Date().toISOString().split('T')[0],
                 prediksiHari: 3,
                 jumlahKematian: item.jumlahKematian || 0,
@@ -742,13 +813,22 @@ function pembibitanComponent() {
                 id: 'BCH-' + new Date().getFullYear() + '-' + String(Math.floor(10 + Math.random() * 90)) + '-A01',
                 id_batch: null,
                 jenisIkan: '',
+                fase_pertumbuhan: 'TELUR',
                 jumlahBibitAwal: 250000,
+                totalBobotKg: 25.0,
                 tglPemijahan: new Date().toISOString().split('T')[0],
                 prediksiHari: 3,
                 jumlahKematian: 0,
                 statusBatch: 'menetas',
                 kolam: ''
             };
+        },
+
+        getFaseClass(fase) {
+            const f = (fase || '').toUpperCase();
+            if (f === 'TELUR') return 'bg-slate-100 text-slate-700';
+            if (f === 'LARVA') return 'bg-sky-100 text-sky-700';
+            return 'bg-indigo-100 text-indigo-700';
         },
 
         async submitBatch() {
@@ -768,8 +848,10 @@ function pembibitanComponent() {
             this.isSubmitting = true;
             const bibitAwalNum = Number(this.form.jumlahBibitAwal || 0);
             const matiNum = Number(this.form.jumlahKematian || 0);
+            const bobotKgNum = Number(this.form.totalBobotKg || 0);
             const sisaBibit = Math.max(0, bibitAwalNum - matiNum);
             const rawStatus = this.form.statusBatch;
+            const faseVal = (this.form.fase_pertumbuhan || 'TELUR').toUpperCase();
 
             let statusLabel = 'Aktif';
             let statusClass = 'bg-emerald-100 text-emerald-700';
@@ -807,8 +889,10 @@ function pembibitanComponent() {
                             jenis_ikan: this.form.jenisIkan,
                             id_kolam: this.form.kolam,
                             tgl_pemijahan: this.form.tglPemijahan,
+                            fase_pertumbuhan: faseVal,
                             jumlah_bibitAwal: bibitAwalNum,
                             jumlah_kematian: matiNum,
+                            total_bobot_kg: bobotKgNum,
                             status: rawStatus
                         })
                     });
@@ -818,11 +902,15 @@ function pembibitanComponent() {
                         if (targetIndex !== -1) {
                             this.batches[targetIndex].jenisIkan = this.form.jenisIkan.toUpperCase();
                             this.batches[targetIndex].rawJenisIkan = this.form.jenisIkan;
+                            this.batches[targetIndex].fase = faseVal;
+                            this.batches[targetIndex].faseClass = this.getFaseClass(faseVal);
                             this.batches[targetIndex].kolam = this.form.kolam;
                             this.batches[targetIndex].tglPemijahan = this.form.tglPemijahan;
                             this.batches[targetIndex].jumlahBibitAwal = bibitAwalNum;
                             this.batches[targetIndex].jumlahKematian = matiNum;
                             this.batches[targetIndex].jumlah = sisaBibit.toLocaleString('id-ID');
+                            this.batches[targetIndex].totalBobotKg = bobotKgNum;
+                            this.batches[targetIndex].totalBobotFormat = bobotKgNum.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 2 }) + ' kg';
                             this.batches[targetIndex].status = rawStatus;
                             this.batches[targetIndex].statusLabel = statusLabel;
                             this.batches[targetIndex].statusClass = statusClass;
@@ -858,8 +946,10 @@ function pembibitanComponent() {
                         jenis_ikan: this.form.jenisIkan,
                         id_kolam: this.form.kolam,
                         tgl_pemijahan: this.form.tglPemijahan,
+                        fase_pertumbuhan: faseVal,
                         jumlah_bibitAwal: bibitAwalNum,
                         jumlah_kematian: matiNum,
+                        total_bobot_kg: bobotKgNum,
                         status: rawStatus
                     })
                 });
@@ -867,17 +957,23 @@ function pembibitanComponent() {
                 const data = await res.json();
                 if (res.ok && data.success) {
                     const newBatch = data.batch;
+                    const diffDays = this.form.tglPemijahan ? Math.max(0, Math.floor((new Date() - new Date(this.form.tglPemijahan)) / (1000 * 60 * 60 * 24))) : 0;
+                    const finalBobot = Number(newBatch.total_bobot_kg || bobotKgNum);
                     this.batches.unshift({
                         id_batch: newBatch.id_batch,
                         id: '#BT-' + String(newBatch.id_batch).padStart(5, '0'),
                         inputDate: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
                         tglPemijahan: this.form.tglPemijahan,
-                        fase: rawStatus === 'menetas' ? 'LARVA' : 'TELUR',
-                        faseClass: rawStatus === 'menetas' ? 'bg-sky-100 text-sky-700' : 'bg-slate-100 text-slate-700',
-                        usia: '0 Hari',
+                        fase: faseVal,
+                        faseClass: this.getFaseClass(faseVal),
+                        usia: diffDays + ' Hari',
+                        usiaDays: diffDays,
                         jumlahBibitAwal: bibitAwalNum,
                         jumlahKematian: matiNum,
                         jumlah: sisaBibit.toLocaleString('id-ID'),
+                        jumlahRaw: sisaBibit,
+                        totalBobotKg: finalBobot,
+                        totalBobotFormat: finalBobot.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 2 }) + ' kg',
                         jenisIkan: this.form.jenisIkan.toUpperCase(),
                         rawJenisIkan: this.form.jenisIkan,
                         status: rawStatus,
@@ -914,6 +1010,50 @@ function pembibitanComponent() {
             this.deleteModalOpen = true;
         },
 
+        async markBatchFinished(item) {
+            const rawId = item.id_batch || item.id.replace(/[^0-9]/g, '');
+            if (!confirm('Apakah Anda yakin ingin menyelesaikan masa pembibitan untuk batch ' + item.id + ' agar siap dipindahkan ke pembesaran?')) {
+                return;
+            }
+            
+            this.isSubmitting = true;
+            try {
+                const res = await fetch('/pembibitan/' + rawId, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        status: 'selesai',
+                        fase_pertumbuhan: 'FINGERLING'
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    const targetIdx = this.batches.findIndex(b => b.id === item.id || b.id_batch === rawId);
+                    if (targetIdx !== -1) {
+                        this.batches[targetIdx].status = 'selesai';
+                        this.batches[targetIdx].fase = 'FINGERLING';
+                        this.batches[targetIdx].faseClass = this.getFaseClass('FINGERLING');
+                        this.batches[targetIdx].statusLabel = 'Selesai';
+                        this.batches[targetIdx].statusClass = 'bg-slate-100 text-slate-700';
+                        this.batches[targetIdx].dotClass = 'bg-slate-500';
+                    }
+                    this.toastMessage = 'Batch ' + item.id + ' telah diselesaikan dan siap dipindahkan ke pembesaran!';
+                    this.showToast = true;
+                    setTimeout(() => { this.showToast = false; }, 4000);
+                } else {
+                    alert(data.message || 'Gagal menyelesaikan batch pembibitan.');
+                }
+            } catch (e) {
+                alert('Terjadi kesalahan saat menyelesaikan batch.');
+            } finally {
+                this.isSubmitting = false;
+            }
+        },
+
         async executeDeleteBatch() {
             if (!this.selectedBatchToDelete) return;
             const item = this.selectedBatchToDelete;
@@ -941,10 +1081,11 @@ function pembibitanComponent() {
         openTransferModal(item) {
             this.selectedBatchToTransfer = item;
             const sisaBibit = item.jumlahRaw || (item.jumlahBibitAwal - item.jumlahKematian) || 1000;
+            const estBiomassa = item.totalBobotKg && item.totalBobotKg > 0 ? item.totalBobotKg : Math.max(10, Math.round(sisaBibit * 0.02));
             this.transferForm = {
                 id_kolam_pembesaran: '',
-                target_panen_kg: 500,
-                biomassa_est: Math.max(10, Math.round(sisaBibit * 0.02))
+                target_panen_kg: Math.max(100, Math.round(estBiomassa * 10)),
+                biomassa_est: estBiomassa
             };
             this.transferModalOpen = true;
         },
@@ -980,9 +1121,12 @@ function pembibitanComponent() {
                     const targetIdx = this.batches.findIndex(b => b.id === item.id || b.id_batch === rawId);
                     if (targetIdx !== -1) {
                         this.batches[targetIdx].status = 'selesai';
+                        this.batches[targetIdx].fase = 'FINGERLING';
+                        this.batches[targetIdx].faseClass = this.getFaseClass('FINGERLING');
                         this.batches[targetIdx].statusLabel = 'Selesai (Dipindahkan)';
                         this.batches[targetIdx].statusClass = 'bg-slate-100 text-slate-700';
                         this.batches[targetIdx].dotClass = 'bg-slate-500';
+                        this.batches[targetIdx].kolam_pembesaran = this.transferForm.id_kolam_pembesaran;
                     }
 
                     this.transferModalOpen = false;

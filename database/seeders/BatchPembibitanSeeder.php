@@ -25,7 +25,9 @@ class BatchPembibitanSeeder extends Seeder
                 'tgl_pemijahan' => now()->subDays(2)->toDateString(),
                 'jumlah_bibitAwal' => 250000,
                 'jenis_ikan' => 'Ikan Gurami Padang Super',
+                'fase_pertumbuhan' => 'TELUR',
                 'jumlah_kematian' => 1200,
+                'total_bobot_kg' => 25.0,
                 'status' => 'aktif',
             ],
             [
@@ -34,7 +36,9 @@ class BatchPembibitanSeeder extends Seeder
                 'tgl_pemijahan' => now()->subDays(9)->toDateString(),
                 'jumlah_bibitAwal' => 480000,
                 'jenis_ikan' => 'Ikan Nila Hitam Super',
+                'fase_pertumbuhan' => 'LARVA',
                 'jumlah_kematian' => 4500,
+                'total_bobot_kg' => 48.0,
                 'status' => 'aktif',
             ],
             [
@@ -43,7 +47,9 @@ class BatchPembibitanSeeder extends Seeder
                 'tgl_pemijahan' => now()->subDays(16)->toDateString(),
                 'jumlah_bibitAwal' => 310000,
                 'jenis_ikan' => 'Ikan Lele Sangkuriang',
+                'fase_pertumbuhan' => 'FINGERLING',
                 'jumlah_kematian' => 3800,
+                'total_bobot_kg' => 62.0,
                 'status' => 'aktif',
             ],
             [
@@ -52,7 +58,9 @@ class BatchPembibitanSeeder extends Seeder
                 'tgl_pemijahan' => now()->subDays(40)->toDateString(),
                 'jumlah_bibitAwal' => 200000,
                 'jenis_ikan' => 'Ikan Patin Siam',
+                'fase_pertumbuhan' => 'FINGERLING',
                 'jumlah_kematian' => 5200,
+                'total_bobot_kg' => 40.0,
                 'status' => 'selesai',
             ],
         ];

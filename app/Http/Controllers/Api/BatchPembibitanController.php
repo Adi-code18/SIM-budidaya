@@ -53,6 +53,7 @@ class BatchPembibitanController extends Controller
             'jumlah_bibitAwal'  => 'required|integer|min:1',
             'jenis_ikan'        => 'required|string|max:255',
             'jumlah_kematian'   => 'nullable|integer|min:0',
+            'total_bobot_kg'    => 'nullable|numeric|min:0',
             'status'            => 'nullable|string|in:aktif,selesai,gagal',
             'id_user'           => 'nullable|exists:users,id_user',
         ]);
@@ -115,6 +116,7 @@ class BatchPembibitanController extends Controller
             'jumlah_bibitAwal'  => 'sometimes|required|integer|min:1',
             'jenis_ikan'        => 'sometimes|required|string|max:255',
             'jumlah_kematian'   => 'nullable|integer|min:0',
+            'total_bobot_kg'    => 'nullable|numeric|min:0',
             'status'            => 'nullable|string|in:aktif,selesai,gagal',
             'id_user'           => 'nullable|exists:users,id_user',
         ]);

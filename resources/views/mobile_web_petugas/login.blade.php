@@ -192,9 +192,9 @@
                         </button>
                     </div>
                     <div class="flex justify-end pt-0.5">
-                        <a href="#" @click.prevent="triggerToast('Silakan hubungi administrator SIM-BUDIDAYA untuk reset password.', 'info')" 
-                           class="text-[11px] font-bold text-sky-700 hover:underline">
-                            Lupa Kata Sandi?
+                        <a href="javascript:void(0)" @click.prevent="triggerToast('Layanan lupa password belum diaktifkan. Silakan hubungi Administrator.', 'info')" 
+                           class="text-[11px] font-bold text-sky-700 hover:underline cursor-pointer">
+                            Lupa Password?
                         </a>
                     </div>
                 </div>

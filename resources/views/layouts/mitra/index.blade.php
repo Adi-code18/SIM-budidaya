@@ -12,21 +12,7 @@
     toastMessage: "",
     showToast: false,
 
-    mitras: {!! isset($mitras) && count($mitras) > 0 ? json_encode($mitras) : json_encode([
-        [
-            'id' => "MTR-2023-081",
-            'nama' => "The Ocean Grill",
-            'tipe' => "Restoran",
-            'tipeKey' => "restoran",
-            'alamat' => "Jl. Sudirman No. 45, Jakarta Pusat",
-            'wilayah' => "jakarta",
-            'lat' => "-6.208800",
-            'lng' => "106.845600",
-            'kontak' => "+62 812-3456-7890",
-            'email' => "info@oceangrill.com",
-            'image' => "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&q=80&w=120"
-        ]
-    ]) !!},
+    mitras: {!! json_encode($mitras ?? []) !!},
 
     form: {
         id: "",

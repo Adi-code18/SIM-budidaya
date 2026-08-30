@@ -61,13 +61,12 @@
                     </div>
 
                     <div>
-                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">ID MITRA / NAMA MITRA</label>
-                        <select x-model="form.mitra" :disabled="formMode === 'edit'" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
-                            <option value="">Pilih Mitra Budidaya...</option>
-                            <option value="MTR-2023-081 — The Ocean Grill">MTR-2023-081 — The Ocean Grill</option>
-                            <option value="MTR-2023-102 — IndoFrozen Supply">MTR-2023-102 — IndoFrozen Supply</option>
-                            <option value="MTR-2022-045 — Pasar Ikan Muara Baru">MTR-2022-045 — Pasar Ikan Muara Baru</option>
-                            <option value="MTR-2023-156 — Global Seafood Corp">MTR-2023-156 — Global Seafood Corp</option>
+                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">ID MITRA / NAMA MITRA (DATABASE MITRA) *</label>
+                        <select x-model="form.id_mitra" @change="onMitraSelected()" :disabled="formMode === 'edit'" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                            <option value="">Pilih Mitra Distributor dari Database...</option>
+                            <template x-for="m in mitraList" :key="m.id_mitra">
+                                <option :value="m.id_mitra" x-text="m.label"></option>
+                            </template>
                         </select>
                     </div>
 
@@ -161,7 +160,7 @@
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
             <div>
                 <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">TOTAL PESANAN</span>
-                <h3 class="text-3xl font-extrabold text-slate-900 mt-1">{{ $kpis['total'] ?? 4 }}</h3>
+                <h3 class="text-3xl font-extrabold text-slate-900 mt-1" x-text="kpiTotal"></h3>
             </div>
             <div class="w-10 h-10 rounded-xl bg-[#BEE3F8]/60 text-[#006699] flex items-center justify-center">
                 <i class="fa-solid fa-box text-base"></i>
@@ -172,7 +171,7 @@
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
             <div>
                 <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">DALAM PEMBEROKIAN</span>
-                <h3 class="text-3xl font-extrabold text-slate-900 mt-1">{{ $kpis['pemberokian'] ?? 1 }}</h3>
+                <h3 class="text-3xl font-extrabold text-slate-900 mt-1" x-text="kpiPemberokian"></h3>
             </div>
             <div class="w-10 h-10 rounded-xl bg-[#BEE3F8]/60 text-[#006699] flex items-center justify-center">
                 <i class="fa-solid fa-hourglass-half text-base"></i>
@@ -183,7 +182,7 @@
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
             <div>
                 <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">SIAP KIRIM</span>
-                <h3 class="text-3xl font-extrabold text-slate-900 mt-1">{{ $kpis['siapKirim'] ?? 2 }}</h3>
+                <h3 class="text-3xl font-extrabold text-slate-900 mt-1" x-text="kpiSiapKirim"></h3>
             </div>
             <div class="w-10 h-10 rounded-xl bg-[#BEE3F8]/60 text-[#006699] flex items-center justify-center">
                 <i class="fa-solid fa-truck text-base"></i>
@@ -194,7 +193,7 @@
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
             <div>
                 <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">SELESAI (TERKIRIM)</span>
-                <h3 class="text-3xl font-extrabold text-slate-900 mt-1">{{ $kpis['selesai'] ?? 1 }}</h3>
+                <h3 class="text-3xl font-extrabold text-slate-900 mt-1" x-text="kpiSelesai"></h3>
             </div>
             <div class="w-10 h-10 rounded-xl bg-[#D1FAE5] text-[#059669] flex items-center justify-center">
                 <i class="fa-regular fa-circle-check text-base"></i>
@@ -209,27 +208,27 @@
             <button @click="activeTab = 'semua'" 
                     :class="activeTab === 'semua' ? 'bg-[#051B44] text-white font-bold' : 'text-slate-600 hover:bg-slate-100 font-semibold'" 
                     class="px-4 py-2 rounded-xl text-xs transition-all">
-                Semua
+                Semua (<span x-text="kpiTotal"></span>)
             </button>
             <button @click="activeTab = 'pending'" 
                     :class="activeTab === 'pending' ? 'bg-[#051B44] text-white font-bold' : 'text-slate-600 hover:bg-slate-100 font-semibold'" 
                     class="px-4 py-2 rounded-xl text-xs transition-all">
-                Pending
+                Pending (<span x-text="kpiPending"></span>)
             </button>
             <button @click="activeTab = 'pemberokian'" 
                     :class="activeTab === 'pemberokian' ? 'bg-[#051B44] text-white font-bold' : 'text-slate-600 hover:bg-slate-100 font-semibold'" 
                     class="px-4 py-2 rounded-xl text-xs transition-all">
-                Pemberokian (RM)
+                Pemberokian (<span x-text="kpiPemberokian"></span>)
             </button>
             <button @click="activeTab = 'siap_kirim'" 
                     :class="activeTab === 'siap_kirim' ? 'bg-[#051B44] text-white font-bold' : 'text-slate-600 hover:bg-slate-100 font-semibold'" 
                     class="px-4 py-2 rounded-xl text-xs transition-all">
-                Siap Kirim
+                Siap Kirim (<span x-text="kpiSiapKirim"></span>)
             </button>
             <button @click="activeTab = 'selesai'" 
                     :class="activeTab === 'selesai' ? 'bg-[#051B44] text-white font-bold' : 'text-slate-600 hover:bg-slate-100 font-semibold'" 
                     class="px-4 py-2 rounded-xl text-xs transition-all">
-                Selesai
+                Selesai (<span x-text="kpiSelesai"></span>)
             </button>
         </div>
 
@@ -327,8 +326,8 @@
 
                 <div class="rounded-xl bg-slate-50 border border-slate-200 p-4">
                     <div class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-400">
-                        <span>Subtotal</span>
-                        <span>Rp 0</span>
+                        <span>Total Nilai Transaksi</span>
+                        <span class="text-sm font-extrabold text-emerald-700" x-text="selectedInvoice?.harga_format || 'Rp 0'"></span>
                     </div>
                 </div>
             </div>
@@ -353,20 +352,39 @@ function distribusiComponent() {
         formMode: 'create',
         jenisOrder: 'reguler',
         selectedInvoice: null,
+        mitraList: {!! json_encode($mitraList ?? []) !!},
+        batches: {!! json_encode($batches ?? []) !!},
 
         form: {
-            id: '#TRX-202310-001',
-            tanggal: '',
+            id: '#ORD-2023-0001',
+            id_transaksi: null,
+            id_mitra: '',
+            tanggal: new Date().toISOString().split('T')[0],
             mitra: '',
+            alamat: '',
             jenisOrder: 'reguler',
             status: 'pending',
             totalBerat: '',
             totalHarga: ''
         },
 
-        orders: {!! isset($orders) && count($orders) > 0 ? json_encode($orders) : json_encode([
-            [ 'id' => '#ORD-2023-9021', 'customer' => 'CV. Bahari Makmur', 'volume' => '250 kg', 'status' => 'pemberokian', 'alamat' => 'Panjalu, Ciamis, Jalan HJ Abdul Hamid', 'tanggal' => '5/8/26', 'label' => true ]
-        ]) !!},
+        orders: {!! isset($orders) && count($orders) > 0 ? json_encode($orders) : json_encode([]) !!},
+
+        get kpiTotal() {
+            return this.orders.length;
+        },
+        get kpiPemberokian() {
+            return this.orders.filter(o => o.status === 'pemberokian' || o.status === 'dalam_pengiriman').length;
+        },
+        get kpiSiapKirim() {
+            return this.orders.filter(o => o.status === 'siap_kirim').length;
+        },
+        get kpiSelesai() {
+            return this.orders.filter(o => o.status === 'selesai').length;
+        },
+        get kpiPending() {
+            return this.orders.filter(o => o.status === 'pending').length;
+        },
 
         get filteredOrders() {
             if (this.activeTab === 'semua') {
@@ -378,7 +396,8 @@ function distribusiComponent() {
         statusOptions: [
             { value: 'pending', label: 'Pending / Menunggu Konfirmasi' },
             { value: 'pemberokian', label: 'Dalam Pemberokian' },
-            { value: 'siap_kirim', label: 'Siap Kirim / Dikirim' }
+            { value: 'siap_kirim', label: 'Siap Kirim / Dikirim' },
+            { value: 'selesai', label: 'Selesai' }
         ],
 
         statusLabel(status) {
@@ -401,13 +420,24 @@ function distribusiComponent() {
             return map[status] || 'bg-[#E2E8F0] text-[#475569]';
         },
 
+        onMitraSelected() {
+            const sel = this.mitraList.find(m => m.id_mitra == this.form.id_mitra);
+            if (sel) {
+                this.form.mitra = sel.nama_mitra;
+                this.form.alamat = sel.alamat;
+            }
+        },
+
         openCreateForm() {
             this.formMode = 'create';
             this.showForm = true;
             this.form = {
-                id: '#TRX-202310-001',
-                tanggal: '',
+                id: '#ORD-2023-' + String(this.orders.length + 1).padStart(4, '0'),
+                id_transaksi: null,
+                id_mitra: '',
+                tanggal: new Date().toISOString().split('T')[0],
                 mitra: '',
+                alamat: '',
                 jenisOrder: 'reguler',
                 status: 'pending',
                 totalBerat: '',
@@ -419,24 +449,91 @@ function distribusiComponent() {
         openEditForm(order) {
             this.formMode = 'edit';
             this.showForm = true;
+            const matchedMitra = this.mitraList.find(m => m.nama_mitra === order.customer);
             this.form = {
                 id: order.id,
+                id_transaksi: order.id_transaksi || null,
+                id_mitra: order.id_mitra || (matchedMitra ? matchedMitra.id_mitra : ''),
                 tanggal: order.tanggal,
                 mitra: order.customer,
+                alamat: order.alamat,
                 jenisOrder: 'reguler',
                 status: order.status,
-                totalBerat: order.volume.replace(/[^0-9.]/g, ''),
-                totalHarga: ''
+                totalBerat: String(order.volume || '').replace(/[^0-9.]/g, ''),
+                totalHarga: order.harga_format || ''
             };
             this.jenisOrder = 'reguler';
         },
 
-        saveForm() {
+        async saveForm() {
             if (this.formMode === 'edit') {
-                const target = this.orders.find(item => item.id === this.form.id);
+                const rawId = this.form.id_transaksi || String(this.form.id).replace(/[^0-9]/g, '');
+                try {
+                    const res = await fetch('/distribusi/' + rawId, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            status_order: this.form.status,
+                            Total_kg: Number(this.form.totalBerat) || 0,
+                            harga_total: Number(String(this.form.totalHarga).replace(/[^0-9]/g, '')) || 0
+                        })
+                    });
+                } catch(e) {}
+
+                const target = this.orders.find(item => item.id === this.form.id || item.id_transaksi == rawId);
                 if (target) {
                     target.status = this.form.status;
                 }
+            } else {
+                if (!this.form.id_mitra) {
+                    alert('Silakan pilih Mitra Distributor dari database!');
+                    return;
+                }
+                if (!this.form.totalBerat || Number(this.form.totalBerat) <= 0) {
+                    alert('Silakan isi total berat pesanan!');
+                    return;
+                }
+
+                const totalKg = Number(this.form.totalBerat);
+                const hargaTotal = this.form.totalHarga ? Number(String(this.form.totalHarga).replace(/[^0-9]/g, '')) : (totalKg * 35000);
+
+                try {
+                    const res = await fetch('{{ route('distribusi.store') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            id_mitra: this.form.id_mitra,
+                            tanggal_order: this.form.tanggal,
+                            Total_kg: totalKg,
+                            harga_total: hargaTotal,
+                            Jenis_order: this.form.jenisOrder,
+                            status_order: this.form.status
+                        })
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.success) {
+                        const newTrx = data.transaksi;
+                        this.orders.unshift({
+                            id_transaksi: newTrx.id_transaksi,
+                            id: '#ORD-2023-' + String(newTrx.id_transaksi).padStart(4, '0'),
+                            id_mitra: newTrx.id_mitra,
+                            customer: newTrx.mitra ? newTrx.mitra.nama_mitra : this.form.mitra,
+                            volume: totalKg.toLocaleString('id-ID') + ' kg',
+                            status: this.form.status,
+                            alamat: this.form.alamat,
+                            tanggal: newTrx.tanggal_order || new Date().toLocaleDateString('id-ID'),
+                            label: true
+                        });
+                    }
+                } catch(e) {}
             }
             this.showForm = false;
             this.formMode = 'create';
@@ -447,6 +544,8 @@ function distribusiComponent() {
                 id: order.id,
                 customer: order.customer,
                 volume: order.volume,
+                total_kg: order.total_kg,
+                harga_format: order.harga_format || ('Rp ' + (Number(order.total_kg || 100) * 35000).toLocaleString('id-ID')),
                 tanggal: order.tanggal,
                 alamat: order.alamat,
                 status: order.status,

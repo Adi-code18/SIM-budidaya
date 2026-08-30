@@ -27,6 +27,7 @@
     <div class="w-full max-w-5xl bg-white rounded-3xl shadow-xl shadow-slate-200/60 overflow-hidden grid grid-cols-1 lg:grid-cols-12 border border-slate-100 min-h-[580px]"
          x-data="{ 
              showPassword: false, 
+             showForgotNotice: false,
              username: '{{ old('username', '') }}', 
              password: '', 
              remember: {{ old('remember') ? 'true' : 'false' }},
@@ -118,7 +119,11 @@
                     <div>
                         <div class="flex items-center justify-between mb-1.5">
                             <label class="block text-xs font-semibold text-slate-600">Kata Sandi</label>
-                            <a href="#" class="text-xs font-semibold text-[#0077C6] hover:text-[#051B44] transition-colors">Lupa Sandi?</a>
+                            <a href="javascript:void(0)" 
+                               @click="showForgotNotice = true" 
+                               class="text-xs font-semibold text-[#0077C6] hover:text-[#051B44] transition-colors cursor-pointer">
+                                Lupa Password?
+                            </a>
                         </div>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -131,8 +136,8 @@
                                    required
                                    class="w-full pl-10 pr-10 py-2.5 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-[#051B44] focus:ring-2 focus:ring-[#051B44]/10 transition-all">
                             <button type="button" 
-                                    @click="showPassword = !showPassword" 
-                                    class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600">
+                                     @click="showPassword = !showPassword" 
+                                     class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600">
                                 <i class="fa-regular text-sm" :class="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
                             </button>
                         </div>
@@ -198,6 +203,34 @@
                         <span>Keamanan Berlapis (One Session & Rate Limiter)</span>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Modal Notifikasi Lupa Password (Non-Fungsional Sementara) -->
+        <div x-show="showForgotNotice" 
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4"
+             style="display: none;">
+            <div @click.outside="showForgotNotice = false" 
+                 class="bg-white max-w-sm w-full rounded-3xl p-6 shadow-2xl border border-slate-100 text-center space-y-4">
+                <div class="w-12 h-12 rounded-2xl bg-sky-100 text-sky-600 mx-auto flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-key"></i>
+                </div>
+                <div>
+                    <h3 class="font-extrabold text-base text-slate-900">Bantuan Lupa Password</h3>
+                    <p class="text-xs text-slate-500 leading-relaxed mt-1">
+                        Layanan pemulihan kata sandi mandiri belum diaktifkan. Silakan hubungi Administrator/Superadmin SIM-BUDIDAYA untuk melakukan reset kredensial akun Anda.
+                    </p>
+                </div>
+                <button type="button" @click="showForgotNotice = false" 
+                        class="w-full py-2.5 rounded-xl bg-[#051B44] text-white text-xs font-bold hover:bg-[#09265c] transition-colors">
+                    Mengerti
+                </button>
             </div>
         </div>
 

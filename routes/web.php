@@ -79,9 +79,12 @@ Route::middleware(['auth', 'role:manajer'])->group(function () {
 
     // Log Stok & Pakan
     Route::get('/log-pakan', [PakanController::class, 'index'])->name('log-pakan');
+    Route::post('/log-pakan', [PakanController::class, 'store'])->name('log-pakan.store');
 
     // Distribusi & Pesanan
     Route::get('/distribusi', [DistribusiController::class, 'index'])->name('distribusi');
+    Route::post('/distribusi', [DistribusiController::class, 'store'])->name('distribusi.store');
+    Route::put('/distribusi/{id}', [DistribusiController::class, 'update'])->name('distribusi.update');
 
     // Rekap Keuangan & Margin
     Route::get('/keuangan', [KeuanganWebController::class, 'index'])->name('keuangan');
