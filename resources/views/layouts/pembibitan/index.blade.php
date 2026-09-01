@@ -150,10 +150,10 @@
                                     class="px-3 py-1.5 rounded-xl border text-xs font-bold transition-all">
                                 Aktif
                             </button>
-                            <button type="button" @click="form.statusBatch = 'selesai'"
-                                    :class="form.statusBatch === 'selesai' ? 'bg-slate-700 text-white border-transparent shadow-xs' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'"
+                            <button type="button" @click="form.statusBatch = 'siap_pindah'"
+                                    :class="form.statusBatch === 'siap_pindah' ? 'bg-teal-600 text-white border-transparent shadow-xs' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'"
                                     class="px-3 py-1.5 rounded-xl border text-xs font-bold transition-all">
-                                Selesai (Siap Pindah)
+                                Siap Pindah
                             </button>
                             <button type="button" @click="form.statusBatch = 'gagal'"
                                     :class="form.statusBatch === 'gagal' ? 'bg-rose-600 text-white border-transparent shadow-xs' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'"
@@ -376,17 +376,17 @@
                                             </a>
                                         </template>
 
-                                        <!-- JIKA BATCH MASIH AKTIF: EDIT, SELESAIKAN BIBIT, DAN HAPUS -->
+                                        <!-- JIKA BATCH MASIH AKTIF: PINDAH KE PEMBESARAN, EDIT, DAN HAPUS -->
                                         <template x-if="item.status !== 'selesai'">
                                             <div>
+                                                <button @click="open = false; openTransferModal(item)" class="w-full px-3.5 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 flex items-center gap-2.5">
+                                                    <i class="fa-solid fa-right-left text-emerald-600 w-4"></i>
+                                                    <span>Pindah ke Pembesaran</span>
+                                                </button>
+
                                                 <button @click="open = false; openEdit(item)" class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
                                                     <i class="fa-solid fa-pen-to-square text-amber-600 w-4"></i>
                                                     <span>Edit Batch</span>
-                                                </button>
-
-                                                <button @click="open = false; markBatchFinished(item)" class="w-full px-3.5 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 flex items-center gap-2.5">
-                                                    <i class="fa-solid fa-circle-check text-emerald-600 w-4"></i>
-                                                    <span>Selesaikan Bibit (Siap Pindah)</span>
                                                 </button>
 
                                                 <div class="my-1 border-t border-slate-100"></div>
@@ -865,8 +865,12 @@ function pembibitanComponent() {
                 statusLabel = 'Mulai Menetas';
                 statusClass = 'bg-sky-100 text-sky-700';
                 dotClass = 'bg-sky-500';
+            } else if (rawStatus === 'siap_pindah') {
+                statusLabel = 'Siap Pindah';
+                statusClass = 'bg-teal-100 text-teal-700';
+                dotClass = 'bg-teal-500';
             } else if (rawStatus === 'selesai') {
-                statusLabel = 'Selesai';
+                statusLabel = 'Selesai (Dipindahkan)';
                 statusClass = 'bg-slate-100 text-slate-700';
                 dotClass = 'bg-slate-500';
             } else if (rawStatus === 'gagal') {
@@ -1127,6 +1131,10 @@ function pembibitanComponent() {
                         this.batches[targetIdx].statusClass = 'bg-slate-100 text-slate-700';
                         this.batches[targetIdx].dotClass = 'bg-slate-500';
                         this.batches[targetIdx].kolam_pembesaran = this.transferForm.id_kolam_pembesaran;
+                        if (data.batch_pembesaran) {
+                            this.batches[targetIdx].batch_pembesaran_id = '#PB-' + String(data.batch_pembesaran.id_pembesaran).padStart(5, '0');
+                            this.batches[targetIdx].tgl_pindah = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+                        }
                     }
 
                     this.transferModalOpen = false;

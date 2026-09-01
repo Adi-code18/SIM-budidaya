@@ -131,15 +131,17 @@ class PembesaranController extends Controller
             ];
         }
 
-        $availablePembibitan = \App\Models\BatchPembibitan::with('kolam')
+        $availablePembibitan = \App\Models\BatchPembibitan::with(['kolam', 'batchPembesaran'])
             ->where('status', '!=', 'gagal')
+            ->whereDoesntHave('batchPembesaran')
             ->latest('id_batch')
             ->get()
             ->map(function ($bp) {
                 $sisa = max(0, $bp->jumlah_bibitAwal - $bp->jumlah_kematian);
+                $statusText = $bp->status === 'siap_pindah' ? 'Siap Pindah' : ($bp->status === 'selesai' ? 'Selesai' : ucfirst($bp->status));
                 return [
                     'id_batch'         => $bp->id_batch,
-                    'label'            => '#BT-' . str_pad($bp->id_batch, 5, '0', STR_PAD_LEFT) . ' (' . $bp->jenis_ikan . ' - ' . number_format($sisa, 0, ',', '.') . ' Ekor' . ($bp->status === 'selesai' ? ' - Siap Pindah' : ' - ' . ucfirst($bp->status)) . ')',
+                    'label'            => '#BT-' . str_pad($bp->id_batch, 5, '0', STR_PAD_LEFT) . ' (' . $bp->jenis_ikan . ' - ' . number_format($sisa, 0, ',', '.') . ' Ekor - ' . $statusText . ')',
                     'jenis_ikan'       => $bp->jenis_ikan,
                     'sisa_ekor'        => $sisa,
                     'est_biomassa'     => round($sisa * 0.02, 1),
@@ -331,5 +333,47 @@ class PembesaranController extends Controller
         }
 
         return redirect()->route('pembesaran')->with('success', 'Batch pembesaran berhasil dihapus!');
+    }
+
+    public function storeKolam(Request $request)
+    {
+        $request->validate([
+            'nama_kolam'       => 'required|string|max:255|unique:kolam,nama_kolam',
+            'tipe_kolam'       => 'required|string|max:255',
+            'kapasitas'        => 'required|numeric|min:10',
+            'kesehatan_ph_air' => 'nullable|numeric|between:0,14',
+        ], [
+            'nama_kolam.required' => 'Nama / Kode Kolam wajib diisi.',
+            'nama_kolam.unique'   => 'Nama / Kode Kolam sudah terdaftar dalam sistem.',
+            'tipe_kolam.required' => 'Tipe / Konstruksi Kolam wajib dipilih.',
+            'kapasitas.required'  => 'Kapasitas kolam wajib diisi.',
+            'kapasitas.min'       => 'Kapasitas minimal 10 kg / ekor.',
+        ]);
+
+        $kolam = Kolam::create([
+            'id_user'          => Auth::id() ?? 1,
+            'nama_kolam'       => $request->nama_kolam,
+            'tipe_kolam'       => $request->tipe_kolam,
+            'kapasitas'        => $request->kapasitas,
+            'status'           => 'aktif',
+            'kesehatan_ph_air' => $request->kesehatan_ph_air ?? 7.2,
+        ]);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Fasilitas kolam {$kolam->nama_kolam} ({$kolam->tipe_kolam}) berhasil ditambahkan!",
+                'kolam'   => [
+                    'id_kolam'    => $kolam->id_kolam,
+                    'nama_kolam'  => $kolam->nama_kolam,
+                    'tipe_kolam'  => $kolam->tipe_kolam,
+                    'kapasitas'   => $kolam->kapasitas,
+                    'is_occupied' => false,
+                    'ph_air'      => (string) ($kolam->kesehatan_ph_air ?? '7.2'),
+                ]
+            ], 201);
+        }
+
+        return redirect()->route('pembesaran')->with('success', "Kolam {$kolam->nama_kolam} berhasil ditambahkan!");
     }
 }

@@ -100,6 +100,10 @@ class PembibitanController extends Controller
                 $statusLabel = 'Mulai Menetas';
                 $statusClass = 'bg-sky-100 text-sky-700';
                 $dotClass = 'bg-sky-500';
+            } elseif ($rawStatus === 'siap_pindah') {
+                $statusLabel = 'Siap Pindah';
+                $statusClass = 'bg-teal-100 text-teal-700';
+                $dotClass = 'bg-teal-500';
             } elseif ($rawStatus === 'selesai') {
                 $statusLabel = 'Selesai (Dipindahkan)';
                 $statusClass = 'bg-slate-100 text-slate-700';

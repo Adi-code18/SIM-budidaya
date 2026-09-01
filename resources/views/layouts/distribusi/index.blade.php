@@ -70,6 +70,36 @@
                         </select>
                     </div>
 
+                    <!-- Pilih Sumber Batch Pembesaran & Jenis Ikan -->
+                    <div class="p-3.5 bg-sky-50/70 rounded-xl border border-sky-100 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-sky-900 block">SUMBER BATCH PEMBESARAN &amp; KOMODITAS IKAN *</label>
+                            <a href="{{ route('pembesaran') }}" target="_blank" class="text-[10px] font-bold text-sky-700 hover:text-sky-900 flex items-center gap-1">
+                                <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                                <span>Cek Kolam Pembesaran</span>
+                            </a>
+                        </div>
+                        <select x-model="form.id_pembesaran" @change="onBatchSelected()" :disabled="formMode === 'edit'" class="w-full px-3.5 py-2.5 rounded-xl border border-sky-200 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
+                            <option value="">-- Pilih Batch Pembesaran / Jenis Ikan yang Tersedia --</option>
+                            <template x-for="b in batches" :key="b.id_pembesaran">
+                                <option :value="b.id_pembesaran" x-text="b.label"></option>
+                            </template>
+                        </select>
+                        <div x-show="form.jenis_ikan" class="flex flex-wrap items-center gap-2 pt-1">
+                            <span class="px-2.5 py-1 rounded-lg bg-sky-100 text-sky-800 border border-sky-200 text-[11px] font-extrabold flex items-center gap-1.5">
+                                <i class="fa-solid fa-fish text-sky-600"></i>
+                                <span>Jenis Ikan: <strong x-text="form.jenis_ikan"></strong></span>
+                            </span>
+                            <span x-show="form.kolam_asal" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 text-[11px] font-semibold flex items-center gap-1">
+                                <i class="fa-solid fa-warehouse text-slate-400"></i>
+                                <span>Kolam: <strong x-text="form.kolam_asal"></strong></span>
+                            </span>
+                            <span x-show="form.stok_biomassa" class="px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold">
+                                Stok Siap: <span x-text="Number(form.stok_biomassa).toLocaleString('id-ID') + ' kg'"></span>
+                            </span>
+                        </div>
+                    </div>
+
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1.5">JENIS ORDER</label>
@@ -248,11 +278,23 @@
                         <span class="text-xs font-bold text-[#0055CC]" x-text="order.id"></span>
                         <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase" :class="statusClass(order.status)" x-text="statusLabel(order.status)"></span>
                     </div>
-                    <h4 class="font-extrabold text-slate-900 text-sm" x-text="order.customer"></h4>
+                    <div class="flex items-start justify-between gap-2">
+                        <div>
+                            <h4 class="font-extrabold text-slate-900 text-sm" x-text="order.customer"></h4>
+                            <span class="text-[10px] text-slate-400 font-semibold" x-text="order.tipe_mitra"></span>
+                        </div>
+                        <span class="px-2 py-0.5 rounded-lg bg-sky-50 text-sky-800 border border-sky-200 text-[10px] font-extrabold" x-text="order.jenis_ikan || 'Ikan Konsumsi'"></span>
+                    </div>
 
-                    <div class="bg-slate-50 border border-slate-100 p-3 rounded-xl">
-                        <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">VOLUME</span>
-                        <h3 class="text-lg font-extrabold text-slate-900 mt-0.5" x-text="order.volume"></h3>
+                    <div class="bg-slate-50 border border-slate-100 p-3 rounded-xl flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">VOLUME</span>
+                            <h3 class="text-lg font-extrabold text-slate-900 mt-0.5" x-text="order.volume"></h3>
+                        </div>
+                        <div class="text-right" x-show="order.batch_code">
+                            <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">BATCH ASAL</span>
+                            <span class="text-xs font-extrabold text-sky-700 mt-0.5 block" x-text="order.batch_code"></span>
+                        </div>
                     </div>
 
                     <div class="space-y-1 text-xs text-slate-500 font-medium">
@@ -308,6 +350,10 @@
                     <span class="text-sm font-bold text-slate-800" x-text="selectedInvoice?.customer"></span>
                 </div>
                 <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Komoditas / Ikan</span>
+                    <span class="text-sm font-bold text-sky-900" x-text="(selectedInvoice?.jenis_ikan || 'Ikan Konsumsi') + (selectedInvoice?.batch_code ? ' (' + selectedInvoice.batch_code + ')' : '')"></span>
+                </div>
+                <div class="flex items-center justify-between">
                     <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Volume</span>
                     <span class="text-sm font-bold text-slate-800" x-text="selectedInvoice?.volume"></span>
                 </div>
@@ -359,6 +405,10 @@ function distribusiComponent() {
             id: '#ORD-2023-0001',
             id_transaksi: null,
             id_mitra: '',
+            id_pembesaran: '',
+            jenis_ikan: '',
+            kolam_asal: '',
+            stok_biomassa: null,
             tanggal: new Date().toISOString().split('T')[0],
             mitra: '',
             alamat: '',
@@ -428,6 +478,22 @@ function distribusiComponent() {
             }
         },
 
+        onBatchSelected() {
+            const sel = this.batches.find(b => b.id_pembesaran == this.form.id_pembesaran);
+            if (sel) {
+                this.form.jenis_ikan = sel.jenis_ikan;
+                this.form.kolam_asal = sel.kolam;
+                this.form.stok_biomassa = sel.biomassa_est;
+                if (this.form.totalBerat && Number(this.form.totalBerat) > 0 && !this.form.totalHarga) {
+                    this.form.totalHarga = 'Rp ' + (Number(this.form.totalBerat) * 35000).toLocaleString('id-ID');
+                }
+            } else {
+                this.form.jenis_ikan = '';
+                this.form.kolam_asal = '';
+                this.form.stok_biomassa = null;
+            }
+        },
+
         openCreateForm() {
             this.formMode = 'create';
             this.showForm = true;
@@ -435,6 +501,10 @@ function distribusiComponent() {
                 id: '#ORD-2023-' + String(this.orders.length + 1).padStart(4, '0'),
                 id_transaksi: null,
                 id_mitra: '',
+                id_pembesaran: '',
+                jenis_ikan: '',
+                kolam_asal: '',
+                stok_biomassa: null,
                 tanggal: new Date().toISOString().split('T')[0],
                 mitra: '',
                 alamat: '',
@@ -454,6 +524,10 @@ function distribusiComponent() {
                 id: order.id,
                 id_transaksi: order.id_transaksi || null,
                 id_mitra: order.id_mitra || (matchedMitra ? matchedMitra.id_mitra : ''),
+                id_pembesaran: order.id_pembesaran || '',
+                jenis_ikan: order.jenis_ikan || '',
+                kolam_asal: order.kolam_asal || '',
+                stok_biomassa: null,
                 tanggal: order.tanggal,
                 mitra: order.customer,
                 alamat: order.alamat,
@@ -493,6 +567,10 @@ function distribusiComponent() {
                     alert('Silakan pilih Mitra Distributor dari database!');
                     return;
                 }
+                if (!this.form.id_pembesaran) {
+                    alert('Silakan pilih Sumber Batch Pembesaran / Jenis Ikan!');
+                    return;
+                }
                 if (!this.form.totalBerat || Number(this.form.totalBerat) <= 0) {
                     alert('Silakan isi total berat pesanan!');
                     return;
@@ -511,29 +589,42 @@ function distribusiComponent() {
                         },
                         body: JSON.stringify({
                             id_mitra: this.form.id_mitra,
+                            id_pembesaran: this.form.id_pembesaran,
                             tanggal_order: this.form.tanggal,
                             Total_kg: totalKg,
                             harga_total: hargaTotal,
-                            Jenis_order: this.form.jenisOrder,
+                            Jenis_order: this.form.jenis_ikan || this.form.jenisOrder,
                             status_order: this.form.status
                         })
                     });
                     const data = await res.json();
                     if (res.ok && data.success) {
                         const newTrx = data.transaksi;
+                        const matchedBatch = this.batches.find(b => b.id_pembesaran == this.form.id_pembesaran);
                         this.orders.unshift({
                             id_transaksi: newTrx.id_transaksi,
                             id: '#ORD-2023-' + String(newTrx.id_transaksi).padStart(4, '0'),
                             id_mitra: newTrx.id_mitra,
+                            id_pembesaran: newTrx.id_pembesaran,
                             customer: newTrx.mitra ? newTrx.mitra.nama_mitra : this.form.mitra,
                             volume: totalKg.toLocaleString('id-ID') + ' kg',
+                            total_kg: totalKg,
+                            harga_total: hargaTotal,
+                            harga_format: 'Rp ' + Number(hargaTotal).toLocaleString('id-ID'),
+                            jenis_ikan: this.form.jenis_ikan || (newTrx.batch_pembesaran ? newTrx.batch_pembesaran.jenis_ikan : 'Ikan Segar'),
+                            kolam_asal: this.form.kolam_asal,
+                            batch_code: this.form.id_pembesaran ? ('#PB-' + String(this.form.id_pembesaran).padStart(5, '0')) : null,
                             status: this.form.status,
                             alamat: this.form.alamat,
                             tanggal: newTrx.tanggal_order || new Date().toLocaleDateString('id-ID'),
                             label: true
                         });
+                    } else {
+                        alert(data.message || 'Gagal menyimpan transaksi pesanan.');
                     }
-                } catch(e) {}
+                } catch(e) {
+                    alert('Terjadi kesalahan saat menyimpan pesanan.');
+                }
             }
             this.showForm = false;
             this.formMode = 'create';
@@ -543,6 +634,9 @@ function distribusiComponent() {
             this.selectedInvoice = {
                 id: order.id,
                 customer: order.customer,
+                jenis_ikan: order.jenis_ikan,
+                batch_code: order.batch_code,
+                kolam_asal: order.kolam_asal,
                 volume: order.volume,
                 total_kg: order.total_kg,
                 harga_format: order.harga_format || ('Rp ' + (Number(order.total_kg || 100) * 35000).toLocaleString('id-ID')),
@@ -568,19 +662,21 @@ function distribusiComponent() {
 function printLabel(order) {
     if (!order) return;
     const content = [
-        'ORDER LABEL',
-        '-------------------',
-        'ID: ' + order.id,
-        'Customer: ' + order.customer,
-        'Volume: ' + order.volume,
-        'Alamat: ' + order.alamat,
-        'Status: ' + (order.status === 'pending' ? 'Pending' : order.status === 'pemberokian' ? 'Pemberokian' : order.status === 'siap_kirim' ? 'Siap Kirim' : 'Selesai')
+        'ORDER LABEL - DISTRIBUSI SIM-BUDIDAYA',
+        '---------------------------------------',
+        'ID Order    : ' + order.id,
+        'Komoditas   : ' + (order.jenis_ikan || 'Ikan Konsumsi') + (order.batch_code ? ' (' + order.batch_code + ')' : ''),
+        'Customer    : ' + order.customer,
+        'Volume      : ' + order.volume,
+        'Alamat      : ' + order.alamat,
+        'Tgl Order   : ' + order.tanggal,
+        'Status      : ' + (order.status === 'pending' ? 'Pending' : order.status === 'pemberokian' ? 'Pemberokian' : order.status === 'siap_kirim' ? 'Siap Kirim' : 'Selesai')
     ].join('\n');
 
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
-    const printable = '<html><head><title>Label Order</title></head><body><pre style="font-family: sans-serif; padding: 24px; line-height: 1.6;">' + content.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</pre></body></html>';
+    const printable = '<html><head><title>Label Order</title></head><body><pre style="font-family: sans-serif; padding: 24px; line-height: 1.6; font-size: 14px;">' + content.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</pre></body></html>';
     printWindow.document.write(printable);
     printWindow.document.close();
     printWindow.focus();

@@ -71,6 +71,7 @@ Route::middleware(['auth', 'role:manajer'])->group(function () {
     // Manajemen Batch Pembesaran
     Route::get('/pembesaran', [PembesaranController::class, 'index'])->name('pembesaran');
     Route::post('/pembesaran', [PembesaranController::class, 'store'])->name('pembesaran.store');
+    Route::post('/pembesaran/kolam', [PembesaranController::class, 'storeKolam'])->name('pembesaran.kolam.store');
     Route::put('/pembesaran/{id}', [PembesaranController::class, 'update'])->name('pembesaran.update');
     Route::delete('/pembesaran/{id}', [PembesaranController::class, 'destroy'])->name('pembesaran.destroy');
 

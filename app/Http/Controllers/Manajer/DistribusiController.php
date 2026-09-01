@@ -26,20 +26,24 @@ class DistribusiController extends Controller
             }
 
             $orders[] = [
-                'id_transaksi' => $t->id_transaksi,
-                'id'           => '#ORD-2023-' . str_pad($t->id_transaksi, 4, '0', STR_PAD_LEFT),
-                'id_mitra'     => $t->id_mitra,
-                'customer'     => $t->mitra ? $t->mitra->nama_mitra : 'Mitra #' . $t->id_mitra,
-                'tipe_mitra'   => $t->mitra ? $t->mitra->tipe_mitra : 'Distributor',
-                'volume'       => number_format($t->Total_kg, 0, ',', '.') . ' kg',
-                'total_kg'     => (float) $t->Total_kg,
-                'harga_total'  => (float) $t->harga_total,
-                'harga_format' => 'Rp ' . number_format($t->harga_total, 0, ',', '.'),
-                'jenis_order'  => $t->Jenis_order ?? 'Ikan Segar',
-                'status'       => $status,
-                'alamat'       => $t->mitra ? $t->mitra->alamat : '-',
-                'tanggal'      => $t->tanggal_order ? Carbon::parse($t->tanggal_order)->toDateString() : Carbon::today()->toDateString(),
-                'label'        => true
+                'id_transaksi'  => $t->id_transaksi,
+                'id'            => '#ORD-2023-' . str_pad($t->id_transaksi, 4, '0', STR_PAD_LEFT),
+                'id_mitra'      => $t->id_mitra,
+                'id_pembesaran' => $t->id_pembesaran,
+                'customer'      => $t->mitra ? $t->mitra->nama_mitra : 'Mitra #' . $t->id_mitra,
+                'tipe_mitra'    => $t->mitra ? $t->mitra->tipe_mitra : 'Distributor',
+                'volume'        => number_format($t->Total_kg, 0, ',', '.') . ' kg',
+                'total_kg'      => (float) $t->Total_kg,
+                'harga_total'   => (float) $t->harga_total,
+                'harga_format'  => 'Rp ' . number_format($t->harga_total, 0, ',', '.'),
+                'jenis_ikan'    => $t->batchPembesaran ? $t->batchPembesaran->jenis_ikan : ($t->Jenis_order ?? 'Ikan Segar'),
+                'kolam_asal'    => $t->batchPembesaran && $t->batchPembesaran->kolam ? $t->batchPembesaran->kolam->nama_kolam : 'Kolam Pembesaran',
+                'batch_code'    => $t->batchPembesaran ? ('#PB-' . str_pad($t->id_pembesaran, 5, '0', STR_PAD_LEFT)) : null,
+                'jenis_order'   => $t->Jenis_order ?? 'Ikan Segar',
+                'status'        => $status,
+                'alamat'        => $t->mitra ? $t->mitra->alamat : '-',
+                'tanggal'       => $t->tanggal_order ? Carbon::parse($t->tanggal_order)->toDateString() : Carbon::today()->toDateString(),
+                'label'         => true
             ];
         }
 
@@ -54,10 +58,14 @@ class DistribusiController extends Controller
         });
 
         $batches = $batchRecords->map(function ($b) {
+            $kolamName = $b->kolam ? $b->kolam->nama_kolam : 'Kolam #' . $b->id_kolam;
+            $stokBiomassa = number_format($b->biomassa_est, 0, ',', '.');
             return [
                 'id_pembesaran' => $b->id_pembesaran,
-                'label'         => '#PB-' . str_pad($b->id_pembesaran, 5, '0', STR_PAD_LEFT) . ' (' . $b->jenis_ikan . ' - ' . ($b->kolam ? $b->kolam->nama_kolam : 'Kolam') . ')',
+                'label'         => '#PB-' . str_pad($b->id_pembesaran, 5, '0', STR_PAD_LEFT) . ' — ' . $b->jenis_ikan . ' (' . $kolamName . ' - Stok: ' . $stokBiomassa . ' kg)',
                 'jenis_ikan'    => $b->jenis_ikan,
+                'kolam'         => $kolamName,
+                'biomassa_est'  => (float) $b->biomassa_est,
             ];
         });
 
@@ -68,12 +76,16 @@ class DistribusiController extends Controller
     {
         $request->validate([
             'id_mitra'      => 'required|exists:mitra_distributor,id_mitra',
-            'id_pembesaran' => 'nullable|exists:batch_pembesaran,id_pembesaran',
+            'id_pembesaran' => 'required|exists:batch_pembesaran,id_pembesaran',
             'tanggal_order' => 'nullable|date',
             'Total_kg'      => 'required|numeric|min:1',
             'harga_total'   => 'nullable|numeric|min:0',
             'Jenis_order'   => 'nullable|string',
             'status_order'  => 'nullable|string',
+        ], [
+            'id_mitra.required'      => 'Mitra Distributor wajib dipilih.',
+            'id_pembesaran.required' => 'Batch Pembesaran / Jenis Ikan wajib dipilih.',
+            'Total_kg.required'      => 'Total berat (kg) wajib diisi.',
         ]);
 
         $status = $request->status_order ?? 'pending';
@@ -87,7 +99,7 @@ class DistribusiController extends Controller
         $transaksi = TransaksiDistribusi::create([
             'id_user'       => Auth::id() ?? 1,
             'id_mitra'      => $request->id_mitra,
-            'id_pembesaran' => $request->id_pembesaran ?? BatchPembesaran::first()?->id_pembesaran ?? 1,
+            'id_pembesaran' => $request->id_pembesaran,
             'tanggal_order' => $request->tanggal_order ?? Carbon::today()->toDateString(),
             'Total_kg'      => $totalKg,
             'harga_total'   => $hargaTotal,
