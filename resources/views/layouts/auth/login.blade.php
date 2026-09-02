@@ -53,12 +53,9 @@
                 
                 <!-- Logo & Brand Header -->
                 <div class="flex items-center gap-3.5 mb-8">
-                    <div class="w-11 h-11 rounded-xl bg-[#051B44] flex items-center justify-center text-white shadow-lg shadow-[#051B44]/20 flex-shrink-0">
-                        <svg class="w-6 h-6 fill-current text-white" viewBox="0 0 24 24">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14.5h-2v-2h2v2zm0-4h-2V7h2v5.5z" opacity="0.3"/>
-                            <path d="M21.5 12c0-2.37-.83-4.55-2.22-6.26l-1.42 1.42C19.06 8.44 19.75 10.14 19.75 12s-.69 3.56-1.89 4.84l1.42 1.42C20.67 16.55 21.5 14.37 21.5 12zM6.14 7.16L4.72 5.74C3.33 7.45 2.5 9.63 2.5 12s.83 4.55 2.22 6.26l1.42-1.42C4.94 15.56 4.25 13.86 4.25 12s.69-3.56 1.89-4.84zM12 4.5c-4.14 0-7.5 3.36-7.5 7.5s3.36 7.5 7.5 7.5 7.5-3.36 7.5-7.5-3.36-7.5-7.5-7.5zm0 13c-3.03 0-5.5-2.47-5.5-5.5S8.97 6.5 12 6.5s5.5 2.47 5.5 5.5-2.47 5.5-5.5 5.5z"/>
-                        </svg>
-                    </div>
+                    <img src="{{ asset('build/images/logo PT.png') }}" 
+                         alt="Logo PT" 
+                         class="h-11 w-auto object-contain flex-shrink-0">
                     <div>
                         <h1 class="font-extrabold text-xl text-[#051B44] tracking-tight leading-tight">SIM-BUDIDAYA</h1>
                         <p class="text-[10px] font-bold text-slate-400 tracking-widest uppercase">PORTAL MANAJER</p>
@@ -182,25 +179,28 @@
         </div>
 
         <!-- Right Side: Visual Hero Section -->
-        <div class="hidden lg:block lg:col-span-6 relative bg-slate-900 overflow-hidden">
-            <!-- Background Image -->
-            <img src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&q=80&w=1200" 
-                 alt="Aquafarm Management" 
-                 class="absolute inset-0 w-full h-full object-cover">
+        <div class="hidden lg:flex lg:col-span-6 relative bg-gradient-to-br from-[#EEF6FD] via-[#F5FAFE] to-[#E8F3FC] p-8 lg:p-10 flex-col justify-between overflow-hidden border-l border-slate-100">
+            <!-- Center Image (Full & Uncropped) -->
+            <div class="my-auto flex items-center justify-center">
+                <img src="{{ asset('build/images/login ilustration.png') }}" 
+                     alt="SIM-BUDIDAYA Illustration" 
+                     class="w-full max-h-[280px] object-contain select-none pointer-events-none">
+            </div>
 
-            <!-- Soft Overlay Gradient -->
-            <div class="absolute inset-0 bg-gradient-to-t from-[#051B44]/85 via-transparent to-black/20"></div>
-
-            <!-- Floating Informational Card -->
-            <div class="absolute bottom-6 left-6 right-6 p-6 rounded-2xl bg-[#E9F0F8]/90 backdrop-blur-md border border-white/60 shadow-2xl">
-                <h3 class="text-xs font-bold text-slate-800 mb-1.5">Sistem Informasi Manajemen Budidaya</h3>
-                <p class="text-[11px] text-slate-600 leading-relaxed mb-3">
-                    Mengatur tata kelola dan monitoring manajemen di dalam bidang <strong class="text-slate-900 font-extrabold">Budidaya ikan</strong> terintegrasi berbasis WEB & Mobile.
+            <!-- Bottom Information Card -->
+            <div class="p-5 sm:p-6 rounded-2xl bg-white/80 backdrop-blur-md border border-white/90 shadow-sm">
+                <h3 class="text-sm font-bold text-slate-800 mb-2">Sistem Informasi Manjemen Budidaya</h3>
+                <p class="text-xs text-slate-600 leading-relaxed mb-4">
+                    Mengatur tata kelola dan monitoring manajemen di dalam bidang <strong class="text-slate-900 font-bold">Budidaya ikan</strong> dengan media berupa WEB .
                 </p>
-                <div class="flex items-center gap-4 text-[10px] font-bold text-slate-700">
-                    <div class="flex items-center gap-1.5">
-                        <i class="fa-solid fa-shield-halved text-[#38BDF8]"></i>
-                        <span>Keamanan Berlapis (One Session & Rate Limiter)</span>
+                <div class="flex items-center gap-6 text-xs font-semibold text-slate-700">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-circle-check text-sky-500 text-sm"></i>
+                        <span>Manajer Role</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-sky-500 text-sm"></i>
+                        <span>Mengatur Pengelolaan</span>
                     </div>
                 </div>
             </div>

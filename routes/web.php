@@ -89,6 +89,9 @@ Route::middleware(['auth', 'role:manajer'])->group(function () {
 
     // Rekap Keuangan & Margin
     Route::get('/keuangan', [KeuanganWebController::class, 'index'])->name('keuangan');
+    Route::post('/keuangan', [KeuanganWebController::class, 'store'])->name('keuangan.store');
+    Route::put('/keuangan/{id}', [KeuanganWebController::class, 'update'])->name('keuangan.update');
+    Route::delete('/keuangan/{id}', [KeuanganWebController::class, 'destroy'])->name('keuangan.destroy');
 
     // Manajemen Mitra Distributor
     Route::get('/mitra', [MitraController::class, 'index'])->name('mitra');

@@ -141,7 +141,9 @@
                             PAKAN PELET KOMERSIAL (KG) *
                         </label>
                         <div class="flex items-center gap-2">
-                            <input type="number" x-model="form.kg_pelet" @input="recalculateCost()"
+                            <input type="number" x-model="form.kg_pelet"
+                                onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E') event.preventDefault()"
+                                @input="if(form.kg_pelet !== '' && Number(form.kg_pelet) < 0) form.kg_pelet = Math.abs(Number(form.kg_pelet)) || 0; recalculateCost()"
                                 step="0.1" min="0" placeholder="0.0"
                                 class="w-full px-3.5 py-2 rounded-lg border border-slate-200 text-sm font-extrabold text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
                             <span class="text-xs font-extrabold text-slate-400">KG</span>
@@ -156,6 +158,8 @@
                         </label>
                         <div class="grid grid-cols-5 gap-2">
                             <input type="number" x-model="form.kg_daun"
+                                   onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E') event.preventDefault()"
+                                   @input="if(form.kg_daun !== '' && Number(form.kg_daun) < 0) form.kg_daun = Math.abs(Number(form.kg_daun)) || 0"
                                    step="0.1" min="0" placeholder="0.0"
                                    class="col-span-2 px-3.5 py-2 rounded-lg border border-slate-200 text-sm font-extrabold text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
                             <select x-model="form.jenis_daun" class="col-span-3 px-3 py-2 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
@@ -186,7 +190,9 @@
                         </label>
                         <div class="relative">
                             <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">Rp</span>
-                            <input type="number" x-model="form.total_biaya"
+                            <input type="number" x-model="form.total_biaya" min="0"
+                                   onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E') event.preventDefault()"
+                                   @input="if(form.total_biaya !== '' && Number(form.total_biaya) < 0) form.total_biaya = Math.abs(Number(form.total_biaya)) || 0"
                                    class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs font-extrabold text-slate-900 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
                         </div>
                     </div>
@@ -197,7 +203,9 @@
                         </label>
                         <div class="relative">
                             <i class="fa-solid fa-vial absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                            <input type="number" step="0.1" x-model="form.ph_air" placeholder="7.2"
+                            <input type="number" step="0.1" min="0" max="14" x-model="form.ph_air" placeholder="7.2"
+                                onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E') event.preventDefault()"
+                                @input="if(form.ph_air !== '' && Number(form.ph_air) < 0) form.ph_air = 0"
                                 class="w-full pl-9 pr-10 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
                             <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">pH</span>
                         </div>
@@ -353,8 +361,16 @@ function logPakanComponent() {
                 alert('Silakan pilih Kolam Pembesaran yang aktif terlebih dahulu!');
                 return;
             }
-            if (Number(this.form.kg_pelet) <= 0 && Number(this.form.kg_daun) <= 0) {
-                alert('Silakan masukkan jumlah pakan (pelet atau daun)!');
+            if (Number(this.form.kg_pelet || 0) < 0 || Number(this.form.kg_daun || 0) < 0) {
+                alert('Jumlah pakan (pelet atau daun) tidak boleh berupa angka minus!');
+                return;
+            }
+            if (Number(this.form.kg_pelet || 0) <= 0 && Number(this.form.kg_daun || 0) <= 0) {
+                alert('Silakan masukkan jumlah pakan (pelet atau daun) lebih dari 0 kg!');
+                return;
+            }
+            if (Number(this.form.total_biaya || 0) < 0) {
+                alert('Estimasi biaya pakan tidak boleh berupa angka minus!');
                 return;
             }
 
@@ -370,11 +386,11 @@ function logPakanComponent() {
                     body: JSON.stringify({
                         id_kolam: this.form.id_kolam,
                         tgl_log: this.form.tgl_log,
-                        kg_pelet: Number(this.form.kg_pelet) || 0,
-                        kg_daun: Number(this.form.kg_daun) || 0,
+                        kg_pelet: Math.abs(Number(this.form.kg_pelet) || 0),
+                        kg_daun: Math.abs(Number(this.form.kg_daun) || 0),
                         jenis_daun: this.form.jenis_daun || null,
-                        total_biaya: Number(this.form.total_biaya) || 0,
-                        ph_air: Number(this.form.ph_air) || 7.2
+                        total_biaya: Math.abs(Number(this.form.total_biaya) || 0),
+                        ph_air: Math.max(0, Number(this.form.ph_air) || 7.2)
                     })
                 });
 

@@ -162,17 +162,23 @@
                     <div class="space-y-3">
                         <div>
                             <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">ESTIMASI BIOMASSA AWAL (KG) *</label>
-                            <input type="number" step="0.1" x-model="form.biomassaEst" placeholder="Contoh: 1250"
+                            <input type="number" step="0.1" min="0.1" x-model="form.biomassaEst" placeholder="Contoh: 1250"
+                                   onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E') event.preventDefault()"
+                                   @input="if(form.biomassaEst !== '' && Number(form.biomassaEst) < 0) form.biomassaEst = Math.abs(Number(form.biomassaEst)) || 0.1"
                                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
                         </div>
                         <div>
                             <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">TARGET PANEN (KG) *</label>
-                            <input type="number" step="0.1" x-model="form.targetPanenKg" placeholder="Contoh: 1500"
+                            <input type="number" step="0.1" min="0.1" x-model="form.targetPanenKg" placeholder="Contoh: 1500"
+                                   onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E') event.preventDefault()"
+                                   @input="if(form.targetPanenKg !== '' && Number(form.targetPanenKg) < 0) form.targetPanenKg = Math.abs(Number(form.targetPanenKg)) || 0.1"
                                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
                         </div>
                         <div>
                             <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">TARGET FCR</label>
-                            <input type="number" step="0.01" x-model="form.fcr" placeholder="1.15"
+                            <input type="number" step="0.01" min="0.01" x-model="form.fcr" placeholder="1.15"
+                                   onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E') event.preventDefault()"
+                                   @input="if(form.fcr !== '' && Number(form.fcr) < 0) form.fcr = Math.abs(Number(form.fcr)) || 1.15"
                                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-extrabold text-[#0B2570] bg-sky-50/60 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
                         </div>
                     </div>
@@ -685,7 +691,9 @@
             <!-- Input Realisasi Berat Panen (KG) -->
             <div class="text-left bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
                 <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 block">TOTAL BERAT HASIL PANEN (KG) *</label>
-                <input type="number" step="0.1" x-model="harvestForm.jumlah_panen_kg"
+                <input type="number" step="0.1" min="0.1" x-model="harvestForm.jumlah_panen_kg"
+                       onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E') event.preventDefault()"
+                       @input="if(harvestForm.jumlah_panen_kg !== '' && Number(harvestForm.jumlah_panen_kg) < 0) harvestForm.jumlah_panen_kg = Math.abs(Number(harvestForm.jumlah_panen_kg)) || 0.1"
                        placeholder="Contoh: 500"
                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-extrabold text-emerald-700 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
                 <div class="flex items-center justify-between text-[10px] text-slate-500 pt-1">
@@ -1091,11 +1099,15 @@ function pembesaranComponent() {
                 return;
             }
             if (!this.form.biomassaEst || Number(this.form.biomassaEst) <= 0) {
-                alert('Silakan masukkan Estimasi Biomassa Awal!');
+                alert('Estimasi Biomassa Awal harus lebih besar dari 0 (tidak boleh berupa angka minus atau 0)!');
                 return;
             }
             if (!this.form.targetPanenKg || Number(this.form.targetPanenKg) <= 0) {
-                alert('Silakan masukkan Target Panen!');
+                alert('Target Panen harus lebih besar dari 0 (tidak boleh berupa angka minus atau 0)!');
+                return;
+            }
+            if (this.form.fcr && Number(this.form.fcr) <= 0) {
+                alert('Target FCR harus lebih besar dari 0!');
                 return;
             }
 
@@ -1108,9 +1120,9 @@ function pembesaranComponent() {
 
             this.isSubmitting = true;
 
-            const biomassaNum = Number(this.form.biomassaEst);
-            const targetNum = Number(this.form.targetPanenKg);
-            const fcrNum = Number(this.form.fcr || 1.15);
+            const biomassaNum = Math.abs(Number(this.form.biomassaEst));
+            const targetNum = Math.abs(Number(this.form.targetPanenKg));
+            const fcrNum = Math.abs(Number(this.form.fcr || 1.15));
             const statusSiklus = this.form.statusSiklus;
             const targetPercent = Math.min(100, Math.round((biomassaNum / targetNum) * 100));
 

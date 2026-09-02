@@ -71,7 +71,9 @@
                     <div>
                         <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">JUMLAH BIBIT / TELUR AWAL *</label>
                         <div class="flex items-center gap-2">
-                            <input type="number" x-model="form.jumlahBibitAwal" min="100" step="500" placeholder="Contoh: 250000"
+                            <input type="number" x-model="form.jumlahBibitAwal" min="1" step="1" placeholder="Contoh: 250000"
+                                   onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E') event.preventDefault()"
+                                   @input="if(form.jumlahBibitAwal !== '' && Number(form.jumlahBibitAwal) < 0) form.jumlahBibitAwal = Math.abs(Number(form.jumlahBibitAwal)) || 0"
                                    class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
                             <span class="text-xs font-bold text-slate-400">ekor/btr</span>
                         </div>
@@ -99,6 +101,8 @@
                         <div class="flex items-center gap-2">
                             <button type="button" @click="form.prediksiHari = Math.max(1, Number(form.prediksiHari) - 1)" class="w-9 h-9 rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 flex items-center justify-center font-bold text-sm transition-colors">−</button>
                             <input type="number" x-model="form.prediksiHari" min="1" max="30"
+                                   onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E') event.preventDefault()"
+                                   @input="if(form.prediksiHari !== '' && Number(form.prediksiHari) < 1) form.prediksiHari = 1"
                                    class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-extrabold text-center text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
                             <button type="button" @click="form.prediksiHari = Number(form.prediksiHari) + 1" class="w-9 h-9 rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 flex items-center justify-center font-bold text-sm transition-colors">+</button>
                         </div>
@@ -107,6 +111,8 @@
                         <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">JUMLAH KEMATIAN</label>
                         <div class="flex items-center gap-2">
                             <input type="number" x-model="form.jumlahKematian" min="0" placeholder="0"
+                                   onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E') event.preventDefault()"
+                                   @input="if(form.jumlahKematian !== '' && Number(form.jumlahKematian) < 0) form.jumlahKematian = 0"
                                    class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
                             <span class="text-xs font-bold text-slate-400">ekor</span>
                         </div>
@@ -114,7 +120,9 @@
                     <div>
                         <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">TOTAL BOBOT / BIOMASSA (KG) *</label>
                         <div class="flex items-center gap-2">
-                            <input type="number" step="0.1" min="0.1" x-model="form.totalBobotKg" placeholder="Contoh: 25.0"
+                            <input type="number" step="0.1" min="0.01" x-model="form.totalBobotKg" placeholder="Contoh: 25.0"
+                                   onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E') event.preventDefault()"
+                                   @input="if(form.totalBobotKg !== '' && Number(form.totalBobotKg) < 0) form.totalBobotKg = Math.abs(Number(form.totalBobotKg)) || 0.1"
                                    class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-emerald-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all">
                             <span class="text-xs font-extrabold text-emerald-700">Kg</span>
                         </div>
@@ -837,7 +845,19 @@ function pembibitanComponent() {
                 return;
             }
             if (!this.form.jumlahBibitAwal || Number(this.form.jumlahBibitAwal) <= 0) {
-                alert('Silakan masukkan Jumlah Bibit / Telur Awal!');
+                alert('Jumlah Bibit / Telur Awal harus lebih besar dari 0 (tidak boleh angka minus atau 0)!');
+                return;
+            }
+            if (Number(this.form.jumlahKematian || 0) < 0) {
+                alert('Jumlah Kematian tidak boleh berupa angka minus!');
+                return;
+            }
+            if (Number(this.form.jumlahKematian || 0) > Number(this.form.jumlahBibitAwal)) {
+                alert('Jumlah Kematian (' + this.form.jumlahKematian + ') tidak boleh melebihi Jumlah Bibit Awal (' + this.form.jumlahBibitAwal + ')!');
+                return;
+            }
+            if (!this.form.totalBobotKg || Number(this.form.totalBobotKg) <= 0) {
+                alert('Total Bobot / Biomassa harus lebih besar dari 0 kg!');
                 return;
             }
             if (!this.form.kolam) {
@@ -846,9 +866,9 @@ function pembibitanComponent() {
             }
 
             this.isSubmitting = true;
-            const bibitAwalNum = Number(this.form.jumlahBibitAwal || 0);
-            const matiNum = Number(this.form.jumlahKematian || 0);
-            const bobotKgNum = Number(this.form.totalBobotKg || 0);
+            const bibitAwalNum = Math.abs(Number(this.form.jumlahBibitAwal || 0));
+            const matiNum = Math.max(0, Number(this.form.jumlahKematian || 0));
+            const bobotKgNum = Math.abs(Number(this.form.totalBobotKg || 0));
             const sisaBibit = Math.max(0, bibitAwalNum - matiNum);
             const rawStatus = this.form.statusBatch;
             const faseVal = (this.form.fase_pertumbuhan || 'TELUR').toUpperCase();

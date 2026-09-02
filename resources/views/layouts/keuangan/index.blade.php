@@ -7,16 +7,17 @@
     showForm: false,
     formMode: "create",
     tipeTransaksi: "income",
-    transactions: {!! isset($transactions) && count($transactions) > 0 ? json_encode($transactions) : json_encode([
-        [ 'id' => "#TRX-202310-0482", 'tanggal' => "2026-08-06", 'tipe' => "income", 'nominal' => 45000000, 'kategori' => "Pakan", 'ref' => "INV/2023/10/099", 'kolam' => "Kolam A-01", 'keterangan' => "Pembelian pakan harian" ]
-    ]) !!},
+    isLoading: false,
+    transactions: {!! isset($transactions) && count($transactions) > 0 ? json_encode($transactions) : "[]" !!},
     form: {
+        raw_id: null,
         id: "",
-        tanggal: "",
+        tanggal: "{{ date('Y-m-d') }}",
         tipe: "income",
         nominal: "",
         kategori: "",
         ref: "",
+        id_kolam: "",
         kolam: "Tidak dialokasikan",
         keterangan: ""
     },
@@ -30,12 +31,14 @@
         this.showForm = true;
         this.tipeTransaksi = "income";
         this.form = {
-            id: "#TRX-" + new Date().getFullYear() + "-" + String(Math.floor(1000 + Math.random() * 9000)),
-            tanggal: "",
+            raw_id: null,
+            id: "#TRX-BARU",
+            tanggal: new Date().toISOString().split("T")[0],
             tipe: "income",
             nominal: "",
             kategori: "",
             ref: "",
+            id_kolam: "",
             kolam: "Tidak dialokasikan",
             keterangan: ""
         };
@@ -45,50 +48,129 @@
         this.formMode = "view";
         this.showForm = true;
         this.tipeTransaksi = item.tipe;
-        this.form = { ...item };
+        this.form = { 
+            raw_id: item.raw_id,
+            id: item.id,
+            tanggal: item.tanggal,
+            tipe: item.tipe,
+            nominal: item.nominal,
+            kategori: item.kategori,
+            ref: item.ref,
+            id_kolam: item.id_kolam || "",
+            kolam: item.kolam,
+            keterangan: item.keterangan === "-" ? "" : item.keterangan
+        };
     },
 
     openEditForm(item) {
         this.formMode = "edit";
         this.showForm = true;
         this.tipeTransaksi = item.tipe;
-        this.form = { ...item };
+        this.form = { 
+            raw_id: item.raw_id,
+            id: item.id,
+            tanggal: item.tanggal,
+            tipe: item.tipe,
+            nominal: item.nominal,
+            kategori: item.kategori,
+            ref: item.ref,
+            id_kolam: item.id_kolam || "",
+            kolam: item.kolam,
+            keterangan: item.keterangan === "-" ? "" : item.keterangan
+        };
     },
 
     saveForm() {
-        const payload = {
-            ...this.form,
-            tipe: this.tipeTransaksi,
-            nominal: Number(this.form.nominal || 0)
-        };
-
-        if (this.formMode === "create") {
-            this.transactions.unshift(payload);
-        } else if (this.formMode === "edit") {
-            const index = this.transactions.findIndex(t => t.id === payload.id);
-            if (index !== -1) {
-                this.transactions[index] = payload;
-            }
+        if (!this.form.tanggal) {
+            alert("Silakan pilih tanggal transaksi.");
+            return;
+        }
+        if (!this.form.nominal || Number(this.form.nominal) <= 0) {
+            alert("Silakan masukkan nominal transaksi yang valid.");
+            return;
+        }
+        if (!this.form.kategori) {
+            alert("Silakan pilih kategori transaksi.");
+            return;
         }
 
-        this.showForm = false;
+        this.isLoading = true;
+        const url = this.formMode === "create" ? "{{ route('keuangan.store') }}" : ("/keuangan/" + this.form.raw_id);
+        const method = this.formMode === "create" ? "POST" : "PUT";
+
+        const payload = {
+            tanggal_transaksi: this.form.tanggal,
+            tipe_transaksi: this.tipeTransaksi,
+            nominal: Number(this.form.nominal),
+            kategori: this.form.kategori,
+            ref_id: this.form.ref,
+            id_kolam: this.form.id_kolam,
+            keterangan: this.form.keterangan
+        };
+
+        fetch(url, {
+            method: method,
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                "Accept": "application/json"
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            this.isLoading = false;
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert(data.message || "Gagal menyimpan transaksi.");
+            }
+        })
+        .catch(err => {
+            this.isLoading = false;
+            console.error(err);
+            alert("Terjadi kesalahan koneksi server saat menyimpan.");
+        });
     },
 
     deleteTransaction(item) {
-        if (confirm("Apakah Anda yakin ingin menghapus transaksi \"" + item.ref + "\"?")) {
-            this.transactions = this.transactions.filter(t => t.id !== item.id);
+        if (confirm("Apakah Anda yakin ingin menghapus transaksi \"" + (item.ref || item.id) + "\"?")) {
+            this.isLoading = true;
+            fetch("/keuangan/" + item.raw_id, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                    "Accept": "application/json"
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                this.isLoading = false;
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert(data.message || "Gagal menghapus transaksi.");
+                }
+            })
+            .catch(err => {
+                this.isLoading = false;
+                console.error(err);
+                alert("Terjadi kesalahan koneksi server saat menghapus.");
+            });
         }
     },
 
     exportReport() {
-        const header = ["DATE", "DESCRIPTION", "CATEGORY", "TYPE", "AMOUNT", "REF"];
+        const header = ["DATE", "DESCRIPTION", "CATEGORY", "TYPE", "AMOUNT", "REF", "KOLAM"];
         const rows = this.transactions.map(item => [
             item.tanggal,
             item.keterangan,
             item.kategori,
             item.tipe === "income" ? "Pemasukan" : "Pengeluaran",
             item.nominal,
-            item.ref
+            item.ref,
+            item.kolam
         ]);
         const csv = [header, ...rows]
             .map(row => row.map(value => "\"" + String(value).replace(/"/g, "\"\"") + "\"").join(","))
@@ -98,13 +180,28 @@
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.download = "financial_report.csv";
+        link.download = "laporan_keuangan_" + new Date().toISOString().split("T")[0] + ".csv";
         document.body.appendChild(link);
         link.click();
         link.remove();
         URL.revokeObjectURL(url);
     }
 }' >
+
+    <!-- Flash Alerts -->
+    @if(session('success'))
+    <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-3 shadow-xs">
+        <i class="fa-solid fa-circle-check text-emerald-500 text-base"></i>
+        <span>{{ session('success') }}</span>
+    </div>
+    @endif
+
+    @if(session('error'))
+    <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold flex items-center gap-3 shadow-xs">
+        <i class="fa-solid fa-circle-exclamation text-rose-500 text-base"></i>
+        <span>{{ session('error') }}</span>
+    </div>
+    @endif
 
     <!-- Subtitle & Page Title Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -117,7 +214,7 @@
                 <i class="fa-solid fa-download text-xs text-slate-500"></i>
                 <span>Export Report</span>
             </button>
-            <button @click="openCreateForm()"
+            <button @click="showForm ? (showForm = false) : openCreateForm()"
                     class="px-4 py-2 rounded-xl bg-[#051B44] hover:bg-navy-900 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-2">
                 <i class="fa-solid" :class="showForm ? 'fa-table-list' : 'fa-plus'" class="text-xs"></i>
                 <span x-text="showForm ? 'Lihat Data' : 'Add Transaction'"></span>
@@ -132,10 +229,17 @@
          x-transition:enter-end="opacity-100 translate-y-0"
          class="space-y-5">
 
-        <!-- Header -->
+        <!-- Header Form -->
         <div class="bg-[#051B44] rounded-2xl p-6 sm:p-8 text-white shadow-xs">
-            <h2 class="text-xl font-extrabold text-white">Pencatatan Keuangan</h2>
-            <p class="text-xs text-sky-200/80 font-medium mt-1">Catat transaksi masuk (pemasukan) atau keluar (pengeluaran) untuk operasional budidaya. Pastikan referensi yang jelas dengan ID lain yang sesuai.</p>
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-xl font-extrabold text-white" x-text="formMode === 'view' ? 'Detail Transaksi Keuangan' : (formMode === 'edit' ? 'Edit Transaksi Keuangan' : 'Pencatatan Keuangan Baru')"></h2>
+                    <p class="text-xs text-sky-200/80 font-medium mt-1" x-text="formMode === 'view' ? 'Melihat rincian transaksi kas dan jurnal operasional budidaya.' : 'Catat transaksi masuk (pemasukan) atau keluar (pengeluaran) untuk operasional budidaya.'"></p>
+                </div>
+                <div x-show="formMode === 'view'">
+                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-sky-500/20 text-sky-200 border border-sky-400/30">Mode Baca (Read Only)</span>
+                </div>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -143,7 +247,7 @@
             <!-- Left 2 Cols: Form Fields -->
             <div class="lg:col-span-2 bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
 
-                <form action="#" method="POST" @submit.prevent class="space-y-6">
+                <form @submit.prevent="saveForm()" class="space-y-6">
 
                     <!-- Section 1: Informasi Dasar -->
                     <div class="space-y-4">
@@ -161,13 +265,13 @@
                                 <button type="button" @click="if (formMode !== 'view') { tipeTransaksi = 'income'; form.tipe = 'income'; }"
                                         :class="tipeTransaksi === 'income' ? 'bg-[#051B44] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'"
                                         :disabled="formMode === 'view'"
-                                        class="flex-1 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5">
+                                        class="flex-1 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer">
                                     <i class="fa-solid fa-arrow-down text-[10px]"></i> Pemasukan (Income)
                                 </button>
                                 <button type="button" @click="if (formMode !== 'view') { tipeTransaksi = 'expense'; form.tipe = 'expense'; }"
                                         :class="tipeTransaksi === 'expense' ? 'bg-[#051B44] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'"
                                         :disabled="formMode === 'view'"
-                                        class="flex-1 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5">
+                                        class="flex-1 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer">
                                     <i class="fa-solid fa-arrow-up text-[10px]"></i> Pengeluaran (Expense)
                                 </button>
                             </div>
@@ -177,13 +281,12 @@
                             <div>
                                 <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">ID KEUANGAN</label>
                                 <input type="text" x-model="form.id" readonly
-                                       :disabled="formMode === 'view'"
                                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-extrabold text-slate-500 bg-slate-100 cursor-not-allowed">
                             </div>
                             <div>
                                 <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">TANGGAL TRANSAKSI</label>
-                                <input type="date" x-model="form.tanggal" :disabled="formMode === 'view'"
-                                       class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                                <input type="date" x-model="form.tanggal" :disabled="formMode === 'view'" required
+                                       class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all disabled:bg-slate-100 disabled:cursor-not-allowed">
                             </div>
                         </div>
                     </div>
@@ -201,44 +304,50 @@
                             <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">NOMINAL (Rp)</label>
                             <div class="relative">
                                 <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">Rp</span>
-                                <input type="number" x-model="form.nominal" :disabled="formMode === 'view'" placeholder="0"
-                                       class="w-full pl-10 pr-3.5 py-3 rounded-xl border border-slate-200 text-lg font-extrabold text-slate-900 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                                <input type="number" x-model="form.nominal" :disabled="formMode === 'view'" placeholder="0" required min="1"
+                                       class="w-full pl-10 pr-3.5 py-3 rounded-xl border border-slate-200 text-lg font-extrabold text-slate-900 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all disabled:bg-slate-100 disabled:cursor-not-allowed">
                             </div>
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">KATEGORI</label>
-                                <select x-model="form.kategori" :disabled="formMode === 'view'" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                                <select x-model="form.kategori" :disabled="formMode === 'view'" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all disabled:bg-slate-100 disabled:cursor-not-allowed">
                                     <option value="">Pilih Kategori...</option>
-                                    <option>Pakan</option>
-                                    <option>Operasional &amp; Perawatan</option>
-                                    <option>Penjualan Panen</option>
-                                    <option>Transportasi &amp; Distribusi</option>
+                                    <option value="Penjualan Panen">Penjualan Panen</option>
+                                    <option value="Penjualan Ekspor Ikan Patin">Penjualan Ekspor Ikan Patin</option>
+                                    <option value="Penjualan Panen Ikan Nila">Penjualan Panen Ikan Nila</option>
+                                    <option value="Penjualan Benih Bibit Ikan">Penjualan Benih Bibit Ikan</option>
+                                    <option value="Pembelian Pakan Pelet">Pembelian Pakan Pelet</option>
+                                    <option value="Pembelian Obat &amp; Probiotik">Pembelian Obat &amp; Probiotik</option>
+                                    <option value="Biaya Listrik &amp; Operasional Aerator">Biaya Listrik &amp; Operasional Aerator</option>
+                                    <option value="Gaji &amp; Honor Petugas">Gaji &amp; Honor Petugas</option>
+                                    <option value="Operasional &amp; Perawatan">Operasional &amp; Perawatan</option>
+                                    <option value="Transportasi &amp; Distribusi">Transportasi &amp; Distribusi</option>
+                                    <option value="Lain-lain">Lain-lain</option>
                                 </select>
                             </div>
                             <div>
                                 <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">REF ID / No. NOTA</label>
-                                <input type="text" x-model="form.ref" :disabled="formMode === 'view'" placeholder="Contoh: INV/2023/10/099"
-                                       class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                                <input type="text" x-model="form.ref" :disabled="formMode === 'view'" placeholder="Contoh: TRX-IN-001 / INV/2026/01"
+                                       class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all disabled:bg-slate-100 disabled:cursor-not-allowed">
                             </div>
                         </div>
 
                         <div>
                             <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">ALOKASI KOLAM (OPSIONAL)</label>
-                            <select x-model="form.kolam" :disabled="formMode === 'view'" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
-                                <option>Tidak dialokasikan ke kolam spesifik</option>
-                                <option>Kolam A-01</option>
-                                <option>Kolam A-02</option>
-                                <option>Kolam B-01</option>
-                                <option>Kolam B-02</option>
+                            <select x-model="form.id_kolam" :disabled="formMode === 'view'" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all disabled:bg-slate-100 disabled:cursor-not-allowed">
+                                <option value="">Tidak dialokasikan ke kolam spesifik</option>
+                                @foreach($kolams as $kolam)
+                                    <option value="{{ $kolam->id_kolam }}">{{ $kolam->nama_kolam }} ({{ $kolam->tipe_kolam }})</option>
+                                @endforeach
                             </select>
                         </div>
 
                         <div>
                             <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">KETERANGAN / DESKRIPSI</label>
                             <textarea rows="3" x-model="form.keterangan" :disabled="formMode === 'view'" placeholder="Tambahkan catatan khusus terkait transaksi ini..."
-                                      class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all"></textarea>
+                                      class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all disabled:bg-slate-100 disabled:cursor-not-allowed"></textarea>
                         </div>
                     </div>
 
@@ -249,16 +358,16 @@
                             <span x-text="formMode === 'view' ? 'Tutup' : 'Batalkan'"></span>
                         </button>
 
-                        <button x-show="formMode !== 'view'" type="submit" @click="saveForm()"
-                                class="px-5 py-2 rounded-xl bg-[#051B44] hover:bg-navy-900 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-2">
-                            <i class="fa-solid fa-floppy-disk text-xs"></i>
-                            <span x-text="formMode === 'create' ? 'Simpan Transaksi' : 'Simpan Perubahan'"></span>
+                        <button x-show="formMode !== 'view'" type="submit" :disabled="isLoading"
+                                class="px-5 py-2 rounded-xl bg-[#051B44] hover:bg-navy-900 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-2 disabled:opacity-50">
+                            <i class="fa-solid" :class="isLoading ? 'fa-spinner fa-spin' : 'fa-floppy-disk'" class="text-xs"></i>
+                            <span x-text="isLoading ? 'Menyimpan...' : (formMode === 'create' ? 'Simpan Transaksi' : 'Simpan Perubahan')"></span>
                         </button>
 
                         <button x-show="formMode === 'view'" type="button" @click="formMode = 'edit'"
                                 class="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-2">
                             <i class="fa-solid fa-pen-to-square text-xs"></i>
-                            <span>Update</span>
+                            <span>Edit / Ubah Data</span>
                         </button>
                     </div>
 
@@ -276,16 +385,16 @@
                     <div class="space-y-3">
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-semibold text-sky-100/70">Pemasukan</span>
-                            <span class="text-xs font-extrabold text-emerald-400">+ {{ $kpis['incomeFormatted'] ?? 'Rp54.500.000' }}</span>
+                            <span class="text-xs font-extrabold text-emerald-400">+ {{ $kpis['incomeFormatted'] ?? 'Rp 0' }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-semibold text-sky-100/70">Pengeluaran</span>
-                            <span class="text-xs font-extrabold text-rose-400">- {{ $kpis['expenseFormatted'] ?? 'Rp26.550.000' }}</span>
+                            <span class="text-xs font-extrabold text-rose-400">- {{ $kpis['expenseFormatted'] ?? 'Rp 0' }}</span>
                         </div>
                         <hr class="border-white/10">
                         <div class="text-center">
                             <span class="text-2xl font-extrabold text-white">{{ ($saldo ?? 0) >= 0 ? 'Surplus / Sehat' : 'Defisit' }}</span>
-                            <span class="text-xs text-sky-200/80 block mt-0.5">Saldo Bersih: {{ $kpis['saldoFormatted'] ?? 'Rp27.950.000' }}</span>
+                            <span class="text-xs text-sky-200/80 block mt-0.5">Saldo Bersih: {{ $kpis['saldoFormatted'] ?? 'Rp 0' }}</span>
                         </div>
                     </div>
                 </div>
@@ -331,7 +440,7 @@
                 </span>
             </div>
             <div class="mt-3">
-                <h3 class="text-xl font-extrabold text-slate-900 tracking-tight">{{ $kpis['incomeFormatted'] ?? 'Rp54.500.000' }}</h3>
+                <h3 class="text-xl font-extrabold text-slate-900 tracking-tight">{{ $kpis['incomeFormatted'] ?? 'Rp 0' }}</h3>
             </div>
         </div>
 
@@ -344,7 +453,7 @@
                 </span>
             </div>
             <div class="mt-3">
-                <h3 class="text-xl font-extrabold text-slate-900 tracking-tight">{{ $kpis['expenseFormatted'] ?? 'Rp26.550.000' }}</h3>
+                <h3 class="text-xl font-extrabold text-slate-900 tracking-tight">{{ $kpis['expenseFormatted'] ?? 'Rp 0' }}</h3>
             </div>
         </div>
 
@@ -353,12 +462,14 @@
             <div class="flex items-center justify-between">
                 <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">NET PROFIT (SALDO KAS)</span>
                 <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-[#E0F2FE] text-[#0284C7]">
-                    <i class="fa-solid fa-chart-pie text-[10px]"></i> {{ $kpis['netMargin'] ?? 51.3 }}% Margin
+                    <i class="fa-solid fa-chart-pie text-[10px]"></i> {{ $kpis['netMargin'] ?? 0 }}% Margin
                 </span>
             </div>
             <div class="mt-3">
-                <h3 class="text-xl font-extrabold text-slate-900 tracking-tight">{{ $kpis['saldoFormatted'] ?? 'Rp27.950.000' }}</h3>
-                <span class="text-[10px] font-medium text-emerald-600 block mt-0.5">Surplus Kas Operasional</span>
+                <h3 class="text-xl font-extrabold text-slate-900 tracking-tight">{{ $kpis['saldoFormatted'] ?? 'Rp 0' }}</h3>
+                <span class="text-[10px] font-medium {{ ($saldo ?? 0) >= 0 ? 'text-emerald-600' : 'text-rose-600' }} block mt-0.5">
+                    {{ ($saldo ?? 0) >= 0 ? 'Surplus Kas Operasional' : 'Defisit Kas Operasional' }}
+                </span>
             </div>
         </div>
 
@@ -367,11 +478,11 @@
             <div class="flex items-center justify-between">
                 <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">TOTAL TRANSAKSI</span>
                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#E2E8F0] text-[#475569]">
-                    {{ $kpis['totalTrx'] ?? 7 }} Transaksi
+                    {{ $kpis['totalTrx'] ?? 0 }} Transaksi
                 </span>
             </div>
             <div class="mt-3">
-                <h3 class="text-xl font-extrabold text-slate-900 tracking-tight">{{ $kpis['totalTrx'] ?? 7 }} <span class="text-xs font-semibold text-slate-500">Record</span></h3>
+                <h3 class="text-xl font-extrabold text-slate-900 tracking-tight">{{ $kpis['totalTrx'] ?? 0 }} <span class="text-xs font-semibold text-slate-500">Record</span></h3>
                 <span class="text-[10px] font-medium text-slate-400 block mt-0.5">Tercatat di sistem buku kas</span>
             </div>
         </div>
@@ -414,10 +525,10 @@
                     <div>
                         <div class="flex items-center justify-between font-bold text-slate-700 mb-1.5">
                             <span>Pakan (Feed)</span>
-                            <span class="font-extrabold text-slate-900">Rp 450.2M</span>
+                            <span class="font-extrabold text-slate-900">{{ $kpis['pakanFormatted'] ?? 'Rp 0' }}</span>
                         </div>
                         <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                            <div class="bg-[#0B2570] h-full rounded-full w-[60%]"></div>
+                            <div class="bg-[#0B2570] h-full rounded-full" style="width: {{ $totalExpense > 0 ? min(100, round(($pakanTotal ?? 0) / $totalExpense * 100)) : 0 }}%"></div>
                         </div>
                     </div>
 
@@ -425,10 +536,10 @@
                     <div>
                         <div class="flex items-center justify-between font-bold text-slate-700 mb-1.5">
                             <span>Operasional &amp; Perawatan</span>
-                            <span class="font-extrabold text-slate-900">Rp 271.5M</span>
+                            <span class="font-extrabold text-slate-900">{{ $kpis['operasionalFormatted'] ?? 'Rp 0' }}</span>
                         </div>
                         <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                            <div class="bg-[#10B981] h-full rounded-full w-[40%]"></div>
+                            <div class="bg-[#10B981] h-full rounded-full" style="width: {{ $totalExpense > 0 ? min(100, round(($operasionalTotal ?? 0) / $totalExpense * 100)) : 0 }}%"></div>
                         </div>
                     </div>
 
@@ -439,10 +550,10 @@
             <div class="bg-[#F4F7FA] border border-slate-200/70 rounded-xl p-4 flex items-center justify-between">
                 <div>
                     <span class="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">Financial Health Score</span>
-                    <h4 class="text-lg font-extrabold text-[#0B2570] mt-0.5">8.4 <span class="text-xs font-semibold text-slate-400">/ 10</span></h4>
+                    <h4 class="text-lg font-extrabold text-[#0B2570] mt-0.5">{{ ($saldo ?? 0) >= 0 ? '8.8' : '4.5' }} <span class="text-xs font-semibold text-slate-400">/ 10</span></h4>
                 </div>
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#C6F6D5] text-[#22543D] uppercase">
-                    STABLE
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold {{ ($saldo ?? 0) >= 0 ? 'bg-[#C6F6D5] text-[#22543D]' : 'bg-[#FEE2E2] text-[#991B1B]' }} uppercase">
+                    {{ ($saldo ?? 0) >= 0 ? 'STABLE' : 'ATTENTION' }}
                 </span>
             </div>
         </div>
@@ -454,9 +565,9 @@
         <div class="p-5 border-b border-slate-100 flex items-center justify-between">
             <h3 class="text-base font-bold text-slate-900">Transaction History</h3>
 
-            <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-600 shadow-xs cursor-pointer">
-                <span>This Month</span>
-                <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1"></i>
+            <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-600 shadow-xs">
+                <i class="fa-solid fa-list-check text-slate-400"></i>
+                <span x-text="transactions.length + ' Total Transaksi'"></span>
             </div>
         </div>
 
@@ -467,26 +578,39 @@
                         <th class="py-3 px-6">DATE</th>
                         <th class="py-3 px-6">DESCRIPTION</th>
                         <th class="py-3 px-6">CATEGORY</th>
+                        <th class="py-3 px-6">KOLAM</th>
                         <th class="py-3 px-6">AMOUNT</th>
                         <th class="py-3 px-6 text-right">ACTION</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
 
-                    <template x-for="transaction in transactions" :key="transaction.id">
+                    <template x-if="transactions.length === 0">
+                        <tr>
+                            <td colspan="6" class="py-8 text-center text-slate-400 text-xs">
+                                Belum ada transaksi keuangan yang tercatat. Klik tombol <strong>Add Transaction</strong> untuk menambah.
+                            </td>
+                        </tr>
+                    </template>
+
+                    <template x-for="transaction in transactions" :key="transaction.raw_id || transaction.id">
                         <tr class="hover:bg-slate-50/50 transition-colors">
                             <td class="py-4 px-6 text-slate-400 font-semibold" x-text="transaction.tanggal"></td>
-                            <td class="py-4 px-6 font-bold text-slate-900" x-text="transaction.keterangan"></td>
+                            <td class="py-4 px-6">
+                                <div class="font-bold text-slate-900" x-text="transaction.keterangan || '-'"></div>
+                                <div class="text-[10px] text-slate-400 font-semibold" x-text="transaction.ref"></div>
+                            </td>
                             <td class="py-4 px-6">
                                 <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold"
                                       :class="transaction.tipe === 'income' ? 'bg-[#C6F6D5] text-[#22543D]' : 'bg-[#E0F2FE] text-[#0284C7]'"
                                       x-text="transaction.kategori"></span>
                             </td>
+                            <td class="py-4 px-6 text-slate-500 font-medium" x-text="transaction.kolam"></td>
                             <td class="py-4 px-6 font-extrabold" :class="transaction.tipe === 'income' ? 'text-emerald-600' : 'text-rose-600'"
                                 x-text="(transaction.tipe === 'income' ? '+ ' : '- ') + formatCurrency(transaction.nominal)"></td>
                             <td class="py-4 px-6 text-right">
                                 <div class="relative inline-block text-left" x-data="{ open: false }">
-                                    <button @click="open = !open" @click.away="open = false" class="text-slate-400 hover:text-slate-600 p-1">
+                                    <button @click="open = !open" @click.away="open = false" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
                                         <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
                                     </button>
 
@@ -498,18 +622,25 @@
                                          x-transition:leave-start="transform opacity-100 scale-100"
                                          x-transition:leave-end="transform opacity-0 scale-95"
                                          class="absolute right-0 mt-2 w-44 rounded-xl bg-white border border-slate-200 shadow-xl py-1.5 z-50 text-left">
-                                        <button @click="open = false; openViewForm(transaction)" class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
+                                        
+                                        <!-- View Detail Button -->
+                                        <button type="button" @click="open = false; openViewForm(transaction)" class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
                                             <i class="fa-solid fa-eye text-sky-600 w-4"></i>
-                                            <span>View</span>
+                                            <span>View Detail</span>
                                         </button>
-                                        <button @click="open = false; openEditForm(transaction)" class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
+
+                                        <!-- Edit / Update Button -->
+                                        <button type="button" @click="open = false; openEditForm(transaction)" class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
                                             <i class="fa-solid fa-pen-to-square text-amber-600 w-4"></i>
-                                            <span>Update</span>
+                                            <span>Edit / Ubah Data</span>
                                         </button>
+
                                         <div class="my-1 border-t border-slate-100"></div>
-                                        <button @click="open = false; deleteTransaction(transaction)" class="w-full px-3.5 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2.5">
+
+                                        <!-- Delete Button -->
+                                        <button type="button" @click="open = false; deleteTransaction(transaction)" class="w-full px-3.5 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2.5">
                                             <i class="fa-solid fa-trash-can text-red-500 w-4"></i>
-                                            <span>Delete</span>
+                                            <span>Hapus / Delete</span>
                                         </button>
                                     </div>
                                 </div>
@@ -523,12 +654,9 @@
 
         <!-- Table Footer Pagination -->
         <div class="p-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-slate-500">
-            <span>Showing 4 of 240 transactions</span>
+            <span>Menampilkan <strong class="text-slate-800" x-text="transactions.length"></strong> data transaksi</span>
             <div class="flex items-center gap-1">
-                <button class="px-3 py-1.5 rounded border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold text-xs">Previous</button>
                 <button class="w-7 h-7 rounded bg-[#051B44] text-white font-bold flex items-center justify-center">1</button>
-                <button class="w-7 h-7 rounded border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50">2</button>
-                <button class="px-3 py-1.5 rounded border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold text-xs">Next</button>
             </div>
         </div>
     </div>
@@ -544,11 +672,11 @@
         new Chart(ctx.getContext('2d'), {
             type: 'bar',
             data: {
-                labels: ['JAN', 'FEB', 'MAR', 'APR', 'MEI', 'JUN'],
+                labels: ['JAN', 'FEB', 'MAR', 'APR', 'MEI', 'JUN', 'JUL', 'AGU', 'SEP'],
                 datasets: [
                     {
                         label: 'Revenue',
-                        data: [250, 310, 280, 360, 420, 380],
+                        data: [250, 310, 280, 360, 420, 380, 410, 490, 545],
                         backgroundColor: '#0B2570',
                         borderRadius: 4,
                         barPercentage: 0.6,
@@ -556,7 +684,7 @@
                     },
                     {
                         label: 'Expense',
-                        data: [180, 210, 190, 240, 260, 290],
+                        data: [180, 210, 190, 240, 260, 290, 270, 310, 265],
                         backgroundColor: '#38BDF8',
                         borderRadius: 4,
                         barPercentage: 0.6,
@@ -575,9 +703,9 @@
                 scales: {
                     y: {
                         min: 0,
-                        max: 500,
+                        max: 600,
                         ticks: {
-                            stepSize: 250,
+                            stepSize: 200,
                             font: { family: 'Plus Jakarta Sans', size: 11, weight: '500' },
                             color: '#94A3B8'
                         },

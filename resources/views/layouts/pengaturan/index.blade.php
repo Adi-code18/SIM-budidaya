@@ -38,33 +38,12 @@
     </div>
     @endif
 
-    <!-- Page Header & Branding Banner -->
-    <div class="bg-gradient-to-r from-[#031B4E] via-[#0B192C] to-[#0F2C59] rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div class="space-y-2 relative z-10">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-sky-300 text-[11px] font-extrabold tracking-wider uppercase backdrop-blur-md">
-                <i class="fa-solid fa-sliders text-xs"></i>
-                <span>Sistem & Pengaturan</span>
-            </div>
-            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Pengaturan & Profil</h1>
-            <p class="text-xs sm:text-sm text-slate-300 max-w-xl font-medium">
-                Kelola informasi akun manajer, keamanan 2FA, batas ambang alarm budidaya, serta preferensi notifikasi sistem.
-            </p>
+    <!-- Page Title Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-extrabold text-[#0B2570] tracking-tight">Pengaturan & Profil</h1>
+            <p class="text-xs text-slate-500 font-medium mt-0.5">Kelola informasi akun manajer, keamanan 2FA, batas ambang alarm budidaya, dan preferensi sistem.</p>
         </div>
-
-        <!-- User Quick Info Card -->
-        <div class="bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-4 flex items-center gap-4 shrink-0 relative z-10">
-            <div class="w-12 h-12 rounded-2xl bg-sky-500 text-white flex items-center justify-center font-extrabold text-lg shadow-lg shadow-sky-500/30">
-                {{ strtoupper(substr($user->nama ?? 'M', 0, 1)) }}
-            </div>
-            <div>
-                <h3 class="text-sm font-extrabold text-white">{{ $user->nama ?? 'Manajer Utama' }}</h3>
-                <span class="text-[11px] font-bold text-sky-200 uppercase tracking-wide block">{{ $user->role ?? 'Manajer' }}</span>
-                <span class="text-[10px] text-slate-300 font-medium block mt-0.5">{{ $user->email ?? 'manajer@simbudidaya.id' }}</span>
-            </div>
-        </div>
-
-        <!-- Decorative Glow Background -->
-        <div class="absolute -right-10 -bottom-10 w-60 h-60 bg-sky-500/10 rounded-full blur-3xl pointer-events-none"></div>
     </div>
 
     <!-- Navigation Tabs Bar -->
@@ -83,14 +62,6 @@
                 class="px-5 py-2.5 rounded-xl font-extrabold text-xs flex items-center gap-2.5 transition-all cursor-pointer shrink-0">
             <i class="fa-solid fa-shield-halved text-xs"></i>
             <span>Keamanan & 2FA</span>
-        </button>
-
-        <button type="button" 
-                @click="activeTab = 'budidaya'"
-                :class="activeTab === 'budidaya' ? 'bg-[#051B44] text-white shadow-md shadow-[#051B44]/20' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80'"
-                class="px-5 py-2.5 rounded-xl font-extrabold text-xs flex items-center gap-2.5 transition-all cursor-pointer shrink-0">
-            <i class="fa-solid fa-fish-fins text-xs"></i>
-            <span>Parameter Budidaya</span>
         </button>
 
         <button type="button" 
@@ -257,54 +228,7 @@
         </div>
     </div>
 
-    <!-- TAB 3: PARAMETER BUDIDAYA -->
-    <div x-show="activeTab === 'budidaya'" 
-         x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="opacity-0 translate-y-1"
-         x-transition:enter-end="opacity-100 translate-y-0"
-         class="bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-8 shadow-xs space-y-6">
-
-        <div class="flex items-center gap-3 border-b border-slate-100 pb-4">
-            <div class="w-10 h-10 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center text-base font-bold">
-                <i class="fa-solid fa-sliders"></i>
-            </div>
-            <div>
-                <h3 class="text-base font-extrabold text-[#051B44]">Ambang Batas Alarm & Parameter Budidaya</h3>
-                <p class="text-xs text-slate-500 font-medium">Tentukan toleransi alarm kesehatan batch dan target efisiensi pakan (FCR).</p>
-            </div>
-        </div>
-
-        <form action="{{ route('pengaturan.update-preferences') }}" method="POST" class="space-y-6">
-            @csrf
-            @method('PUT')
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-2">
-                    <label class="block text-xs font-extrabold text-slate-800">Target FCR Standar (Feed Conversion Ratio)</label>
-                    <input type="number" step="0.01" name="target_fcr" value="{{ $settings['target_fcr'] }}" required
-                           class="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/10 transition-all">
-                    <p class="text-[11px] text-slate-500 font-medium">Batas FCR aman. Di atas batas ini, siklus akan ditandai perlu perhatian.</p>
-                </div>
-
-                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-2">
-                    <label class="block text-xs font-extrabold text-slate-800">Threshold Kematian Alarm (Ekor/Batch)</label>
-                    <input type="number" name="threshold_kematian" value="{{ $settings['threshold_kematian'] }}" required
-                           class="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/10 transition-all">
-                    <p class="text-[11px] text-slate-500 font-medium">Jumlah kematian bibit yang akan memicu status alarm WASPADA pada batch.</p>
-                </div>
-            </div>
-
-            <div class="flex items-center justify-end">
-                <button type="submit" 
-                        class="px-6 py-2.5 rounded-xl bg-[#051B44] hover:bg-[#09265c] text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-[#051B44]/20 transition-all cursor-pointer">
-                    <i class="fa-solid fa-floppy-disk"></i>
-                    <span>Simpan Parameter Budidaya</span>
-                </button>
-            </div>
-        </form>
-    </div>
-
-    <!-- TAB 4: NOTIFIKASI & SISTEM -->
+    <!-- TAB 3: NOTIFIKASI & SISTEM -->
     <div x-show="activeTab === 'notifikasi'" 
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0 translate-y-1"
@@ -326,14 +250,6 @@
                 <div class="space-y-0.5">
                     <h4 class="text-xs font-extrabold text-slate-800">Notifikasi Email Otomatis</h4>
                     <p class="text-[11px] text-slate-500 font-medium">Kirimkan ringkasan mingguan margin keuangan dan siklus panen ke email manajer.</p>
-                </div>
-                <input type="checkbox" checked class="w-5 h-5 accent-[#051B44] rounded cursor-pointer">
-            </div>
-
-            <div class="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                <div class="space-y-0.5">
-                    <h4 class="text-xs font-extrabold text-slate-800">Alert WhatsApp Kematian Bibit</h4>
-                    <p class="text-[11px] text-slate-500 font-medium">Kirim alert langsung ke WhatsApp manajer jika kematian bibit melampaui batas toleransi.</p>
                 </div>
                 <input type="checkbox" checked class="w-5 h-5 accent-[#051B44] rounded cursor-pointer">
             </div>

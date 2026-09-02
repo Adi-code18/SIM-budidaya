@@ -7,6 +7,7 @@ use App\Models\BatchPembesaran;
 use App\Models\BatchPembibitan;
 use App\Models\Kolam;
 use App\Models\ManajemenPakan;
+use App\Models\MitraDistributor;
 use App\Models\TransaksiDistribusi;
 use Illuminate\Http\Request;
 
@@ -39,30 +40,19 @@ class DashboardController extends Controller
             'avgPh'           => number_format($avgPh, 1, '.', '')
         ];
 
-        // 2. Daftar Stok Siap Panen / Kolam Berjalan
-        $batches = BatchPembesaran::with(['kolam', 'user'])->get();
-        $stokList = [];
+        // 2. Daftar Titik Koordinat Mitra Distributor untuk Leaflet Map
+        $mitras = MitraDistributor::withCount('transaksiDistribusi')->get();
+        $mitraList = [];
 
-        foreach ($batches as $b) {
-            $status = 'READY';
-            if ($b->status_siklus === 'selesai') {
-                $status = 'PANEN';
-            } elseif ($b->status_siklus === 'persiapan') {
-                $status = 'HOLD';
-            }
-
-            $stokList[] = [
-                'id'        => $b->kolam ? $b->kolam->nama_kolam : 'Kolam #' . $b->id_kolam,
-                'jenisIkan' => $b->jenis_ikan,
-                'bobot'     => number_format($b->biomassa_est, 0, ',', '.') . ' kg',
-                'bobotNum'  => (float) $b->biomassa_est,
-                'tujuan'    => 'Mitra Distribusi',
-                'status'    => $status,
-                'ph'        => $b->kolam ? ($b->kolam->kesehatan_ph_air ?? '7.2') : '7.2',
-                'suhu'      => '28.5°C',
-                'populasi'  => number_format($b->biomassa_est * 2, 0, ',', '.') . ' Ekor',
-                'tglTebar'  => $b->tgl_tebar ? \Carbon\Carbon::parse($b->tgl_tebar)->translatedFormat('d F Y') : '-',
-                'fcr'       => number_format($b->fcr ?? 1.10, 2, '.', '')
+        foreach ($mitras as $m) {
+            $mitraList[] = [
+                'id'        => $m->id_mitra,
+                'nama'      => $m->nama_mitra,
+                'tipe'      => $m->tipe_mitra,
+                'alamat'    => $m->alamat,
+                'lat'       => (float) ($m->latitude ?? -8.5833),
+                'lng'       => (float) ($m->longitude ?? 116.1166),
+                'total_trx' => $m->transaksi_distribusi_count ?? 0,
             ];
         }
 
@@ -77,6 +67,6 @@ class DashboardController extends Controller
             ];
         }
 
-        return view('layouts.dashboard.index', compact('metrics', 'stokList', 'pakanRekap'));
+        return view('layouts.dashboard.index', compact('metrics', 'mitraList', 'pakanRekap'));
     }
 }
