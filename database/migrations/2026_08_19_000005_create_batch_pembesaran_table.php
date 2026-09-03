@@ -15,12 +15,14 @@ return new class extends Migration
             $table->id('id_pembesaran');
             $table->foreignId('id_kolam')->constrained('kolam', 'id_kolam')->onDelete('cascade');
             $table->foreignId('id_user')->constrained('users', 'id_user')->onDelete('cascade');
+            $table->foreignId('id_batch_pembibitan')->nullable()->constrained('batch_pembibitan', 'id_batch')->onDelete('set null');
             $table->date('tgl_tebar');
+            $table->date('est_tgl_panen')->nullable();
             $table->decimal('biomassa_est', 8, 2)->default(0);
             $table->decimal('fcr', 4, 2)->nullable();
             $table->decimal('target_panen_kg', 8, 2)->default(0);
             $table->decimal('jumlah_panen_kg', 8, 2)->default(0);
-            $table->string('jenis_ikan');
+            $table->string('jenis_ikan')->default('Ikan Nila');
             $table->string('status_siklus')->default('berjalan');
             $table->timestamps();
         });

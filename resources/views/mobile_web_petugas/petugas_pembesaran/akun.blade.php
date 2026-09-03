@@ -106,8 +106,14 @@
                     <input type="text" x-model="userName" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:border-emerald-600">
                 </div>
                 <div>
-                    <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1" x-text="i18n[currentLang].phone">NOMOR HP</label>
-                    <input type="text" x-model="userPhone" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:border-emerald-600">
+                    <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1" x-text="i18n[currentLang].phone">NOMOR HP / WHATSAPP</label>
+                    <div class="flex items-center rounded-xl border border-slate-200 overflow-hidden focus-within:border-emerald-600 bg-white">
+                        <span class="px-3 py-2 text-xs font-bold text-slate-500 bg-slate-50 border-r border-slate-200 shrink-0 flex items-center gap-1">
+                            <span>🇮🇩</span>
+                            <span>+62</span>
+                        </span>
+                        <input type="tel" x-model="userPhone" placeholder="812-xxxx-xxxx" class="w-full px-3 py-2 text-xs font-semibold text-slate-800 bg-transparent border-0 focus:outline-none">
+                    </div>
                 </div>
                 <div>
                     <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1" x-text="i18n[currentLang].jobTitle">JABATAN</label>

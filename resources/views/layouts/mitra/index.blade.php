@@ -241,13 +241,20 @@
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">NO. TELEPON / KONTAK</label>
-                                <input type="text" 
-                                       x-model="form.kontak"
-                                       :disabled="formMode === 'view'"
-                                       placeholder="+62 812-xxxx-xxxx" 
-                                       :class="formMode === 'view' ? 'bg-slate-100 text-slate-500 cursor-not-allowed border-slate-200 font-bold' : 'bg-slate-50/70 focus:bg-white text-slate-700 font-semibold focus:ring-sky-500'"
-                                       class="w-full px-3.5 py-2.5 rounded-xl border text-xs focus:outline-none focus:ring-2 transition-all">
+                                <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">NO. TELEPON / WHATSAPP</label>
+                                <div class="flex items-center rounded-xl border overflow-hidden transition-all"
+                                     :class="formMode === 'view' ? 'bg-slate-100 border-slate-200' : 'border-slate-200 bg-slate-50/70 focus-within:bg-white focus-within:ring-2 focus-within:ring-sky-500'">
+                                    <span class="px-3 py-2.5 text-xs font-bold text-slate-500 bg-slate-100/90 border-r border-slate-200 shrink-0 flex items-center gap-1.5">
+                                        <span>🇮🇩</span>
+                                        <span>+62</span>
+                                    </span>
+                                    <input type="tel" 
+                                           x-model="form.kontak"
+                                           :disabled="formMode === 'view'"
+                                           placeholder="812-3456-7890 / 081234567890" 
+                                           :class="formMode === 'view' ? 'text-slate-500 cursor-not-allowed font-bold' : 'text-slate-700 font-semibold'"
+                                           class="w-full px-3.5 py-2.5 text-xs bg-transparent border-0 focus:outline-none">
+                                </div>
                             </div>
                             <div>
                                 <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">EMAIL MITRA</label>

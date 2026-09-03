@@ -11,6 +11,27 @@ use Illuminate\Support\Facades\Auth;
 
 class KeuanganWebController extends Controller
 {
+    public static function generateSopId($tanggal = null)
+    {
+        $date = $tanggal ? Carbon::parse($tanggal) : Carbon::now();
+        $prefix = 'TRX-' . $date->format('ym') . '-';
+
+        $count = Keuangan::whereYear('tanggal_transaksi', $date->year)
+            ->whereMonth('tanggal_transaksi', $date->month)
+            ->count();
+
+        $nextNum = str_pad($count + 1, 3, '0', STR_PAD_LEFT);
+        $code = $prefix . $nextNum;
+
+        while (Keuangan::where('ref_id', $code)->exists()) {
+            $count++;
+            $nextNum = str_pad($count + 1, 3, '0', STR_PAD_LEFT);
+            $code = $prefix . $nextNum;
+        }
+
+        return $code;
+    }
+
     public function index()
     {
         $keuanganRecords = Keuangan::with(['kolam', 'user'])->latest('tanggal_transaksi')->latest('id_keuangan')->get();
@@ -18,14 +39,15 @@ class KeuanganWebController extends Controller
 
         $transactions = [];
         foreach ($keuanganRecords as $k) {
+            $refId = $k->ref_id ?: self::generateSopId($k->tanggal_transaksi);
             $transactions[] = [
                 'raw_id'     => $k->id_keuangan,
-                'id'         => '#TRX-' . ($k->ref_id ? preg_replace('/[^A-Za-z0-9\-]/', '', $k->ref_id) : ('2026-' . str_pad($k->id_keuangan, 4, '0', STR_PAD_LEFT))),
+                'id'         => $refId,
                 'tanggal'    => $k->tanggal_transaksi ? Carbon::parse($k->tanggal_transaksi)->toDateString() : date('Y-m-d'),
                 'tipe'       => in_array(strtolower($k->tipe_transaksi), ['pemasukan', 'income']) ? 'income' : 'expense',
                 'nominal'    => (float) $k->nominal,
                 'kategori'   => $k->kategori,
-                'ref'        => $k->ref_id ?? ('TRX-' . str_pad($k->id_keuangan, 4, '0', STR_PAD_LEFT)),
+                'ref'        => $refId,
                 'id_kolam'   => $k->id_kolam,
                 'kolam'      => $k->kolam ? $k->kolam->nama_kolam : 'Tidak dialokasikan',
                 'keterangan' => $k->keterangan ?? '-'
@@ -41,29 +63,78 @@ class KeuanganWebController extends Controller
         $pakanTotal = Keuangan::whereIn('tipe_transaksi', ['pengeluaran', 'expense'])
             ->where('kategori', 'like', '%Pakan%')
             ->sum('nominal');
+
         $operasionalTotal = Keuangan::whereIn('tipe_transaksi', ['pengeluaran', 'expense'])
             ->where(function ($q) {
                 $q->where('kategori', 'like', '%Operasional%')
                   ->orWhere('kategori', 'like', '%Perawatan%')
                   ->orWhere('kategori', 'like', '%Listrik%')
                   ->orWhere('kategori', 'like', '%Gaji%')
-                  ->orWhere('kategori', 'like', '%Obat%');
+                  ->orWhere('kategori', 'like', '%Obat%')
+                  ->orWhere('kategori', 'like', '%Transportasi%');
             })
             ->sum('nominal');
 
-        $kpis = [
-            'incomeFormatted'   => 'Rp' . number_format($totalIncome, 0, ',', '.'),
-            'expenseFormatted'  => 'Rp' . number_format($totalExpense, 0, ',', '.'),
-            'saldoFormatted'    => 'Rp' . number_format($saldo, 0, ',', '.'),
-            'netMargin'         => $netMargin,
-            'incomeShort'       => 'Rp ' . number_format($totalIncome / 1000000, 1) . ' Jt',
-            'expenseShort'      => 'Rp ' . number_format($totalExpense / 1000000, 1) . ' Jt',
-            'totalTrx'          => $keuanganRecords->count(),
-            'pakanFormatted'    => 'Rp ' . number_format($pakanTotal, 0, ',', '.'),
-            'operasionalFormatted' => 'Rp ' . number_format($operasionalTotal, 0, ',', '.'),
+        // Financial Health Score calculation
+        if ($totalIncome == 0 && $totalExpense == 0) {
+            $healthScore = 0.0;
+            $healthStatus = 'BELUM ADA TRANSAKSI';
+            $healthBadgeClass = 'bg-slate-100 text-slate-600';
+        } elseif ($saldo >= 0) {
+            $healthScore = round(min(10.0, 7.0 + ($netMargin / 33)), 1);
+            $healthStatus = 'STABLE';
+            $healthBadgeClass = 'bg-[#C6F6D5] text-[#22543D]';
+        } else {
+            $healthScore = round(max(1.0, 5.0 - (abs($saldo) / max(1, $totalExpense) * 4)), 1);
+            $healthStatus = 'PERLU EVALUASI';
+            $healthBadgeClass = 'bg-[#FEE2E2] text-[#991B1B]';
+        }
+
+        // Monthly Cash Flow Chart from database
+        $currentYear = Carbon::now()->year;
+        $monthlyGrouped = Keuangan::whereYear('tanggal_transaksi', $currentYear)
+            ->selectRaw('MONTH(tanggal_transaksi) as bulan, 
+                         SUM(CASE WHEN LOWER(tipe_transaksi) IN ("pemasukan", "income") THEN nominal ELSE 0 END) as total_income,
+                         SUM(CASE WHEN LOWER(tipe_transaksi) IN ("pengeluaran", "expense") THEN nominal ELSE 0 END) as total_expense')
+            ->groupBy('bulan')
+            ->orderBy('bulan')
+            ->get()
+            ->keyBy('bulan');
+
+        $monthNames = ['JAN', 'FEB', 'MAR', 'APR', 'MEI', 'JUN', 'JUL', 'AGU', 'SEP', 'OKT', 'NOV', 'DES'];
+        $currentMonthNum = Carbon::now()->month;
+        $monthlyCashflow = [
+            'labels'  => [],
+            'revenue' => [],
+            'expense' => []
         ];
 
-        return view('layouts.keuangan.index', compact('transactions', 'kolams', 'totalIncome', 'totalExpense', 'saldo', 'kpis'));
+        for ($m = 1; $m <= $currentMonthNum; $m++) {
+            $monthlyCashflow['labels'][] = $monthNames[$m - 1];
+            $row = $monthlyGrouped->get($m);
+            // In Juta (Jt) or raw Jt format
+            $monthlyCashflow['revenue'][] = $row ? round((float)$row->total_income / 1000000, 2) : 0;
+            $monthlyCashflow['expense'][] = $row ? round((float)$row->total_expense / 1000000, 2) : 0;
+        }
+
+        $kpis = [
+            'incomeFormatted'      => 'Rp ' . number_format($totalIncome, 0, ',', '.'),
+            'expenseFormatted'     => 'Rp ' . number_format($totalExpense, 0, ',', '.'),
+            'saldoFormatted'       => 'Rp ' . number_format($saldo, 0, ',', '.'),
+            'netMargin'            => $netMargin,
+            'incomeShort'          => 'Rp ' . number_format($totalIncome / 1000000, 1) . ' Jt',
+            'expenseShort'         => 'Rp ' . number_format($totalExpense / 1000000, 1) . ' Jt',
+            'totalTrx'             => $keuanganRecords->count(),
+            'pakanFormatted'       => 'Rp ' . number_format($pakanTotal, 0, ',', '.'),
+            'operasionalFormatted' => 'Rp ' . number_format($operasionalTotal, 0, ',', '.'),
+            'pakanTotal'           => $pakanTotal,
+            'operasionalTotal'     => $operasionalTotal,
+            'healthScore'          => $healthScore,
+            'healthStatus'         => $healthStatus,
+            'healthBadgeClass'     => $healthBadgeClass,
+        ];
+
+        return view('layouts.keuangan.index', compact('transactions', 'kolams', 'totalIncome', 'totalExpense', 'saldo', 'kpis', 'monthlyCashflow'));
     }
 
     public function store(Request $request)
@@ -94,7 +165,7 @@ class KeuanganWebController extends Controller
             'kategori'          => $request->kategori,
             'nominal'           => $request->nominal,
             'keterangan'        => $request->keterangan,
-            'ref_id'            => $request->ref_id ?: ('TRX-' . strtoupper(substr($tipe, 0, 2)) . '-' . rand(100, 999)),
+            'ref_id'            => $request->ref_id ?: self::generateSopId($request->tanggal_transaksi),
         ]);
 
         if ($request->wantsJson() || $request->ajax()) {

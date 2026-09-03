@@ -15,6 +15,7 @@ class BatchPembibitan extends Model
     protected $fillable = [
         'id_kolam',
         'id_user',
+        'id_ikan',
         'tgl_pemijahan',
         'jumlah_bibitAwal',
         'jenis_ikan',
@@ -32,6 +33,11 @@ class BatchPembibitan extends Model
     public function kolam()
     {
         return $this->belongsTo(Kolam::class, 'id_kolam', 'id_kolam');
+    }
+
+    public function ikan()
+    {
+        return $this->belongsTo(Ikan::class, 'id_ikan', 'id_ikan');
     }
 
     public function batchPembesaran()

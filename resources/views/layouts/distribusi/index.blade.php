@@ -45,7 +45,7 @@
                         </div>
                         <div>
                             <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">TANGGAL ORDER</label>
-                            <input type="date" x-model="form.tanggal" :disabled="formMode === 'edit'"
+                            <input type="date" x-model="form.tanggal" :max="maxDate" :disabled="formMode === 'edit'"
                                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
                         </div>
                     </div>
@@ -152,8 +152,11 @@
                         </div>
                         <div>
                             <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">HARGA TOTAL (RP)</label>
-                            <input type="text" x-model="form.totalHarga" placeholder="Rp" :disabled="formMode === 'edit'"
-                                   class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+                            <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50/70 overflow-hidden focus-within:bg-white focus-within:ring-2 focus-within:ring-sky-500 transition-all">
+                                <span class="px-3.5 py-2.5 text-xs font-extrabold text-slate-500 bg-slate-100/80 border-r border-slate-200 shrink-0">Rp</span>
+                                <input type="text" x-model="form.totalHarga" placeholder="0" :disabled="formMode === 'edit'"
+                                       class="w-full px-3.5 py-2.5 text-xs font-semibold text-slate-700 bg-transparent border-0 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed">
+                            </div>
                         </div>
                     </div>
 
@@ -271,6 +274,12 @@
     <!-- Order Cards Grid -->
     <div x-show="!showForm" class="grid grid-cols-1 md:grid-cols-3 gap-5">
         
+        <div x-show="filteredOrders.length === 0" class="col-span-full py-12 bg-white rounded-2xl border border-slate-200/80 text-center text-slate-400 text-xs font-medium">
+            <i class="fa-solid fa-truck text-2xl text-slate-300 block mb-2"></i>
+            Tidak ada pesanan distribusi yang ditemukan di database.<br>
+            <span class="text-[11px] text-slate-400">Klik tombol <strong>Input Order Baru</strong> untuk mencatat pengiriman baru.</span>
+        </div>
+
         <template x-for="order in filteredOrders" :key="order.id">
             <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs flex flex-col justify-between space-y-4">
                 <div class="space-y-3">
@@ -420,6 +429,12 @@ function distribusiComponent() {
 
         orders: {!! isset($orders) && count($orders) > 0 ? json_encode($orders) : json_encode([]) !!},
 
+        get maxDate() {
+            const d = new Date();
+            d.setDate(d.getDate() + 7);
+            return d.toISOString().split('T')[0];
+        },
+
         get kpiTotal() {
             return this.orders.length;
         },
@@ -563,6 +578,10 @@ function distribusiComponent() {
                     target.status = this.form.status;
                 }
             } else {
+                if (this.form.tanggal && this.form.tanggal > this.maxDate) {
+                    alert('Tanggal order tidak boleh melebihi batas maksimal minggu ini (' + this.maxDate + ')!');
+                    return;
+                }
                 if (!this.form.id_mitra) {
                     alert('Silakan pilih Mitra Distributor dari database!');
                     return;

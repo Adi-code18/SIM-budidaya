@@ -15,10 +15,13 @@ return new class extends Migration
             $table->id('id_batch');
             $table->foreignId('id_kolam')->constrained('kolam', 'id_kolam')->onDelete('cascade');
             $table->foreignId('id_user')->constrained('users', 'id_user')->onDelete('cascade');
+            $table->foreignId('id_ikan')->nullable()->constrained('ikan', 'id_ikan')->onDelete('set null');
             $table->date('tgl_pemijahan');
             $table->integer('jumlah_bibitAwal');
-            $table->string('jenis_ikan');
+            $table->string('jenis_ikan')->nullable();
+            $table->string('fase_pertumbuhan')->default('TELUR');
             $table->integer('jumlah_kematian')->default(0);
+            $table->decimal('total_bobot_kg', 8, 2)->default(0);
             $table->string('status')->default('aktif');
             $table->timestamps();
         });

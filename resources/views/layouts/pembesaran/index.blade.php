@@ -28,23 +28,18 @@
 
     <!-- Alert Notification Banner jika ada Batch yang Waktunya Panen -->
     <template x-if="batches.some(b => b.is_harvest_due)">
-        <div class="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 p-4 rounded-2xl text-white shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-pulse">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-xl shrink-0">
-                    <i class="fa-solid fa-wheat-awn font-bold text-amber-100"></i>
-                </div>
-                <div>
-                    <h4 class="font-extrabold text-xs tracking-wider uppercase flex items-center gap-2">
-                        <span>NOTIFIKASI PANEN: MASA PANEN TIBA!</span>
-                        <span class="px-2 py-0.5 rounded-full text-[9px] bg-white text-rose-600 font-extrabold" x-text="batches.filter(b => b.is_harvest_due).length + ' BATCH'"></span>
-                    </h4>
-                    <p class="text-xs text-amber-100 font-medium mt-0.5">
-                        Terdapat batch pembesaran yang telah mencapai/melewati estimasi tanggal panen. Harap segera lakukan pemeriksaan &amp; pemanenan.
-                    </p>
-                </div>
+        <div class="bg-amber-50 border border-amber-200/90 p-4 rounded-2xl text-slate-800 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div>
+                <h4 class="font-extrabold text-xs tracking-wider uppercase flex items-center gap-2 text-amber-900">
+                    <span>NOTIFIKASI PANEN: MASA PANEN TIBA!</span>
+                    <span class="px-2 py-0.5 rounded-full text-[9px] bg-amber-200 text-amber-900 font-extrabold" x-text="batches.filter(b => b.is_harvest_due).length + ' BATCH'"></span>
+                </h4>
+                <p class="text-xs text-amber-800/90 font-medium mt-0.5">
+                    Terdapat batch pembesaran yang telah mencapai/melewati estimasi tanggal panen. Harap segera lakukan pemeriksaan &amp; pemanenan.
+                </p>
             </div>
-            <button @click="activeFilter = 'aktif'" class="px-4 py-2 bg-white text-amber-900 rounded-xl text-xs font-extrabold hover:bg-amber-50 transition-all shrink-0 shadow-md">
-                <i class="fa-solid fa-eye text-amber-700 mr-1"></i> Lihat Batch Panen
+            <button @click="activeFilter = 'aktif'" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-extrabold transition-all shrink-0 shadow-sm cursor-pointer">
+                Lihat Batch Panen
             </button>
         </div>
     </template>
@@ -260,12 +255,12 @@
                     </div>
                 </div>
                 <div class="mt-3">
-                    <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight">{{ number_format($avgFcr ?? 1.12, 2) }} <span class="text-xs font-semibold text-slate-500">Ratio</span></h3>
+                    <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight">{{ number_format($avgFcr ?? 0, 2) }} <span class="text-xs font-semibold text-slate-500">Ratio</span></h3>
                 </div>
             </div>
-            <div class="mt-4 flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
-                <i class="fa-regular fa-circle-check"></i>
-                <span>Dalam target optimal (≤ 1.25)</span>
+            <div class="mt-4 flex items-center gap-1.5 text-xs font-semibold {{ ($avgFcr ?? 0) > 0 && ($avgFcr ?? 0) <= 1.25 ? 'text-emerald-600' : 'text-slate-500' }}">
+                <i class="fa-regular {{ ($avgFcr ?? 0) > 0 && ($avgFcr ?? 0) <= 1.25 ? 'fa-circle-check text-emerald-600' : 'fa-circle-info text-slate-400' }}"></i>
+                <span>{{ ($avgFcr ?? 0) > 0 ? (($avgFcr ?? 0) <= 1.25 ? 'Dalam target optimal (≤ 1.25)' : 'Perlu evaluasi pakan') : 'Belum ada data pakan' }}</span>
             </div>
         </div>
 
@@ -332,12 +327,11 @@
                         <div>
                             <!-- Banner Notifikasi Waktunya Panen Pada Card -->
                             <template x-if="item.is_harvest_due">
-                                <div class="mb-3 p-2 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 text-white font-extrabold text-[10px] flex items-center justify-between shadow-xs animate-pulse">
-                                    <span class="flex items-center gap-1.5 uppercase tracking-wider">
-                                        <i class="fa-solid fa-wheat-awn text-xs"></i>
-                                        <span>SUDAH WAKTUNYA PANEN!</span>
+                                <div class="mb-3 p-2 rounded-xl bg-amber-100 border border-amber-200 text-amber-900 font-extrabold text-[10px] flex items-center justify-between shadow-xs">
+                                    <span class="uppercase tracking-wider">
+                                        SUDAH WAKTUNYA PANEN!
                                     </span>
-                                    <span class="text-[9px] bg-white/20 px-2 py-0.5 rounded-md" x-text="item.est_panen_format"></span>
+                                    <span class="text-[9px] bg-amber-200 text-amber-950 px-2 py-0.5 rounded-md font-extrabold" x-text="item.est_panen_format"></span>
                                 </div>
                             </template>
 
@@ -571,9 +565,8 @@
                         <span class="text-[10px] font-bold" :class="selectedBatch?.is_harvest_due ? 'text-rose-600' : 'text-slate-400'" x-text="selectedBatch?.is_harvest_due ? '⚠️ Waktunya Panen!' : 'Jadwal Panen'"></span>
                     </div>
 
-                    <div class="p-3 bg-sky-50/60 rounded-2xl border border-sky-100">
                         <span class="text-[10px] font-extrabold uppercase tracking-wider text-sky-800 block mb-0.5">KUALITAS AIR</span>
-                        <span class="font-extrabold text-[#0B2570] text-xs block" x-text="'pH ' + selectedBatch?.ph_air + ' • ' + (selectedBatch?.suhu_air || '28.5°C')"></span>
+                        <span class="font-extrabold text-[#0B2570] text-xs block" x-text="'pH Air ' + selectedBatch?.ph_air"></span>
                         <span class="text-[10px] text-emerald-700 font-bold">Kondisi Optimal</span>
                     </div>
                 </div>

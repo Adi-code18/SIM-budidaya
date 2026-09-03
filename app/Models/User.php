@@ -46,11 +46,6 @@ class User extends Authenticatable
         return !is_null($this->two_factor_confirmed_at);
     }
 
-    public function pengajuanLibur()
-    {
-        return $this->hasMany(PengajuanLibur::class, 'id_user', 'id_user');
-    }
-
     public function kolam()
     {
         return $this->hasMany(Kolam::class, 'id_user', 'id_user');

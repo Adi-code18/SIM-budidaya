@@ -45,26 +45,26 @@
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
-                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">ID BATCH (OTOMATIS)</label>
+                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">ID BATCH SISTEM</label>
                         <input type="text" x-model="form.id" readonly
                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-extrabold text-slate-500 bg-slate-100 cursor-not-allowed">
                     </div>
                     <div>
-                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">JENIS IKAN *</label>
-                        <select x-model="form.jenisIkan" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
-                            <option value="">Pilih Spesies...</option>
-                            <option value="Gurami">Gurami</option>
-                            <option value="Lele">Lele</option>
-                            <option value="Nila">Nila</option>
-                            <option value="Patin">Patin</option>
-                            <option value="Bawal">Bawal</option>
+                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">PILIH SPESIES IKAN (SOP OTOMATIS)</label>
+                        <select x-model="selectedIkanId" 
+                                @change="onIkanSelected()"
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-sky-800 bg-sky-50/60 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                            <option value="">-- Manual / Tanpa SOP --</option>
+                            @foreach($ikans ?? [] as $ik)
+                                <option value="{{ $ik->id_ikan }}">{{ $ik->nama_ikan }} (SOP: {{ $ik->durasi_penetasan + $ik->durasi_pembibitan }} Hari)</option>
+                            @endforeach
                         </select>
                     </div>
                     <div>
                         <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">FASE PERTUMBUHAN *</label>
                         <select x-model="form.fase_pertumbuhan"
                                 @change="onFaseChange()"
-                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-sky-800 bg-sky-50/60 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
                             <option value="TELUR">TELUR (Masa Pemijahan &amp; Penetasan Awal)</option>
                             <option value="LARVA">LARVA (Benih Kecil / Post-Larva)</option>
                             <option value="FINGERLING">FINGERLING (Benih Siap Pembesaran)</option>
@@ -99,15 +99,27 @@
                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
                     </div>
                     <div>
-                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">PREDIKSI PENETASAN (HARI)</label>
-                        <div class="flex items-center gap-2">
-                            <button type="button" @click="form.prediksiHari = Math.max(1, Number(form.prediksiHari) - 1)" class="w-9 h-9 rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 flex items-center justify-center font-bold text-sm transition-colors">−</button>
-                            <input type="number" x-model="form.prediksiHari" min="1" max="30"
-                                   onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E') event.preventDefault()"
-                                   @input="if(form.prediksiHari !== '' && Number(form.prediksiHari) < 1) form.prediksiHari = 1"
-                                   class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-extrabold text-center text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
-                            <button type="button" @click="form.prediksiHari = Number(form.prediksiHari) + 1" class="w-9 h-9 rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 flex items-center justify-center font-bold text-sm transition-colors">+</button>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block">ESTIMASI SELESAI</label>
+                            <button type="button" 
+                                    @click="isEstLocked = !isEstLocked" 
+                                    class="text-[10px] font-extrabold flex items-center gap-1 transition-colors cursor-pointer"
+                                    :class="isEstLocked ? 'text-amber-600 hover:text-amber-700' : 'text-sky-600 hover:text-sky-700'"
+                                    :title="isEstLocked ? 'Klik untuk membuka kunci dan edit tanggal manual' : 'Klik untuk mengunci kembali ke mode SOP'">
+                                <i class="fa-solid" :class="isEstLocked ? 'fa-lock text-amber-600' : 'fa-lock-open text-sky-600'"></i>
+                                <span x-text="isEstLocked ? 'Buka Kunci' : 'Kunci SOP'"></span>
+                            </button>
                         </div>
+                        <div class="relative">
+                            <input type="date" 
+                                   x-model="form.est_prcs_pembibitaan"
+                                   :readonly="isEstLocked"
+                                   :class="isEstLocked ? 'bg-slate-100/90 text-slate-600 cursor-not-allowed border-slate-200 focus:ring-0' : 'bg-slate-50/70 text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500'"
+                                   class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold transition-all">
+                        </div>
+                        <span x-show="isEstLocked && selectedIkanId" class="text-[10px] font-semibold text-slate-400 mt-1 block">
+                            🔒 Terkunci SOP (Klik <strong>Buka Kunci</strong> untuk edit)
+                        </span>
                     </div>
                     <div>
                         <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">JUMLAH KEMATIAN</label>
@@ -238,8 +250,8 @@
                 </div>
             </div>
             <div class="mt-4 flex items-center gap-1.5 text-xs font-bold text-emerald-600">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+12.5% bln ini</span>
+                <i class="fa-solid fa-circle-check"></i>
+                <span>{{ $kpis['activeBatchCount'] ?? count($batches) }} Batch Aktif Terdata</span>
             </div>
         </div>
 
@@ -253,12 +265,12 @@
                     </div>
                 </div>
                 <div class="mt-3">
-                    <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{{ $kpis['srRate'] ?? '98.8' }}%</h3>
+                    <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{{ ($kpis['totalAwal'] ?? 0) > 0 ? ($kpis['srRate'] ?? '0.0') . '%' : '0.0%' }}</h3>
                 </div>
             </div>
             <div class="mt-4">
                 <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                    <div class="bg-emerald-500 h-full rounded-full" style="width: {{ $kpis['srRate'] ?? '98.8' }}%"></div>
+                    <div class="bg-emerald-500 h-full rounded-full" style="width: {{ ($kpis['totalAwal'] ?? 0) > 0 ? ($kpis['srRateRaw'] ?? 0) : 0 }}%"></div>
                 </div>
             </div>
         </div>
@@ -273,12 +285,12 @@
                     </div>
                 </div>
                 <div class="mt-3 flex items-baseline gap-1.5">
-                    <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{{ $kpis['bakTerpakai'] ?? 4 }}</h3>
-                    <span class="text-xs font-extrabold text-slate-500">/ {{ $kpis['totalBak'] ?? 12 }} Bak</span>
+                    <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{{ $kpis['bakTerpakai'] ?? 0 }}</h3>
+                    <span class="text-xs font-extrabold text-slate-500">/ {{ $kpis['totalBak'] ?? 0 }} Bak</span>
                 </div>
             </div>
             <div class="mt-4 text-xs font-semibold text-slate-500">
-                {{ $kpis['bakTersedia'] ?? 8 }} Bak tersedia (Siap Pakai)
+                {{ $kpis['bakTersedia'] ?? 0 }} Bak tersedia (Siap Pakai)
             </div>
         </div>
 
@@ -286,19 +298,19 @@
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
             <div>
                 <div class="flex items-center justify-between">
-                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">KUALITAS AIR HATCHERY</span>
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">KUALITAS AIR (pH) HATCHERY</span>
                     <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
                         <i class="fa-solid fa-droplet text-sm"></i>
                     </div>
                 </div>
                 <div class="mt-3 flex items-baseline gap-2">
-                    <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{{ $kpis['avgPh'] ?? '7.2' }}</h3>
-                    <span class="text-xs font-bold text-emerald-600">pH Normal</span>
+                    <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{{ $kpis['avgPh'] }}</h3>
+                    <span class="text-xs font-bold {{ $kpis['phStatusClass'] ?? 'text-slate-400' }}">{{ $kpis['phStatus'] ?? 'Belum Ada Data' }}</span>
                 </div>
             </div>
             <div class="mt-4 text-xs font-semibold text-slate-500 flex items-center justify-between">
-                <span>Suhu Rata-rata</span>
-                <span class="font-extrabold text-slate-800">{{ $kpis['suhu'] ?? '28°C' }}</span>
+                <span>Rentang Standar pH</span>
+                <span class="font-bold text-slate-700">6.8 - 8.0 pH</span>
             </div>
         </div>
 
@@ -336,13 +348,23 @@
                         <th class="py-4 px-6">USIA (HARI)</th>
                         <th class="py-4 px-6">JUMLAH (EKOR)</th>
                         <th class="py-4 px-6">TOTAL BOBOT (KG)</th>
-                        <th class="py-4 px-6">JENIS IKAN</th>
+                        <th class="py-4 px-6">ESTIMASI SELESAI</th>
                         <th class="py-4 px-6">STATUS BATCH</th>
                         <th class="py-4 px-6 text-right">AKSI</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
                     
+                    <template x-if="filteredBatches.length === 0">
+                        <tr>
+                            <td colspan="8" class="py-12 text-center text-slate-400 text-xs font-medium">
+                                <i class="fa-solid fa-folder-open text-2xl text-slate-300 block mb-2"></i>
+                                Belum ada data batch pembibitan yang tercatat di database.<br>
+                                <span class="text-[11px] text-slate-400">Klik tombol <strong>Input Batch Baru</strong> di atas untuk menambahkan data.</span>
+                            </td>
+                        </tr>
+                    </template>
+
                     <template x-for="item in filteredBatches" :key="item.id">
                         <tr class="hover:bg-slate-50/70 transition-colors">
                             <td class="py-4 px-6">
@@ -357,7 +379,7 @@
                             <td class="py-4 px-6">
                                 <span class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-800 px-2.5 py-1 rounded-lg text-xs font-extrabold border border-emerald-200/60" x-text="item.totalBobotFormat || (item.totalBobotKg + ' kg')"></span>
                             </td>
-                            <td class="py-4 px-6 font-extrabold text-slate-800" x-text="item.jenisIkan"></td>
+                            <td class="py-4 px-6 font-bold text-slate-800" x-text="item.est_prcs_pembibitaan || '-'"></td>
                             <td class="py-4 px-6">
                                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold" :class="item.statusClass">
                                     <span class="w-1.5 h-1.5 rounded-full" :class="item.dotClass"></span>
@@ -522,8 +544,8 @@
                     <span class="font-extrabold text-emerald-800 text-sm" x-text="selectedBatch?.totalBobotFormat || (selectedBatch?.totalBobotKg + ' kg')"></span>
                 </div>
                 <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
-                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">JENIS IKAN</span>
-                    <span class="font-extrabold text-slate-900" x-text="selectedBatch?.jenisIkan"></span>
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">ESTIMASI SELESAI</span>
+                    <span class="font-extrabold text-slate-900" x-text="selectedBatch?.est_prcs_pembibitaan || '-'"></span>
                 </div>
 
                 <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
@@ -537,8 +559,8 @@
                         <span class="font-extrabold text-[#0B2570] text-xs" x-text="selectedBatch?.kolam"></span>
                     </div>
                     <div class="text-right">
-                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">PARAMETER AIR</span>
-                        <span class="font-extrabold text-slate-800 text-xs" x-text="'pH ' + selectedBatch?.phAir + ' • ' + selectedBatch?.suhuAir"></span>
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">KUALITAS AIR</span>
+                        <span class="font-extrabold text-slate-800 text-xs" x-text="'pH Air ' + selectedBatch?.phAir"></span>
                     </div>
                 </div>
             </div>
@@ -737,45 +759,24 @@ function pembibitanComponent() {
         selectedBatch: null,
         isSubmitting: false,
 
+        selectedIkanId: '',
+        ikansList: {!! json_encode($ikans ?? []) !!},
+        isEstLocked: true,
+
         form: {
             id: 'BCH-' + new Date().getFullYear() + '-' + String(Math.floor(10 + Math.random() * 90)) + '-A01',
             id_batch: null,
-            jenisIkan: 'Lele',
             fase_pertumbuhan: 'TELUR',
             jumlahBibitAwal: 250000,
             totalBobotKg: 25.0,
             tglPemijahan: new Date().toISOString().split('T')[0],
-            prediksiHari: 3,
+            est_prcs_pembibitaan: '',
             jumlahKematian: 0,
-            statusBatch: 'menetas',
+            statusBatch: 'inkubasi',
             kolam: ''
         },
 
-        batches: {!! isset($batches) && count($batches) > 0 ? json_encode($batches) : json_encode([
-            [
-                'id_batch' => 1,
-                'id' => '#BT-00124',
-                'inputDate' => '12 Okt 2023',
-                'tglPemijahan' => '2023-10-12',
-                'fase' => 'TELUR',
-                'faseClass' => 'bg-slate-100 text-slate-700',
-                'usia' => '2 Hari',
-                'jumlahBibitAwal' => 250000,
-                'jumlahKematian' => 0,
-                'jumlah' => '250,000',
-                'totalBobotKg' => 25.0,
-                'totalBobotFormat' => '25,0 kg',
-                'jenisIkan' => 'GURAMI',
-                'rawJenisIkan' => 'Gurami',
-                'status' => 'menetas',
-                'statusLabel' => 'Mulai Menetas',
-                'statusClass' => 'bg-sky-100 text-sky-700',
-                'dotClass' => 'bg-sky-500',
-                'kolam' => 'Kolam Pemijahan A-01',
-                'phAir' => '7.2',
-                'suhuAir' => '28°C'
-            ]
-        ]) !!},
+        batches: {!! json_encode($batches ?? []) !!},
         activeFilter: 'aktif',
 
         get filteredBatches() {
@@ -801,8 +802,22 @@ function pembibitanComponent() {
         showToast: false,
         toastMessage: '',
 
+        onIkanSelected() {
+            if (!this.selectedIkanId) return;
+            const found = this.ikansList.find(i => String(i.id_ikan) === String(this.selectedIkanId));
+            if (found && this.form.tglPemijahan) {
+                const totalDays = Number(found.durasi_penetasan || 0) + Number(found.durasi_pembibitan || 0);
+                const d = new Date(this.form.tglPemijahan);
+                d.setDate(d.getDate() + totalDays);
+                this.form.est_prcs_pembibitaan = d.toISOString().split('T')[0];
+                this.isEstLocked = true;
+            }
+        },
+
         openCreateForm() {
             this.formMode = 'create';
+            this.selectedIkanId = '';
+            this.isEstLocked = true;
             this.resetForm();
             this.showForm = true;
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -810,17 +825,18 @@ function pembibitanComponent() {
 
         openEdit(item) {
             this.formMode = 'edit';
+            this.selectedIkanId = '';
+            this.isEstLocked = false;
             this.selectedBatch = item;
             const itemFase = (item.fase || 'TELUR').toUpperCase();
             this.form = {
                 id: item.id,
                 id_batch: item.id_batch,
-                jenisIkan: item.rawJenisIkan || (item.jenisIkan ? item.jenisIkan.charAt(0) + item.jenisIkan.slice(1).toLowerCase() : 'Lele'),
                 fase_pertumbuhan: itemFase,
                 jumlahBibitAwal: item.jumlahBibitAwal || 250000,
                 totalBobotKg: item.totalBobotKg || 25.0,
                 tglPemijahan: item.tglPemijahan || new Date().toISOString().split('T')[0],
-                prediksiHari: 3,
+                est_prcs_pembibitaan: item.est_prcs_raw || (item.est_prcs_pembibitaan && item.est_prcs_pembibitaan !== '-' ? item.est_prcs_pembibitaan : ''),
                 jumlahKematian: itemFase === 'TELUR' ? 0 : (item.jumlahKematian || 0),
                 statusBatch: item.status || 'aktif',
                 kolam: item.kolam || ''
@@ -828,6 +844,22 @@ function pembibitanComponent() {
             this.detailModalOpen = false;
             this.showForm = true;
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        },
+
+        resetForm() {
+            this.selectedIkanId = '';
+            this.form = {
+                id: 'BCH-' + new Date().getFullYear() + '-' + String(Math.floor(10 + Math.random() * 90)) + '-A01',
+                id_batch: null,
+                fase_pertumbuhan: 'TELUR',
+                jumlahBibitAwal: 250000,
+                totalBobotKg: 25.0,
+                tglPemijahan: new Date().toISOString().split('T')[0],
+                est_prcs_pembibitaan: '',
+                jumlahKematian: 0,
+                statusBatch: 'inkubasi',
+                kolam: ''
+            };
         },
 
         onFaseChange() {
@@ -872,12 +904,11 @@ function pembibitanComponent() {
             this.form = {
                 id: 'BCH-' + new Date().getFullYear() + '-' + String(Math.floor(10 + Math.random() * 90)) + '-A01',
                 id_batch: null,
-                jenisIkan: '',
                 fase_pertumbuhan: 'TELUR',
                 jumlahBibitAwal: 250000,
                 totalBobotKg: 25.0,
                 tglPemijahan: new Date().toISOString().split('T')[0],
-                prediksiHari: 3,
+                est_prcs_pembibitaan: '',
                 jumlahKematian: 0,
                 statusBatch: 'inkubasi',
                 kolam: ''
@@ -899,10 +930,6 @@ function pembibitanComponent() {
                 return;
             }
 
-            if (!this.form.jenisIkan) {
-                alert('Silakan pilih Jenis Ikan terlebih dahulu!');
-                return;
-            }
             if (!this.form.jumlahBibitAwal || Number(this.form.jumlahBibitAwal) <= 0) {
                 alert('Jumlah Bibit / Telur Awal harus lebih besar dari 0 (tidak boleh angka minus atau 0)!');
                 return;
@@ -972,9 +999,9 @@ function pembibitanComponent() {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}'
                         },
                         body: JSON.stringify({
-                            jenis_ikan: this.form.jenisIkan,
                             id_kolam: this.form.kolam,
                             tgl_pemijahan: this.form.tglPemijahan,
+                            est_prcs_pembibitaan: this.form.est_prcs_pembibitaan,
                             fase_pertumbuhan: faseVal,
                             jumlah_bibitAwal: bibitAwalNum,
                             jumlah_kematian: matiNum,
@@ -986,8 +1013,8 @@ function pembibitanComponent() {
                     if (res.ok && data.success) {
                         const targetIndex = this.batches.findIndex(b => b.id_batch === idBatch || b.id === this.form.id);
                         if (targetIndex !== -1) {
-                            this.batches[targetIndex].jenisIkan = this.form.jenisIkan.toUpperCase();
-                            this.batches[targetIndex].rawJenisIkan = this.form.jenisIkan;
+                            this.batches[targetIndex].est_prcs_pembibitaan = this.form.est_prcs_pembibitaan ? new Date(this.form.est_prcs_pembibitaan).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
+                            this.batches[targetIndex].est_prcs_raw = this.form.est_prcs_pembibitaan;
                             this.batches[targetIndex].fase = faseVal;
                             this.batches[targetIndex].faseClass = this.getFaseClass(faseVal);
                             this.batches[targetIndex].kolam = this.form.kolam;
@@ -1029,9 +1056,9 @@ function pembibitanComponent() {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
                     body: JSON.stringify({
-                        jenis_ikan: this.form.jenisIkan,
                         id_kolam: this.form.kolam,
                         tgl_pemijahan: this.form.tglPemijahan,
+                        est_prcs_pembibitaan: this.form.est_prcs_pembibitaan,
                         fase_pertumbuhan: faseVal,
                         jumlah_bibitAwal: bibitAwalNum,
                         jumlah_kematian: matiNum,
@@ -1050,6 +1077,8 @@ function pembibitanComponent() {
                         id: '#BT-' + String(newBatch.id_batch).padStart(5, '0'),
                         inputDate: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
                         tglPemijahan: this.form.tglPemijahan,
+                        est_prcs_pembibitaan: this.form.est_prcs_pembibitaan ? new Date(this.form.est_prcs_pembibitaan).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-',
+                        est_prcs_raw: this.form.est_prcs_pembibitaan,
                         fase: faseVal,
                         faseClass: this.getFaseClass(faseVal),
                         usia: diffDays + ' Hari',
@@ -1060,15 +1089,12 @@ function pembibitanComponent() {
                         jumlahRaw: sisaBibit,
                         totalBobotKg: finalBobot,
                         totalBobotFormat: finalBobot.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 2 }) + ' kg',
-                        jenisIkan: this.form.jenisIkan.toUpperCase(),
-                        rawJenisIkan: this.form.jenisIkan,
                         status: rawStatus,
                         statusLabel: statusLabel,
                         statusClass: statusClass,
                         dotClass: dotClass,
                         kolam: this.form.kolam,
-                        phAir: '7.2',
-                        suhuAir: '28.0°C'
+                        phAir: '-'
                     });
 
                     this.showForm = false;

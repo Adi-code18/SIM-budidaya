@@ -42,12 +42,14 @@ class PengaturanController extends Controller
         $request->validate([
             'nama' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,' . $user->id_user . ',id_user',
+            'no_tlp' => 'nullable|phone:AUTO,ID',
             'password_saat_ini' => 'nullable|required_with:password_baru',
             'password_baru' => ['nullable', 'confirmed', Password::min(6)],
         ], [
             'nama.required' => 'Nama pengguna wajib diisi.',
             'email.required' => 'Email wajib diisi.',
             'email.unique' => 'Email sudah digunakan oleh pengguna lain.',
+            'no_tlp.phone' => 'Format nomor telepon/WhatsApp tidak valid (contoh: 081234567890 atau +6281234567890).',
             'password_saat_ini.required_with' => 'Password saat ini wajib diisi untuk menginstal password baru.',
             'password_baru.confirmed' => 'Konfirmasi password baru tidak cocok.',
             'password_baru.min' => 'Password baru minimal 6 karakter.',
@@ -61,8 +63,18 @@ class PengaturanController extends Controller
             $user->password = Hash::make($request->password_baru);
         }
 
+        $noTlp = $user->no_tlp;
+        if ($request->filled('no_tlp')) {
+            try {
+                $noTlp = phone($request->no_tlp, 'ID')->formatNational();
+            } catch (\Exception $e) {
+                $noTlp = $request->no_tlp;
+            }
+        }
+
         $user->nama = $request->nama;
         $user->email = $request->email;
+        $user->no_tlp = $noTlp;
         $user->save();
 
         return back()->with('status', 'Profil & Keamanan berhasil diperbarui!');

@@ -3,190 +3,7 @@
 @section('title', 'Financial Management - SIM-BUDIDAYA')
 
 @section('content')
-<div class="space-y-6" x-data='{
-    showForm: false,
-    formMode: "create",
-    tipeTransaksi: "income",
-    isLoading: false,
-    transactions: {!! isset($transactions) && count($transactions) > 0 ? json_encode($transactions) : "[]" !!},
-    form: {
-        raw_id: null,
-        id: "",
-        tanggal: "{{ date('Y-m-d') }}",
-        tipe: "income",
-        nominal: "",
-        kategori: "",
-        ref: "",
-        id_kolam: "",
-        kolam: "Tidak dialokasikan",
-        keterangan: ""
-    },
-
-    formatCurrency(value) {
-        return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(value || 0);
-    },
-
-    openCreateForm() {
-        this.formMode = "create";
-        this.showForm = true;
-        this.tipeTransaksi = "income";
-        this.form = {
-            raw_id: null,
-            id: "#TRX-BARU",
-            tanggal: new Date().toISOString().split("T")[0],
-            tipe: "income",
-            nominal: "",
-            kategori: "",
-            ref: "",
-            id_kolam: "",
-            kolam: "Tidak dialokasikan",
-            keterangan: ""
-        };
-    },
-
-    openViewForm(item) {
-        this.formMode = "view";
-        this.showForm = true;
-        this.tipeTransaksi = item.tipe;
-        this.form = { 
-            raw_id: item.raw_id,
-            id: item.id,
-            tanggal: item.tanggal,
-            tipe: item.tipe,
-            nominal: item.nominal,
-            kategori: item.kategori,
-            ref: item.ref,
-            id_kolam: item.id_kolam || "",
-            kolam: item.kolam,
-            keterangan: item.keterangan === "-" ? "" : item.keterangan
-        };
-    },
-
-    openEditForm(item) {
-        this.formMode = "edit";
-        this.showForm = true;
-        this.tipeTransaksi = item.tipe;
-        this.form = { 
-            raw_id: item.raw_id,
-            id: item.id,
-            tanggal: item.tanggal,
-            tipe: item.tipe,
-            nominal: item.nominal,
-            kategori: item.kategori,
-            ref: item.ref,
-            id_kolam: item.id_kolam || "",
-            kolam: item.kolam,
-            keterangan: item.keterangan === "-" ? "" : item.keterangan
-        };
-    },
-
-    saveForm() {
-        if (!this.form.tanggal) {
-            alert("Silakan pilih tanggal transaksi.");
-            return;
-        }
-        if (!this.form.nominal || Number(this.form.nominal) <= 0) {
-            alert("Silakan masukkan nominal transaksi yang valid.");
-            return;
-        }
-        if (!this.form.kategori) {
-            alert("Silakan pilih kategori transaksi.");
-            return;
-        }
-
-        this.isLoading = true;
-        const url = this.formMode === "create" ? "{{ route('keuangan.store') }}" : ("/keuangan/" + this.form.raw_id);
-        const method = this.formMode === "create" ? "POST" : "PUT";
-
-        const payload = {
-            tanggal_transaksi: this.form.tanggal,
-            tipe_transaksi: this.tipeTransaksi,
-            nominal: Number(this.form.nominal),
-            kategori: this.form.kategori,
-            ref_id: this.form.ref,
-            id_kolam: this.form.id_kolam,
-            keterangan: this.form.keterangan
-        };
-
-        fetch(url, {
-            method: method,
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRF-TOKEN": "{{ csrf_token() }}",
-                "Accept": "application/json"
-            },
-            body: JSON.stringify(payload)
-        })
-        .then(res => res.json())
-        .then(data => {
-            this.isLoading = false;
-            if (data.success) {
-                window.location.reload();
-            } else {
-                alert(data.message || "Gagal menyimpan transaksi.");
-            }
-        })
-        .catch(err => {
-            this.isLoading = false;
-            console.error(err);
-            alert("Terjadi kesalahan koneksi server saat menyimpan.");
-        });
-    },
-
-    deleteTransaction(item) {
-        if (confirm("Apakah Anda yakin ingin menghapus transaksi \"" + (item.ref || item.id) + "\"?")) {
-            this.isLoading = true;
-            fetch("/keuangan/" + item.raw_id, {
-                method: "DELETE",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": "{{ csrf_token() }}",
-                    "Accept": "application/json"
-                }
-            })
-            .then(res => res.json())
-            .then(data => {
-                this.isLoading = false;
-                if (data.success) {
-                    window.location.reload();
-                } else {
-                    alert(data.message || "Gagal menghapus transaksi.");
-                }
-            })
-            .catch(err => {
-                this.isLoading = false;
-                console.error(err);
-                alert("Terjadi kesalahan koneksi server saat menghapus.");
-            });
-        }
-    },
-
-    exportReport() {
-        const header = ["DATE", "DESCRIPTION", "CATEGORY", "TYPE", "AMOUNT", "REF", "KOLAM"];
-        const rows = this.transactions.map(item => [
-            item.tanggal,
-            item.keterangan,
-            item.kategori,
-            item.tipe === "income" ? "Pemasukan" : "Pengeluaran",
-            item.nominal,
-            item.ref,
-            item.kolam
-        ]);
-        const csv = [header, ...rows]
-            .map(row => row.map(value => "\"" + String(value).replace(/"/g, "\"\"") + "\"").join(","))
-            .join("\n");
-
-        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = "laporan_keuangan_" + new Date().toISOString().split("T")[0] + ".csv";
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        URL.revokeObjectURL(url);
-    }
-}' >
+<div class="space-y-6" x-data="keuanganComponent()">
 
     <!-- Flash Alerts -->
     @if(session('success'))
@@ -210,10 +27,6 @@
             <p class="text-xs text-slate-500 font-medium mt-0.5">Monitor revenue streams, expenses, and overall aquaculture profitability.</p>
         </div>
         <div class="flex items-center gap-3">
-            <button @click="exportReport()" class="px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 transition-colors flex items-center gap-2">
-                <i class="fa-solid fa-download text-xs text-slate-500"></i>
-                <span>Export Report</span>
-            </button>
             <button @click="showForm ? (showForm = false) : openCreateForm()"
                     class="px-4 py-2 rounded-xl bg-[#051B44] hover:bg-navy-900 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-2">
                 <i class="fa-solid" :class="showForm ? 'fa-table-list' : 'fa-plus'" class="text-xs"></i>
@@ -285,7 +98,7 @@
                             </div>
                             <div>
                                 <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">TANGGAL TRANSAKSI</label>
-                                <input type="date" x-model="form.tanggal" :disabled="formMode === 'view'" required
+                                <input type="date" x-model="form.tanggal" @change="onDateChange()" :disabled="formMode === 'view'" required
                                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all disabled:bg-slate-100 disabled:cursor-not-allowed">
                             </div>
                         </div>
@@ -301,37 +114,32 @@
                         </div>
 
                         <div>
-                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">NOMINAL (Rp)</label>
-                            <div class="relative">
-                                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">Rp</span>
+                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">NOMINAL (Rp) <span class="text-rose-500">*</span></label>
+                            <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50/70 overflow-hidden focus-within:bg-white focus-within:ring-2 focus-within:ring-sky-500 focus-within:border-sky-500 transition-all">
+                                <span class="px-4 py-3 text-sm font-extrabold text-slate-500 bg-slate-100/80 border-r border-slate-200 shrink-0">Rp</span>
                                 <input type="number" x-model="form.nominal" :disabled="formMode === 'view'" placeholder="0" required min="1"
-                                       class="w-full pl-10 pr-3.5 py-3 rounded-xl border border-slate-200 text-lg font-extrabold text-slate-900 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all disabled:bg-slate-100 disabled:cursor-not-allowed">
+                                       onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E' || event.key === '+') event.preventDefault()"
+                                       @input="if(form.nominal !== '' && Number(form.nominal) < 0) form.nominal = Math.abs(Number(form.nominal)) || ''"
+                                       class="w-full px-3.5 py-3 text-lg font-extrabold text-slate-900 bg-transparent border-0 focus:outline-none disabled:bg-slate-100 disabled:cursor-not-allowed">
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">KATEGORI</label>
-                                <select x-model="form.kategori" :disabled="formMode === 'view'" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all disabled:bg-slate-100 disabled:cursor-not-allowed">
-                                    <option value="">Pilih Kategori...</option>
-                                    <option value="Penjualan Panen">Penjualan Panen</option>
-                                    <option value="Penjualan Ekspor Ikan Patin">Penjualan Ekspor Ikan Patin</option>
-                                    <option value="Penjualan Panen Ikan Nila">Penjualan Panen Ikan Nila</option>
-                                    <option value="Penjualan Benih Bibit Ikan">Penjualan Benih Bibit Ikan</option>
-                                    <option value="Pembelian Pakan Pelet">Pembelian Pakan Pelet</option>
-                                    <option value="Pembelian Obat &amp; Probiotik">Pembelian Obat &amp; Probiotik</option>
-                                    <option value="Biaya Listrik &amp; Operasional Aerator">Biaya Listrik &amp; Operasional Aerator</option>
-                                    <option value="Gaji &amp; Honor Petugas">Gaji &amp; Honor Petugas</option>
-                                    <option value="Operasional &amp; Perawatan">Operasional &amp; Perawatan</option>
-                                    <option value="Transportasi &amp; Distribusi">Transportasi &amp; Distribusi</option>
-                                    <option value="Lain-lain">Lain-lain</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">REF ID / No. NOTA</label>
-                                <input type="text" x-model="form.ref" :disabled="formMode === 'view'" placeholder="Contoh: TRX-IN-001 / INV/2026/01"
-                                       class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all disabled:bg-slate-100 disabled:cursor-not-allowed">
-                            </div>
+                        <div>
+                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">KATEGORI <span class="text-rose-500">*</span></label>
+                            <select x-model="form.kategori" :disabled="formMode === 'view'" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all disabled:bg-slate-100 disabled:cursor-not-allowed">
+                                <option value="">Pilih Kategori...</option>
+                                <option value="Penjualan Panen">Penjualan Panen</option>
+                                <option value="Penjualan Ekspor Ikan Patin">Penjualan Ekspor Ikan Patin</option>
+                                <option value="Penjualan Panen Ikan Nila">Penjualan Panen Ikan Nila</option>
+                                <option value="Penjualan Benih Bibit Ikan">Penjualan Benih Bibit Ikan</option>
+                                <option value="Pembelian Pakan Pelet">Pembelian Pakan Pelet</option>
+                                <option value="Pembelian Obat &amp; Probiotik">Pembelian Obat &amp; Probiotik</option>
+                                <option value="Biaya Listrik &amp; Operasional Aerator">Biaya Listrik &amp; Operasional Aerator</option>
+                                <option value="Gaji &amp; Honor Petugas">Gaji &amp; Honor Petugas</option>
+                                <option value="Operasional &amp; Perawatan">Operasional &amp; Perawatan</option>
+                                <option value="Transportasi &amp; Distribusi">Transportasi &amp; Distribusi</option>
+                                <option value="Lain-lain">Lain-lain</option>
+                            </select>
                         </div>
 
                         <div>
@@ -528,7 +336,7 @@
                             <span class="font-extrabold text-slate-900">{{ $kpis['pakanFormatted'] ?? 'Rp 0' }}</span>
                         </div>
                         <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                            <div class="bg-[#0B2570] h-full rounded-full" style="width: {{ $totalExpense > 0 ? min(100, round(($pakanTotal ?? 0) / $totalExpense * 100)) : 0 }}%"></div>
+                            <div class="bg-[#0B2570] h-full rounded-full" style="width: {{ $totalExpense > 0 ? min(100, round(($kpis['pakanTotal'] ?? 0) / $totalExpense * 100)) : 0 }}%"></div>
                         </div>
                     </div>
 
@@ -539,7 +347,7 @@
                             <span class="font-extrabold text-slate-900">{{ $kpis['operasionalFormatted'] ?? 'Rp 0' }}</span>
                         </div>
                         <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                            <div class="bg-[#10B981] h-full rounded-full" style="width: {{ $totalExpense > 0 ? min(100, round(($operasionalTotal ?? 0) / $totalExpense * 100)) : 0 }}%"></div>
+                            <div class="bg-[#10B981] h-full rounded-full" style="width: {{ $totalExpense > 0 ? min(100, round(($kpis['operasionalTotal'] ?? 0) / $totalExpense * 100)) : 0 }}%"></div>
                         </div>
                     </div>
 
@@ -550,10 +358,10 @@
             <div class="bg-[#F4F7FA] border border-slate-200/70 rounded-xl p-4 flex items-center justify-between">
                 <div>
                     <span class="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">Financial Health Score</span>
-                    <h4 class="text-lg font-extrabold text-[#0B2570] mt-0.5">{{ ($saldo ?? 0) >= 0 ? '8.8' : '4.5' }} <span class="text-xs font-semibold text-slate-400">/ 10</span></h4>
+                    <h4 class="text-lg font-extrabold text-[#0B2570] mt-0.5">{{ number_format($kpis['healthScore'] ?? 0, 1) }} <span class="text-xs font-semibold text-slate-400">/ 10</span></h4>
                 </div>
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold {{ ($saldo ?? 0) >= 0 ? 'bg-[#C6F6D5] text-[#22543D]' : 'bg-[#FEE2E2] text-[#991B1B]' }} uppercase">
-                    {{ ($saldo ?? 0) >= 0 ? 'STABLE' : 'ATTENTION' }}
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold {{ $kpis['healthBadgeClass'] ?? 'bg-slate-100 text-slate-600' }} uppercase">
+                    {{ $kpis['healthStatus'] ?? 'STABLE' }}
                 </span>
             </div>
         </div>
@@ -666,25 +474,210 @@
 
 @push('scripts')
 <script>
+function keuanganComponent() {
+    return {
+        showForm: false,
+        formMode: "create",
+        tipeTransaksi: "income",
+        isLoading: false,
+        transactions: {!! isset($transactions) && count($transactions) > 0 ? json_encode($transactions) : "[]" !!},
+        form: {
+            raw_id: null,
+            id: "",
+            tanggal: "{{ date('Y-m-d') }}",
+            tipe: "income",
+            nominal: "",
+            kategori: "",
+            ref: "",
+            id_kolam: "",
+            kolam: "Tidak dialokasikan",
+            keterangan: ""
+        },
+
+        formatCurrency(value) {
+            return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(value || 0);
+        },
+
+        generateSopCode(dateStr) {
+            const d = dateStr ? new Date(dateStr) : new Date();
+            const yy = String(d.getFullYear()).slice(-2);
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const prefix = 'TRX-' + yy + mm + '-';
+            const countThisMonth = this.transactions.filter(t => t.ref && t.ref.startsWith(prefix)).length + 1;
+            return prefix + String(countThisMonth).padStart(3, '0');
+        },
+
+        onDateChange() {
+            if (this.formMode === 'create' && this.form.tanggal) {
+                const autoId = this.generateSopCode(this.form.tanggal);
+                this.form.id = autoId;
+                this.form.ref = autoId;
+            }
+        },
+
+        openCreateForm() {
+            this.formMode = "create";
+            this.showForm = true;
+            this.tipeTransaksi = "income";
+            const today = new Date().toISOString().split("T")[0];
+            const autoId = this.generateSopCode(today);
+            this.form = {
+                raw_id: null,
+                id: autoId,
+                tanggal: today,
+                tipe: "income",
+                nominal: "",
+                kategori: "",
+                ref: autoId,
+                id_kolam: "",
+                kolam: "Tidak dialokasikan",
+                keterangan: ""
+            };
+        },
+
+        openViewForm(item) {
+            this.formMode = "view";
+            this.showForm = true;
+            this.tipeTransaksi = item.tipe;
+            this.form = { 
+                raw_id: item.raw_id,
+                id: item.id,
+                tanggal: item.tanggal,
+                tipe: item.tipe,
+                nominal: item.nominal,
+                kategori: item.kategori,
+                ref: item.ref,
+                id_kolam: item.id_kolam || "",
+                kolam: item.kolam,
+                keterangan: item.keterangan === "-" ? "" : item.keterangan
+            };
+        },
+
+        openEditForm(item) {
+            this.formMode = "edit";
+            this.showForm = true;
+            this.tipeTransaksi = item.tipe;
+            this.form = { 
+                raw_id: item.raw_id,
+                id: item.id,
+                tanggal: item.tanggal,
+                tipe: item.tipe,
+                nominal: item.nominal,
+                kategori: item.kategori,
+                ref: item.ref,
+                id_kolam: item.id_kolam || "",
+                kolam: item.kolam,
+                keterangan: item.keterangan === "-" ? "" : item.keterangan
+            };
+        },
+
+        saveForm() {
+            if (!this.form.tanggal) {
+                alert("Silakan pilih tanggal transaksi.");
+                return;
+            }
+            if (!this.form.nominal || Number(this.form.nominal) <= 0) {
+                alert("Silakan masukkan nominal transaksi yang valid.");
+                return;
+            }
+            if (!this.form.kategori) {
+                alert("Silakan pilih kategori transaksi.");
+                return;
+            }
+
+            this.isLoading = true;
+            const url = this.formMode === "create" ? "{{ route('keuangan.store') }}" : ("/keuangan/" + this.form.raw_id);
+            const method = this.formMode === "create" ? "POST" : "PUT";
+
+            const payload = {
+                tanggal_transaksi: this.form.tanggal,
+                tipe_transaksi: this.tipeTransaksi,
+                nominal: Number(this.form.nominal),
+                kategori: this.form.kategori,
+                ref_id: this.form.ref,
+                id_kolam: this.form.id_kolam,
+                keterangan: this.form.keterangan
+            };
+
+            fetch(url, {
+                method: method,
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                this.isLoading = false;
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert(data.message || "Gagal menyimpan transaksi.");
+                }
+            })
+            .catch(err => {
+                this.isLoading = false;
+                console.error(err);
+                alert("Terjadi kesalahan koneksi server saat menyimpan.");
+            });
+        },
+
+        deleteTransaction(item) {
+            if (confirm("Apakah Anda yakin ingin menghapus transaksi \"" + (item.ref || item.id) + "\"?")) {
+                this.isLoading = true;
+                fetch("/keuangan/" + item.raw_id, {
+                    method: "DELETE",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                        "Accept": "application/json"
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    this.isLoading = false;
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        alert(data.message || "Gagal menghapus transaksi.");
+                    }
+                })
+                .catch(err => {
+                    this.isLoading = false;
+                    console.error(err);
+                    alert("Terjadi kesalahan koneksi server saat menghapus.");
+                });
+            }
+        }
+    };
+}
+
     document.addEventListener('DOMContentLoaded', function() {
         const ctx = document.getElementById('financialCashFlowChart');
         if (!ctx) return;
+
+        const labels = {!! json_encode($monthlyCashflow['labels'] ?? ['JAN', 'FEB', 'MAR', 'APR', 'MEI', 'JUN', 'JUL', 'AGU', 'SEP']) !!};
+        const revenueData = {!! json_encode($monthlyCashflow['revenue'] ?? []) !!};
+        const expenseData = {!! json_encode($monthlyCashflow['expense'] ?? []) !!};
+
         new Chart(ctx.getContext('2d'), {
             type: 'bar',
             data: {
-                labels: ['JAN', 'FEB', 'MAR', 'APR', 'MEI', 'JUN', 'JUL', 'AGU', 'SEP'],
+                labels: labels,
                 datasets: [
                     {
-                        label: 'Revenue',
-                        data: [250, 310, 280, 360, 420, 380, 410, 490, 545],
+                        label: 'Revenue (Jt)',
+                        data: revenueData,
                         backgroundColor: '#0B2570',
                         borderRadius: 4,
                         barPercentage: 0.6,
                         categoryPercentage: 0.5
                     },
                     {
-                        label: 'Expense',
-                        data: [180, 210, 190, 240, 260, 290, 270, 310, 265],
+                        label: 'Expense (Jt)',
+                        data: expenseData,
                         backgroundColor: '#38BDF8',
                         borderRadius: 4,
                         barPercentage: 0.6,
@@ -698,14 +691,22 @@
                 plugins: {
                     legend: {
                         display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': Rp ' + context.raw + ' Juta';
+                            }
+                        }
                     }
                 },
                 scales: {
                     y: {
-                        min: 0,
-                        max: 600,
+                        beginAtZero: true,
                         ticks: {
-                            stepSize: 200,
+                            callback: function(value) {
+                                return value + ' Jt';
+                            },
                             font: { family: 'Plus Jakarta Sans', size: 11, weight: '500' },
                             color: '#94A3B8'
                         },

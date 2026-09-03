@@ -26,10 +26,6 @@ class BatchPembibitanController extends Controller
             $query->where('id_kolam', $request->id_kolam);
         }
 
-        if ($request->filled('jenis_ikan')) {
-            $query->where('jenis_ikan', 'like', '%' . $request->jenis_ikan . '%');
-        }
-
         $perPage = $request->input('per_page', 15);
         $data = $request->has('all') && $request->boolean('all')
             ? $query->latest('id_batch')->get()
@@ -48,26 +44,32 @@ class BatchPembibitanController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'id_kolam'          => 'required|exists:kolam,id_kolam',
-            'tgl_pemijahan'     => 'required|date',
-            'jumlah_bibitAwal'  => 'required|integer|min:1',
-            'jenis_ikan'        => 'required|string|max:255',
-            'jumlah_kematian'   => 'nullable|integer|min:0',
-            'total_bobot_kg'    => 'nullable|numeric|min:0',
-            'status'            => 'nullable|string|in:aktif,selesai,gagal',
-            'id_user'           => 'nullable|exists:users,id_user',
+            'id_kolam'              => 'required|exists:kolam,id_kolam',
+            'tgl_pemijahan'         => 'required|date',
+            'est_prcs_pembibitaan'  => 'nullable|date',
+            'jumlah_bibitAwal'      => 'required|integer|min:1',
+            'jumlah_kematian'       => 'nullable|integer|min:0',
+            'total_bobot_kg'        => 'nullable|numeric|min:0',
+            'status'                => 'nullable|string|in:aktif,selesai,gagal',
+            'id_user'               => 'nullable|exists:users,id_user',
         ]);
 
-        $validated['id_user'] = $validated['id_user'] ?? $request->user()->id_user;
-        $validated['jumlah_kematian'] = $validated['jumlah_kematian'] ?? 0;
-        $validated['status'] = $validated['status'] ?? 'aktif';
+        $batch = BatchPembibitan::create([
+            'id_kolam'              => $validated['id_kolam'],
+            'id_user'               => $validated['id_user'] ?? (Auth::id() ?? 1),
+            'tgl_pemijahan'         => $validated['tgl_pemijahan'],
+            'est_prcs_pembibitaan'  => $validated['est_prcs_pembibitaan'] ?? null,
+            'jumlah_bibitAwal'      => $validated['jumlah_bibitAwal'],
+            'jumlah_kematian'       => $validated['jumlah_kematian'] ?? 0,
+            'total_bobot_kg'        => $validated['total_bobot_kg'] ?? 0,
+            'status'                => $validated['status'] ?? 'aktif',
+        ]);
 
-        $batch = BatchPembibitan::create($validated);
         $batch->load(['kolam', 'user:id_user,nama,email,role']);
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Batch pembibitan berhasil dibuat',
+            'message' => 'Data batch pembibitan berhasil ditambahkan',
             'data' => $batch
         ], 201);
     }
@@ -77,15 +79,12 @@ class BatchPembibitanController extends Controller
      */
     public function show(string $id)
     {
-        $batch = BatchPembibitan::with([
-            'kolam',
-            'user:id_user,nama,email,role'
-        ])->find($id);
+        $batch = BatchPembibitan::with(['kolam', 'user:id_user,nama,email,role'])->find($id);
 
         if (!$batch) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Batch pembibitan tidak ditemukan'
+                'message' => 'Data batch pembibitan tidak ditemukan'
             ], 404);
         }
 
@@ -106,19 +105,19 @@ class BatchPembibitanController extends Controller
         if (!$batch) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Batch pembibitan tidak ditemukan'
+                'message' => 'Data batch pembibitan tidak ditemukan'
             ], 404);
         }
 
         $validated = $request->validate([
-            'id_kolam'          => 'sometimes|required|exists:kolam,id_kolam',
-            'tgl_pemijahan'     => 'sometimes|required|date',
-            'jumlah_bibitAwal'  => 'sometimes|required|integer|min:1',
-            'jenis_ikan'        => 'sometimes|required|string|max:255',
-            'jumlah_kematian'   => 'nullable|integer|min:0',
-            'total_bobot_kg'    => 'nullable|numeric|min:0',
-            'status'            => 'nullable|string|in:aktif,selesai,gagal',
-            'id_user'           => 'nullable|exists:users,id_user',
+            'id_kolam'              => 'sometimes|required|exists:kolam,id_kolam',
+            'tgl_pemijahan'         => 'sometimes|required|date',
+            'est_prcs_pembibitaan'  => 'nullable|date',
+            'jumlah_bibitAwal'      => 'sometimes|required|integer|min:1',
+            'jumlah_kematian'       => 'nullable|integer|min:0',
+            'total_bobot_kg'        => 'nullable|numeric|min:0',
+            'status'                => 'nullable|string|in:aktif,selesai,gagal',
+            'id_user'               => 'nullable|exists:users,id_user',
         ]);
 
         $batch->update($validated);

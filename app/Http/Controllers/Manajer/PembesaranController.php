@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Manajer;
 use App\Http\Controllers\Controller;
 use App\Models\BatchPembesaran;
 use App\Models\Kolam;
+use App\Models\ManajemenPakan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -33,12 +34,14 @@ class PembesaranController extends Controller
             ];
         });
 
-        $totalBiomassa = BatchPembesaran::where('status_siklus', '!=', 'selesai')->sum('biomassa_est') / 1000; // in Ton
-        if ($totalBiomassa == 0) {
-            $totalBiomassa = BatchPembesaran::sum('biomassa_est') / 1000;
+        $totalBiomassaKg = BatchPembesaran::where('status_siklus', '!=', 'selesai')->sum('biomassa_est');
+        if ($totalBiomassaKg == 0) {
+            $totalBiomassaKg = BatchPembesaran::sum('biomassa_est');
         }
+        $totalBiomassa = $totalBiomassaKg / 1000; // in Ton
 
-        $avgFcr = BatchPembesaran::whereNotNull('fcr')->where('fcr', '>', 0)->avg('fcr') ?? 1.12;
+        $avgFcrVal = BatchPembesaran::whereNotNull('fcr')->where('fcr', '>', 0)->avg('fcr');
+        $avgFcr = $avgFcrVal ? round((float)$avgFcrVal, 2) : 0;
 
         $today = Carbon::today()->toDateString();
         $fedTodayKolamIds = \App\Models\ManajemenPakan::whereDate('tgl_log', $today)->pluck('id_kolam')->toArray();
@@ -108,7 +111,7 @@ class PembesaranController extends Controller
                 'tipe_kolam'          => $b->kolam ? $b->kolam->tipe_kolam : 'Pembesaran',
                 'kapasitas_kolam'     => $b->kolam ? number_format($b->kolam->kapasitas, 0, ',', '.') : '0',
                 'id_batch_pembibitan' => $b->id_batch_pembibitan ? ('#BT-' . str_pad($b->id_batch_pembibitan, 5, '0', STR_PAD_LEFT)) : null,
-                'asal_pembibitan'     => $b->batchPembibitan ? ('#BT-' . str_pad($b->id_batch_pembibitan, 5, '0', STR_PAD_LEFT) . ' (' . $b->batchPembibitan->jenis_ikan . ')') : 'Input Manual (Bukan Bibit)',
+                'asal_pembibitan'     => $b->batchPembibitan ? ('#BT-' . str_pad($b->id_batch_pembibitan, 5, '0', STR_PAD_LEFT)) : 'Input Manual (Bukan Bibit)',
                 'bibit_list'          => $bibitList,
                 'is_fed_today'        => $isFedToday,
                 'fed_status_label'    => $isFedToday ? 'Sudah Diberi Pakan' : 'Belum Diberi Pakan',
@@ -132,8 +135,7 @@ class PembesaranController extends Controller
                 'status_siklus'       => $statusSiklus,
                 'status_label'        => $statusLabel,
                 'status_class'        => $statusClass,
-                'ph_air'              => $b->kolam ? ($b->kolam->kesehatan_ph_air ?? '7.2') : '7.2',
-                'suhu_air'            => '28.5°C',
+                'ph_air'              => ($logPh = ManajemenPakan::where('id_kolam', $b->id_kolam)->whereNotNull('ph_air')->where('ph_air', '>', 0)->latest('tgl_log')->value('ph_air')) ? number_format($logPh, 1) : '-',
             ];
         }
 
@@ -147,8 +149,7 @@ class PembesaranController extends Controller
                 $statusText = $bp->status === 'siap_pindah' ? 'Siap Pindah' : ($bp->status === 'selesai' ? 'Selesai' : ucfirst($bp->status));
                 return [
                     'id_batch'         => $bp->id_batch,
-                    'label'            => '#BT-' . str_pad($bp->id_batch, 5, '0', STR_PAD_LEFT) . ' (' . $bp->jenis_ikan . ' - ' . number_format($sisa, 0, ',', '.') . ' Ekor - ' . $statusText . ')',
-                    'jenis_ikan'       => $bp->jenis_ikan,
+                    'label'            => '#BT-' . str_pad($bp->id_batch, 5, '0', STR_PAD_LEFT) . ' (' . number_format($sisa, 0, ',', '.') . ' Ekor - ' . $statusText . ')',
                     'sisa_ekor'        => $sisa,
                     'est_biomassa'     => round($sisa * 0.02, 1),
                     'status'           => $bp->status,

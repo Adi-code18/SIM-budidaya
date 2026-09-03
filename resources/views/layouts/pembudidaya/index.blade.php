@@ -40,7 +40,7 @@
             </div>
             <div>
                 <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Total Benih / Ekor</p>
-                <h3 class="text-2xl font-extrabold text-slate-900 mt-0.5">1,240,500 <span class="text-xs font-semibold text-slate-500">ekor</span></h3>
+                <h3 class="text-2xl font-extrabold text-slate-900 mt-0.5">{{ $stats['totalBenih'] ?? '1,040,000' }} <span class="text-xs font-semibold text-slate-500">ekor</span></h3>
             </div>
         </div>
 
@@ -50,7 +50,7 @@
             </div>
             <div>
                 <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Tingkat Keberhasilan</p>
-                <h3 class="text-2xl font-extrabold text-slate-900 mt-0.5">94.2% <span class="text-xs font-bold text-emerald-600">High Yield</span></h3>
+                <h3 class="text-2xl font-extrabold text-slate-900 mt-0.5">{{ $stats['keberhasilanRate'] ?? 99.1 }}% <span class="text-xs font-bold text-emerald-600">High Yield</span></h3>
             </div>
         </div>
 
@@ -60,7 +60,7 @@
             </div>
             <div>
                 <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Kolam Siap Panen</p>
-                <h3 class="text-2xl font-extrabold text-slate-900 mt-0.5">42 <span class="text-xs font-bold text-amber-600">Kolam</span></h3>
+                <h3 class="text-2xl font-extrabold text-slate-900 mt-0.5">{{ $stats['siapPanenCount'] ?? 0 }} <span class="text-xs font-bold text-amber-600">/ {{ $stats['totalKolamCount'] ?? count($kolams) }} Kolam</span></h3>
             </div>
         </div>
     </div>
@@ -106,7 +106,14 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
-                    
+                    <template x-if="filteredKolams.length === 0">
+                        <tr>
+                            <td colspan="7" class="py-12 text-center text-slate-400 text-xs font-medium">
+                                <i class="fa-solid fa-water text-2xl text-slate-300 block mb-2"></i>
+                                Tidak ada data kolam budidaya yang ditemukan di database.
+                            </td>
+                        </tr>
+                    </template>
                     <template x-for="item in filteredKolams" :key="item.id">
                         <tr class="hover:bg-slate-50/70 transition-colors">
                             <td class="py-4 px-6">
@@ -372,22 +379,7 @@ function pembudidayaComponent() {
             status: "Optimal"
         },
 
-        kolams: {!! isset($kolams) && count($kolams) > 0 ? json_encode($kolams) : json_encode([
-            [
-                'id' => "Kolam A1",
-                'lokasi' => "Beton / Pembesaran",
-                'pembudidaya' => "Budi Santoso",
-                'initials' => "BS",
-                'colorClass' => "bg-sky-100 text-sky-700",
-                'jenisIkan' => "Ikan Nila Hitam Super",
-                'tebarBenih' => "12 Mei 2026",
-                'populasi' => "5,000",
-                'populasiRaw' => 5000,
-                'status' => "Optimal",
-                'statusClass' => "bg-emerald-100 text-emerald-700",
-                'dotClass' => "bg-emerald-500"
-            ]
-        ]) !!},
+        kolams: {!! json_encode($kolams ?? []) !!},
 
         get filteredKolams() {
             return this.kolams.filter(item => {

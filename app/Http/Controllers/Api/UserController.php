@@ -51,7 +51,7 @@ class UserController extends Controller
             'email'    => 'required|email|max:255|unique:users,email',
             'password' => 'required|string|min:6',
             'role'     => 'required|string|in:manajer,petugas_distribusi,pembesaran,pembibitan,pekerja',
-            'no_tlp'   => 'nullable|string|max:20',
+            'no_tlp'   => 'nullable|phone:AUTO,ID',
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
@@ -105,7 +105,7 @@ class UserController extends Controller
             'email'    => ['sometimes', 'required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id_user, 'id_user')],
             'password' => 'nullable|string|min:6',
             'role'     => 'sometimes|required|string|in:manajer,petugas_distribusi,pembesaran,pembibitan,pekerja',
-            'no_tlp'   => 'nullable|string|max:20',
+            'no_tlp'   => 'nullable|phone:AUTO,ID',
         ]);
 
         if (!empty($validated['password'])) {
@@ -133,7 +133,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'nama'     => 'sometimes|required|string|max:255',
             'email'    => ['sometimes', 'required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id_user, 'id_user')],
-            'no_tlp'   => 'nullable|string|max:20',
+            'no_tlp'   => 'nullable|phone:AUTO,ID',
             'password' => 'nullable|string|min:6|confirmed',
         ]);
 

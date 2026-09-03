@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\EmailOtpController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Manajer\DashboardController;
 use App\Http\Controllers\Manajer\DistribusiController;
+use App\Http\Controllers\Manajer\IkanController;
 use App\Http\Controllers\Manajer\KeuanganWebController;
 use App\Http\Controllers\Manajer\MitraController;
 use App\Http\Controllers\Manajer\PakanController;
@@ -58,8 +59,9 @@ Route::middleware(['auth'])->group(function () {
 // 2. WEB PORTAL MANAJER (ROLE: MANAJER)
 // =========================================================================
 Route::middleware(['auth', 'role:manajer'])->group(function () {
-    // Dashboard Utama
+    // Dashboard Utama & Export Excel
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/export-excel', [DashboardController::class, 'exportExcel'])->name('dashboard.export-excel');
 
     // Manajemen Batch Pembibitan
     Route::get('/pembibitan', [PembibitanController::class, 'index'])->name('pembibitan');
@@ -67,6 +69,12 @@ Route::middleware(['auth', 'role:manajer'])->group(function () {
     Route::put('/pembibitan/{id}', [PembibitanController::class, 'update'])->name('pembibitan.update');
     Route::delete('/pembibitan/{id}', [PembibitanController::class, 'destroy'])->name('pembibitan.destroy');
     Route::post('/pembibitan/{id}/transfer', [PembibitanController::class, 'transferKePembesaran'])->name('pembibitan.transfer');
+
+    // Master Data & Pemetaan Jenis Ikan
+    Route::get('/ikan', [IkanController::class, 'index'])->name('ikan');
+    Route::post('/ikan', [IkanController::class, 'store'])->name('ikan.store');
+    Route::put('/ikan/{id}', [IkanController::class, 'update'])->name('ikan.update');
+    Route::delete('/ikan/{id}', [IkanController::class, 'destroy'])->name('ikan.destroy');
 
     // Manajemen Batch Pembesaran
     Route::get('/pembesaran', [PembesaranController::class, 'index'])->name('pembesaran');
@@ -96,15 +104,15 @@ Route::middleware(['auth', 'role:manajer'])->group(function () {
     // Manajemen Mitra Distributor
     Route::get('/mitra', [MitraController::class, 'index'])->name('mitra');
 
-    // Manajemen Akun Petugas & Cuti/Libur
+    // Manajemen Akun Petugas & Keamanan Akses
     Route::get('/petugas', [PetugasController::class, 'index'])->name('petugas');
     Route::post('/petugas', [PetugasController::class, 'store'])->name('petugas.store');
     Route::get('/petugas/create', [PetugasController::class, 'create'])->name('petugas.create');
     Route::get('/petugas/{id}/edit', [PetugasController::class, 'edit'])->name('petugas.edit');
     Route::put('/petugas/{id}', [PetugasController::class, 'update'])->name('petugas.update');
     Route::delete('/petugas/{id}', [PetugasController::class, 'destroy'])->name('petugas.destroy');
-    Route::get('/petugas/libur/approval', [PetugasController::class, 'approvalLibur'])->name('petugas.libur.approval');
-    Route::get('/petugas/libur/ajukan', [PetugasController::class, 'ajukanLibur'])->name('petugas.libur.ajukan');
+    Route::put('/petugas/{id}/password', [PetugasController::class, 'updatePassword'])->name('petugas.password.update');
+    Route::post('/petugas/{id}/reset-2fa', [PetugasController::class, 'reset2fa'])->name('petugas.2fa.reset');
 
     // Halaman Pengaturan & Profil
     Route::get('/pengaturan', [PengaturanController::class, 'index'])->name('pengaturan');

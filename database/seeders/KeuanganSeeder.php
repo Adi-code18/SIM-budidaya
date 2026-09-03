@@ -29,7 +29,7 @@ class KeuanganSeeder extends Seeder
                 'kategori' => 'Penjualan Panen Ikan Nila',
                 'nominal' => 14000000.00,
                 'keterangan' => 'Penjualan panen ikan nila merah ke RM Padang Berkah Utama (400 kg)',
-                'ref_id' => 'TRX-IN-001',
+                'ref_id' => 'TRX-2608-001',
             ],
             [
                 'id_user' => $userId,
@@ -39,7 +39,7 @@ class KeuanganSeeder extends Seeder
                 'kategori' => 'Penjualan Ekspor Ikan Patin',
                 'nominal' => 32000000.00,
                 'keterangan' => 'Penjualan ikan patin fillet ke PT Bahari Ekspor Indo (1000 kg)',
-                'ref_id' => 'TRX-IN-002',
+                'ref_id' => 'TRX-2608-002',
             ],
             [
                 'id_user' => $userId,
@@ -49,7 +49,7 @@ class KeuanganSeeder extends Seeder
                 'kategori' => 'Penjualan Benih Bibit Ikan',
                 'nominal' => 8500000.00,
                 'keterangan' => 'Penjualan bibit nila & gurami ke mitra pembudidaya lokal',
-                'ref_id' => 'TRX-IN-003',
+                'ref_id' => 'TRX-2609-001',
             ],
 
             // Pengeluaran
@@ -61,7 +61,7 @@ class KeuanganSeeder extends Seeder
                 'kategori' => 'Pembelian Pakan Pelet',
                 'nominal' => 7500000.00,
                 'keterangan' => 'Pembelian pelet komersial protein tinggi 500 kg',
-                'ref_id' => 'TRX-OUT-001',
+                'ref_id' => 'TRX-2608-003',
             ],
             [
                 'id_user' => $userId,
@@ -71,7 +71,7 @@ class KeuanganSeeder extends Seeder
                 'kategori' => 'Pembelian Obat & Probiotik',
                 'nominal' => 1250000.00,
                 'keterangan' => 'Vitamin imun booster dan probiotik pengurai air kolam',
-                'ref_id' => 'TRX-OUT-002',
+                'ref_id' => 'TRX-2608-004',
             ],
             [
                 'id_user' => $userId,
@@ -81,7 +81,7 @@ class KeuanganSeeder extends Seeder
                 'kategori' => 'Biaya Listrik & Operasional Aerator',
                 'nominal' => 2800000.00,
                 'keterangan' => 'Tagihan listrik operasional aerator & pompa sirkulasi',
-                'ref_id' => 'TRX-OUT-003',
+                'ref_id' => 'TRX-2608-005',
             ],
             [
                 'id_user' => $userId,
@@ -91,7 +91,7 @@ class KeuanganSeeder extends Seeder
                 'kategori' => 'Gaji & Honor Petugas',
                 'nominal' => 15000000.00,
                 'keterangan' => 'Gaji bulanan teknisi pembibitan, pembesaran & kurir distribusi',
-                'ref_id' => 'TRX-OUT-004',
+                'ref_id' => 'TRX-2609-002',
             ],
         ];
 

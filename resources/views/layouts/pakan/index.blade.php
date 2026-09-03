@@ -3,27 +3,27 @@
 @section('title', 'Log Pakan Harian - SIM-BUDIDAYA')
 
 @section('content')
-<div class="space-y-6 max-w-5xl mx-auto" x-data="logPakanComponent()">
+<div class="space-y-6" x-data="logPakanComponent()">
 
-    <!-- Subtitle & Page Title Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-            <span class="text-xs font-semibold text-slate-400 block uppercase tracking-wider">Pemberian Pakan &amp; Nutrisi</span>
-            <h1 class="text-2xl font-extrabold text-[#0B2570] tracking-tight mt-0.5">Log Pakan Harian</h1>
-            <p class="text-xs text-slate-500 font-medium mt-0.5">Catat pakan pelet, dedaunan organik, dan kualitas air kolam pembesaran aktif.</p>
-        </div>
-        <div class="flex items-center gap-2">
-            <a href="{{ route('pembesaran') }}" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-2 transition-colors">
-                <i class="fa-solid fa-fish text-xs text-sky-600"></i>
-                <span>Lihat Batch Pembesaran</span>
-            </a>
-        </div>
+    <!-- Flash Notification Messages -->
+    @if(session('success'))
+    <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-3 shadow-xs">
+        <i class="fa-solid fa-circle-check text-emerald-500 text-base"></i>
+        <span>{{ session('success') }}</span>
     </div>
+    @endif
 
-    <!-- Alert Jika Tidak Ada Batch Pembesaran Aktif -->
+    @if(session('error'))
+    <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold flex items-center gap-3 shadow-xs">
+        <i class="fa-solid fa-circle-exclamation text-rose-500 text-base"></i>
+        <span>{{ session('error') }}</span>
+    </div>
+    @endif
+
+    <!-- Alert jika tidak ada Kolam Pembesaran yang Aktif -->
     <template x-if="activeKolams.length === 0">
-        <div class="p-5 bg-amber-50 rounded-2xl border border-amber-200/80 flex items-start gap-3.5 text-amber-900">
-            <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 text-lg">
+        <div class="p-5 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-4 text-amber-900 shadow-xs">
+            <div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center shrink-0 text-amber-700 text-lg">
                 <i class="fa-solid fa-triangle-exclamation"></i>
             </div>
             <div>
@@ -66,30 +66,23 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                     <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1.5">
-                        PILIH KOLAM PEMBESARAN (HANYA BATCH AKTIF) *
+                        PILIH KOLAM PEMBESARAN (HANYA BATCH AKTIF) <span class="text-rose-500">*</span>
                     </label>
-                    <div class="relative">
-                        <i class="fa-solid fa-water absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                        <select x-model="form.id_kolam" @change="onKolamChange()" 
-                                class="w-full pl-9 pr-8 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all appearance-none cursor-pointer">
-                            <option value="">Pilih Kolam Pembesaran Aktif...</option>
-                            <template x-for="k in activeKolams" :key="k.id_kolam">
-                                <option :value="k.id_kolam" x-text="k.label"></option>
-                            </template>
-                        </select>
-                        <i class="fa-solid fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"></i>
-                    </div>
+                    <select x-model="form.id_kolam" @change="onKolamChange()" 
+                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all cursor-pointer">
+                        <option value="">Pilih Kolam Pembesaran Aktif...</option>
+                        <template x-for="k in activeKolams" :key="k.id_kolam">
+                            <option :value="k.id_kolam" x-text="k.label"></option>
+                        </template>
+                    </select>
                 </div>
 
                 <div>
                     <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1.5">
-                        TANGGAL PEMBERIAN PAKAN *
+                        TANGGAL PEMBERIAN PAKAN <span class="text-rose-500">*</span>
                     </label>
-                    <div class="relative">
-                        <i class="fa-regular fa-calendar absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                        <input type="date" x-model="form.tgl_log"
-                               class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
-                    </div>
+                    <input type="date" x-model="form.tgl_log"
+                           class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
                 </div>
             </div>
 
@@ -138,15 +131,15 @@
                     <!-- Pakan Pelet Box -->
                     <div class="bg-slate-50/80 p-4 rounded-xl border border-slate-100 space-y-2">
                         <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block">
-                            PAKAN PELET KOMERSIAL (KG) *
+                            PAKAN PELET KOMERSIAL (KG) <span class="text-rose-500">*</span>
                         </label>
                         <div class="flex items-center gap-2">
                             <input type="number" x-model="form.kg_pelet"
                                 onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E') event.preventDefault()"
                                 @input="if(form.kg_pelet !== '' && Number(form.kg_pelet) < 0) form.kg_pelet = Math.abs(Number(form.kg_pelet)) || 0; recalculateCost()"
                                 step="0.1" min="0" placeholder="0.0"
-                                class="w-full px-3.5 py-2 rounded-lg border border-slate-200 text-sm font-extrabold text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
-                            <span class="text-xs font-extrabold text-slate-400">KG</span>
+                                class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-extrabold text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                            <span class="text-xs font-extrabold text-slate-400 px-1">KG</span>
                         </div>
                         <span class="text-[10px] text-slate-400 font-medium block">Standar pakan protein tinggi / apung.</span>
                     </div>
@@ -156,14 +149,17 @@
                         <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block">
                             PAKAN DEDAUNAN ORGANIK (KG)
                         </label>
-                        <div class="grid grid-cols-5 gap-2">
-                            <input type="number" x-model="form.kg_daun"
-                                   onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E') event.preventDefault()"
-                                   @input="if(form.kg_daun !== '' && Number(form.kg_daun) < 0) form.kg_daun = Math.abs(Number(form.kg_daun)) || 0"
-                                   step="0.1" min="0" placeholder="0.0"
-                                   class="col-span-2 px-3.5 py-2 rounded-lg border border-slate-200 text-sm font-extrabold text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
-                            <select x-model="form.jenis_daun" class="col-span-3 px-3 py-2 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
-                                <option value="">Pilih Daun...</option>
+                        <div class="flex items-center gap-2">
+                            <div class="w-2/5 flex items-center gap-1.5">
+                                <input type="number" x-model="form.kg_daun"
+                                       onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E') event.preventDefault()"
+                                       @input="if(form.kg_daun !== '' && Number(form.kg_daun) < 0) form.kg_daun = Math.abs(Number(form.kg_daun)) || 0"
+                                       step="0.1" min="0" placeholder="0.0"
+                                       class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-extrabold text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                                <span class="text-xs font-extrabold text-slate-400">KG</span>
+                            </div>
+                            <select x-model="form.jenis_daun" class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all cursor-pointer">
+                                <option value="">Pilih Jenis Daun...</option>
                                 <option value="Daun Talas">Daun Talas</option>
                                 <option value="Daun Singkong">Daun Singkong</option>
                                 <option value="Daun Pepaya">Daun Pepaya</option>
@@ -188,12 +184,12 @@
                         <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1.5">
                             ESTIMASI BIAYA PAKAN (RP)
                         </label>
-                        <div class="relative">
-                            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">Rp</span>
+                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50/70 overflow-hidden focus-within:bg-white focus-within:ring-2 focus-within:ring-sky-500 focus-within:border-sky-500 transition-all">
+                            <span class="px-3.5 py-2.5 text-xs font-extrabold text-slate-500 bg-slate-100/80 border-r border-slate-200 shrink-0">Rp</span>
                             <input type="number" x-model="form.total_biaya" min="0"
                                    onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E') event.preventDefault()"
                                    @input="if(form.total_biaya !== '' && Number(form.total_biaya) < 0) form.total_biaya = Math.abs(Number(form.total_biaya)) || 0"
-                                   class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs font-extrabold text-slate-900 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                                   class="w-full px-3.5 py-2.5 text-xs font-extrabold text-slate-900 bg-transparent border-0 focus:outline-none">
                         </div>
                     </div>
 
@@ -201,13 +197,12 @@
                         <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1.5">
                             PH AIR KOLAM
                         </label>
-                        <div class="relative">
-                            <i class="fa-solid fa-vial absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50/70 overflow-hidden focus-within:bg-white focus-within:ring-2 focus-within:ring-sky-500 focus-within:border-sky-500 transition-all">
                             <input type="number" step="0.1" min="0" max="14" x-model="form.ph_air" placeholder="7.2"
-                                onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E') event.preventDefault()"
-                                @input="if(form.ph_air !== '' && Number(form.ph_air) < 0) form.ph_air = 0"
-                                class="w-full pl-9 pr-10 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
-                            <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">pH</span>
+                                   onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E') event.preventDefault()"
+                                   @input="if(form.ph_air !== '' && Number(form.ph_air) < 0) form.ph_air = 0"
+                                   class="w-full px-3.5 py-2.5 text-xs font-semibold text-slate-800 bg-transparent border-0 focus:outline-none">
+                            <span class="px-3.5 py-2.5 text-xs font-extrabold text-slate-500 bg-slate-100/80 border-l border-slate-200 shrink-0">pH</span>
                         </div>
                     </div>
                 </div>
@@ -215,12 +210,13 @@
 
             <!-- Form Actions -->
             <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
-                <button type="button" @click="resetForm()" class="px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+                <button type="button" @click="resetForm()" class="px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer">
                     Reset
                 </button>
-                <button type="submit" :disabled="isSubmitting"
-                        class="px-6 py-2.5 rounded-xl bg-[#051B44] hover:bg-navy-900 text-white font-bold text-xs shadow-md shadow-sky-950/20 transition-all flex items-center gap-2 disabled:opacity-60">
-                    <i class="fa-solid" :class="isSubmitting ? 'fa-spinner fa-spin' : 'fa-floppy-disk'"></i>
+                <button type="submit" 
+                        :disabled="isSubmitting"
+                        class="px-6 py-2.5 rounded-xl bg-[#0284C7] hover:bg-sky-600 active:scale-95 text-white font-extrabold text-xs shadow-md shadow-sky-600/20 transition-all flex items-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-check text-xs"></i>
                     <span x-text="isSubmitting ? 'Menyimpan...' : 'Simpan Log Pakan'"></span>
                 </button>
             </div>
@@ -229,81 +225,158 @@
 
     </div>
 
-    <!-- Chart Analisis Pemberian Pakan 7 Hari Terakhir -->
-    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+    <!-- Tabel Riwayat Log Pakan dengan Filter Tanggal & Pagination -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden space-y-4 p-5">
+        
+        <!-- Filter Toolbar -->
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-100">
             <div>
-                <h3 class="text-base font-bold text-slate-900">Grafik Konsumsi Pakan (7 Hari Terakhir)</h3>
-                <p class="text-xs text-slate-400 mt-0.5">Grafik real-time penggunaan pakan pelet dan dedaunan organik.</p>
+                <h3 class="text-sm font-extrabold text-slate-900">Riwayat Pemberian Pakan</h3>
+                <p class="text-xs text-slate-500 font-medium">Rekap pencatatan pakan dan kondisi pH air harian.</p>
             </div>
-            <div class="flex items-center gap-4 text-xs font-medium">
-                <div class="flex items-center gap-2 text-slate-700">
-                    <span class="w-2.5 h-2.5 rounded-full bg-[#0B2570]"></span>
-                    <span>Pelet (kg)</span>
+
+            <!-- Tanggal & Kolam Filters -->
+            <div class="flex flex-wrap items-center gap-2.5">
+                
+                <!-- Quick Filter Period Buttons -->
+                <div class="flex items-center p-1 bg-slate-100 rounded-xl text-[11px] font-extrabold text-slate-600">
+                    <button type="button" 
+                            @click="setQuickDateFilter('all')" 
+                            :class="dateFilterType === 'all' ? 'bg-white text-slate-900 shadow-xs rounded-lg' : 'hover:text-slate-900'"
+                            class="px-2.5 py-1 transition-all cursor-pointer">
+                        Semua
+                    </button>
+                    <button type="button" 
+                            @click="setQuickDateFilter('today')" 
+                            :class="dateFilterType === 'today' ? 'bg-white text-slate-900 shadow-xs rounded-lg' : 'hover:text-slate-900'"
+                            class="px-2.5 py-1 transition-all cursor-pointer">
+                        Hari Ini
+                    </button>
+                    <button type="button" 
+                            @click="setQuickDateFilter('7days')" 
+                            :class="dateFilterType === '7days' ? 'bg-white text-slate-900 shadow-xs rounded-lg' : 'hover:text-slate-900'"
+                            class="px-2.5 py-1 transition-all cursor-pointer">
+                        7 Hari
+                    </button>
+                    <button type="button" 
+                            @click="setQuickDateFilter('30days')" 
+                            :class="dateFilterType === '30days' ? 'bg-white text-slate-900 shadow-xs rounded-lg' : 'hover:text-slate-900'"
+                            class="px-2.5 py-1 transition-all cursor-pointer">
+                        30 Hari
+                    </button>
                 </div>
-                <div class="flex items-center gap-2 text-slate-700">
-                    <span class="w-2.5 h-2.5 rounded-full bg-[#10B981]"></span>
-                    <span>Dedaunan (kg)</span>
+
+                <!-- Custom Date Range -->
+                <div class="flex items-center gap-1.5">
+                    <input type="date" 
+                           x-model="filterStartDate" 
+                           @change="dateFilterType = 'custom'; currentPage = 1"
+                           class="px-2.5 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                    <span class="text-xs text-slate-400 font-bold">s/d</span>
+                    <input type="date" 
+                           x-model="filterEndDate" 
+                           @change="dateFilterType = 'custom'; currentPage = 1"
+                           class="px-2.5 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
                 </div>
+
+                <!-- Reset Filter Button -->
+                <button type="button" 
+                        x-show="filterStartDate || filterEndDate || dateFilterType !== 'all'"
+                        @click="setQuickDateFilter('all')" 
+                        class="px-2.5 py-1.5 rounded-xl border border-rose-200 text-rose-600 bg-rose-50 hover:bg-rose-100 text-xs font-bold transition-colors cursor-pointer"
+                        title="Reset Filter Tanggal">
+                    <i class="fa-solid fa-rotate-left text-[10px]"></i>
+                    <span>Reset</span>
+                </button>
+
             </div>
         </div>
-        <div class="h-56 w-full relative">
-            <canvas id="pakanPageChart"></canvas>
-        </div>
-    </div>
 
-    <!-- Tabel Riwayat Log Pakan Terbaru -->
-    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-        <!-- <div class="p-5 border-b border-slate-100 flex items-center justify-between">
-            <div>
-                <h3 class="text-base font-extrabold text-slate-900">Riwayat Pemberian Pakan Terbaru</h3>
-                <p class="text-xs text-slate-500 mt-0.5">Catatan log pakan pada siklus pembesaran terkini.</p>
-            </div>
-            <span class="text-xs font-bold text-slate-400" x-text="logs.length + ' Catatan'"></span>
-        </div> -->
-
+        <!-- Table List -->
         <div class="overflow-x-auto">
             <table class="w-full text-left text-xs">
                 <thead class="bg-slate-50/80 text-[10px] uppercase font-extrabold text-slate-400 border-b border-slate-100">
                     <tr>
-                        <th class="py-3 px-5">Tanggal</th>
-                        <th class="py-3 px-5">Kolam Pembesaran</th>
-                        <th class="py-3 px-5">Pakan Pelet</th>
-                        <th class="py-3 px-5">Pakan Daun</th>
-                        <th class="py-3 px-5">Total Biaya</th>
-                        <th class="py-3 px-5">pH Air</th>
-                        <th class="py-3 px-5 text-right">Petugas</th>
+                        <th class="py-3.5 px-4">TANGGAL</th>
+                        <th class="py-3.5 px-4">KOLAM PEMBESARAN</th>
+                        <th class="py-3.5 px-4">PAKAN PELET</th>
+                        <th class="py-3.5 px-4">PAKAN DAUN</th>
+                        <th class="py-3.5 px-4">TOTAL BIAYA</th>
+                        <th class="py-3.5 px-4">PH AIR</th>
+                        <th class="py-3.5 px-4 text-right">PETUGAS</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
-                    <template x-for="log in logs" :key="log.id_pakan">
-                        <tr class="hover:bg-slate-50/60 transition-colors">
-                            <td class="py-3 px-5 font-bold text-slate-900" x-text="log.tgl_log"></td>
-                            <td class="py-3 px-5">
-                                <span class="font-extrabold text-[#0B2570]" x-text="log.kolam ? log.kolam.nama_kolam : 'Kolam #' + log.id_kolam"></span>
+                    
+                    <template x-if="paginatedLogs.length === 0">
+                        <tr>
+                            <td colspan="7" class="py-10 text-center text-slate-400 text-xs font-medium">
+                                <i class="fa-solid fa-calendar-xmark text-2xl text-slate-300 block mb-1.5"></i>
+                                Tidak ada catatan log pakan yang cocok dengan filter tanggal yang dipilih.
                             </td>
-                            <td class="py-3 px-5 font-bold text-slate-800" x-text="Number(log.kg_pelet).toFixed(1) + ' kg'"></td>
-                            <td class="py-3 px-5">
-                                <span x-text="Number(log.kg_daun) > 0 ? (Number(log.kg_daun).toFixed(1) + ' kg ' + (log.jenis_daun ? '(' + log.jenis_daun + ')' : '')) : '-'"></span>
-                            </td>
-                            <td class="py-3 px-5 font-bold text-emerald-700" x-text="'Rp ' + Number(log.total_biaya).toLocaleString('id-ID')"></td>
-                            <td class="py-3 px-5">
-                                <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-sky-50 text-sky-800 border border-sky-100" x-text="'pH ' + (log.ph_air || '7.2')"></span>
-                            </td>
-                            <td class="py-3 px-5 text-right text-slate-500" x-text="log.user ? log.user.name : 'Petugas'"></td>
                         </tr>
                     </template>
 
-                    <template x-if="logs.length === 0">
-                        <tr>
-                            <td colspan="7" class="py-8 text-center text-slate-400">
-                                Belum ada data log pakan yang tercatat.
+                    <template x-for="log in paginatedLogs" :key="log.id_pakan">
+                        <tr class="hover:bg-slate-50/60 transition-colors">
+                            <td class="py-3.5 px-4 font-extrabold text-slate-900" x-text="log.tgl_log"></td>
+                            <td class="py-3.5 px-4">
+                                <span class="font-extrabold text-[#0B2570]" x-text="log.kolam ? log.kolam.nama_kolam : 'Kolam #' + log.id_kolam"></span>
                             </td>
+                            <td class="py-3.5 px-4 font-bold text-slate-800">
+                                <span class="px-2 py-0.5 rounded-md bg-slate-100 font-extrabold" x-text="Number(log.kg_pelet).toFixed(1) + ' kg'"></span>
+                            </td>
+                            <td class="py-3.5 px-4">
+                                <span x-text="Number(log.kg_daun) > 0 ? (Number(log.kg_daun).toFixed(1) + ' kg ' + (log.jenis_daun ? '(' + log.jenis_daun + ')' : '')) : '-'"></span>
+                            </td>
+                            <td class="py-3.5 px-4 font-extrabold text-emerald-700" x-text="'Rp ' + Number(log.total_biaya).toLocaleString('id-ID')"></td>
+                            <td class="py-3.5 px-4">
+                                <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-sky-50 text-sky-800 border border-sky-100" x-text="'pH ' + (log.ph_air || '7.2')"></span>
+                            </td>
+                            <td class="py-3.5 px-4 text-right text-slate-500 font-semibold" x-text="log.user ? (log.user.nama || log.user.name) : 'Petugas'"></td>
                         </tr>
                     </template>
                 </tbody>
             </table>
         </div>
+
+        <!-- Pagination Controls (1, 2, 3...) -->
+        <div x-show="filteredLogs.length > 0" class="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <span class="text-slate-500 font-medium">
+                Menampilkan <strong class="text-slate-800" x-text="((currentPage - 1) * perPage) + 1"></strong> - <strong class="text-slate-800" x-text="Math.min(currentPage * perPage, filteredLogs.length)"></strong> dari <strong class="text-slate-800" x-text="filteredLogs.length"></strong> catatan
+            </span>
+
+            <div class="flex items-center gap-1" x-show="totalPages > 1">
+                <!-- Prev Button -->
+                <button type="button" 
+                        @click="goToPage(currentPage - 1)" 
+                        :disabled="currentPage === 1"
+                        :class="currentPage === 1 ? 'text-slate-300 cursor-not-allowed' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 cursor-pointer'"
+                        class="w-8 h-8 rounded-lg flex items-center justify-center font-bold transition-all">
+                    <i class="fa-solid fa-chevron-left text-xs"></i>
+                </button>
+
+                <!-- Page Number Buttons -->
+                <template x-for="p in visiblePages" :key="p">
+                    <button type="button" 
+                            @click="goToPage(p)"
+                            :class="currentPage === p ? 'bg-[#0284C7] text-white shadow-xs font-black' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-semibold'"
+                            class="w-8 h-8 rounded-lg flex items-center justify-center text-xs transition-all cursor-pointer"
+                            x-text="p">
+                    </button>
+                </template>
+
+                <!-- Next Button -->
+                <button type="button" 
+                        @click="goToPage(currentPage + 1)" 
+                        :disabled="currentPage === totalPages"
+                        :class="currentPage === totalPages ? 'text-slate-300 cursor-not-allowed' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 cursor-pointer'"
+                        class="w-8 h-8 rounded-lg flex items-center justify-center font-bold transition-all">
+                    <i class="fa-solid fa-chevron-right text-xs"></i>
+                </button>
+            </div>
+        </div>
+
     </div>
 
     <!-- Notification Toast -->
@@ -338,6 +411,15 @@ function logPakanComponent() {
         showToast: false,
         toastMessage: '',
 
+        // Pagination State
+        currentPage: 1,
+        perPage: 8,
+
+        // Date Filter State
+        dateFilterType: 'all', // 'all', 'today', '7days', '30days', 'custom'
+        filterStartDate: '',
+        filterEndDate: '',
+
         form: {
             id_kolam: '',
             tgl_log: new Date().toISOString().split('T')[0],
@@ -351,6 +433,68 @@ function logPakanComponent() {
         get selectedKolamInfo() {
             if (!this.form.id_kolam) return null;
             return this.activeKolams.find(k => k.id_kolam == this.form.id_kolam) || null;
+        },
+
+        get filteredLogs() {
+            let list = this.logs;
+
+            if (this.filterStartDate) {
+                list = list.filter(item => item.tgl_log >= this.filterStartDate);
+            }
+            if (this.filterEndDate) {
+                list = list.filter(item => item.tgl_log <= this.filterEndDate);
+            }
+
+            return list;
+        },
+
+        get totalPages() {
+            return Math.ceil(this.filteredLogs.length / this.perPage) || 1;
+        },
+
+        get paginatedLogs() {
+            const start = (this.currentPage - 1) * this.perPage;
+            return this.filteredLogs.slice(start, start + this.perPage);
+        },
+
+        get visiblePages() {
+            const pages = [];
+            const total = this.totalPages;
+            for (let i = 1; i <= total; i++) {
+                pages.push(i);
+            }
+            return pages;
+        },
+
+        goToPage(page) {
+            if (page >= 1 && page <= this.totalPages) {
+                this.currentPage = page;
+            }
+        },
+
+        setQuickDateFilter(type) {
+            this.dateFilterType = type;
+            this.currentPage = 1;
+            const now = new Date();
+
+            if (type === 'all') {
+                this.filterStartDate = '';
+                this.filterEndDate = '';
+            } else if (type === 'today') {
+                const todayStr = now.toISOString().split('T')[0];
+                this.filterStartDate = todayStr;
+                this.filterEndDate = todayStr;
+            } else if (type === '7days') {
+                const d = new Date();
+                d.setDate(d.getDate() - 7);
+                this.filterStartDate = d.toISOString().split('T')[0];
+                this.filterEndDate = now.toISOString().split('T')[0];
+            } else if (type === '30days') {
+                const d = new Date();
+                d.setDate(d.getDate() - 30);
+                this.filterStartDate = d.toISOString().split('T')[0];
+                this.filterEndDate = now.toISOString().split('T')[0];
+            }
         },
 
         onKolamChange() {
@@ -422,6 +566,7 @@ function logPakanComponent() {
                     // Update state locally
                     if (data.log) {
                         this.logs.unshift(data.log);
+                        this.currentPage = 1;
                     }
 
                     // Tandai kolam sudah diberi pakan hari ini
@@ -446,48 +591,5 @@ function logPakanComponent() {
         }
     };
 }
-
-document.addEventListener('DOMContentLoaded', function() {
-    const canvas = document.getElementById('pakanPageChart');
-    const chart7d = {!! json_encode($chart7d ?? ['labels' => [], 'pelet' => [], 'daun' => []]) !!};
-    if (canvas && chart7d.labels.length) {
-        const ctx = canvas.getContext('2d');
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: chart7d.labels,
-                datasets: [
-                    {
-                        label: 'Pelet (kg)',
-                        data: chart7d.pelet,
-                        backgroundColor: '#0B2570',
-                        borderRadius: 6,
-                        barPercentage: 0.6,
-                        categoryPercentage: 0.5
-                    },
-                    {
-                        label: 'Dedaunan (kg)',
-                        data: chart7d.daun,
-                        backgroundColor: '#10B981',
-                        borderRadius: 6,
-                        barPercentage: 0.6,
-                        categoryPercentage: 0.5
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    x: { grid: { display: false } },
-                    y: { beginAtZero: true, grid: { borderDash: [4, 4] } }
-                }
-            }
-        });
-    }
-});
 </script>
 @endpush

@@ -93,11 +93,10 @@
         <div>
             <!-- Top Logo Section -->
             <div class="pt-4 flex flex-col items-center text-center space-y-2.5">
-                <div class="w-14 h-14 rounded-2xl bg-navy-800 flex flex-col items-center justify-center text-white shadow-lg space-y-1">
-                    <i class="fa-solid fa-fish-fins text-xl text-sky-300"></i>
-                </div>
+                <img src="{{ asset('build/images/logo PT.png') }}" 
+                     alt="Logo PT" 
+                     class="h-14 w-auto object-contain drop-shadow-sm">
                 <div>
-                    <h1 class="text-lg font-extrabold text-navy-900 tracking-tight">Selamat Datang Kembali</h1>
                     <p class="text-[11px] text-slate-500 font-medium mt-0.5 max-w-xs leading-relaxed">
                         Masuk ke aplikasi SIM-BUDIDAYA Mobile sesuai peran petugas operasional Anda.
                     </p>

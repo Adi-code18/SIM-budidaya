@@ -17,10 +17,23 @@ class PetugasPembesaranController extends Controller
     public function index()
     {
         $batches = BatchPembesaran::with('kolam')->latest('id_pembesaran')->get();
-        $totalBiomassa = BatchPembesaran::sum('biomassa_est') / 1000;
-        $avgFcr = BatchPembesaran::whereNotNull('fcr')->where('fcr', '>', 0)->avg('fcr') ?? 1.24;
+        $totalBiomassaKg = $batches->where('status_siklus', '!=', 'selesai')->sum('biomassa_est');
+        if ($totalBiomassaKg == 0) {
+            $totalBiomassaKg = $batches->sum('biomassa_est');
+        }
+        $totalBiomassa = $totalBiomassaKg / 1000;
 
-        return view('mobile_web_petugas.petugas_pembesaran.index', compact('batches', 'totalBiomassa', 'avgFcr'));
+        $avgFcrVal = BatchPembesaran::whereNotNull('fcr')->where('fcr', '>', 0)->avg('fcr');
+        if (!$avgFcrVal || $avgFcrVal <= 0) {
+            $totalPakan = ManajemenPakan::sum('kg_pelet') + ManajemenPakan::sum('kg_daun');
+            $avgFcrVal = $totalBiomassaKg > 0 ? round($totalPakan / $totalBiomassaKg, 2) : 0.0;
+        }
+        $avgFcr = round((float)$avgFcrVal, 2);
+
+        $pakanPh = ManajemenPakan::whereNotNull('ph_air')->where('ph_air', '>', 0)->avg('ph_air');
+        $avgPh = $pakanPh ? round((float)$pakanPh, 1) : 0.0;
+
+        return view('mobile_web_petugas.petugas_pembesaran.index', compact('batches', 'totalBiomassa', 'avgFcr', 'avgPh'));
     }
 
     /**

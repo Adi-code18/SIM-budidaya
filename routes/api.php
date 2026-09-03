@@ -19,3 +19,8 @@ Route::get('/', function () {
         'status' => 'online'
     ]);
 });
+
+// RESTful API Endpoint untuk Master Jenis Ikan
+Route::apiResource('ikan', \App\Http\Controllers\Api\IkanController::class);
+Route::apiResource('pembibitan', \App\Http\Controllers\Api\BatchPembibitanController::class);
+Route::apiResource('pembesaran', \App\Http\Controllers\Api\BatchPembesaranController::class);

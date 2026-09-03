@@ -477,18 +477,21 @@
             },
 
             // KPI Metrics
-            metrics: {!! isset($metrics) ? json_encode($metrics) : json_encode([
-                'totalStok' => '1,250',
-                'totalStokTrend' => '+4.2% dari minggu lalu',
-                'fcr' => '1.12',
-                'fcrStatus' => 'Efisiensi Pakan Optimal',
-                'targetPanen' => '450',
-                'targetPanenNote' => 'Restoran Madani',
-                'targetPanenTag' => 'ORDER AKTIF'
+            metrics: {!! json_encode($metrics ?? [
+                'totalStok' => '0',
+                'totalStokTrend' => 'Belum Ada Batch Aktif',
+                'fcr' => '0.00',
+                'fcrStatus' => 'Belum Ada Data Pakan',
+                'targetPanen' => '0',
+                'targetPanenNote' => 'Belum Ada Order',
+                'targetPanenTag' => 'TIDAK ADA ORDER'
             ]) !!},
 
             // Data Mitra
             mitraList: {!! isset($mitraList) ? json_encode($mitraList) : '[]' !!},
+
+            // Data Rekap Pakan Nyata dari Database
+            pakanRekap: {!! isset($pakanRekap) ? json_encode($pakanRekap) : '[]' !!},
 
             // Daftar Bulan
             monthList: [
@@ -583,68 +586,20 @@
                 this.triggerToast(`Periode ekspor dipilih: ${this.fullPeriodLabel}`, 'info');
             },
 
-            // Ekspor Excel / CSV Laporan Dashboard
+            // Ekspor Excel Laporan Dashboard Lengkap & Rapi
             exportExcel() {
                 const periodeExport = this.fullPeriodLabel || this.periodLabel;
-                this.triggerToast(`Mengekspor data periode [${periodeExport}] ke Excel...`, 'info');
+                this.triggerToast(`Menyiapkan laporan Excel lengkap periode [${periodeExport}]...`, 'info');
 
-                const now = new Date();
-                const dateStr = now.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-
-                let csvContent = '\uFEFF'; // UTF-8 BOM untuk Microsoft Excel
-                csvContent += 'LAPORAN OPERASIONAL SISTEM INFORMASI MANAJEMEN BUDIDAYA IKAN (SIM-BUDIDAYA)\r\n';
-                csvContent += `Tanggal Cetak: "${dateStr}"\r\n`;
-                csvContent += `Periode Data: "${periodeExport}"\r\n`;
-                csvContent += `Diunduh Oleh: "Manajer SIM-Budidaya"\r\n\r\n`;
-
-                // Section 1: KPI Summary
-                csvContent += '--- 1. RINGKASAN EKSEKUTIF (KPI) ---\r\n';
-                csvContent += 'Indikator,Nilai,Keterangan\r\n';
-                csvContent += `"Total Stok Ikan","${this.metrics.totalStok} kg","${this.metrics.totalStokTrend}"\r\n`;
-                csvContent += `"FCR Rata-rata","${this.metrics.fcr}","${this.metrics.fcrStatus}"\r\n`;
-                csvContent += `"Target Panen Terdekat","${this.metrics.targetPanen} kg","${this.metrics.targetPanenNote} (${this.metrics.targetPanenTag})"\r\n`;
-                csvContent += `"Stok Gudang Pakan","${this.metrics.totalPakan || '1240'} kg","Persediaan pakan operasional"\r\n`;
-                csvContent += `"Status Kualitas Air","Normal (pH ${this.metrics.avgPh || '7.3'})","Semua kolam optimal"\r\n\r\n`;
-
-                // Section 2: Daftar Mitra Distributor
-                csvContent += '--- 2. DAFTAR TITIK MITRA DISTRIBUTOR ---\r\n';
-                csvContent += 'ID MITRA,NAMA MITRA,TIPE MITRA,ALAMAT,LATITUDE,LONGITUDE\r\n';
-                this.mitraList.forEach(m => {
-                    csvContent += `"${m.id}","${m.nama}","${m.tipe}","${m.alamat}","${m.lat}","${m.lng}"\r\n`;
-                });
-                csvContent += '\r\n';
-
-                // Section 3: Rekap Konsumsi Pakan
-                csvContent += '--- 3. REKAP KONSUMSI PAKAN (7 HARI TERAKHIR) ---\r\n';
-                csvContent += 'HARI,PELET KOMERSIAL (KG),DEDAUNAN ORGANIK (KG),TOTAL KONSUMSI (KG)\r\n';
-                const pakanRekap = [
-                    { hari: 'Senin', pelet: 18, daun: 12 },
-                    { hari: 'Selasa', pelet: 24, daun: 16 },
-                    { hari: 'Rabu', pelet: 22, daun: 20 },
-                    { hari: 'Kamis', pelet: 30, daun: 18 },
-                    { hari: 'Jumat', pelet: 35, daun: 22 },
-                    { hari: 'Sabtu', pelet: 28, daun: 24 },
-                    { hari: 'Minggu', pelet: 32, daun: 21 }
-                ];
-                pakanRekap.forEach(p => {
-                    csvContent += `"${p.hari}","${p.pelet}","${p.daun}","${p.pelet + p.daun}"\r\n`;
-                });
-
-                // Trigger file download
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                const fileName = `Laporan_Dashboard_Budidaya_${now.toISOString().slice(0, 10)}.csv`;
-                link.setAttribute('href', url);
-                link.setAttribute('download', fileName);
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
+                const periodKey = this.selectedPeriodKey || 'all';
+                const exportUrl = `{{ route('dashboard.export-excel') }}?period=${encodeURIComponent(periodKey)}&label=${encodeURIComponent(periodeExport)}`;
 
                 setTimeout(() => {
-                    this.triggerToast(`File [${fileName}] berhasil diunduh!`, 'success');
-                }, 600);
+                    window.location.href = exportUrl;
+                    setTimeout(() => {
+                        this.triggerToast(`Laporan Excel [${periodeExport}] berhasil diunduh!`, 'success');
+                    }, 1200);
+                }, 300);
             }
         };
     }

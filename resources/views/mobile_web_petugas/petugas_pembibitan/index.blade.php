@@ -27,23 +27,29 @@
             <div class="flex items-center justify-between">
                 <span class="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">TOTAL BENIH AKTIF</span>
                 <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-white text-sky-700 border border-sky-200 shadow-2xs">
-                    +4.1% bulan ini
+                    {{ $batches->where('status', '!=', 'selesai')->count() }} Batch Aktif
                 </span>
             </div>
-            <h2 class="text-3xl font-extrabold text-navy-900 tracking-tight">{{ isset($totalBenih) && $totalBenih > 0 ? (number_format($totalBenih / 1000000, 1) . 'M') : '1.2M' }}</h2>
+            <h2 class="text-3xl font-extrabold text-navy-900 tracking-tight">
+                @if($totalBenih >= 1000000)
+                    {{ number_format($totalBenih / 1000000, 2) }} <span class="text-lg font-bold text-sky-700">Jt Ekor</span>
+                @else
+                    {{ number_format($totalBenih, 0, ',', '.') }} <span class="text-lg font-bold text-sky-700">Ekor</span>
+                @endif
+            </h2>
         </div>
 
-        <!-- Metrics Grid (FCR Air & Kapasitas Tank) -->
+        <!-- Metrics Grid (Survival Rate & Kapasitas Tank) -->
         <div class="grid grid-cols-2 gap-3 pt-3 border-t border-sky-200/60">
             
-            <!-- FCR Air -->
+            <!-- Survival Rate (SR) -->
             <div class="bg-white/80 rounded-2xl p-3 border border-sky-100/80 space-y-1">
                 <div class="flex items-center gap-1.5 text-emerald-600">
-                    <i class="fa-solid fa-droplet text-xs"></i>
-                    <span class="text-[9px] font-extrabold uppercase text-slate-400">FCR AIR</span>
+                    <i class="fa-regular fa-heart text-xs"></i>
+                    <span class="text-[9px] font-extrabold uppercase text-slate-400">SURVIVAL RATE</span>
                 </div>
-                <h3 class="text-lg font-extrabold text-navy-900">85.2%</h3>
-                <span class="text-[9px] text-emerald-600 font-bold block">Target: >80%</span>
+                <h3 class="text-lg font-extrabold text-navy-900">{{ ($totalAwal ?? 0) > 0 ? number_format($srRate ?? 0, 1) . '%' : '0.0%' }}</h3>
+                <span class="text-[9px] text-emerald-600 font-bold block">Tingkat Hidup Benih</span>
             </div>
 
             <!-- Kapasitas Tank -->
@@ -53,7 +59,7 @@
                     <span class="text-[9px] font-extrabold uppercase text-slate-400">KAPASITAS TANK</span>
                 </div>
                 <h3 class="text-lg font-extrabold text-navy-900">{{ $totalTank ?? 12 }}</h3>
-                <span class="text-[9px] text-slate-500 font-medium block">Tank / Kolam Aktif</span>
+                <span class="text-[9px] text-slate-500 font-medium block">Tank / Kolam Hatchery</span>
             </div>
 
         </div>
@@ -65,73 +71,49 @@
         <div class="flex items-center justify-between px-1">
             <h3 class="text-xs font-extrabold text-navy-900">Batch Hatchery Aktif</h3>
             <button type="button" @click="showAllModal = true" class="text-[10px] font-extrabold text-sky-700 uppercase hover:underline tracking-wider">
-                LIHAT SEMUA
+                LIHAT SEMUA ({{ count($batches) }})
             </button>
         </div>
 
         <!-- Cards List -->
         <div class="space-y-2.5">
-            
-            <!-- Batch Card 1 -->
-            <a href="{{ route('petugas.pembibitan.log-pakan', ['batch' => 'Batch-H-042']) }}" 
-               class="bg-white rounded-2xl border border-slate-200/90 p-3.5 shadow-xs flex items-center justify-between hover:shadow-md transition-all">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-xs">
-                        <i class="fa-solid fa-fish text-slate-500"></i>
-                    </div>
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <h4 class="text-xs font-extrabold text-navy-900">Batch-H-042</h4>
-                            <span class="px-2 py-0.2 rounded-full text-[9px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                SEHAT
-                            </span>
+            @php
+                $activeBatchesDisplay = $batches->where('status', '!=', 'selesai');
+                if ($activeBatchesDisplay->isEmpty()) {
+                    $activeBatchesDisplay = $batches;
+                }
+            @endphp
+            @forelse($activeBatchesDisplay->take(3) as $b)
+                @php
+                    $batchCode = 'Batch-H-' . str_pad($b->id_batch, 3, '0', STR_PAD_LEFT);
+                    $kolamName = $b->kolam ? $b->kolam->nama_kolam : 'Kolam #' . $b->id_kolam;
+                    $populasi = max(0, $b->jumlah_bibitAwal - $b->jumlah_kematian);
+                    $isWaspada = $b->jumlah_kematian > 3000;
+                    $days = $b->tgl_pemijahan ? (int) abs(\Carbon\Carbon::parse($b->tgl_pemijahan)->startOfDay()->diffInDays(now()->startOfDay())) : 0;
+                @endphp
+                <a href="{{ route('petugas.pembibitan.log-pakan', ['batch' => $batchCode]) }}" 
+                   class="bg-white rounded-2xl border border-slate-200/90 p-3.5 shadow-xs flex items-center justify-between hover:shadow-md transition-all">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full {{ $isWaspada ? 'bg-rose-50 text-rose-600' : 'bg-slate-100 text-slate-600' }} flex items-center justify-center font-bold text-xs shrink-0">
+                            <i class="fa-solid {{ $isWaspada ? 'fa-triangle-exclamation text-rose-500' : 'fa-fish text-slate-500' }}"></i>
                         </div>
-                        <p class="text-[11px] text-slate-500 font-medium mt-0.5">Pembibitan 4 / Nila Merah</p>
-                    </div>
-                </div>
-                <i class="fa-solid fa-chevron-right text-slate-400 text-xs"></i>
-            </a>
-
-            <!-- Batch Card 2 -->
-            <a href="{{ route('petugas.pembibitan.log-pakan', ['batch' => 'Batch-H-041']) }}" 
-               class="bg-white rounded-2xl border border-slate-200/90 p-3.5 shadow-xs flex items-center justify-between hover:shadow-md transition-all">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-xs">
-                        <i class="fa-solid fa-circle-dot text-slate-500 text-xs"></i>
-                    </div>
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <h4 class="text-xs font-extrabold text-navy-900">Batch-H-041</h4>
-                            <span class="px-2 py-0.2 rounded-full text-[9px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                SEHAT
-                            </span>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h4 class="text-xs font-extrabold text-navy-900">{{ $batchCode }}</h4>
+                                <span class="px-2 py-0.2 rounded-full text-[9px] font-extrabold {{ $isWaspada ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200' }}">
+                                    {{ $isWaspada ? 'WASPADA' : 'SEHAT' }}
+                                </span>
+                            </div>
+                            <p class="text-[11px] text-slate-500 font-medium mt-0.5">{{ $kolamName }} / {{ $b->jenis_ikan }} • {{ number_format($populasi, 0, ',', '.') }} Ekor</p>
                         </div>
-                        <p class="text-[11px] text-slate-500 font-medium mt-0.5">Fase Penyerapan / Umur 28 Hari</p>
                     </div>
+                    <i class="fa-solid fa-chevron-right text-slate-400 text-xs"></i>
+                </a>
+            @empty
+                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-center text-xs text-slate-400 font-medium">
+                    Belum ada batch pembibitan yang dicatat.
                 </div>
-                <i class="fa-solid fa-chevron-right text-slate-400 text-xs"></i>
-            </a>
-
-            <!-- Batch Card 3 -->
-            <a href="{{ route('petugas.pembibitan.log-pakan', ['batch' => 'Batch-H-039']) }}" 
-               class="bg-white rounded-2xl border border-slate-200/90 p-3.5 shadow-xs flex items-center justify-between hover:shadow-md transition-all">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-xs">
-                        <i class="fa-solid fa-triangle-exclamation text-rose-500 text-xs"></i>
-                    </div>
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <h4 class="text-xs font-extrabold text-navy-900">Batch-H-039</h4>
-                            <span class="px-2 py-0.2 rounded-full text-[9px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200">
-                                WASPADA
-                            </span>
-                        </div>
-                        <p class="text-[11px] text-slate-500 font-medium mt-0.5">Fase Menetas / pH + Suhu Tinggi</p>
-                    </div>
-                </div>
-                <i class="fa-solid fa-chevron-right text-slate-400 text-xs"></i>
-            </a>
-
+            @endforelse
         </div>
     </div>
 
@@ -240,9 +222,9 @@ function petugasPembibitanComponent() {
         filterStatus: 'semua',
         searchQuery: '',
 
-        allBatches: {!! isset($batches) && count($batches) > 0 ? json_encode(
-            $batches->map(function($b) {
-                $days = $b->tgl_pemijahan ? (int) abs(\Carbon\Carbon::parse($b->tgl_pemijahan)->startOfDay()->diffInDays(now()->startOfDay())) : 2;
+        allBatches: {!! json_encode(
+            (isset($batches) ? $batches : collect())->map(function($b) {
+                $days = $b->tgl_pemijahan ? (int) abs(\Carbon\Carbon::parse($b->tgl_pemijahan)->startOfDay()->diffInDays(now()->startOfDay())) : 0;
                 $isWaspada = $b->jumlah_kematian > 3000;
                 return [
                     'id' => 'Batch-H-' . str_pad($b->id_batch, 3, '0', STR_PAD_LEFT),
@@ -255,10 +237,8 @@ function petugasPembibitanComponent() {
                     'icon' => 'fa-fish',
                     'iconBg' => 'bg-slate-100 text-slate-600'
                 ];
-            })
-        ) : json_encode([
-            [ 'id' => 'Batch-H-042', 'status' => 'SEHAT', 'statusClass' => 'bg-emerald-50 text-emerald-700 border-emerald-200', 'dotColor' => 'bg-emerald-500', 'detail' => 'Pembibitan 4 / Nila Merah', 'populasi' => '250.000 Ekor', 'umur' => '14 Hari (DOC)', 'icon' => 'fa-fish', 'iconBg' => 'bg-slate-100 text-slate-600' ]
-        ]) !!},
+            })->values()
+        ) !!},
 
         get filteredBatches() {
             return this.allBatches.filter(b => {

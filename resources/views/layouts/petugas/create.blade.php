@@ -54,11 +54,17 @@
                     </div>
 
                     <div>
-                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1.5">Phone Number *</label>
-                        <input type="text" 
-                               value="081234567890" 
-                               placeholder="081234567890" 
-                               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1.5">Phone Number / WhatsApp *</label>
+                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50/70 overflow-hidden focus-within:bg-white focus-within:ring-2 focus-within:ring-sky-500 focus-within:border-sky-500 transition-all">
+                            <span class="px-3 py-2.5 text-xs font-bold text-slate-500 bg-slate-100/90 border-r border-slate-200 shrink-0 flex items-center gap-1.5">
+                                <span>🇮🇩</span>
+                                <span>+62</span>
+                            </span>
+                            <input type="tel" 
+                                   value="081234567890" 
+                                   placeholder="812-3456-7890 / 081234567890" 
+                                   class="w-full px-3.5 py-2.5 text-xs font-semibold text-slate-800 bg-transparent border-0 focus:outline-none">
+                        </div>
                     </div>
                 </div>
             </div>

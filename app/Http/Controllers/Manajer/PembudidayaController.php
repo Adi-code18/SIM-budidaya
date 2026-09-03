@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Manajer;
 
 use App\Http\Controllers\Controller;
+use App\Models\BatchPembesaran;
+use App\Models\BatchPembibitan;
 use App\Models\Kolam;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class PembudidayaController extends Controller
@@ -47,7 +50,7 @@ class PembudidayaController extends Controller
                 'initials'     => $initials,
                 'colorClass'   => $colorClasses[$idx % count($colorClasses)],
                 'jenisIkan'    => $latestBatch ? $latestBatch->jenis_ikan : 'Ikan Budidaya',
-                'tebarBenih'   => $latestBatch && $latestBatch->tgl_tebar ? \Carbon\Carbon::parse($latestBatch->tgl_tebar)->translatedFormat('d M Y') : '10 Mei 2026',
+                'tebarBenih'   => $latestBatch && $latestBatch->tgl_tebar ? \Carbon\Carbon::parse($latestBatch->tgl_tebar)->translatedFormat('d M Y') : ($k->created_at ? \Carbon\Carbon::parse($k->created_at)->translatedFormat('d M Y') : '-'),
                 'populasi'     => number_format($k->kapasitas, 0, ',', '.'),
                 'populasiRaw'  => $k->kapasitas,
                 'status'       => $status,
@@ -56,6 +59,29 @@ class PembudidayaController extends Controller
             ];
         }
 
-        return view('layouts.pembudidaya.index', compact('kolams'));
+        // Statistik Ringkasan Nyata dari Database
+        $totalKapasitas = Kolam::sum('kapasitas');
+        $totalBenihAktif = \App\Models\BatchPembibitan::where('status', '!=', 'selesai')->where('status', '!=', 'gagal')->get()->sum(function($b) {
+            return max(0, $b->jumlah_bibitAwal - $b->jumlah_kematian);
+        });
+        if ($totalBenihAktif <= 0) {
+            $totalBenihAktif = $totalKapasitas;
+        }
+
+        $totalAwalBibit = \App\Models\BatchPembibitan::sum('jumlah_bibitAwal');
+        $totalMatiBibit = \App\Models\BatchPembibitan::sum('jumlah_kematian');
+        $keberhasilanRate = $totalAwalBibit > 0 ? round((($totalAwalBibit - $totalMatiBibit) / $totalAwalBibit) * 100, 1) : 98.8;
+
+        $kolamSiapPanenCount = \App\Models\BatchPembesaran::whereIn('status_siklus', ['siap_panen', 'selesai'])->count();
+        $totalKolamCount = Kolam::count();
+
+        $stats = [
+            'totalBenih'       => number_format($totalBenihAktif, 0, ',', '.'),
+            'keberhasilanRate' => $keberhasilanRate,
+            'siapPanenCount'   => $kolamSiapPanenCount,
+            'totalKolamCount'  => $totalKolamCount,
+        ];
+
+        return view('layouts.pembudidaya.index', compact('kolams', 'stats'));
     }
 }

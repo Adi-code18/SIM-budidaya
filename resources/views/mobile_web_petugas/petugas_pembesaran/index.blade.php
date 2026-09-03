@@ -46,22 +46,24 @@
         <div class="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-xs space-y-1">
             <span class="text-[9px] font-extrabold uppercase text-slate-400 block tracking-wider">RERATA FCR</span>
             <div class="flex items-center gap-2">
-                <h3 class="text-2xl font-extrabold text-navy-900">{{ number_format($avgFcr ?? 1.24, 2) }}</h3>
-                <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px]">
-                    <i class="fa-solid fa-check"></i>
+                <h3 class="text-2xl font-extrabold text-navy-900">{{ number_format($avgFcr, 2) }}</h3>
+                <span class="w-5 h-5 rounded-full {{ $avgFcr <= 1.25 ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700' }} flex items-center justify-center text-[10px]">
+                    <i class="fa-solid {{ $avgFcr <= 1.25 ? 'fa-check' : 'fa-triangle-exclamation' }}"></i>
                 </span>
             </div>
+            <span class="text-[9px] {{ $avgFcr <= 1.25 ? 'text-emerald-600' : 'text-amber-600' }} font-bold block">{{ $avgFcr <= 1.25 ? 'Efisiensi Optimal' : 'Perlu Evaluasi' }}</span>
         </div>
 
-        <!-- Metric 2: Kuesioner Kualitas -->
+        <!-- Metric 2: Kualitas Air pH -->
         <div class="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-xs space-y-1">
-            <span class="text-[9px] font-extrabold uppercase text-slate-400 block tracking-wider">KONDISI AIR & PAKAN</span>
-            <div class="pt-0.5">
-                <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1">
-                    <i class="fa-solid fa-circle-check text-[9px]"></i>
-                    Bagus ✓
+            <span class="text-[9px] font-extrabold uppercase text-slate-400 block tracking-wider">KUALITAS AIR (pH)</span>
+            <div class="flex items-center gap-2">
+                <h3 class="text-2xl font-extrabold text-navy-900">{{ ($avgPh ?? 0) > 0 ? number_format($avgPh, 1) : '-' }}</h3>
+                <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px]">
+                    <i class="fa-solid fa-droplet text-sky-600"></i>
                 </span>
             </div>
+            <span class="text-[9px] {{ ($avgPh ?? 0) >= 6.5 && ($avgPh ?? 0) <= 8.5 ? 'text-emerald-600' : 'text-slate-400' }} font-bold block">{{ ($avgPh ?? 0) > 0 ? (($avgPh >= 6.5 && $avgPh <= 8.5) ? 'Parameter Normal ✓' : 'Perlu Perhatian') : 'Belum Ada Data' }}</span>
         </div>
 
     </div>
