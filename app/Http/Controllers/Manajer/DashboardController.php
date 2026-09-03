@@ -10,6 +10,7 @@ use App\Models\ManajemenPakan;
 use App\Models\MitraDistributor;
 use App\Models\TransaksiDistribusi;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
@@ -20,7 +21,7 @@ class DashboardController extends Controller
         $avgFcr = BatchPembesaran::whereNotNull('fcr')->where('fcr', '>', 0)->avg('fcr') ?? 1.12;
         $targetPanen = BatchPembesaran::sum('target_panen_kg');
 
-        // Total pakan dari seeder
+        // Total pakan dari database
         $totalPakan = ManajemenPakan::sum('kg_pelet') + ManajemenPakan::sum('kg_daun');
         $avgPh = Kolam::avg('kesehatan_ph_air') ?? 7.3;
 
@@ -56,17 +57,78 @@ class DashboardController extends Controller
             ];
         }
 
-        // 3. Rekap Konsumsi Pakan 7 Hari
+        // 3. Rekap Konsumsi Pakan Terbaru
         $pakanLogs = ManajemenPakan::latest('tgl_log')->take(7)->get();
         $pakanRekap = [];
         foreach ($pakanLogs as $log) {
             $pakanRekap[] = [
-                'hari'  => \Carbon\Carbon::parse($log->tgl_log)->translatedFormat('l'),
+                'hari'  => Carbon::parse($log->tgl_log)->translatedFormat('l'),
                 'pelet' => (float) $log->kg_pelet,
                 'daun'  => (float) $log->kg_daun
             ];
         }
 
-        return view('layouts.dashboard.index', compact('metrics', 'mitraList', 'pakanRekap'));
+        // 4. Data Dynamic Chart Pakan (7d, 14d, 30d, month) Berdasarkan Data Nyata ManajemenPakan
+        $startDate30 = Carbon::now()->subDays(29)->startOfDay();
+        $pakanGrouped = ManajemenPakan::where('tgl_log', '>=', $startDate30)
+            ->selectRaw('DATE(tgl_log) as tanggal, SUM(kg_pelet) as total_pelet, SUM(kg_daun) as total_daun')
+            ->groupBy('tanggal')
+            ->orderBy('tanggal', 'asc')
+            ->get()
+            ->keyBy('tanggal');
+
+        // 7 Hari Terakhir
+        $chart7d = ['labels' => [], 'pelet' => [], 'daun' => []];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = Carbon::now()->subDays($i);
+            $dateStr = $date->toDateString();
+            $rec = $pakanGrouped->get($dateStr);
+            $chart7d['labels'][] = $date->translatedFormat('D') . ' (' . $date->format('d/m') . ')';
+            $chart7d['pelet'][]  = $rec ? round((float) $rec->total_pelet, 1) : 0;
+            $chart7d['daun'][]   = $rec ? round((float) $rec->total_daun, 1) : 0;
+        }
+
+        // 14 Hari Terakhir
+        $chart14d = ['labels' => [], 'pelet' => [], 'daun' => []];
+        for ($i = 13; $i >= 0; $i--) {
+            $date = Carbon::now()->subDays($i);
+            $dateStr = $date->toDateString();
+            $rec = $pakanGrouped->get($dateStr);
+            $chart14d['labels'][] = $date->format('d/m');
+            $chart14d['pelet'][]  = $rec ? round((float) $rec->total_pelet, 1) : 0;
+            $chart14d['daun'][]   = $rec ? round((float) $rec->total_daun, 1) : 0;
+        }
+
+        // 30 Hari Terakhir
+        $chart30d = ['labels' => [], 'pelet' => [], 'daun' => []];
+        for ($i = 29; $i >= 0; $i--) {
+            $date = Carbon::now()->subDays($i);
+            $dateStr = $date->toDateString();
+            $rec = $pakanGrouped->get($dateStr);
+            $chart30d['labels'][] = $date->format('d/m');
+            $chart30d['pelet'][]  = $rec ? round((float) $rec->total_pelet, 1) : 0;
+            $chart30d['daun'][]   = $rec ? round((float) $rec->total_daun, 1) : 0;
+        }
+
+        // Bulan Ini
+        $chartMonth = ['labels' => [], 'pelet' => [], 'daun' => []];
+        $daysInMonth = Carbon::now()->day;
+        for ($d = 1; $d <= $daysInMonth; $d++) {
+            $date = Carbon::now()->startOfMonth()->addDays($d - 1);
+            $dateStr = $date->toDateString();
+            $rec = $pakanGrouped->get($dateStr);
+            $chartMonth['labels'][] = $date->format('d/m');
+            $chartMonth['pelet'][]  = $rec ? round((float) $rec->total_pelet, 1) : 0;
+            $chartMonth['daun'][]   = $rec ? round((float) $rec->total_daun, 1) : 0;
+        }
+
+        $chartDatasets = [
+            '7d'    => $chart7d,
+            '14d'   => $chart14d,
+            '30d'   => $chart30d,
+            'month' => $chartMonth,
+        ];
+
+        return view('layouts.dashboard.index', compact('metrics', 'mitraList', 'pakanRekap', 'chartDatasets'));
     }
 }

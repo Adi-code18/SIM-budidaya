@@ -651,28 +651,12 @@
 
     let dashboardChartInstance = null;
 
-    const chartDatasets = {
-        '7d': {
-            labels: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
-            pelet: [18, 24, 22, 30, 35, 28, 32],
-            daun: [12, 16, 20, 18, 22, 24, 21]
-        },
-        '14d': {
-            labels: ['H-13', 'H-11', 'H-9', 'H-7', 'H-5', 'H-3', 'H-1'],
-            pelet: [20, 22, 25, 28, 30, 32, 35],
-            daun: [14, 15, 18, 19, 21, 23, 22]
-        },
-        '30d': {
-            labels: ['Mgg 1', 'Mgg 2', 'Mgg 3', 'Mgg 4'],
-            pelet: [130, 155, 170, 185],
-            daun: [90, 110, 125, 130]
-        },
-        'month': {
-            labels: ['Mgg 1', 'Mgg 2', 'Mgg 3', 'Mgg 4'],
-            pelet: [145, 160, 168, 192],
-            daun: [95, 105, 118, 135]
-        }
-    };
+    const chartDatasets = {!! json_encode($chartDatasets ?? [
+        '7d' => ['labels' => [], 'pelet' => [], 'daun' => []],
+        '14d' => ['labels' => [], 'pelet' => [], 'daun' => []],
+        '30d' => ['labels' => [], 'pelet' => [], 'daun' => []],
+        'month' => ['labels' => [], 'pelet' => [], 'daun' => []]
+    ]) !!};
 
     window.setChartData = function(periodKey) {
         if (!dashboardChartInstance) return;

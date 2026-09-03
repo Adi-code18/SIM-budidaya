@@ -46,7 +46,26 @@ class PakanController extends Controller
         // Riwayat log pakan terbaru
         $logs = ManajemenPakan::with(['kolam', 'user'])->latest('tgl_log')->take(20)->get();
 
-        return view('layouts.pakan.index', compact('activeKolams', 'activeBatches', 'logs'));
+        // Dynamic Chart Pakan 7 Hari Terakhir untuk Halaman Log Pakan
+        $startDate7 = Carbon::now()->subDays(6)->startOfDay();
+        $pakanGrouped = ManajemenPakan::where('tgl_log', '>=', $startDate7)
+            ->selectRaw('DATE(tgl_log) as tanggal, SUM(kg_pelet) as total_pelet, SUM(kg_daun) as total_daun')
+            ->groupBy('tanggal')
+            ->orderBy('tanggal', 'asc')
+            ->get()
+            ->keyBy('tanggal');
+
+        $chart7d = ['labels' => [], 'pelet' => [], 'daun' => []];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = Carbon::now()->subDays($i);
+            $dateStr = $date->toDateString();
+            $rec = $pakanGrouped->get($dateStr);
+            $chart7d['labels'][] = $date->translatedFormat('D') . ' (' . $date->format('d/m') . ')';
+            $chart7d['pelet'][]  = $rec ? round((float) $rec->total_pelet, 1) : 0;
+            $chart7d['daun'][]   = $rec ? round((float) $rec->total_daun, 1) : 0;
+        }
+
+        return view('layouts.pakan.index', compact('activeKolams', 'activeBatches', 'logs', 'chart7d'));
     }
 
     public function store(Request $request)

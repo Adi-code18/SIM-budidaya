@@ -229,6 +229,29 @@
 
     </div>
 
+    <!-- Chart Analisis Pemberian Pakan 7 Hari Terakhir -->
+    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+            <div>
+                <h3 class="text-base font-bold text-slate-900">Grafik Konsumsi Pakan (7 Hari Terakhir)</h3>
+                <p class="text-xs text-slate-400 mt-0.5">Grafik real-time penggunaan pakan pelet dan dedaunan organik.</p>
+            </div>
+            <div class="flex items-center gap-4 text-xs font-medium">
+                <div class="flex items-center gap-2 text-slate-700">
+                    <span class="w-2.5 h-2.5 rounded-full bg-[#0B2570]"></span>
+                    <span>Pelet (kg)</span>
+                </div>
+                <div class="flex items-center gap-2 text-slate-700">
+                    <span class="w-2.5 h-2.5 rounded-full bg-[#10B981]"></span>
+                    <span>Dedaunan (kg)</span>
+                </div>
+            </div>
+        </div>
+        <div class="h-56 w-full relative">
+            <canvas id="pakanPageChart"></canvas>
+        </div>
+    </div>
+
     <!-- Tabel Riwayat Log Pakan Terbaru -->
     <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
         <!-- <div class="p-5 border-b border-slate-100 flex items-center justify-between">
@@ -423,5 +446,48 @@ function logPakanComponent() {
         }
     };
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const canvas = document.getElementById('pakanPageChart');
+    const chart7d = {!! json_encode($chart7d ?? ['labels' => [], 'pelet' => [], 'daun' => []]) !!};
+    if (canvas && chart7d.labels.length) {
+        const ctx = canvas.getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: chart7d.labels,
+                datasets: [
+                    {
+                        label: 'Pelet (kg)',
+                        data: chart7d.pelet,
+                        backgroundColor: '#0B2570',
+                        borderRadius: 6,
+                        barPercentage: 0.6,
+                        categoryPercentage: 0.5
+                    },
+                    {
+                        label: 'Dedaunan (kg)',
+                        data: chart7d.daun,
+                        backgroundColor: '#10B981',
+                        borderRadius: 6,
+                        barPercentage: 0.6,
+                        categoryPercentage: 0.5
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: { grid: { display: false } },
+                    y: { beginAtZero: true, grid: { borderDash: [4, 4] } }
+                }
+            }
+        });
+    }
+});
 </script>
 @endpush

@@ -215,7 +215,6 @@
 
             </form>
         </div>
-
         <!-- Footer Support Section -->
         <div class="text-center pt-2 pb-1 border-t border-slate-100">
             <p class="text-[11px] text-slate-400 font-medium">
