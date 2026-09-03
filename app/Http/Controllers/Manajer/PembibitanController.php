@@ -190,6 +190,7 @@ class PembibitanController extends Controller
             'id_kolam_pembesaran' => 'required',
             'target_panen_kg'     => 'required|numeric|min:1',
             'biomassa_est'        => 'nullable|numeric|min:0.1',
+            'est_tgl_panen'       => 'nullable|date',
         ], [
             'id_kolam_pembesaran.required' => 'Kolam pembesaran tujuan wajib dipilih.',
             'target_panen_kg.required'     => 'Target panen (kg) wajib diisi.',
@@ -212,12 +213,15 @@ class PembibitanController extends Controller
             $biomassaEst = 50.00;
         }
 
+        $estTglPanen = $request->est_tgl_panen ?? now()->addDays(90)->toDateString();
+
         // Create Batch Pembesaran connected with id_batch_pembibitan
         $batchPembesaran = \App\Models\BatchPembesaran::create([
             'id_kolam'            => $kolamTujuan->id_kolam,
             'id_user'             => Auth::id() ?? 1,
             'id_batch_pembibitan' => $batchPembibitan->id_batch,
             'tgl_tebar'           => now(),
+            'est_tgl_panen'       => $estTglPanen,
             'biomassa_est'        => $biomassaEst,
             'fcr'                 => 1.10,
             'target_panen_kg'     => $request->target_panen_kg,
@@ -271,12 +275,14 @@ class PembibitanController extends Controller
             $rawBobot = $fase === 'TELUR' ? ($sisa * 0.0001) : ($fase === 'LARVA' ? ($sisa * 0.0008) : ($sisa * 0.02));
         }
 
+        $jumlahKematian = ($fase === 'TELUR') ? 0 : ($request->jumlah_kematian ?? 0);
+
         $batch = BatchPembibitan::create([
             'id_kolam'         => $kolam ? $kolam->id_kolam : 1,
             'id_user'          => Auth::id() ?? 1,
             'tgl_pemijahan'    => $tglPemijahan,
             'jumlah_bibitAwal' => $request->jumlah_bibitAwal,
-            'jumlah_kematian'  => $request->jumlah_kematian ?? 0,
+            'jumlah_kematian'  => $jumlahKematian,
             'total_bobot_kg'   => round($rawBobot, 2),
             'jenis_ikan'       => 'Ikan ' . $request->jenis_ikan,
             'fase_pertumbuhan' => $fase,
@@ -344,7 +350,9 @@ class PembibitanController extends Controller
             $batch->jumlah_bibitAwal = $request->jumlah_bibitAwal;
         }
 
-        if ($request->has('jumlah_kematian')) {
+        if ($batch->fase_pertumbuhan === 'TELUR') {
+            $batch->jumlah_kematian = 0;
+        } elseif ($request->has('jumlah_kematian')) {
             $batch->jumlah_kematian = $request->jumlah_kematian;
         }
 
@@ -353,7 +361,19 @@ class PembibitanController extends Controller
         }
 
         if ($request->filled('status')) {
-            $batch->status = strtolower($request->status);
+            $statusVal = strtolower($request->status);
+            if ($statusVal === 'gagal') {
+                $batch->delete();
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => "Batch #BT-" . str_pad($cleanId, 5, '0', STR_PAD_LEFT) . " dinyatakan GAGAL dan telah dihapus dari sistem.",
+                        'deleted' => true
+                    ]);
+                }
+                return redirect()->route('pembibitan')->with('success', "Batch telah dihapus karena status GAGAL.");
+            }
+            $batch->status = $statusVal;
         }
 
         $batch->save();

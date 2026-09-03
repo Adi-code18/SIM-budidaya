@@ -17,6 +17,7 @@ class BatchPembesaran extends Model
         'id_user',
         'id_batch_pembibitan',
         'tgl_tebar',
+        'est_tgl_panen',
         'biomassa_est',
         'fcr',
         'target_panen_kg',

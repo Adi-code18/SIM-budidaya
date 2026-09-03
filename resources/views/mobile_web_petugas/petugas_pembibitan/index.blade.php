@@ -242,7 +242,7 @@ function petugasPembibitanComponent() {
 
         allBatches: {!! isset($batches) && count($batches) > 0 ? json_encode(
             $batches->map(function($b) {
-                $days = $b->tgl_pemijahan ? \Carbon\Carbon::parse($b->tgl_pemijahan)->diffInDays(now()) : 2;
+                $days = $b->tgl_pemijahan ? (int) abs(\Carbon\Carbon::parse($b->tgl_pemijahan)->startOfDay()->diffInDays(now()->startOfDay())) : 2;
                 $isWaspada = $b->jumlah_kematian > 3000;
                 return [
                     'id' => 'Batch-H-' . str_pad($b->id_batch, 3, '0', STR_PAD_LEFT),

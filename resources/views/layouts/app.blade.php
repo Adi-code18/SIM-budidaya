@@ -12,13 +12,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Leaflet.js Local Assets -->
-    <link rel="stylesheet" href="{{ asset('build/assets/leaflet/leaflet.css') }}" />
-    <script src="{{ asset('build/assets/leaflet/leaflet.js') }}"></script>
+    <!-- Leaflet.js Assets (Local & CDN Fallback) -->
+    <link rel="stylesheet" href="{{ asset('leaflet/leaflet.css') }}" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="{{ asset('leaflet/leaflet.js') }}"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <!-- Tailwind CSS CDN Fallback -->
     <script src="https://cdn.tailwindcss.com"></script>
+
     <script>
         tailwind.config = {
             theme: {

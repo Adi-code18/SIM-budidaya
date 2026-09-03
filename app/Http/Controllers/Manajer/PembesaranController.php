@@ -97,6 +97,9 @@ class PembesaranController extends Controller
                 ];
             }
 
+            $estTglPanen = $b->est_tgl_panen ?? ($b->tgl_tebar ? Carbon::parse($b->tgl_tebar)->addDays(90)->toDateString() : null);
+            $isHarvestDue = ($statusSiklus !== 'selesai') && ($estTglPanen ? Carbon::today()->gte(Carbon::parse($estTglPanen)) : ($doc >= 90));
+
             $batches[] = [
                 'id_pembesaran'       => $b->id_pembesaran,
                 'id'                  => '#PB-' . str_pad($b->id_pembesaran, 5, '0', STR_PAD_LEFT),
@@ -111,6 +114,9 @@ class PembesaranController extends Controller
                 'fed_status_label'    => $isFedToday ? 'Sudah Diberi Pakan' : 'Belum Diberi Pakan',
                 'tgl_tebar'           => $b->tgl_tebar,
                 'tgl_tebar_format'    => $b->tgl_tebar ? Carbon::parse($b->tgl_tebar)->translatedFormat('d M Y') : '-',
+                'est_tgl_panen'       => $estTglPanen,
+                'est_panen_format'    => $estTglPanen ? Carbon::parse($estTglPanen)->translatedFormat('d M Y') : '-',
+                'is_harvest_due'      => $isHarvestDue,
                 'doc'                 => $doc,
                 'jenis_ikan'          => $b->jenis_ikan,
                 'clean_jenis'         => $cleanJenis,
@@ -159,6 +165,7 @@ class PembesaranController extends Controller
             'jenis_ikan'           => 'required|string',
             'id_batch_pembibitan'  => 'nullable|numeric',
             'tgl_tebar'            => 'nullable|date',
+            'est_tgl_panen'        => 'nullable|date',
             'biomassa_est'         => 'required|numeric|min:1',
             'target_panen_kg'      => 'required|numeric|min:1',
             'fcr'                  => 'nullable|numeric|min:0.5',
@@ -191,11 +198,15 @@ class PembesaranController extends Controller
             $jenis = 'Ikan ' . $jenis;
         }
 
+        $tglTebar = $request->tgl_tebar ?? now();
+        $estTglPanen = $request->est_tgl_panen ?? ($request->tgl_tebar ? Carbon::parse($request->tgl_tebar)->addDays(90)->toDateString() : now()->addDays(90)->toDateString());
+
         $batch = BatchPembesaran::create([
             'id_kolam'            => $kolam->id_kolam,
             'id_user'             => Auth::id() ?? 1,
             'id_batch_pembibitan' => $request->id_batch_pembibitan,
-            'tgl_tebar'           => $request->tgl_tebar ?? now(),
+            'tgl_tebar'           => $tglTebar,
+            'est_tgl_panen'       => $estTglPanen,
             'biomassa_est'        => $request->biomassa_est,
             'fcr'                 => $request->fcr ?? 1.15,
             'target_panen_kg'     => $request->target_panen_kg,
@@ -236,6 +247,7 @@ class PembesaranController extends Controller
             'id_kolam'        => 'nullable',
             'jenis_ikan'      => 'nullable|string',
             'tgl_tebar'       => 'nullable|date',
+            'est_tgl_panen'   => 'nullable|date',
             'biomassa_est'    => 'nullable|numeric',
             'target_panen_kg' => 'nullable|numeric',
             'jumlah_panen_kg' => 'nullable|numeric',
@@ -275,6 +287,10 @@ class PembesaranController extends Controller
 
         if ($request->filled('tgl_tebar')) {
             $batch->tgl_tebar = $request->tgl_tebar;
+        }
+
+        if ($request->filled('est_tgl_panen')) {
+            $batch->est_tgl_panen = $request->est_tgl_panen;
         }
 
         if ($request->has('biomassa_est')) {

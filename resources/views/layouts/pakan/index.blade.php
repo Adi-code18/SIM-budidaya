@@ -231,13 +231,13 @@
 
     <!-- Tabel Riwayat Log Pakan Terbaru -->
     <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-        <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+        <!-- <div class="p-5 border-b border-slate-100 flex items-center justify-between">
             <div>
                 <h3 class="text-base font-extrabold text-slate-900">Riwayat Pemberian Pakan Terbaru</h3>
                 <p class="text-xs text-slate-500 mt-0.5">Catatan log pakan pada siklus pembesaran terkini.</p>
             </div>
             <span class="text-xs font-bold text-slate-400" x-text="logs.length + ' Catatan'"></span>
-        </div>
+        </div> -->
 
         <div class="overflow-x-auto">
             <table class="w-full text-left text-xs">

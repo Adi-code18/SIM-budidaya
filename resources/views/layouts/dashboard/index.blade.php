@@ -780,9 +780,9 @@
             // Fix leaflet default icon asset paths
             delete L.Icon.Default.prototype._getIconUrl;
             L.Icon.Default.mergeOptions({
-                iconRetinaUrl: "{{ asset('build/assets/leaflet/images/marker-icon-2x.png') }}",
-                iconUrl: "{{ asset('build/assets/leaflet/images/marker-icon.png') }}",
-                shadowUrl: "{{ asset('build/assets/leaflet/images/marker-shadow.png') }}",
+                iconRetinaUrl: "{{ asset('leaflet/images/marker-icon-2x.png') }}",
+                iconUrl: "{{ asset('leaflet/images/marker-icon.png') }}",
+                shadowUrl: "{{ asset('leaflet/images/marker-shadow.png') }}",
             });
 
             // Default center Mataram / NTB

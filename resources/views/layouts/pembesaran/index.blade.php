@@ -26,6 +26,29 @@
         </div>
     </div>
 
+    <!-- Alert Notification Banner jika ada Batch yang Waktunya Panen -->
+    <template x-if="batches.some(b => b.is_harvest_due)">
+        <div class="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 p-4 rounded-2xl text-white shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-pulse">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-xl shrink-0">
+                    <i class="fa-solid fa-wheat-awn font-bold text-amber-100"></i>
+                </div>
+                <div>
+                    <h4 class="font-extrabold text-xs tracking-wider uppercase flex items-center gap-2">
+                        <span>NOTIFIKASI PANEN: MASA PANEN TIBA!</span>
+                        <span class="px-2 py-0.5 rounded-full text-[9px] bg-white text-rose-600 font-extrabold" x-text="batches.filter(b => b.is_harvest_due).length + ' BATCH'"></span>
+                    </h4>
+                    <p class="text-xs text-amber-100 font-medium mt-0.5">
+                        Terdapat batch pembesaran yang telah mencapai/melewati estimasi tanggal panen. Harap segera lakukan pemeriksaan &amp; pemanenan.
+                    </p>
+                </div>
+            </div>
+            <button @click="activeFilter = 'aktif'" class="px-4 py-2 bg-white text-amber-900 rounded-xl text-xs font-extrabold hover:bg-amber-50 transition-all shrink-0 shadow-md">
+                <i class="fa-solid fa-eye text-amber-700 mr-1"></i> Lihat Batch Panen
+            </button>
+        </div>
+    </template>
+
     <!-- ========= INPUT / EDIT FORM SECTION ========= -->
     <div x-show="showForm"
          x-transition:enter="transition ease-out duration-300"
@@ -83,13 +106,13 @@
                         <p class="text-[10px] text-sky-700 italic">Memilih batch pembibitan akan otomatis mengisi jenis ikan dan mengalihkan status pembibitan menjadi Selesai/Dipindahkan.</p>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="sm:col-span-1">
                             <div class="flex items-center justify-between mb-1">
                                 <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block">KOLAM PEMBESARAN *</label>
                                 <button type="button" @click="openKolamModal()" class="text-[10px] font-extrabold text-sky-600 hover:text-sky-800 flex items-center gap-1 transition-colors">
                                     <i class="fa-solid fa-circle-plus"></i>
-                                    <span>+ Kolam Baru</span>
+                                    <span>+ Kolam</span>
                                 </button>
                             </div>
                             <select x-model="form.kolam" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
@@ -101,12 +124,16 @@
                                     </option>
                                 </template>
                             </select>
-                            <p class="text-[10px] text-slate-400 mt-1 italic">Hanya menampilkan fasilitas kolam tipe Pembesaran (1 Kolam = 1 Batch Aktif).</p>
                         </div>
                         <div>
                             <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">TANGGAL TEBAR BENIH *</label>
-                            <input type="date" x-model="form.tglTebar"
+                            <input type="date" x-model="form.tglTebar" @change="calculateEstPanen()"
                                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-amber-700 block mb-1">ESTIMASI WAKTU PANEN *</label>
+                            <input type="date" x-model="form.estTglPanen"
+                                   class="w-full px-3.5 py-2.5 rounded-xl border border-amber-200 text-xs font-extrabold text-amber-800 bg-amber-50/60 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all">
                         </div>
                     </div>
                 </div>
@@ -300,8 +327,20 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 
                 <template x-for="item in filteredBatches" :key="item.id">
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between hover:shadow-md transition-all relative group">
+                    <div class="bg-white p-5 rounded-2xl border shadow-xs flex flex-col justify-between hover:shadow-md transition-all relative group"
+                         :class="item.is_harvest_due ? 'border-amber-400/90 ring-2 ring-amber-400/20' : 'border-slate-200/80'">
                         <div>
+                            <!-- Banner Notifikasi Waktunya Panen Pada Card -->
+                            <template x-if="item.is_harvest_due">
+                                <div class="mb-3 p-2 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 text-white font-extrabold text-[10px] flex items-center justify-between shadow-xs animate-pulse">
+                                    <span class="flex items-center gap-1.5 uppercase tracking-wider">
+                                        <i class="fa-solid fa-wheat-awn text-xs"></i>
+                                        <span>SUDAH WAKTUNYA PANEN!</span>
+                                    </span>
+                                    <span class="text-[9px] bg-white/20 px-2 py-0.5 rounded-md" x-text="item.est_panen_format"></span>
+                                </div>
+                            </template>
+
                             <div class="flex items-start justify-between gap-2">
                                 <div>
                                     <div class="flex items-center gap-2">
@@ -335,14 +374,18 @@
                                 </div>
                             </div>
 
-                            <div class="mt-4 grid grid-cols-2 gap-2 text-xs">
+                            <div class="mt-4 grid grid-cols-3 gap-2 text-xs">
                                 <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                                    <span class="text-[10px] text-slate-400 font-bold uppercase block">BIOMASSA EST.</span>
-                                    <span class="font-extrabold text-slate-900 text-sm" x-text="item.biomassa_format + ' kg'"></span>
+                                    <span class="text-[9px] text-slate-400 font-bold uppercase block">BIOMASSA</span>
+                                    <span class="font-extrabold text-slate-900 text-xs" x-text="item.biomassa_format + ' kg'"></span>
                                 </div>
                                 <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                                    <span class="text-[10px] text-slate-400 font-bold uppercase block">MASA BUDIDAYA</span>
-                                    <span class="font-extrabold text-slate-900 text-sm"><span x-text="item.doc"></span> Hari <span class="text-[10px] font-medium text-slate-500">(DOC)</span></span>
+                                    <span class="text-[9px] text-slate-400 font-bold uppercase block">DOC</span>
+                                    <span class="font-extrabold text-slate-900 text-xs"><span x-text="item.doc"></span> Hari</span>
+                                </div>
+                                <div class="p-2.5 rounded-xl border" :class="item.is_harvest_due ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-slate-50 border-slate-100'">
+                                    <span class="text-[9px] font-bold uppercase block" :class="item.is_harvest_due ? 'text-amber-700 font-extrabold' : 'text-slate-400'">EST. PANEN</span>
+                                    <span class="font-extrabold text-xs" :class="item.is_harvest_due ? 'text-amber-800' : 'text-slate-900'" x-text="item.est_panen_format || '-'"></span>
                                 </div>
                             </div>
 
@@ -509,17 +552,23 @@
             <div class="p-6 space-y-4 overflow-y-auto text-xs">
                 
                 <!-- Ringkasan Info Kolam & Parameter -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100">
                         <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-0.5">LOKASI KOLAM</span>
                         <span class="font-extrabold text-slate-900 text-xs block" x-text="selectedBatch?.nama_kolam"></span>
-                        <span class="text-[10px] text-slate-500" x-text="selectedBatch?.tipe_kolam + ' (' + selectedBatch?.kapasitas_kolam + ' Ekor)'"></span>
+                        <span class="text-[10px] text-slate-500" x-text="selectedBatch?.tipe_kolam"></span>
                     </div>
 
                     <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100">
                         <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-0.5">TANGGAL TEBAR & DOC</span>
                         <span class="font-extrabold text-slate-900 text-xs block" x-text="selectedBatch?.tgl_tebar_format || selectedBatch?.tgl_tebar"></span>
-                        <span class="text-[10px] text-emerald-600 font-bold" x-text="selectedBatch?.doc + ' Hari Budidaya (DOC)'"></span>
+                        <span class="text-[10px] text-emerald-600 font-bold" x-text="selectedBatch?.doc + ' Hari (DOC)'"></span>
+                    </div>
+
+                    <div class="p-3 rounded-2xl border" :class="selectedBatch?.is_harvest_due ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-100'">
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider block mb-0.5" :class="selectedBatch?.is_harvest_due ? 'text-amber-800' : 'text-slate-400'">ESTIMASI PANEN</span>
+                        <span class="font-extrabold text-xs block" :class="selectedBatch?.is_harvest_due ? 'text-amber-900' : 'text-slate-900'" x-text="selectedBatch?.est_panen_format || '-'"></span>
+                        <span class="text-[10px] font-bold" :class="selectedBatch?.is_harvest_due ? 'text-rose-600' : 'text-slate-400'" x-text="selectedBatch?.is_harvest_due ? '⚠️ Waktunya Panen!' : 'Jadwal Panen'"></span>
                     </div>
 
                     <div class="p-3 bg-sky-50/60 rounded-2xl border border-sky-100">
@@ -881,6 +930,7 @@ function pembesaranComponent() {
             id_batch_pembibitan: '',
             kolam: '',
             tglTebar: new Date().toISOString().split('T')[0],
+            estTglPanen: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
             jenisIkan: '',
             biomassaEst: 1200,
             targetPanenKg: 1500,
@@ -991,6 +1041,13 @@ function pembesaranComponent() {
             }
         },
 
+        calculateEstPanen() {
+            if (!this.form.tglTebar) return;
+            const tgl = new Date(this.form.tglTebar);
+            tgl.setDate(tgl.getDate() + 90);
+            this.form.estTglPanen = tgl.toISOString().split('T')[0];
+        },
+
         openCreateForm() {
             this.formMode = 'create';
             this.resetForm();
@@ -1007,6 +1064,7 @@ function pembesaranComponent() {
                 id_batch_pembibitan: item.id_batch_pembibitan || '',
                 kolam: item.nama_kolam,
                 tglTebar: item.tgl_tebar || new Date().toISOString().split('T')[0],
+                estTglPanen: item.est_tgl_panen || (item.tgl_tebar ? new Date(new Date(item.tgl_tebar).getTime() + 90*86400000).toISOString().split('T')[0] : new Date(Date.now() + 90*86400000).toISOString().split('T')[0]),
                 jenisIkan: item.clean_jenis || (item.jenis_ikan ? item.jenis_ikan.replace(/^Ikan\s+/i, '') : ''),
                 biomassaEst: item.biomassa_est,
                 targetPanenKg: item.target_panen_kg,
@@ -1018,12 +1076,15 @@ function pembesaranComponent() {
         },
 
         resetForm() {
+            const today = new Date().toISOString().split('T')[0];
+            const defaultEst = new Date(Date.now() + 90 * 86400000).toISOString().split('T')[0];
             this.form = {
                 id: '',
                 id_pembesaran: null,
                 id_batch_pembibitan: '',
                 kolam: '',
-                tglTebar: new Date().toISOString().split('T')[0],
+                tglTebar: today,
+                estTglPanen: defaultEst,
                 jenisIkan: '',
                 biomassaEst: 1200,
                 targetPanenKg: 1500,
@@ -1069,6 +1130,7 @@ function pembesaranComponent() {
                         this.batches[targetIdx].status_class = 'bg-slate-100 text-slate-700';
                         this.batches[targetIdx].jumlah_panen_kg = jumlahPanen;
                         this.batches[targetIdx].jumlah_panen_format = jumlahPanen.toLocaleString('id-ID');
+                        this.batches[targetIdx].is_harvest_due = false;
                     }
 
                     // Refresh pond occupancy (pond becomes available)
@@ -1137,6 +1199,11 @@ function pembesaranComponent() {
                 statusClass = 'bg-slate-100 text-slate-700';
             }
 
+            const todayStr = new Date().toISOString().split('T')[0];
+            const estPanenDateStr = this.form.estTglPanen || '';
+            const isHarvestDue = statusSiklus !== 'selesai' && estPanenDateStr && estPanenDateStr <= todayStr;
+            const estPanenFormat = estPanenDateStr ? new Date(estPanenDateStr).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
+
             if (this.formMode === 'edit') {
                 const idPB = this.form.id_pembesaran;
                 try {
@@ -1151,6 +1218,7 @@ function pembesaranComponent() {
                             id_kolam: this.form.kolam,
                             jenis_ikan: this.form.jenisIkan,
                             tgl_tebar: this.form.tglTebar,
+                            est_tgl_panen: this.form.estTglPanen,
                             biomassa_est: biomassaNum,
                             target_panen_kg: targetNum,
                             fcr: fcrNum,
@@ -1165,6 +1233,9 @@ function pembesaranComponent() {
                             this.batches[targetIndex].jenis_ikan = 'Ikan ' + this.form.jenisIkan;
                             this.batches[targetIndex].clean_jenis = this.form.jenisIkan;
                             this.batches[targetIndex].tgl_tebar = this.form.tglTebar;
+                            this.batches[targetIndex].est_tgl_panen = this.form.estTglPanen;
+                            this.batches[targetIndex].est_panen_format = estPanenFormat;
+                            this.batches[targetIndex].is_harvest_due = isHarvestDue;
                             this.batches[targetIndex].biomassa_est = biomassaNum;
                             this.batches[targetIndex].biomassa_format = biomassaNum.toLocaleString('id-ID');
                             this.batches[targetIndex].target_panen_kg = targetNum;
@@ -1211,6 +1282,7 @@ function pembesaranComponent() {
                         id_batch_pembibitan: this.form.id_batch_pembibitan || null,
                         jenis_ikan: this.form.jenisIkan,
                         tgl_tebar: this.form.tglTebar,
+                        est_tgl_panen: this.form.estTglPanen,
                         biomassa_est: biomassaNum,
                         target_panen_kg: targetNum,
                         fcr: fcrNum,
@@ -1228,6 +1300,9 @@ function pembesaranComponent() {
                         nama_kolam: newBatch.kolam ? newBatch.kolam.nama_kolam : this.form.kolam,
                         tipe_kolam: newBatch.kolam ? newBatch.kolam.tipe_kolam : 'Pembesaran',
                         tgl_tebar: this.form.tglTebar,
+                        est_tgl_panen: this.form.estTglPanen,
+                        est_panen_format: estPanenFormat,
+                        is_harvest_due: isHarvestDue,
                         doc: 0,
                         jenis_ikan: 'Ikan ' + this.form.jenisIkan,
                         clean_jenis: this.form.jenisIkan,

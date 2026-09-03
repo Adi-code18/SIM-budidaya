@@ -20,10 +20,19 @@
     </div>
 
     <!-- Total Biomassa Big Navy Banner Card -->
+    @php
+        $totalBiomassaKg = isset($batches) ? $batches->sum('biomassa_est') : 0;
+    @endphp
     <div class="bg-gradient-to-r from-navy-900 via-navy-800 to-navy-700 rounded-3xl p-5 text-white shadow-md relative overflow-hidden flex items-center justify-between">
         <div class="space-y-1 relative z-10">
             <span class="text-[10px] font-extrabold uppercase tracking-widest text-sky-300">TOTAL BIOMASSA</span>
-            <h2 class="text-3xl font-extrabold text-white tracking-tight">{{ number_format($totalBiomassa ?? 12.4, 1) }} <span class="text-lg font-bold text-sky-200">Ton</span></h2>
+            <h2 class="text-3xl font-extrabold text-white tracking-tight">
+                @if($totalBiomassaKg >= 1000)
+                    {{ number_format($totalBiomassaKg / 1000, 1) }} <span class="text-lg font-bold text-sky-200">Ton</span>
+                @else
+                    {{ number_format($totalBiomassaKg, 0) }} <span class="text-lg font-bold text-sky-200">kg</span>
+                @endif
+            </h2>
         </div>
         <div class="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-sky-300 text-xl backdrop-blur-md">
             <i class="fa-solid fa-fish-fins"></i>
@@ -71,7 +80,7 @@
                 @foreach($batches as $b)
                     @php
                         $kolamName = $b->kolam ? $b->kolam->nama_kolam : 'Kolam #' . $b->id_kolam;
-                        $doc = $b->tgl_tebar ? \Carbon\Carbon::parse($b->tgl_tebar)->diffInDays(now()) : 60;
+                        $doc = $b->tgl_tebar ? (int) abs(\Carbon\Carbon::parse($b->tgl_tebar)->startOfDay()->diffInDays(now()->startOfDay())) : 0;
                         $isPanen = $b->status_siklus === 'selesai' || $b->status_siklus === 'siap_panen';
                     @endphp
                     <a href="{{ route('petugas.pembesaran.log-pakan', ['kolam' => $kolamName]) }}" 
@@ -89,7 +98,13 @@
                         <div class="grid grid-cols-3 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-center">
                             <div>
                                 <span class="text-[9px] font-bold text-slate-400 uppercase block">BIOMASSA</span>
-                                <span class="text-xs font-extrabold text-navy-900">{{ number_format($b->biomassa_est / 1000, 1) }} Ton</span>
+                                <span class="text-xs font-extrabold text-navy-900">
+                                    @if($b->biomassa_est >= 1000)
+                                        {{ number_format($b->biomassa_est / 1000, 1) }} Ton
+                                    @else
+                                        {{ number_format($b->biomassa_est, 0) }} kg
+                                    @endif
+                                </span>
                             </div>
                             <div>
                                 <span class="text-[9px] font-bold text-slate-400 uppercase block">SIKLUS</span>

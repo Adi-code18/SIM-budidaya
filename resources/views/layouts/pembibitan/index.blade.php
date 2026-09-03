@@ -62,7 +62,9 @@
                     </div>
                     <div>
                         <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">FASE PERTUMBUHAN *</label>
-                        <select x-model="form.fase_pertumbuhan" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-sky-800 bg-sky-50/60 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                        <select x-model="form.fase_pertumbuhan"
+                                @change="onFaseChange()"
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-sky-800 bg-sky-50/60 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
                             <option value="TELUR">TELUR (Masa Pemijahan &amp; Penetasan Awal)</option>
                             <option value="LARVA">LARVA (Benih Kecil / Post-Larva)</option>
                             <option value="FINGERLING">FINGERLING (Benih Siap Pembesaran)</option>
@@ -111,11 +113,14 @@
                         <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">JUMLAH KEMATIAN</label>
                         <div class="flex items-center gap-2">
                             <input type="number" x-model="form.jumlahKematian" min="0" placeholder="0"
+                                   :disabled="form.fase_pertumbuhan === 'TELUR'"
                                    onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E') event.preventDefault()"
                                    @input="if(form.jumlahKematian !== '' && Number(form.jumlahKematian) < 0) form.jumlahKematian = 0"
-                                   class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                                   :class="form.fase_pertumbuhan === 'TELUR' ? 'bg-slate-100/90 text-slate-400 cursor-not-allowed border-slate-200' : 'bg-slate-50/70 text-slate-700 focus:bg-white focus:ring-sky-500'"
+                                   class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 transition-all">
                             <span class="text-xs font-bold text-slate-400">ekor</span>
                         </div>
+                        <span x-show="form.fase_pertumbuhan === 'TELUR'" class="text-[10px] font-semibold text-slate-400 mt-1 block">* Disabled pada masa Telur</span>
                     </div>
                     <div>
                         <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">TOTAL BOBOT / BIOMASSA (KG) *</label>
@@ -144,29 +149,33 @@
                         <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1.5">STATUS BATCH</label>
                         <div class="flex flex-wrap items-center gap-2">
                             <button type="button" @click="form.statusBatch = 'inkubasi'"
-                                    :class="form.statusBatch === 'inkubasi' ? 'bg-[#051B44] text-white border-transparent shadow-xs' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'"
+                                    :disabled="form.fase_pertumbuhan !== 'TELUR'"
+                                    :class="form.statusBatch === 'inkubasi' ? 'bg-[#051B44] text-white border-transparent shadow-xs' : (form.fase_pertumbuhan !== 'TELUR' ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-40' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50')"
                                     class="px-3 py-1.5 rounded-xl border text-xs font-bold transition-all">
                                 Proses Inkubasi
                             </button>
                             <button type="button" @click="form.statusBatch = 'menetas'"
-                                    :class="form.statusBatch === 'menetas' ? 'bg-[#0284C7] text-white border-transparent shadow-xs' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'"
+                                    :disabled="form.fase_pertumbuhan !== 'TELUR'"
+                                    :class="form.statusBatch === 'menetas' ? 'bg-[#0284C7] text-white border-transparent shadow-xs' : (form.fase_pertumbuhan !== 'TELUR' ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-40' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50')"
                                     class="px-3 py-1.5 rounded-xl border text-xs font-bold transition-all">
                                 Mulai Menetas
                             </button>
                             <button type="button" @click="form.statusBatch = 'aktif'"
-                                    :class="form.statusBatch === 'aktif' ? 'bg-emerald-600 text-white border-transparent shadow-xs' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'"
+                                    :disabled="form.fase_pertumbuhan === 'TELUR'"
+                                    :class="form.statusBatch === 'aktif' ? 'bg-emerald-600 text-white border-transparent shadow-xs' : (form.fase_pertumbuhan === 'TELUR' ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-40' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50')"
                                     class="px-3 py-1.5 rounded-xl border text-xs font-bold transition-all">
                                 Aktif
                             </button>
                             <button type="button" @click="form.statusBatch = 'siap_pindah'"
-                                    :class="form.statusBatch === 'siap_pindah' ? 'bg-teal-600 text-white border-transparent shadow-xs' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'"
+                                    :disabled="form.fase_pertumbuhan !== 'FINGERLING'"
+                                    :class="form.statusBatch === 'siap_pindah' ? 'bg-teal-600 text-white border-transparent shadow-xs' : (form.fase_pertumbuhan !== 'FINGERLING' ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-40' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50')"
                                     class="px-3 py-1.5 rounded-xl border text-xs font-bold transition-all">
                                 Siap Pindah
                             </button>
-                            <button type="button" @click="form.statusBatch = 'gagal'"
-                                    :class="form.statusBatch === 'gagal' ? 'bg-rose-600 text-white border-transparent shadow-xs' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'"
+                            <button type="button" @click="handleStatusGagalClick()"
+                                    :class="form.statusBatch === 'gagal' ? 'bg-rose-600 text-white border-transparent shadow-xs' : 'bg-white text-rose-600 border-rose-200 hover:bg-rose-50'"
                                     class="px-3 py-1.5 rounded-xl border text-xs font-bold transition-all">
-                                Gagal
+                                Gagal (Hapus Batch)
                             </button>
                         </div>
                     </div>
@@ -617,17 +626,21 @@
                     </select>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-3 gap-3">
                     <div>
-                        <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">ESTIMASI BIOMASSA AWAL (KG) *</label>
+                        <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">BIOMAKSA AWAL (KG) *</label>
                         <input type="number" step="0.1" x-model="transferForm.biomassa_est" required
                                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-emerald-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-emerald-600">
-                        <p class="text-[10px] text-slate-400 mt-1">Otomatis sinkron dengan total bobot batch pembibitan.</p>
                     </div>
                     <div>
                         <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">TARGET PANEN (KG) *</label>
                         <input type="number" step="1" x-model="transferForm.target_panen_kg" required
                                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:border-emerald-600">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">ESTIMASI TGL PANEN *</label>
+                        <input type="date" x-model="transferForm.est_tgl_panen" required
+                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-amber-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-emerald-600">
                     </div>
                 </div>
 
@@ -798,22 +811,61 @@ function pembibitanComponent() {
         openEdit(item) {
             this.formMode = 'edit';
             this.selectedBatch = item;
+            const itemFase = (item.fase || 'TELUR').toUpperCase();
             this.form = {
                 id: item.id,
                 id_batch: item.id_batch,
                 jenisIkan: item.rawJenisIkan || (item.jenisIkan ? item.jenisIkan.charAt(0) + item.jenisIkan.slice(1).toLowerCase() : 'Lele'),
-                fase_pertumbuhan: item.fase || 'TELUR',
+                fase_pertumbuhan: itemFase,
                 jumlahBibitAwal: item.jumlahBibitAwal || 250000,
                 totalBobotKg: item.totalBobotKg || 25.0,
                 tglPemijahan: item.tglPemijahan || new Date().toISOString().split('T')[0],
                 prediksiHari: 3,
-                jumlahKematian: item.jumlahKematian || 0,
+                jumlahKematian: itemFase === 'TELUR' ? 0 : (item.jumlahKematian || 0),
                 statusBatch: item.status || 'aktif',
                 kolam: item.kolam || ''
             };
             this.detailModalOpen = false;
             this.showForm = true;
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        },
+
+        onFaseChange() {
+            const fase = (this.form.fase_pertumbuhan || 'TELUR').toUpperCase();
+            if (fase === 'TELUR') {
+                this.form.jumlahKematian = 0;
+                if (this.form.statusBatch !== 'inkubasi' && this.form.statusBatch !== 'menetas' && this.form.statusBatch !== 'gagal') {
+                    this.form.statusBatch = 'inkubasi';
+                }
+            } else if (fase === 'LARVA') {
+                if (this.form.statusBatch !== 'aktif' && this.form.statusBatch !== 'gagal') {
+                    this.form.statusBatch = 'aktif';
+                }
+            } else if (fase === 'FINGERLING') {
+                if (this.form.statusBatch !== 'aktif' && this.form.statusBatch !== 'siap_pindah' && this.form.statusBatch !== 'gagal') {
+                    this.form.statusBatch = 'aktif';
+                }
+            }
+        },
+
+        handleStatusGagalClick() {
+            this.form.statusBatch = 'gagal';
+            if (confirm('Menyatakan batch ini GAGAL akan langsung MENGHAPUS data batch dari sistem. Apakah Anda yakin?')) {
+                this.confirmDeleteGagalBatch();
+            }
+        },
+
+        async confirmDeleteGagalBatch() {
+            if (this.formMode === 'edit' && (this.form.id_batch || this.form.id)) {
+                this.selectedBatchToDelete = { id: this.form.id, id_batch: this.form.id_batch };
+                await this.executeDeleteBatch();
+                this.showForm = false;
+                this.resetForm();
+            } else {
+                alert('Data batch dengan status Gagal dibatalkan dan tidak disimpan.');
+                this.showForm = false;
+                this.resetForm();
+            }
         },
 
         resetForm() {
@@ -827,7 +879,7 @@ function pembibitanComponent() {
                 tglPemijahan: new Date().toISOString().split('T')[0],
                 prediksiHari: 3,
                 jumlahKematian: 0,
-                statusBatch: 'menetas',
+                statusBatch: 'inkubasi',
                 kolam: ''
             };
         },
@@ -840,6 +892,13 @@ function pembibitanComponent() {
         },
 
         async submitBatch() {
+            if (this.form.statusBatch === 'gagal') {
+                if (confirm('Status batch diset GAGAL! Batch ini akan dihapus dari sistem. Lanjutkan?')) {
+                    await this.confirmDeleteGagalBatch();
+                }
+                return;
+            }
+
             if (!this.form.jenisIkan) {
                 alert('Silakan pilih Jenis Ikan terlebih dahulu!');
                 return;
@@ -847,6 +906,9 @@ function pembibitanComponent() {
             if (!this.form.jumlahBibitAwal || Number(this.form.jumlahBibitAwal) <= 0) {
                 alert('Jumlah Bibit / Telur Awal harus lebih besar dari 0 (tidak boleh angka minus atau 0)!');
                 return;
+            }
+            if (this.form.fase_pertumbuhan === 'TELUR') {
+                this.form.jumlahKematian = 0;
             }
             if (Number(this.form.jumlahKematian || 0) < 0) {
                 alert('Jumlah Kematian tidak boleh berupa angka minus!');
@@ -866,12 +928,12 @@ function pembibitanComponent() {
             }
 
             this.isSubmitting = true;
+            const faseVal = (this.form.fase_pertumbuhan || 'TELUR').toUpperCase();
             const bibitAwalNum = Math.abs(Number(this.form.jumlahBibitAwal || 0));
-            const matiNum = Math.max(0, Number(this.form.jumlahKematian || 0));
+            const matiNum = faseVal === 'TELUR' ? 0 : Math.max(0, Number(this.form.jumlahKematian || 0));
             const bobotKgNum = Math.abs(Number(this.form.totalBobotKg || 0));
             const sisaBibit = Math.max(0, bibitAwalNum - matiNum);
             const rawStatus = this.form.statusBatch;
-            const faseVal = (this.form.fase_pertumbuhan || 'TELUR').toUpperCase();
 
             let statusLabel = 'Aktif';
             let statusClass = 'bg-emerald-100 text-emerald-700';
@@ -1106,10 +1168,12 @@ function pembibitanComponent() {
             this.selectedBatchToTransfer = item;
             const sisaBibit = item.jumlahRaw || (item.jumlahBibitAwal - item.jumlahKematian) || 1000;
             const estBiomassa = item.totalBobotKg && item.totalBobotKg > 0 ? item.totalBobotKg : Math.max(10, Math.round(sisaBibit * 0.02));
+            const estHarvestDate = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
             this.transferForm = {
                 id_kolam_pembesaran: '',
                 target_panen_kg: Math.max(100, Math.round(estBiomassa * 10)),
-                biomassa_est: estBiomassa
+                biomassa_est: estBiomassa,
+                est_tgl_panen: estHarvestDate
             };
             this.transferModalOpen = true;
         },
@@ -1136,7 +1200,8 @@ function pembibitanComponent() {
                     body: JSON.stringify({
                         id_kolam_pembesaran: this.transferForm.id_kolam_pembesaran,
                         target_panen_kg: this.transferForm.target_panen_kg,
-                        biomassa_est: this.transferForm.biomassa_est
+                        biomassa_est: this.transferForm.biomassa_est,
+                        est_tgl_panen: this.transferForm.est_tgl_panen
                     })
                 });
 
