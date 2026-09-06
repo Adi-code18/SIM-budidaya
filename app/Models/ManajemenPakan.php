@@ -15,6 +15,8 @@ class ManajemenPakan extends Model
     protected $fillable = [
         'id_user',
         'id_kolam',
+        'id_stok_pakan',
+        'kategori_fase',
         'tgl_log',
         'kg_pelet',
         'kg_daun',
@@ -31,5 +33,10 @@ class ManajemenPakan extends Model
     public function kolam()
     {
         return $this->belongsTo(Kolam::class, 'id_kolam', 'id_kolam');
+    }
+
+    public function stokPakan()
+    {
+        return $this->belongsTo(StokPakan::class, 'id_stok_pakan', 'id_stok_pakan');
     }
 }

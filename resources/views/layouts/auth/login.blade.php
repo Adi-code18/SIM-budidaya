@@ -33,6 +33,77 @@
              remember: {{ old('remember') ? 'true' : 'false' }},
              lockoutSeconds: {{ $errors->any() && preg_match('/(\d+)\s*detik/', implode(' ', $errors->all()), $m) ? (int)$m[1] : 0 }},
              timer: null,
+             get emailSuggestion() {
+                 const val = (this.username || '').trim();
+                 if (!val.includes('@') || /^(\+62|62|08|0)[0-9\s\-]+$/.test(val)) return '';
+                 const parts = val.split('@');
+                 if (parts.length !== 2) return '';
+                 const local = parts[0];
+                 const domain = parts[1].toLowerCase();
+                 if (!local || !domain) return '';
+
+                 const validDomains = ['gmail.com', 'yahoo.com', 'yahoo.co.id', 'outlook.com', 'hotmail.com', 'icloud.com', 'proton.me', 'protonmail.com', 'live.com', 'mail.com'];
+                 if (validDomains.includes(domain)) return '';
+
+                 const typoMap = {
+                     'gnail.com': 'gmail.com', 'gnail': 'gmail.com',
+                     'gmai.com': 'gmail.com', 'gmai': 'gmail.com',
+                     'gmial.com': 'gmail.com', 'gmial': 'gmail.com',
+                     'gmaill.com': 'gmail.com', 'gmaill': 'gmail.com',
+                     'gamil.com': 'gmail.com', 'gamil': 'gmail.com',
+                     'gmal.com': 'gmail.com', 'gmal': 'gmail.com',
+                     'gemail.com': 'gmail.com',
+                     'gmeil.com': 'gmail.com', 'gmeil': 'gmail.com',
+                     'gmaul.com': 'gmail.com', 'gmaul': 'gmail.com',
+                     'gmqil.com': 'gmail.com',
+                     'gmail.co': 'gmail.com', 'gmail.con': 'gmail.com', 'gmaild.com': 'gmail.com',
+                     'gmaik.com': 'gmail.com', 'gmail.cm': 'gmail.com', 'gmaol.com': 'gmail.com',
+                     'gmail.cpm': 'gmail.com', 'gmail.om': 'gmail.com', 'gmail.comm': 'gmail.com',
+                     'gmai.co': 'gmail.com', 'gmail.co.id': 'gmail.com', 'g-mail.com': 'gmail.com',
+                     'gmail.net': 'gmail.com', 'gmail.org': 'gmail.com', 'gmail': 'gmail.com',
+                     'yaho.com': 'yahoo.com', 'yaho': 'yahoo.com', 'yahooo.com': 'yahoo.com',
+                     'yaho.co.id': 'yahoo.co.id', 'yaho.co': 'yahoo.com', 'yahoo.con': 'yahoo.com',
+                     'yahoo.comm': 'yahoo.com', 'yaho.id': 'yahoo.co.id', 'yahoo': 'yahoo.com',
+                     'outlok.com': 'outlook.com', 'outluk.com': 'outlook.com', 'outlook.con': 'outlook.com',
+                     'outlookk.com': 'outlook.com', 'outlook': 'outlook.com',
+                     'hotmial.com': 'hotmail.com', 'hotmai.com': 'hotmail.com', 'hotmaill.com': 'hotmail.com',
+                     'hotmail.con': 'hotmail.com', 'hotmail': 'hotmail.com',
+                     'icoud.com': 'icloud.com', 'iclod.com': 'icloud.com', 'icloud.con': 'icloud.com', 'icloud': 'icloud.com',
+                     'protonmial.com': 'protonmail.com', 'protonmai.com': 'protonmail.com'
+                 };
+                 if (typoMap[domain]) return `${local}@${typoMap[domain]}`;
+
+                 const lev = (a, b) => {
+                     const m = [];
+                     for (let i = 0; i <= b.length; i++) m[i] = [i];
+                     for (let j = 0; j <= a.length; j++) m[0][j] = j;
+                     for (let i = 1; i <= b.length; i++) {
+                         for (let j = 1; j <= a.length; j++) {
+                             m[i][j] = b[i - 1] === a[j - 1] ? m[i - 1][j - 1] : Math.min(m[i - 1][j - 1] + 1, m[i][j - 1] + 1, m[i - 1][j] + 1);
+                         }
+                     }
+                     return m[b.length][a.length];
+                 };
+
+                 if (!domain.includes('.')) {
+                     if (lev(domain, 'gmail') <= 2) return `${local}@gmail.com`;
+                     if (lev(domain, 'yahoo') <= 2) return `${local}@yahoo.com`;
+                     if (lev(domain, 'outlook') <= 2) return `${local}@outlook.com`;
+                     if (lev(domain, 'hotmail') <= 2) return `${local}@hotmail.com`;
+                     return `${local}@${domain}.com`;
+                 }
+
+                 if (domain.endsWith('.')) return `${local}@${domain.replace(/\.+$/, '')}.com`;
+
+                 const providers = ['gmail.com', 'yahoo.com', 'yahoo.co.id', 'outlook.com', 'hotmail.com', 'icloud.com', 'proton.me'];
+                 for (const prov of providers) {
+                     if (lev(domain, prov) <= 2) {
+                         return `${local}@${prov}`;
+                     }
+                 }
+
+                 return '';
+             },
              init() {
                  if (this.lockoutSeconds > 0) {
                      this.timer = setInterval(() => {
@@ -53,8 +124,8 @@
                 
                 <!-- Logo & Brand Header -->
                 <div class="flex items-center gap-3.5 mb-8">
-                    <img src="{{ asset('build/images/logo PT.png') }}" 
-                         alt="Logo PT" 
+                    <img src="{{ asset('build/images/Logo aquafarm.png') }}" 
+                         alt="Logo Aquafarm" 
                          class="h-11 w-auto object-contain flex-shrink-0">
                     <div>
                         <h1 class="font-extrabold text-xl text-[#051B44] tracking-tight leading-tight">SIM-BUDIDAYA</h1>
@@ -110,14 +181,23 @@
                                    autofocus
                                    class="w-full pl-10 pr-4 py-2.5 bg-slate-50/50 border {{ $errors->has('username') ? 'border-rose-300 ring-1 ring-rose-300' : 'border-slate-200' }} rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-[#051B44] focus:ring-2 focus:ring-[#051B44]/10 transition-all">
                         </div>
+                        <!-- Typo suggestion chip -->
+                        <div x-cloak x-show="emailSuggestion && emailSuggestion !== username" class="mt-1.5 p-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-[11px] flex items-center justify-between gap-2 animate-fadeIn">
+                            <div class="flex items-center gap-1.5 truncate">
+                                <i class="fa-solid fa-lightbulb text-amber-500 shrink-0"></i>
+                                <span class="truncate">Maksud Anda: <strong class="font-bold underline decoration-amber-400" x-text="emailSuggestion"></strong>?</span>
+                            </div>
+                            <button type="button" @click="username = emailSuggestion" class="shrink-0 px-2 py-0.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-bold text-[10px] transition-colors cursor-pointer">
+                                Terapkan
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Field 2: Password -->
                     <div>
                         <div class="flex items-center justify-between mb-1.5">
                             <label class="block text-xs font-semibold text-slate-600">Kata Sandi</label>
-                            <a href="javascript:void(0)" 
-                               @click="showForgotNotice = true" 
+                            <a href="{{ route('forgot.password') }}" 
                                class="text-xs font-semibold text-[#0077C6] hover:text-[#051B44] transition-colors cursor-pointer">
                                 Lupa Password?
                             </a>
@@ -144,9 +224,9 @@
                     <div class="flex items-center pt-0.5">
                         <label class="flex items-center gap-2 cursor-pointer select-none">
                             <input type="checkbox" 
-                                   name="remember"
+                                   name="remember" 
                                    x-model="remember"
-                                   class="w-4 h-4 rounded border-slate-300 text-[#051B44] focus:ring-[#051B44]/20 cursor-pointer">
+                                   class="w-4 h-4 text-[#051B44] border-slate-300 rounded focus:ring-0 focus:ring-offset-0 transition-colors">
                             <span class="text-xs text-slate-500 font-medium">Ingat perangkat ini</span>
                         </label>
                     </div>
@@ -203,34 +283,6 @@
                         <span>Mengatur Pengelolaan</span>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- Modal Notifikasi Lupa Password (Non-Fungsional Sementara) -->
-        <div x-show="showForgotNotice" 
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0 scale-95"
-             x-transition:enter-end="opacity-100 scale-100"
-             x-transition:leave="transition ease-in duration-150"
-             x-transition:leave-start="opacity-100 scale-100"
-             x-transition:leave-end="opacity-0 scale-95"
-             class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4"
-             style="display: none;">
-            <div @click.outside="showForgotNotice = false" 
-                 class="bg-white max-w-sm w-full rounded-3xl p-6 shadow-2xl border border-slate-100 text-center space-y-4">
-                <div class="w-12 h-12 rounded-2xl bg-sky-100 text-sky-600 mx-auto flex items-center justify-center text-xl">
-                    <i class="fa-solid fa-key"></i>
-                </div>
-                <div>
-                    <h3 class="font-extrabold text-base text-slate-900">Bantuan Lupa Password</h3>
-                    <p class="text-xs text-slate-500 leading-relaxed mt-1">
-                        Layanan pemulihan kata sandi mandiri belum diaktifkan. Silakan hubungi Administrator/Superadmin SIM-BUDIDAYA untuk melakukan reset kredensial akun Anda.
-                    </p>
-                </div>
-                <button type="button" @click="showForgotNotice = false" 
-                        class="w-full py-2.5 rounded-xl bg-[#051B44] text-white text-xs font-bold hover:bg-[#09265c] transition-colors">
-                    Mengerti
-                </button>
             </div>
         </div>
 

@@ -24,3 +24,8 @@ Route::get('/', function () {
 Route::apiResource('ikan', \App\Http\Controllers\Api\IkanController::class);
 Route::apiResource('pembibitan', \App\Http\Controllers\Api\BatchPembibitanController::class);
 Route::apiResource('pembesaran', \App\Http\Controllers\Api\BatchPembesaranController::class);
+
+// Forgot Password via Email OTP (Semua Role)
+Route::post('/forgot-password/send-otp', [\App\Http\Controllers\Auth\ForgotPasswordOtpController::class, 'apiSendOtp']);
+Route::post('/forgot-password/verify-otp', [\App\Http\Controllers\Auth\ForgotPasswordOtpController::class, 'apiVerifyOtp']);
+Route::post('/forgot-password/reset-password', [\App\Http\Controllers\Auth\ForgotPasswordOtpController::class, 'apiResetPassword']);

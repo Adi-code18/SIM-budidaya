@@ -120,34 +120,22 @@
                     </a>
                 @endforeach
             @else
-                <!-- Fallback Kolam Card 1: Kolam A-01 -->
-                <a href="{{ route('petugas.pembesaran.log-pakan', ['kolam' => 'Kolam A-01']) }}" 
-                   class="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs space-y-3 block hover:shadow-md transition-all">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                            <h4 class="text-xs font-extrabold text-navy-900">Kolam A-01</h4>
-                        </div>
-                        <span class="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            OPTIMAL
-                        </span>
+                <div class="p-6 bg-white rounded-3xl border border-slate-200/90 text-center space-y-3 shadow-xs">
+                    <div class="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 mx-auto flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-water-ladder"></i>
                     </div>
-
-                    <div class="grid grid-cols-3 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-center">
-                        <div>
-                            <span class="text-[9px] font-bold text-slate-400 uppercase block">BIOMASSA</span>
-                            <span class="text-xs font-extrabold text-navy-900">4.2 Ton</span>
-                        </div>
-                        <div>
-                            <span class="text-[9px] font-bold text-slate-400 uppercase block">SIKLUS</span>
-                            <span class="text-xs font-extrabold text-navy-900">DOC 85</span>
-                        </div>
-                        <div>
-                            <span class="text-[9px] font-bold text-slate-400 uppercase block">FCR</span>
-                            <span class="text-xs font-extrabold text-emerald-700">1.18</span>
-                        </div>
+                    <div class="space-y-1">
+                        <h4 class="text-xs font-extrabold text-navy-900">Belum Ada Kolam yang Terisi</h4>
+                        <p class="text-[11px] text-slate-400 max-w-xs mx-auto">Seluruh kolam pembesaran saat ini sedang kosong. Klik tombol di bawah untuk memulai siklus pembesaran baru.</p>
                     </div>
-                </a>
+                    <div class="pt-1">
+                        <a href="{{ route('petugas.pembesaran.create-batch') }}" 
+                           class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-navy-800 hover:bg-navy-900 text-white font-extrabold text-xs shadow-sm transition-all">
+                            <i class="fa-solid fa-plus text-[10px]"></i>
+                            <span>Mulai Batch Baru</span>
+                        </a>
+                    </div>
+                </div>
             @endif
         </div>
     </div>

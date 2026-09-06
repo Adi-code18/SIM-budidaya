@@ -21,10 +21,25 @@ class User extends Authenticatable
         'password',
         'role',
         'no_tlp',
+        'foto_profil',
         'two_factor_secret',
         'two_factor_confirmed_at',
         'last_session_id',
     ];
+
+    protected $appends = [
+        'foto_profil_url',
+    ];
+
+    public function getFotoProfilUrlAttribute(): string
+    {
+        if ($this->foto_profil && \Illuminate\Support\Facades\Storage::disk('public')->exists($this->foto_profil)) {
+            return asset('storage/' . $this->foto_profil);
+        }
+
+        $name = urlencode($this->nama ?: 'User');
+        return "https://ui-avatars.com/api/?name={$name}&background=0B2570&color=ffffff&bold=true";
+    }
 
     protected $hidden = [
         'password',

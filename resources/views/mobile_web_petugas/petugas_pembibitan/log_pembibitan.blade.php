@@ -35,7 +35,7 @@
         }
         this.isSubmitting = true;
         try {
-            const res = await fetch('{{ route('petugas.pembibitan.batch.store') }}', {
+            const res = await fetch('{{ route('petugas.pembibitan.store-batch') }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -110,16 +110,21 @@
 
             <!-- Field 3: Kolam / Tank Hatchery -->
             <div class="space-y-1">
-                <label class="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider block">LOKASI KOLAM HATCHERY *</label>
-                <select x-model="kolam" 
-                        class="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 text-xs font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-navy-800">
-                    <option value="">Pilih unit kolam...</option>
-                    @if(isset($kolams))
+                <label class="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider block">LOKASI KOLAM HATCHERY (KOSONG / TERSEDIA) *</label>
+                @if(isset($kolams) && $kolams->count() > 0)
+                    <select x-model="kolam" 
+                            class="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 text-xs font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-navy-800">
+                        <option value="">Pilih unit kolam hatchery...</option>
                         @foreach($kolams as $k)
-                            <option value="{{ $k->nama_kolam }}">{{ $k->nama_kolam }} ({{ $k->tipe_kolam }})</option>
+                            <option value="{{ $k->id_kolam }}">{{ $k->nama_kolam }} ({{ ucfirst($k->tipe_kolam ?? 'Hatchery') }})</option>
                         @endforeach
-                    @endif
-                </select>
+                    </select>
+                @else
+                    <div class="p-3 bg-rose-50 rounded-2xl border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
+                        <i class="fa-solid fa-triangle-exclamation text-rose-600"></i>
+                        <span>Semua kolam hatchery sedang terisi atau belum tersedia.</span>
+                    </div>
+                @endif
             </div>
 
             <!-- Field 4: Jumlah Bibit Awal -->

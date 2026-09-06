@@ -99,19 +99,21 @@
 
             <!-- Field 4: Kolam Tebar -->
             <div class="space-y-1">
-                <label class="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider block">KOLAM TEBAR *</label>
-                <select x-model="kolamTebar" 
-                        class="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 text-xs font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-navy-800">
-                    <option value="">Pilih kolam pembesaran...</option>
-                    @if(isset($kolams))
+                <label class="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider block">KOLAM TEBAR (KOSONG / TERSEDIA) *</label>
+                @if(isset($kolams) && $kolams->count() > 0)
+                    <select x-model="kolamTebar" 
+                            class="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 text-xs font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-navy-800">
+                        <option value="">Pilih kolam yang tersedia...</option>
                         @foreach($kolams as $k)
-                            <option value="{{ $k->nama_kolam }}">{{ $k->nama_kolam }} (Kapasitas: {{ number_format($k->kapasitas, 0, ',', '.') }} Ekor)</option>
+                            <option value="{{ $k->id_kolam }}">{{ $k->nama_kolam }} (Kapasitas: {{ number_format($k->kapasitas, 0, ',', '.') }} Ekor • {{ ucfirst($k->tipe_kolam ?? 'Terpal') }})</option>
                         @endforeach
-                    @else
-                        <option value="Kolam A-01">Kolam A-01</option>
-                        <option value="Kolam B-03">Kolam B-03</option>
-                    @endif
-                </select>
+                    </select>
+                @else
+                    <div class="p-3 bg-rose-50 rounded-2xl border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
+                        <i class="fa-solid fa-triangle-exclamation text-rose-600"></i>
+                        <span>Semua kolam pembesaran sedang terisi siklus aktif atau belum ada kolam yang tersedia.</span>
+                    </div>
+                @endif
             </div>
 
             <!-- Field 5: Sumber Benih -->

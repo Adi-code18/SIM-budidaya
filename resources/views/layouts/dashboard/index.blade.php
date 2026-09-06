@@ -361,7 +361,16 @@
                     <p class="text-xs text-slate-400 mt-0.5">Pemetaan geolokasi outlet, restoran, dan eksportir mitra yang bekerjasama.</p>
                 </div>
             </div>
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2">
+                <!-- Toggle Satelit / Peta Jalan -->
+                <button type="button" 
+                        onclick="if(window.toggleDashboardMapLayer) window.toggleDashboardMapLayer()"
+                        id="btnDashboardMapToggle"
+                        class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 text-xs font-bold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-satellite text-sky-600" id="iconDashboardMapToggle"></i>
+                    <span id="textDashboardMapToggle">Satelit HD</span>
+                </button>
+
                 <div class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-50 border border-sky-200/60 text-[#051B44] text-xs font-bold">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                     <span>{{ count($mitraList ?? []) }} Titik Mitra Terdaftar</span>
@@ -716,6 +725,24 @@
         if (mapElement && typeof L !== 'undefined') {
             const mitras = {!! json_encode($mitraList ?? []) !!};
 
+            let currentMapMode = 'satellite';
+            let activeTileLayer = null;
+
+            function getDashboardTileLayer(mode) {
+                if (mode === 'satellite') {
+                    return L.tileLayer('https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+                        maxZoom: 20,
+                        subdomains: ['0', '1', '2', '3'],
+                        attribution: '© Google Satellite'
+                    });
+                } else {
+                    return L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        maxZoom: 19,
+                        attribution: '© OpenStreetMap'
+                    });
+                }
+            }
+
             // Fix leaflet default icon asset paths
             delete L.Icon.Default.prototype._getIconUrl;
             L.Icon.Default.mergeOptions({
@@ -724,26 +751,40 @@
                 shadowUrl: "{{ asset('leaflet/images/marker-shadow.png') }}",
             });
 
-            // Default center Mataram / NTB
             const map = L.map('mitraDistributionMap', {
                 zoomControl: true,
                 scrollWheelZoom: false
-            }).setView([-8.5833, 116.1166], 12);
+            }).setView([-7.135, 108.27], 14);
 
-            // OpenStreetMap Standard tile layer (Clean, No watermark, No API key required)
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-                maxZoom: 19
-            }).addTo(map);
+            activeTileLayer = getDashboardTileLayer(currentMapMode);
+            activeTileLayer.addTo(map);
+
+            window.toggleDashboardMapLayer = function() {
+                currentMapMode = currentMapMode === 'satellite' ? 'street' : 'satellite';
+                if (activeTileLayer) {
+                    map.removeLayer(activeTileLayer);
+                }
+                activeTileLayer = getDashboardTileLayer(currentMapMode);
+                activeTileLayer.addTo(map);
+                activeTileLayer.bringToBack();
+
+                const txt = document.getElementById('textDashboardMapToggle');
+                const ico = document.getElementById('iconDashboardMapToggle');
+                if (txt) txt.textContent = currentMapMode === 'satellite' ? 'Satelit HD' : 'Peta Jalan';
+                if (ico) {
+                    ico.className = currentMapMode === 'satellite' ? 'fa-solid fa-satellite text-sky-600' : 'fa-solid fa-map text-emerald-600';
+                }
+                return currentMapMode;
+            };
 
             const markers = [];
             const customIcon = L.divIcon({
                 className: 'custom-leaflet-marker',
-                html: `<div style="background-color: #051B44; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; border: 2.5px solid #38BDF8; box-shadow: 0 4px 10px rgba(5,27,68,0.35); font-size: 13px;">
+                html: `<div style="background-color: #051B44; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; border: 2.5px solid #38BDF8; box-shadow: 0 4px 10px rgba(5,27,68,0.35); font-size: 14px;">
                         <i class="fa-solid fa-store"></i>
                        </div>`,
-                iconSize: [32, 32],
-                iconAnchor: [16, 16],
+                iconSize: [34, 34],
+                iconAnchor: [17, 17],
                 popupAnchor: [0, -18]
             });
 
@@ -780,11 +821,14 @@
             if (markers.length > 0) {
                 const group = new L.featureGroup(markers);
                 map.fitBounds(group.getBounds().pad(0.15));
+                if (markers.length === 1) {
+                    map.setZoom(16);
+                }
             }
 
             // Global focus function for sidebar outlet list clicks
             window.focusMitra = function(lat, lng, nama) {
-                map.flyTo([lat, lng], 15, { animate: true, duration: 1.2 });
+                map.flyTo([lat, lng], 17, { animate: true, duration: 1.2 });
                 markers.forEach(function(marker) {
                     const pos = marker.getLatLng();
                     if (Math.abs(pos.lat - lat) < 0.0001 && Math.abs(pos.lng - lng) < 0.0001) {

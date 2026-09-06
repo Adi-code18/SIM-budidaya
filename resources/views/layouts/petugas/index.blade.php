@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Manajemen Petugas & Keamanan - SIM-BUDIDAYA')
+@section('title', 'Manajemen Petugas & Akses Akun - SIM-BUDIDAYA')
 
 @section('content')
 <div class="space-y-6" x-data="petugasComponent()">
@@ -17,8 +17,8 @@
         <!-- Title & Action Button -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-                <h1 class="text-2xl font-extrabold text-[#0B2570] tracking-tight">Manajemen Petugas &amp; Akses Keamanan</h1>
-                <p class="text-xs text-slate-500 font-medium mt-0.5">Kelola akun staf operasional, ganti password, dan pantau status Google Authenticator (2FA).</p>
+                <h1 class="text-2xl font-extrabold text-[#0B2570] tracking-tight">Manajemen Petugas &amp; Akses Akun</h1>
+                <p class="text-xs text-slate-500 font-medium mt-0.5">Kelola akun staf operasional dan perbarui kata sandi petugas.</p>
             </div>
             <div>
                 <button @click="activeTab = 'create'"
@@ -39,8 +39,6 @@
                             <th class="py-3.5 px-6">PERAN &amp; DIVISI</th>
                             <th class="py-3.5 px-6">EMAIL / TELP</th>
                             <th class="py-3.5 px-6">TGL BERGABUNG</th>
-                            <th class="py-3.5 px-6 text-center">STATUS 2FA (AUTHENTICATOR)</th>
-                            <th class="py-3.5 px-6">STATUS AKUN</th>
                             <th class="py-3.5 px-6 text-center">AKSI</th>
                         </tr>
                     </thead>
@@ -53,23 +51,15 @@
                                     'pembesaran'         => ['bg' => 'bg-cyan-100 text-cyan-800', 'label' => 'Teknisi Pembesaran'],
                                     'petugas_distribusi' => ['bg' => 'bg-sky-100 text-sky-700', 'label' => 'Logistik & Distribusi'],
                                 ];
-                                $avatars = [
-                                    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=120',
-                                    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=120',
-                                    'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=120',
-                                    'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=120'
-                                ];
                             @endphp
                             @foreach($users as $idx => $u)
                                 @php
                                     $roleInfo = $roleBadges[$u->role] ?? ['bg' => 'bg-slate-100 text-slate-700', 'label' => ucfirst(str_replace('_', ' ', $u->role))];
-                                    $avatar = $avatars[$idx % count($avatars)];
-                                    $has2fa = !empty($u->two_factor_confirmed_at);
                                 @endphp
                                 <tr id="user-row-{{ $u->id_user }}" class="hover:bg-slate-50/60 transition-colors">
                                     <td class="py-4 px-6">
                                         <div class="flex items-center gap-3">
-                                            <img src="{{ $avatar }}" alt="{{ $u->nama }}" class="w-10 h-10 rounded-full object-cover border border-slate-200 shrink-0">
+                                            <img src="{{ $u->foto_profil_url }}" alt="{{ $u->nama }}" class="w-10 h-10 rounded-full object-cover border border-slate-200 shrink-0">
                                             <div>
                                                 <h4 class="font-extrabold text-slate-900">{{ $u->nama }}</h4>
                                                 <span class="text-[10px] text-slate-400 font-mono">ID: USR-{{ str_pad($u->id_user, 4, '0', STR_PAD_LEFT) }}</span>
@@ -97,24 +87,6 @@
                                         {{ $u->created_at ? $u->created_at->translatedFormat('d M Y') : '01 Jan 2026' }}
                                     </td>
                                     <td class="py-4 px-6 text-center">
-                                        @if($has2fa)
-                                            <span id="badge-2fa-{{ $u->id_user }}" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-xs">
-                                                <i class="fa-solid fa-shield-halved text-emerald-600"></i>
-                                                <span>2FA Aktif</span>
-                                            </span>
-                                        @else
-                                            <span id="badge-2fa-{{ $u->id_user }}" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-500 border border-slate-200">
-                                                <i class="fa-solid fa-lock-open text-slate-400"></i>
-                                                <span>Nonaktif</span>
-                                            </span>
-                                        @endif
-                                    </td>
-                                    <td class="py-4 px-6">
-                                        <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-700 uppercase">
-                                            Aktif
-                                        </span>
-                                    </td>
-                                    <td class="py-4 px-6 text-center">
                                         <div class="relative inline-block text-left" x-data="{ open: false }">
                                             <button @click="open = !open" @click.away="open = false"
                                                     class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors">
@@ -136,7 +108,7 @@
 
                                                 <button @click="open = false; openSecurity({{ json_encode($u) }})" class="w-full px-3.5 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50/70 flex items-center gap-2.5">
                                                     <i class="fa-solid fa-key text-indigo-600 w-4"></i>
-                                                    <span>Keamanan &amp; Sandi</span>
+                                                    <span>Ganti Password</span>
                                                 </button>
 
                                                 <div class="my-1 border-t border-slate-100"></div>
@@ -152,7 +124,7 @@
                             @endforeach
                         @else
                             <tr>
-                                <td colspan="7" class="py-8 text-center text-slate-400">
+                                <td colspan="5" class="py-8 text-center text-slate-400">
                                     Belum ada data petugas terdaftar.
                                 </td>
                             </tr>
@@ -212,13 +184,140 @@
 
                     <div>
                         <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1.5">Nomor WhatsApp / Telp</label>
-                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50/70 overflow-hidden focus-within:bg-white focus-within:ring-2 focus-within:ring-sky-500 focus-within:border-sky-500 transition-all">
-                            <span class="px-3 py-2.5 text-xs font-bold text-slate-500 bg-slate-100/90 border-r border-slate-200 shrink-0 flex items-center gap-1.5">
-                                <span>🇮🇩</span>
-                                <span>+62</span>
-                            </span>
-                            <input type="tel" name="no_tlp" x-model="formCreate.no_tlp" placeholder="812-3456-7890 / 081234567890"
-                                   class="w-full px-3.5 py-2.5 text-xs font-semibold text-slate-800 bg-transparent border-0 focus:outline-none">
+                        <div x-data="{
+                            countryMenuOpen: false,
+                            countrySearch: '',
+                            countries: [
+                                { code: 'ID', dial: '+62', name: 'Indonesia', flag: '🇮🇩', placeholder: '812-3456-7890' },
+                                { code: 'US', dial: '+1', name: 'United States', flag: '🇺🇸', placeholder: '201-555-5555' },
+                                { code: 'CN', dial: '+86', name: 'China (中国)', flag: '🇨🇳', placeholder: '138-0013-8000' },
+                                { code: 'FR', dial: '+33', name: 'France', flag: '🇫🇷', placeholder: '6 12 34 56 78' },
+                                { code: 'IN', dial: '+91', name: 'India (भारत)', flag: '🇮🇳', placeholder: '98765-43210' },
+                                { code: 'GB', dial: '+44', name: 'United Kingdom', flag: '🇬🇧', placeholder: '7911 123456' },
+                                { code: 'MY', dial: '+60', name: 'Malaysia', flag: '🇲🇾', placeholder: '12-345 6789' },
+                                { code: 'SG', dial: '+65', name: 'Singapore', flag: '🇸🇬', placeholder: '8123 4567' },
+                                { code: 'JP', dial: '+81', name: 'Japan (日本)', flag: '🇯🇵', placeholder: '90-1234-5678' },
+                                { code: 'KR', dial: '+82', name: 'South Korea (대한민국)', flag: '🇰🇷', placeholder: '10-1234-5678' },
+                                { code: 'SA', dial: '+966', name: 'Saudi Arabia (السعودية)', flag: '🇸🇦', placeholder: '50 123 4567' },
+                                { code: 'AE', dial: '+971', name: 'United Arab Emirates (الإمارات)', flag: '🇦🇪', placeholder: '50 123 4567' },
+                                { code: 'AU', dial: '+61', name: 'Australia', flag: '🇦🇺', placeholder: '412 345 678' },
+                                { code: 'DE', dial: '+49', name: 'Germany (Deutschland)', flag: '🇩🇪', placeholder: '1512 3456789' },
+                                { code: 'NL', dial: '+31', name: 'Netherlands', flag: '🇳🇱', placeholder: '6 12345678' },
+                                { code: 'TH', dial: '+66', name: 'Thailand (ไทย)', flag: '🇹🇭', placeholder: '81 234 5678' },
+                                { code: 'VN', dial: '+84', name: 'Vietnam (Việt Nam)', flag: '🇻🇳', placeholder: '91 234 5678' },
+                                { code: 'PH', dial: '+63', name: 'Philippines', flag: '🇵🇭', placeholder: '917 123 4567' },
+                                { code: 'BR', dial: '+55', name: 'Brazil (Brasil)', flag: '🇧🇷', placeholder: '11 98765-4321' },
+                                { code: 'CA', dial: '+1', name: 'Canada', flag: '🇨🇦', placeholder: '416-555-0199' },
+                                { code: 'TR', dial: '+90', name: 'Turkey (Türkiye)', flag: '🇹🇷', placeholder: '532 123 45 67' },
+                                { code: 'RU', dial: '+7', name: 'Russia (Россия)', flag: '🇷🇺', placeholder: '912 345-67-89' },
+                                { code: 'ES', dial: '+34', name: 'Spain (España)', flag: '🇪🇸', placeholder: '612 34 56 78' },
+                                { code: 'IT', dial: '+39', name: 'Italy (Italia)', flag: '🇮🇹', placeholder: '312 345 6789' },
+                                { code: 'EG', dial: '+20', name: 'Egypt (مصر)', flag: '🇪🇬', placeholder: '100 123 4567' }
+                            ],
+                            selectedCountry: { code: 'ID', dial: '+62', name: 'Indonesia', flag: '🇮🇩', placeholder: '812-3456-7890' },
+                            phoneNum: '',
+                            init() {
+                                this.selectedCountry = this.countries[0];
+                                this.syncFromModel();
+                                this.$watch('formCreate.no_tlp', () => this.syncFromModel());
+                            },
+                            syncFromModel() {
+                                let val = (formCreate.no_tlp || '').trim();
+                                if (!val) { this.phoneNum = ''; return; }
+                                for (let c of this.countries) {
+                                    if (val.startsWith(c.dial)) {
+                                        this.selectedCountry = c;
+                                        this.phoneNum = val.slice(c.dial.length).trim();
+                                        return;
+                                    }
+                                }
+                                if (val.startsWith('0')) {
+                                    this.selectedCountry = this.countries[0];
+                                    this.phoneNum = val.slice(1).trim();
+                                } else {
+                                    this.phoneNum = val;
+                                }
+                            },
+                            updatePhone() {
+                                let num = (this.phoneNum || '').trim();
+                                if (num.startsWith('0')) num = num.substring(1).trim();
+                                formCreate.no_tlp = num ? `${this.selectedCountry.dial} ${num}` : '';
+                            },
+                            selectCountry(c) {
+                                this.selectedCountry = c;
+                                this.countryMenuOpen = false;
+                                this.countrySearch = '';
+                                this.updatePhone();
+                                this.$nextTick(() => { if (this.$refs.createPhoneRef) this.$refs.createPhoneRef.focus(); });
+                            },
+                            get filteredCountries() {
+                                if (!this.countrySearch.trim()) return this.countries;
+                                let q = this.countrySearch.toLowerCase();
+                                return this.countries.filter(c => c.name.toLowerCase().includes(q) || c.dial.includes(q) || c.code.toLowerCase().includes(q));
+                            }
+                        }" @click.outside="countryMenuOpen = false" class="relative">
+                            <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50/70 focus-within:bg-white focus-within:ring-2 focus-within:ring-sky-500 focus-within:border-sky-500 transition-all">
+                                <input type="hidden" name="no_tlp" :value="formCreate.no_tlp">
+                                
+                                <button type="button"
+                                        @click="countryMenuOpen = !countryMenuOpen"
+                                        class="px-3 py-2.5 text-xs font-bold text-slate-700 bg-slate-100/90 border-r border-slate-200 hover:bg-slate-100 cursor-pointer shrink-0 flex items-center gap-1.5 transition-colors select-none focus:outline-none rounded-l-xl">
+                                    <span class="text-base leading-none" x-text="selectedCountry.flag">🇮🇩</span>
+                                    <span class="text-xs font-extrabold text-slate-800" x-text="selectedCountry.dial">+62</span>
+                                    <i class="fa-solid fa-chevron-down text-[9px] text-slate-400 transition-transform duration-200"
+                                       :class="countryMenuOpen ? 'rotate-180 text-sky-600' : ''"></i>
+                                </button>
+                                <input type="tel" 
+                                       x-ref="createPhoneRef"
+                                       x-model="phoneNum"
+                                       @input="updatePhone()"
+                                       :placeholder="selectedCountry.placeholder"
+                                       class="w-full px-3.5 py-2.5 text-xs font-semibold text-slate-800 bg-transparent border-0 focus:outline-none rounded-r-xl">
+                            </div>
+
+                            <!-- Dropdown -->
+                            <div x-show="countryMenuOpen"
+                                 x-transition:enter="transition ease-out duration-150"
+                                 x-transition:enter-start="opacity-0 translate-y-1 scale-98"
+                                 x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                                 x-transition:leave="transition ease-in duration-100"
+                                 x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                                 x-transition:leave-end="opacity-0 translate-y-1 scale-98"
+                                 class="absolute z-50 top-full left-0 mt-1.5 w-72 sm:w-80 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden"
+                                 style="display: none;">
+                                
+                                <div class="p-2 border-b border-slate-100 bg-slate-50/80 sticky top-0 z-10">
+                                    <div class="relative">
+                                        <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs absolute left-3 top-1/2 -translate-y-1/2"></i>
+                                        <input type="text"
+                                               x-model="countrySearch"
+                                               @keydown.enter.prevent
+                                               placeholder="Cari negara atau kode (+62)..."
+                                               class="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#00897B] focus:border-[#00897B] font-medium">
+                                    </div>
+                                </div>
+
+                                <div class="max-h-56 overflow-y-auto divide-y divide-slate-50 py-1">
+                                    <template x-for="c in filteredCountries" :key="c.code + c.dial">
+                                        <button type="button"
+                                                @click="selectCountry(c)"
+                                                :class="selectedCountry.code === c.code && selectedCountry.dial === c.dial ? 'bg-[#00897B] text-white hover:bg-[#00796B]' : 'text-slate-700 hover:bg-slate-100'"
+                                                class="w-full px-3.5 py-2.5 text-xs flex items-center justify-between text-left transition-colors font-medium">
+                                            <div class="flex items-center gap-2.5 truncate pr-2">
+                                                <span class="text-base shrink-0 leading-none" x-text="c.flag"></span>
+                                                <span class="truncate" x-text="c.name"></span>
+                                            </div>
+                                            <span class="font-extrabold shrink-0 text-[11px]"
+                                                  :class="selectedCountry.code === c.code && selectedCountry.dial === c.dial ? 'text-white/95' : 'text-slate-500'"
+                                                  x-text="c.dial"></span>
+                                        </button>
+                                    </template>
+                                    <div x-show="filteredCountries.length === 0" class="px-4 py-6 text-center text-xs text-slate-400">
+                                        <i class="fa-solid fa-earth-americas text-slate-300 text-lg mb-1 block"></i>
+                                        Negara tidak ditemukan
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -291,13 +390,140 @@
 
                     <div>
                         <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1.5">Nomor WhatsApp / Telp</label>
-                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50/70 overflow-hidden focus-within:bg-white focus-within:ring-2 focus-within:ring-sky-500 focus-within:border-sky-500 transition-all">
-                            <span class="px-3 py-2.5 text-xs font-bold text-slate-500 bg-slate-100/90 border-r border-slate-200 shrink-0 flex items-center gap-1.5">
-                                <span>🇮🇩</span>
-                                <span>+62</span>
-                            </span>
-                            <input type="tel" name="no_tlp" x-model="formEdit.no_tlp" placeholder="812-3456-7890 / 081234567890"
-                                   class="w-full px-3.5 py-2.5 text-xs font-semibold text-slate-800 bg-transparent border-0 focus:outline-none">
+                        <div x-data="{
+                            countryMenuOpen: false,
+                            countrySearch: '',
+                            countries: [
+                                { code: 'ID', dial: '+62', name: 'Indonesia', flag: '🇮🇩', placeholder: '812-3456-7890' },
+                                { code: 'US', dial: '+1', name: 'United States', flag: '🇺🇸', placeholder: '201-555-5555' },
+                                { code: 'CN', dial: '+86', name: 'China (中国)', flag: '🇨🇳', placeholder: '138-0013-8000' },
+                                { code: 'FR', dial: '+33', name: 'France', flag: '🇫🇷', placeholder: '6 12 34 56 78' },
+                                { code: 'IN', dial: '+91', name: 'India (भारत)', flag: '🇮🇳', placeholder: '98765-43210' },
+                                { code: 'GB', dial: '+44', name: 'United Kingdom', flag: '🇬🇧', placeholder: '7911 123456' },
+                                { code: 'MY', dial: '+60', name: 'Malaysia', flag: '🇲🇾', placeholder: '12-345 6789' },
+                                { code: 'SG', dial: '+65', name: 'Singapore', flag: '🇸🇬', placeholder: '8123 4567' },
+                                { code: 'JP', dial: '+81', name: 'Japan (日本)', flag: '🇯🇵', placeholder: '90-1234-5678' },
+                                { code: 'KR', dial: '+82', name: 'South Korea (대한민국)', flag: '🇰🇷', placeholder: '10-1234-5678' },
+                                { code: 'SA', dial: '+966', name: 'Saudi Arabia (السعودية)', flag: '🇸🇦', placeholder: '50 123 4567' },
+                                { code: 'AE', dial: '+971', name: 'United Arab Emirates (الإمارات)', flag: '🇦🇪', placeholder: '50 123 4567' },
+                                { code: 'AU', dial: '+61', name: 'Australia', flag: '🇦🇺', placeholder: '412 345 678' },
+                                { code: 'DE', dial: '+49', name: 'Germany (Deutschland)', flag: '🇩🇪', placeholder: '1512 3456789' },
+                                { code: 'NL', dial: '+31', name: 'Netherlands', flag: '🇳🇱', placeholder: '6 12345678' },
+                                { code: 'TH', dial: '+66', name: 'Thailand (ไทย)', flag: '🇹🇭', placeholder: '81 234 5678' },
+                                { code: 'VN', dial: '+84', name: 'Vietnam (Việt Nam)', flag: '🇻🇳', placeholder: '91 234 5678' },
+                                { code: 'PH', dial: '+63', name: 'Philippines', flag: '🇵🇭', placeholder: '917 123 4567' },
+                                { code: 'BR', dial: '+55', name: 'Brazil (Brasil)', flag: '🇧🇷', placeholder: '11 98765-4321' },
+                                { code: 'CA', dial: '+1', name: 'Canada', flag: '🇨🇦', placeholder: '416-555-0199' },
+                                { code: 'TR', dial: '+90', name: 'Turkey (Türkiye)', flag: '🇹🇷', placeholder: '532 123 45 67' },
+                                { code: 'RU', dial: '+7', name: 'Russia (Россия)', flag: '🇷🇺', placeholder: '912 345-67-89' },
+                                { code: 'ES', dial: '+34', name: 'Spain (España)', flag: '🇪🇸', placeholder: '612 34 56 78' },
+                                { code: 'IT', dial: '+39', name: 'Italy (Italia)', flag: '🇮🇹', placeholder: '312 345 6789' },
+                                { code: 'EG', dial: '+20', name: 'Egypt (مصر)', flag: '🇪🇬', placeholder: '100 123 4567' }
+                            ],
+                            selectedCountry: { code: 'ID', dial: '+62', name: 'Indonesia', flag: '🇮🇩', placeholder: '812-3456-7890' },
+                            phoneNum: '',
+                            init() {
+                                this.selectedCountry = this.countries[0];
+                                this.syncFromModel();
+                                this.$watch('formEdit.no_tlp', () => this.syncFromModel());
+                            },
+                            syncFromModel() {
+                                let val = (formEdit.no_tlp || '').trim();
+                                if (!val) { this.phoneNum = ''; return; }
+                                for (let c of this.countries) {
+                                    if (val.startsWith(c.dial)) {
+                                        this.selectedCountry = c;
+                                        this.phoneNum = val.slice(c.dial.length).trim();
+                                        return;
+                                    }
+                                }
+                                if (val.startsWith('0')) {
+                                    this.selectedCountry = this.countries[0];
+                                    this.phoneNum = val.slice(1).trim();
+                                } else {
+                                    this.phoneNum = val;
+                                }
+                            },
+                            updatePhone() {
+                                let num = (this.phoneNum || '').trim();
+                                if (num.startsWith('0')) num = num.substring(1).trim();
+                                formEdit.no_tlp = num ? `${this.selectedCountry.dial} ${num}` : '';
+                            },
+                            selectCountry(c) {
+                                this.selectedCountry = c;
+                                this.countryMenuOpen = false;
+                                this.countrySearch = '';
+                                this.updatePhone();
+                                this.$nextTick(() => { if (this.$refs.editPhoneRef) this.$refs.editPhoneRef.focus(); });
+                            },
+                            get filteredCountries() {
+                                if (!this.countrySearch.trim()) return this.countries;
+                                let q = this.countrySearch.toLowerCase();
+                                return this.countries.filter(c => c.name.toLowerCase().includes(q) || c.dial.includes(q) || c.code.toLowerCase().includes(q));
+                            }
+                        }" @click.outside="countryMenuOpen = false" class="relative">
+                            <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50/70 focus-within:bg-white focus-within:ring-2 focus-within:ring-sky-500 focus-within:border-sky-500 transition-all">
+                                <input type="hidden" name="no_tlp" :value="formEdit.no_tlp">
+                                
+                                <button type="button"
+                                        @click="countryMenuOpen = !countryMenuOpen"
+                                        class="px-3 py-2.5 text-xs font-bold text-slate-700 bg-slate-100/90 border-r border-slate-200 hover:bg-slate-100 cursor-pointer shrink-0 flex items-center gap-1.5 transition-colors select-none focus:outline-none rounded-l-xl">
+                                    <span class="text-base leading-none" x-text="selectedCountry.flag">🇮🇩</span>
+                                    <span class="text-xs font-extrabold text-slate-800" x-text="selectedCountry.dial">+62</span>
+                                    <i class="fa-solid fa-chevron-down text-[9px] text-slate-400 transition-transform duration-200"
+                                       :class="countryMenuOpen ? 'rotate-180 text-sky-600' : ''"></i>
+                                </button>
+                                <input type="tel" 
+                                       x-ref="editPhoneRef"
+                                       x-model="phoneNum"
+                                       @input="updatePhone()"
+                                       :placeholder="selectedCountry.placeholder"
+                                       class="w-full px-3.5 py-2.5 text-xs font-semibold text-slate-800 bg-transparent border-0 focus:outline-none rounded-r-xl">
+                            </div>
+
+                            <!-- Dropdown -->
+                            <div x-show="countryMenuOpen"
+                                 x-transition:enter="transition ease-out duration-150"
+                                 x-transition:enter-start="opacity-0 translate-y-1 scale-98"
+                                 x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                                 x-transition:leave="transition ease-in duration-100"
+                                 x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                                 x-transition:leave-end="opacity-0 translate-y-1 scale-98"
+                                 class="absolute z-50 top-full left-0 mt-1.5 w-72 sm:w-80 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden"
+                                 style="display: none;">
+                                
+                                <div class="p-2 border-b border-slate-100 bg-slate-50/80 sticky top-0 z-10">
+                                    <div class="relative">
+                                        <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs absolute left-3 top-1/2 -translate-y-1/2"></i>
+                                        <input type="text"
+                                               x-model="countrySearch"
+                                               @keydown.enter.prevent
+                                               placeholder="Cari negara atau kode (+62)..."
+                                               class="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#00897B] focus:border-[#00897B] font-medium">
+                                    </div>
+                                </div>
+
+                                <div class="max-h-56 overflow-y-auto divide-y divide-slate-50 py-1">
+                                    <template x-for="c in filteredCountries" :key="c.code + c.dial">
+                                        <button type="button"
+                                                @click="selectCountry(c)"
+                                                :class="selectedCountry.code === c.code && selectedCountry.dial === c.dial ? 'bg-[#00897B] text-white hover:bg-[#00796B]' : 'text-slate-700 hover:bg-slate-100'"
+                                                class="w-full px-3.5 py-2.5 text-xs flex items-center justify-between text-left transition-colors font-medium">
+                                            <div class="flex items-center gap-2.5 truncate pr-2">
+                                                <span class="text-base shrink-0 leading-none" x-text="c.flag"></span>
+                                                <span class="truncate" x-text="c.name"></span>
+                                            </div>
+                                            <span class="font-extrabold shrink-0 text-[11px]"
+                                                  :class="selectedCountry.code === c.code && selectedCountry.dial === c.dial ? 'text-white/95' : 'text-slate-500'"
+                                                  x-text="c.dial"></span>
+                                        </button>
+                                    </template>
+                                    <div x-show="filteredCountries.length === 0" class="px-4 py-6 text-center text-xs text-slate-400">
+                                        <i class="fa-solid fa-earth-americas text-slate-300 text-lg mb-1 block"></i>
+                                        Negara tidak ditemukan
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -316,7 +542,7 @@
     </div>
 
     <!-- ========================================================================= -->
-    <!-- MODAL KEAMANAN & RESET PASSWORD / GOOGLE AUTHENTICATOR (2FA)              -->
+    <!-- MODAL GANTI PASSWORD PETUGAS                                              -->
     <!-- ========================================================================= -->
     <div x-show="securityModalOpen" 
          x-transition:enter="transition ease-out duration-200"
@@ -336,16 +562,16 @@
              x-transition:leave="transition ease-in duration-150"
              x-transition:leave-start="opacity-100 scale-100 translate-y-0"
              x-transition:leave-end="opacity-0 scale-95 translate-y-3"
-             class="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-slate-100 p-6 sm:p-7 space-y-6 text-left">
+             class="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-slate-100 p-6 sm:p-7 space-y-6 text-left">
             
             <!-- Header Modal -->
             <div class="flex items-center justify-between pb-4 border-b border-slate-100">
                 <div class="flex items-center gap-3">
                     <div class="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center text-lg shadow-xs">
-                        <i class="fa-solid fa-shield-keyhole"></i>
+                        <i class="fa-solid fa-key"></i>
                     </div>
                     <div>
-                        <h3 class="text-base font-extrabold text-slate-900">Keamanan &amp; Akses Akun</h3>
+                        <h3 class="text-base font-extrabold text-slate-900">Ganti Password Petugas</h3>
                         <p class="text-xs text-slate-500 font-medium" x-text="securityUser.nama + ' (' + securityUser.email + ')'"></p>
                     </div>
                 </div>
@@ -354,46 +580,8 @@
                 </button>
             </div>
 
-            <!-- Section 1: Status Google Authenticator 2FA -->
-            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2 text-xs font-extrabold text-slate-800">
-                        <i class="fa-solid fa-mobile-screen-button text-indigo-600"></i>
-                        <span>Google Authenticator (2FA)</span>
-                    </div>
-                    <template x-if="securityUser.has_2fa">
-                        <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 flex items-center gap-1">
-                            <i class="fa-solid fa-circle-check text-emerald-600"></i>
-                            <span>Aktif</span>
-                        </span>
-                    </template>
-                    <template x-if="!securityUser.has_2fa">
-                        <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-200 text-slate-600">
-                            Nonaktif
-                        </span>
-                    </template>
-                </div>
-                <p class="text-[11px] text-slate-500 leading-relaxed">
-                    Petugas mengamankan login mobile web menggunakan kode 6-digit Google Authenticator. Jika ponsel petugas hilang/berganti, Anda dapat meresetnya di sini.
-                </p>
-                <template x-if="securityUser.has_2fa">
-                    <div class="pt-1">
-                        <button type="button" @click="reset2fa()" :disabled="isResetting2fa"
-                                class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-[0.99] text-white font-extrabold text-[11px] transition-all flex items-center gap-1.5 shadow-xs disabled:opacity-50">
-                            <i class="fa-solid text-[10px]" :class="isResetting2fa ? 'fa-spinner fa-spin' : 'fa-arrows-rotate'"></i>
-                            <span x-text="isResetting2fa ? 'Mereset 2FA...' : 'Reset / Nonaktifkan 2FA'"></span>
-                        </button>
-                    </div>
-                </template>
-            </div>
-
-            <!-- Section 2: Ganti / Reset Password Petugas -->
+            <!-- Form: Ganti / Reset Password Petugas -->
             <form action="#" method="POST" @submit.prevent="submitPassword()" class="space-y-4">
-                <div class="flex items-center gap-2 text-xs font-extrabold text-slate-800 pt-1">
-                    <i class="fa-solid fa-key text-sky-600"></i>
-                    <span>Ganti / Reset Kata Sandi Petugas</span>
-                </div>
-
                 <div>
                     <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">Password Baru <span class="text-rose-500">*</span></label>
                     <input type="password" x-model="formPassword.password" required minlength="6" placeholder="Masukkan minimal 6 karakter..."
@@ -408,7 +596,7 @@
 
                 <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
                     <button type="button" @click="securityModalOpen = false" class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors">
-                        Tutup
+                        Batal
                     </button>
                     <button type="submit" :disabled="isUpdatingPassword"
                             class="px-5 py-2 rounded-xl bg-[#051B44] hover:bg-navy-900 text-white font-extrabold text-xs shadow-md shadow-sky-950/20 transition-all flex items-center gap-2 disabled:opacity-50">
@@ -502,11 +690,10 @@ function petugasComponent() {
         deleteModalOpen: false,
         securityModalOpen: false,
         selectedUser: null,
-        securityUser: { id_user: null, nama: '', email: '', role: '', has_2fa: false },
+        securityUser: { id_user: null, nama: '', email: '', role: '' },
         formPassword: { password: '', password_confirmation: '' },
         isDeleting: false,
         isUpdatingPassword: false,
-        isResetting2fa: false,
         toastMessage: '',
         toastType: 'success',
         showToast: false,
@@ -545,8 +732,7 @@ function petugasComponent() {
                 id_user: user.id_user,
                 nama: user.nama,
                 email: user.email,
-                role: user.role,
-                has_2fa: !!user.two_factor_confirmed_at
+                role: user.role
             };
             this.formPassword = { password: '', password_confirmation: '' };
             this.securityModalOpen = true;
@@ -585,37 +771,6 @@ function petugasComponent() {
                 this.triggerToast('Terjadi kesalahan koneksi server.', 'error');
             } finally {
                 this.isUpdatingPassword = false;
-            }
-        },
-
-        async reset2fa() {
-            if (!confirm('Yakin ingin mereset/menonaktifkan Google Authenticator 2FA untuk ' + this.securityUser.nama + '?')) return;
-            this.isResetting2fa = true;
-            try {
-                const res = await fetch('{{ url('/petugas') }}/' + this.securityUser.id_user + '/reset-2fa', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    }
-                });
-                const data = await res.json();
-                if (res.ok && data.success) {
-                    this.securityUser.has_2fa = false;
-                    this.triggerToast(data.message || '2FA berhasil direset!', 'success');
-                    const badgeEl = document.getElementById('badge-2fa-' + this.securityUser.id_user);
-                    if (badgeEl) {
-                        badgeEl.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-500 border border-slate-200';
-                        badgeEl.innerHTML = '<i class="fa-solid fa-lock-open text-slate-400"></i> <span>Nonaktif</span>';
-                    }
-                } else {
-                    this.triggerToast(data.message || 'Gagal mereset 2FA.', 'error');
-                }
-            } catch(e) {
-                this.triggerToast('Terjadi kesalahan koneksi server.', 'error');
-            } finally {
-                this.isResetting2fa = false;
             }
         },
 

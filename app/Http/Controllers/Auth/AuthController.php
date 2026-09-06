@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Mail\SendOtpMail;
 use App\Models\User;
+use App\Services\EmailSecurityService;
 use App\Services\Google2FA;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -57,7 +58,15 @@ class AuthController extends Controller
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             $seconds = max(1, RateLimiter::availableIn($throttleKey));
             return back()->withInput($request->only('username', 'remember'))->withErrors([
-                'username' => "Terlalu banyak percobaan login gagal. Silakan tunggu {$seconds} detik lagi.",
+                'username' => "Terlalu banyak percobaan login gagal. Akun dibatasi selama 5 menit. Silakan tunggu {$seconds} detik lagi.",
+            ]);
+        }
+
+        // 1.1 Validasi Cloudflare Turnstile CAPTCHA (Hit rate limit 5 menit jika gagal/tidak dicentang)
+        if (!$this->verifyTurnstile($request)) {
+            RateLimiter::hit($throttleKey, 300);
+            return back()->withInput($request->only('username', 'remember'))->withErrors([
+                'turnstile' => 'Verifikasi keamanan CAPTCHA wajib dicentang dan diselesaikan.',
             ]);
         }
 
@@ -74,14 +83,22 @@ class AuthController extends Controller
         $password = $request->input('password');
         $remember = $request->boolean('remember');
 
+        // 2.1 Validasi Domain Typo & Format Email (Jika memasukkan Email)
+        $emailCheck = EmailSecurityService::checkEmail($loginInput);
+        if ($emailCheck['is_email'] && !$emailCheck['is_valid']) {
+            return back()->withInput($request->only('username', 'remember'))->withErrors([
+                'username' => $emailCheck['error'],
+            ]);
+        }
+
         // 3. Lookup user via email or no_tlp
         $user = User::where('email', $loginInput)
             ->orWhere('no_tlp', $loginInput)
             ->first();
 
-        // 4. Verifikasi Password
+        // 4. Verifikasi Password (Ban 5 menit / 300 detik jika 5x gagal)
         if (!$user || !Hash::check($password, $user->password)) {
-            RateLimiter::hit($throttleKey, 60);
+            RateLimiter::hit($throttleKey, 300);
             return back()->withInput($request->only('username', 'remember'))->withErrors([
                 'username' => 'Email/Username atau Kata Sandi yang dimasukkan salah.',
             ]);
@@ -89,7 +106,7 @@ class AuthController extends Controller
 
         // 5. Verifikasi Hak Akses Role (Hanya Manajer yang boleh masuk ke portal Web Manajer)
         if ($user->role !== 'manajer') {
-            RateLimiter::hit($throttleKey, 60);
+            RateLimiter::hit($throttleKey, 300);
             return back()->withInput($request->only('username', 'remember'))->withErrors([
                 'username' => 'Akun ini bukan Manajer. Silakan masuk melalui portal Mobile Petugas.',
             ]);
@@ -173,7 +190,15 @@ class AuthController extends Controller
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             $seconds = max(1, RateLimiter::availableIn($throttleKey));
             return back()->withInput($request->only('email', 'selectedRole'))->withErrors([
-                'email' => "Terlalu banyak percobaan login gagal. Silakan tunggu {$seconds} detik lagi.",
+                'email' => "Terlalu banyak percobaan login gagal. Akun dibatasi selama 5 menit. Silakan tunggu {$seconds} detik lagi.",
+            ]);
+        }
+
+        // 1.1 Validasi Cloudflare Turnstile CAPTCHA (Hit rate limit 5 menit jika gagal/tidak dicentang)
+        if (!$this->verifyTurnstile($request)) {
+            RateLimiter::hit($throttleKey, 300);
+            return back()->withInput($request->only('email', 'selectedRole'))->withErrors([
+                'turnstile' => 'Verifikasi keamanan CAPTCHA wajib dicentang dan diselesaikan.',
             ]);
         }
 
@@ -192,14 +217,22 @@ class AuthController extends Controller
         $password = $request->input('password');
         $selectedRole = $request->input('selectedRole');
 
+        // 2.1 Validasi Domain Typo & Format Email (Jika memasukkan Email)
+        $emailCheck = EmailSecurityService::checkEmail($loginInput);
+        if ($emailCheck['is_email'] && !$emailCheck['is_valid']) {
+            return back()->withInput($request->only('email', 'selectedRole'))->withErrors([
+                'email' => $emailCheck['error'],
+            ]);
+        }
+
         // 3. Lookup user via email or no_tlp
         $user = User::where('email', $loginInput)
             ->orWhere('no_tlp', $loginInput)
             ->first();
 
-        // 4. Verifikasi Password
+        // 4. Verifikasi Password (Ban 5 menit / 300 detik jika 5x gagal)
         if (!$user || !Hash::check($password, $user->password)) {
-            RateLimiter::hit($throttleKey, 60);
+            RateLimiter::hit($throttleKey, 300);
             return back()->withInput($request->only('email', 'selectedRole'))->withErrors([
                 'email' => 'Email/No. HP atau Kata Sandi yang dimasukkan salah.',
             ]);
@@ -216,7 +249,7 @@ class AuthController extends Controller
         }
 
         if (!$isRoleValid) {
-            RateLimiter::hit($throttleKey, 60);
+            RateLimiter::hit($throttleKey, 300);
             return back()->withInput($request->only('email', 'selectedRole'))->withErrors([
                 'email' => 'Peran akun ini (' . e($user->role) . ') tidak cocok dengan tab peran yang dipilih (' . e($selectedRole) . ').',
             ]);
@@ -316,20 +349,23 @@ class AuthController extends Controller
         $turnstileResponse = $request->input('cf-turnstile-response');
         $secretKey = config('services.turnstile.secret_key');
 
-        if (!$turnstileResponse || !$secretKey) {
+        // Wajib dicentang dan memiliki respon token dari Cloudflare
+        if (empty($turnstileResponse) || empty($secretKey)) {
             return false;
         }
 
         try {
-            $response = \Illuminate\Support\Facades\Http::asForm()->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
+            $response = \Illuminate\Support\Facades\Http::asForm()->timeout(5)->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
                 'secret'   => $secretKey,
                 'response' => $turnstileResponse,
                 'remoteip' => $request->ip(),
             ]);
 
-            return $response->json('success') === true;
+            $data = $response->json();
+            return isset($data['success']) && $data['success'] === true;
         } catch (\Throwable $e) {
-            return true;
+            \Illuminate\Support\Facades\Log::error('Turnstile verification error: ' . $e->getMessage());
+            return false;
         }
     }
 }

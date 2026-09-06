@@ -5,18 +5,25 @@
 @section('content')
 <div class="p-4 space-y-4" x-data="petugasPembibitanComponent()">
 
-    <!-- Header Section -->
-    <div class="text-center pt-2 pb-1 space-y-1">
-        <span class="text-[9px] font-extrabold uppercase text-slate-400 tracking-widest block">DASHBOARD</span>
-        <h1 class="text-xl font-extrabold text-navy-900">Petugas Pembibitan</h1>
-        <p class="text-xs text-slate-500 font-medium">Kelola pembibitan benih/indukan kamu.</p>
+    <!-- Top Greeting & Action Header (Sesuai Layout Petugas) -->
+    <div class="flex items-center justify-between pt-2 pb-1">
+        <div>
+            <span class="text-[9px] font-extrabold uppercase text-slate-400 tracking-widest block">DASHBOARD</span>
+            <h1 class="text-xl font-extrabold text-navy-900">Petugas Pembibitan</h1>
+        </div>
+
+        <a href="{{ route('petugas.pembibitan.log-pakan') }}" 
+           class="px-4 py-2 rounded-xl bg-navy-800 hover:bg-navy-900 active:scale-[0.98] text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition-all">
+            <i class="fa-solid fa-plus text-xs"></i>
+            <span>Pakan Baru</span>
+        </a>
     </div>
 
     <!-- Primary Action Button: Input Batch Baru -->
     <a href="{{ route('petugas.pembibitan.form') }}" 
-       class="w-full py-3.5 rounded-2xl bg-navy-800 hover:bg-navy-900 active:scale-[0.99] text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-md transition-all">
-        <i class="fa-solid fa-plus text-xs"></i>
-        <span>Input Batch Baru</span>
+       class="w-full py-3 rounded-2xl bg-sky-50 border border-sky-200/90 hover:bg-sky-100/70 text-sky-800 font-extrabold text-xs flex items-center justify-center gap-2 shadow-2xs transition-all">
+        <i class="fa-solid fa-seedling text-xs text-sky-600"></i>
+        <span>Mulai Siklus / Input Batch Baru</span>
     </a>
 
     <!-- Key Metrics Highlight Card -->

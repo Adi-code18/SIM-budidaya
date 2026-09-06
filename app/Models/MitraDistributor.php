@@ -30,4 +30,9 @@ class MitraDistributor extends Model
     {
         return $this->hasMany(TransaksiDistribusi::class, 'id_mitra', 'id_mitra');
     }
+
+    public function pembelianPakan()
+    {
+        return $this->hasMany(PembelianPakan::class, 'id_mitra', 'id_mitra');
+    }
 }

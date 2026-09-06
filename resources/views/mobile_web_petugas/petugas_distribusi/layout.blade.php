@@ -158,8 +158,10 @@
                         class="w-9 h-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-slate-200 transition-colors">
                     <i class="fa-solid fa-magnifying-glass text-xs"></i>
                 </button>
-                <a href="{{ route('mobile.petugas.akun') }}" class="relative w-9 h-9 rounded-full bg-sky-100 text-sky-800 font-bold text-xs flex items-center justify-center border border-sky-200 overflow-hidden">
-                    <i class="fa-solid fa-user text-xs"></i>
+                <a href="{{ route('mobile.petugas.akun') }}" class="relative w-9 h-9 rounded-full border border-sky-200 overflow-hidden shadow-2xs">
+                    <img src="{{ Auth::user()->foto_profil_url ?? 'https://ui-avatars.com/api/?name=Distribusi&background=0284C7&color=ffffff' }}" 
+                         alt="{{ Auth::user()->nama ?? 'Petugas' }}" 
+                         class="w-full h-full object-cover">
                 </a>
             </div>
         </header>

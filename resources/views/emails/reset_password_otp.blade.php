@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kode OTP Verifikasi Login - SIM-BUDIDAYA</title>
+    <title>Kode OTP Pemulihan Kata Sandi - SIM-BUDIDAYA</title>
     <!--[if mso]>
     <style type="text/css">
         body, table, td, a { font-family: Arial, Helvetica, sans-serif !important; }
@@ -17,7 +17,6 @@
             ? $message->embed(public_path('build/images/Logo aquafarm.png')) 
             : asset('build/images/Logo aquafarm.png');
             
-        // Tanggal dan bulan yang benar dalam format Bahasa Indonesia
         try {
             $formattedDate = \Carbon\Carbon::now()->locale('id')->translatedFormat('d F Y');
         } catch (\Exception $e) {
@@ -25,7 +24,7 @@
         }
     @endphp
 
-    <!-- Outer Container (Latar Belakang Putih Bersih / Clean White) -->
+    <!-- Outer Container (Clean White Card) -->
     <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 580px; margin: 0 auto; background-color: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06); border: 1px solid #e2e8f0;">
         
         <!-- TOP ACCENT LINE -->
@@ -47,19 +46,19 @@
                                     </td>
                                     <td valign="middle" style="vertical-align: middle; padding-left: 12px;">
                                         <span style="font-size: 17px; font-weight: 900; color: #051b44; letter-spacing: -0.3px; display: block; line-height: 1.1;">SIM-BUDIDAYA</span>
-                                        <span style="font-size: 10px; font-weight: 800; color: #0284c7; letter-spacing: 1.2px; text-transform: uppercase;">PORTAL MANAJER</span>
+                                        <span style="font-size: 10px; font-weight: 800; color: #0284c7; letter-spacing: 1.2px; text-transform: uppercase;">PUSAT KEAMANAN AKUN</span>
                                     </td>
                                 </tr>
                             </table>
 
                             <!-- Tanggal & Bulan yang Benar -->
                             <div style="font-size: 11px; font-weight: 800; color: #0284c7; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px;">
-                                {{ strtoupper($formattedDate) }} &bull; KEAMANAN
+                                {{ strtoupper($formattedDate) }} &bull; RESET PASSWORD
                             </div>
 
                             <!-- Main Headline -->
                             <h1 style="color: #051b44; font-size: 24px; font-weight: 900; line-height: 1.2; margin: 0; letter-spacing: -0.4px;">
-                                Verifikasi Login Akun
+                                Permintaan Reset Kata Sandi
                             </h1>
                         </td>
                     </tr>
@@ -81,15 +80,15 @@
 
                             <!-- Description -->
                             <p style="font-size: 13px; line-height: 1.65; color: #475569; margin: 0 0 22px 0;">
-                                Sistem mendeteksi adanya aktivitas login ke akun Manajer Anda. Masukkan kode verifikasi <strong>One-Time Password (OTP)</strong> berikut pada halaman login untuk menyelesaikan autentikasi:
+                                Kami menerima permintaan untuk mengatur ulang kata sandi akun <strong style="color: #051b44;">SIM-BUDIDAYA</strong> Anda. Gunakan kode <strong>One-Time Password (OTP)</strong> berikut untuk memverifikasi identitas Anda:
                             </p>
 
-                            <!-- Modern OTP Box (Warna Biru Cerah / Sky Blue Gradient) -->
+                            <!-- Modern OTP Box (Sky Blue Gradient) -->
                             <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0 0 22px 0;">
                                 <tr>
                                     <td style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border-radius: 16px; padding: 22px 16px; text-align: center; border: 1px solid #0284c7; box-shadow: 0 6px 20px rgba(2, 132, 199, 0.25);">
                                         <span style="display: block; font-size: 11px; font-weight: 800; color: #e0f2fe; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px;">
-                                            KODE OTP OTENTIKASI
+                                            KODE OTP PEMULIHAN
                                         </span>
                                         <div style="font-family: 'Courier New', Courier, monospace; font-size: 38px; font-weight: 900; color: #ffffff; letter-spacing: 12px; padding: 6px 0; margin-left: 12px; text-shadow: 0 2px 6px rgba(0,0,0,0.15);">
                                             {{ $otpCode }}
@@ -103,15 +102,15 @@
                                 </tr>
                             </table>
 
-                            <!-- Important Security Notice Box -->
+                            <!-- Security Notice Box -->
                             <div style="background-color: #f0fdf4; border-left: 4px solid #10b981; padding: 12px 16px; border-radius: 10px; margin-bottom: 22px; border-top: 1px solid #dcfce7; border-right: 1px solid #dcfce7; border-bottom: 1px solid #dcfce7;">
                                 <p style="font-size: 12px; line-height: 1.55; color: #065f46; margin: 0;">
-                                    <strong style="color: #047857;">Perhatian Keamanan:</strong> Jangan berikan kode OTP ini kepada siapapun demi menjaga kerahasiaan akun budidaya Anda.
+                                    <strong style="color: #047857;">Penting:</strong> Jangan berikan kode OTP ini kepada siapapun termasuk staf/petugas pengelola SIM-BUDIDAYA demi keamanan data Anda.
                                 </p>
                             </div>
 
                             <p style="font-size: 12px; line-height: 1.6; color: #64748b; margin: 0 0 22px 0;">
-                                Jika Anda tidak sedang melakukan login ini, segera ubah kata sandi akun Anda atau hubungi tim administrator.
+                                Jika Anda tidak pernah meminta pemulihan kata sandi ini, abaikan email ini. Kata sandi akun Anda tetap aman dan tidak akan berubah.
                             </p>
 
                             <!-- Bottom Security Team Signature -->
@@ -146,7 +145,7 @@
                     &copy; {{ date('Y') }} <strong>SIM-BUDIDAYA</strong>. Hak Cipta Dilindungi Undang-Undang.
                 </p>
                 <p style="font-size: 10px; color: #94a3b8; margin: 0;">
-                    Email ini dikirim secara otomatis oleh protokol keamanan sistem saat ada permintaan login akun.
+                    Email ini dikirim secara otomatis oleh protokol keamanan sistem saat ada permintaan reset kata sandi akun.
                 </p>
             </td>
         </tr>

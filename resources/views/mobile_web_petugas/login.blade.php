@@ -40,12 +40,85 @@
     <div class="w-full sm:max-w-md min-h-screen sm:min-h-0 bg-white flex flex-col justify-between p-6 sm:p-8 overflow-y-auto sm:rounded-3xl sm:shadow-xl border border-slate-200 relative sm:my-8" 
          x-data="{
              selectedRole: '{{ $initialRole }}',
+             emailInput: '{{ old('email', '') }}',
              showPass: false,
              toastShow: false,
              toastMsg: '',
              toastType: 'info',
              lockoutSeconds: {{ $errors->any() && preg_match('/(\d+)\s*detik/', implode(' ', $errors->all()), $m) ? (int)$m[1] : 0 }},
              timer: null,
+             
+             get emailSuggestion() {
+                 const val = (this.emailInput || '').trim();
+                 if (!val.includes('@') || /^(\+62|62|08|0)[0-9\s\-]+$/.test(val)) return '';
+                 const parts = val.split('@');
+                 if (parts.length !== 2) return '';
+                 const local = parts[0];
+                 const domain = parts[1].toLowerCase();
+                 if (!local || !domain) return '';
+
+                 const validDomains = ['gmail.com', 'yahoo.com', 'yahoo.co.id', 'outlook.com', 'hotmail.com', 'icloud.com', 'proton.me', 'protonmail.com', 'live.com', 'mail.com'];
+                 if (validDomains.includes(domain)) return '';
+
+                 const typoMap = {
+                     'gnail.com': 'gmail.com', 'gnail': 'gmail.com',
+                     'gmai.com': 'gmail.com', 'gmai': 'gmail.com',
+                     'gmial.com': 'gmail.com', 'gmial': 'gmail.com',
+                     'gmaill.com': 'gmail.com', 'gmaill': 'gmail.com',
+                     'gamil.com': 'gmail.com', 'gamil': 'gmail.com',
+                     'gmal.com': 'gmail.com', 'gmal': 'gmail.com',
+                     'gemail.com': 'gmail.com',
+                     'gmeil.com': 'gmail.com', 'gmeil': 'gmail.com',
+                     'gmaul.com': 'gmail.com', 'gmaul': 'gmail.com',
+                     'gmqil.com': 'gmail.com',
+                     'gmail.co': 'gmail.com', 'gmail.con': 'gmail.com', 'gmaild.com': 'gmail.com',
+                     'gmaik.com': 'gmail.com', 'gmail.cm': 'gmail.com', 'gmaol.com': 'gmail.com',
+                     'gmail.cpm': 'gmail.com', 'gmail.om': 'gmail.com', 'gmail.comm': 'gmail.com',
+                     'gmai.co': 'gmail.com', 'gmail.co.id': 'gmail.com', 'g-mail.com': 'gmail.com',
+                     'gmail.net': 'gmail.com', 'gmail.org': 'gmail.com', 'gmail': 'gmail.com',
+                     'yaho.com': 'yahoo.com', 'yaho': 'yahoo.com', 'yahooo.com': 'yahoo.com',
+                     'yaho.co.id': 'yahoo.co.id', 'yaho.co': 'yahoo.com', 'yahoo.con': 'yahoo.com',
+                     'yahoo.comm': 'yahoo.com', 'yaho.id': 'yahoo.co.id', 'yahoo': 'yahoo.com',
+                     'outlok.com': 'outlook.com', 'outluk.com': 'outlook.com', 'outlook.con': 'outlook.com',
+                     'outlookk.com': 'outlook.com', 'outlook': 'outlook.com',
+                     'hotmial.com': 'hotmail.com', 'hotmai.com': 'hotmail.com', 'hotmaill.com': 'hotmail.com',
+                     'hotmail.con': 'hotmail.com', 'hotmail': 'hotmail.com',
+                     'icoud.com': 'icloud.com', 'iclod.com': 'icloud.com', 'icloud.con': 'icloud.com', 'icloud': 'icloud.com',
+                     'protonmial.com': 'protonmail.com', 'protonmai.com': 'protonmail.com'
+                 };
+                 if (typoMap[domain]) return `${local}@${typoMap[domain]}`;
+
+                 const lev = (a, b) => {
+                     const m = [];
+                     for (let i = 0; i <= b.length; i++) m[i] = [i];
+                     for (let j = 0; j <= a.length; j++) m[0][j] = j;
+                     for (let i = 1; i <= b.length; i++) {
+                         for (let j = 1; j <= a.length; j++) {
+                             m[i][j] = b[i - 1] === a[j - 1] ? m[i - 1][j - 1] : Math.min(m[i - 1][j - 1] + 1, m[i][j - 1] + 1, m[i - 1][j] + 1);
+                         }
+                     }
+                     return m[b.length][a.length];
+                 };
+
+                 if (!domain.includes('.')) {
+                     if (lev(domain, 'gmail') <= 2) return `${local}@gmail.com`;
+                     if (lev(domain, 'yahoo') <= 2) return `${local}@yahoo.com`;
+                     if (lev(domain, 'outlook') <= 2) return `${local}@outlook.com`;
+                     if (lev(domain, 'hotmail') <= 2) return `${local}@hotmail.com`;
+                     return `${local}@${domain}.com`;
+                 }
+
+                 if (domain.endsWith('.')) return `${local}@${domain.replace(/\.+$/, '')}.com`;
+
+                 const providers = ['gmail.com', 'yahoo.com', 'yahoo.co.id', 'outlook.com', 'hotmail.com', 'icloud.com', 'proton.me'];
+                 for (const prov of providers) {
+                     if (lev(domain, prov) <= 2) {
+                         return `${local}@${prov}`;
+                     }
+                 }
+
+                 return '';
+             },
              
              init() {
                  if (this.lockoutSeconds > 0) {
@@ -93,8 +166,8 @@
         <div>
             <!-- Top Logo Section -->
             <div class="pt-4 flex flex-col items-center text-center space-y-2.5">
-                <img src="{{ asset('build/images/logo PT.png') }}" 
-                     alt="Logo PT" 
+                <img src="{{ asset('build/images/Logo aquafarm.png') }}" 
+                     alt="Logo Aquafarm" 
                      class="h-14 w-auto object-contain drop-shadow-sm">
                 <div>
                     <p class="text-[11px] text-slate-500 font-medium mt-0.5 max-w-xs leading-relaxed">
@@ -102,6 +175,14 @@
                     </p>
                 </div>
             </div>
+
+            <!-- Status Alert Messages -->
+            @if (session('status'))
+            <div class="my-3 p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2.5 shadow-xs">
+                <i class="fa-solid fa-circle-check text-emerald-500 text-sm shrink-0"></i>
+                <span class="font-bold">{{ session('status') }}</span>
+            </div>
+            @endif
 
             <!-- Error Alerts -->
             @if ($errors->any())
@@ -169,10 +250,20 @@
                         <i class="fa-solid fa-user absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
                         <input type="text" 
                                name="email"
-                               value="{{ old('email') }}"
+                               x-model="emailInput"
                                placeholder="Contoh: distribusi@example.com / 0812..."
                                required
                                class="w-full pl-9 pr-4 py-2.5 rounded-2xl bg-slate-50 border {{ $errors->has('email') ? 'border-rose-300 ring-1 ring-rose-300' : 'border-slate-200' }} text-xs font-semibold text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-navy-800 transition-all">
+                    </div>
+                    <!-- Typo suggestion chip -->
+                    <div x-cloak x-show="emailSuggestion && emailSuggestion !== emailInput" class="p-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-[10px] flex items-center justify-between gap-1.5 animate-fadeIn">
+                        <div class="flex items-center gap-1.5 truncate">
+                            <i class="fa-solid fa-lightbulb text-amber-500 shrink-0"></i>
+                            <span class="truncate">Maksud Anda: <strong class="font-bold underline decoration-amber-400" x-text="emailSuggestion"></strong>?</span>
+                        </div>
+                        <button type="button" @click="emailInput = emailSuggestion" class="shrink-0 px-2 py-0.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-bold text-[9px] transition-colors cursor-pointer">
+                            Terapkan
+                        </button>
                     </div>
                 </div>
 
@@ -191,7 +282,7 @@
                         </button>
                     </div>
                     <div class="flex justify-end pt-0.5">
-                        <a href="javascript:void(0)" @click.prevent="triggerToast('Layanan lupa password belum diaktifkan. Silakan hubungi Administrator.', 'info')" 
+                        <a href="{{ route('forgot.password') }}" 
                            class="text-[11px] font-bold text-sky-700 hover:underline cursor-pointer">
                             Lupa Password?
                         </a>

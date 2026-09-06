@@ -203,14 +203,14 @@
                 <span class="text-[10px] mt-1 tracking-tight">Dashboard</span>
             </a>
 
-            <!-- Tab 2: Form Log -->
-            <a href="{{ route('petugas.pembibitan.form') }}" 
-               class="flex flex-col items-center py-1 px-3 rounded-xl transition-all duration-200 {{ request()->routeIs('petugas.pembibitan.form*') || request()->routeIs('petugas.pembibitan.log-pakan*') ? 'text-navy-800 font-bold' : 'text-slate-400 hover:text-slate-600 font-medium' }}">
+            <!-- Tab 2: Pakan -->
+            <a href="{{ route('petugas.pembibitan.log-pakan') }}" 
+               class="flex flex-col items-center py-1 px-3 rounded-xl transition-all duration-200 {{ request()->routeIs('petugas.pembibitan.log-pakan*') || request()->routeIs('petugas.pembibitan.form*') ? 'text-navy-800 font-bold' : 'text-slate-400 hover:text-slate-600 font-medium' }}">
                 <div class="relative">
-                    <i class="fa-solid fa-clipboard-list text-lg {{ request()->routeIs('petugas.pembibitan.form*') || request()->routeIs('petugas.pembibitan.log-pakan*') ? 'text-navy-800' : 'text-slate-400' }}"></i>
-                    <span class="absolute -top-1 -right-1.5 w-2 h-2 bg-sky-500 rounded-full"></span>
+                    <i class="fa-solid fa-bowl-food text-lg {{ request()->routeIs('petugas.pembibitan.log-pakan*') || request()->routeIs('petugas.pembibitan.form*') ? 'text-navy-800' : 'text-slate-400' }}"></i>
+                    <span class="absolute -top-1 -right-1.5 w-2 h-2 bg-emerald-500 rounded-full"></span>
                 </div>
-                <span class="text-[10px] mt-1 tracking-tight">Form</span>
+                <span class="text-[10px] mt-1 tracking-tight">Pakan</span>
             </a>
 
             <!-- Tab 3: Profile -->

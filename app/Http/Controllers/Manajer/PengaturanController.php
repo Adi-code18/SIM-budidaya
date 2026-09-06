@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
 
 class PengaturanController extends Controller
@@ -43,6 +44,7 @@ class PengaturanController extends Controller
             'nama' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,' . $user->id_user . ',id_user',
             'no_tlp' => 'nullable|phone:AUTO,ID',
+            'foto_profil' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'password_saat_ini' => 'nullable|required_with:password_baru',
             'password_baru' => ['nullable', 'confirmed', Password::min(6)],
         ], [
@@ -50,6 +52,9 @@ class PengaturanController extends Controller
             'email.required' => 'Email wajib diisi.',
             'email.unique' => 'Email sudah digunakan oleh pengguna lain.',
             'no_tlp.phone' => 'Format nomor telepon/WhatsApp tidak valid (contoh: 081234567890 atau +6281234567890).',
+            'foto_profil.image' => 'File harus berupa gambar.',
+            'foto_profil.mimes' => 'Format gambar harus jpeg, png, jpg, atau webp.',
+            'foto_profil.max' => 'Ukuran gambar maksimal 2MB.',
             'password_saat_ini.required_with' => 'Password saat ini wajib diisi untuk menginstal password baru.',
             'password_baru.confirmed' => 'Konfirmasi password baru tidak cocok.',
             'password_baru.min' => 'Password baru minimal 6 karakter.',
@@ -61,6 +66,19 @@ class PengaturanController extends Controller
                 return back()->withErrors(['password_saat_ini' => 'Password saat ini tidak sesuai.'])->withInput();
             }
             $user->password = Hash::make($request->password_baru);
+        }
+
+        // Upload atau hapus foto profil
+        if ($request->hasFile('foto_profil')) {
+            if ($user->foto_profil && Storage::disk('public')->exists($user->foto_profil)) {
+                Storage::disk('public')->delete($user->foto_profil);
+            }
+            $user->foto_profil = $request->file('foto_profil')->store('profil', 'public');
+        } elseif ($request->boolean('hapus_foto')) {
+            if ($user->foto_profil && Storage::disk('public')->exists($user->foto_profil)) {
+                Storage::disk('public')->delete($user->foto_profil);
+            }
+            $user->foto_profil = null;
         }
 
         $noTlp = $user->no_tlp;

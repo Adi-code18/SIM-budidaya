@@ -63,9 +63,9 @@
             
             <!-- White Logo Box Container -->
             <div class="w-36 h-36 rounded-3xl bg-white p-4 shadow-2xl flex flex-col items-center justify-center space-y-2 border border-white/20 transform transition-transform hover:scale-105">
-                <div class="w-16 h-16 rounded-2xl bg-navy-800 text-sky-400 flex items-center justify-center text-3xl shadow-inner">
-                    <i class="fa-solid fa-fish-fins"></i>
-                </div>
+                <img src="{{ asset('build/images/Logo aquafarm.png') }}" 
+                     alt="Logo Aquafarm" 
+                     class="w-16 h-16 object-contain drop-shadow-sm">
                 <span class="text-xs font-black tracking-tighter text-navy-900 uppercase">SIM-BUDIDAYA</span>
             </div>
 

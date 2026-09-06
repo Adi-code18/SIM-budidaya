@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\EmailOtpController;
+use App\Http\Controllers\Auth\ForgotPasswordOtpController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Manajer\DashboardController;
 use App\Http\Controllers\Manajer\DistribusiController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\Manajer\PengaturanController;
 use App\Http\Controllers\Petugas\PetugasDistribusiController;
 use App\Http\Controllers\Petugas\PetugasPembesaranController;
 use App\Http\Controllers\Petugas\PetugasPembibitanController;
+use App\Http\Controllers\Petugas\PetugasProfileController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -32,11 +34,19 @@ Route::get('/', function () {
 });
 
 // =========================================================================
-// 1. AUTENTIKASI & KEAMANAN 2FA / EMAIL OTP (AUTH)
+// 1. AUTENTIKASI & KEAMANAN 2FA / EMAIL OTP / LUPA PASSWORD (AUTH)
 // =========================================================================
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// Lupa Password (Semua Role via Email OTP)
+Route::get('/forgot-password', [ForgotPasswordOtpController::class, 'showRequestForm'])->name('forgot.password');
+Route::post('/forgot-password', [ForgotPasswordOtpController::class, 'sendResetOtp'])->name('forgot.password.post');
+Route::get('/forgot-password/verify', [ForgotPasswordOtpController::class, 'showVerifyForm'])->name('forgot.password.verify');
+Route::post('/forgot-password/verify', [ForgotPasswordOtpController::class, 'verifyResetOtp'])->name('forgot.password.verify.post');
+Route::get('/forgot-password/reset', [ForgotPasswordOtpController::class, 'showResetPasswordForm'])->name('forgot.password.reset.form');
+Route::post('/forgot-password/reset', [ForgotPasswordOtpController::class, 'resetPassword'])->name('forgot.password.reset.post');
 
 // Email OTP Routes (Role Manajer)
 Route::get('/login/otp', [EmailOtpController::class, 'showForm'])->name('email.otp.show');
@@ -86,23 +96,33 @@ Route::middleware(['auth', 'role:manajer'])->group(function () {
     // Monitoring Kolam & Pembudidaya
     Route::get('/pembudidaya', [PembudidayaController::class, 'index'])->name('pembudidaya');
 
-    // Log Stok & Pakan
+    // Log Stok & Pakan (Inventori, Pembelian Supplier, & Log Harian)
     Route::get('/log-pakan', [PakanController::class, 'index'])->name('log-pakan');
     Route::post('/log-pakan', [PakanController::class, 'store'])->name('log-pakan.store');
+    Route::post('/log-pakan/beli', [PakanController::class, 'storePembelian'])->name('log-pakan.beli');
+    Route::post('/log-pakan/stok', [PakanController::class, 'storeStokPakan'])->name('log-pakan.stok.store');
+    Route::put('/log-pakan/stok/{id}', [PakanController::class, 'updateStokPakan'])->name('log-pakan.stok.update');
+    Route::delete('/log-pakan/stok/{id}', [PakanController::class, 'destroyStokPakan'])->name('log-pakan.stok.destroy');
 
     // Distribusi & Pesanan
     Route::get('/distribusi', [DistribusiController::class, 'index'])->name('distribusi');
     Route::post('/distribusi', [DistribusiController::class, 'store'])->name('distribusi.store');
     Route::put('/distribusi/{id}', [DistribusiController::class, 'update'])->name('distribusi.update');
 
-    // Rekap Keuangan & Margin
+    // Rekap & Laporan Keuangan
     Route::get('/keuangan', [KeuanganWebController::class, 'index'])->name('keuangan');
+    Route::get('/keuangan/transaksi', [KeuanganWebController::class, 'transaksi'])->name('keuangan.transaksi');
     Route::post('/keuangan', [KeuanganWebController::class, 'store'])->name('keuangan.store');
+    Route::post('/keuangan/transaksi', [KeuanganWebController::class, 'store']);
     Route::put('/keuangan/{id}', [KeuanganWebController::class, 'update'])->name('keuangan.update');
     Route::delete('/keuangan/{id}', [KeuanganWebController::class, 'destroy'])->name('keuangan.destroy');
 
     // Manajemen Mitra Distributor
     Route::get('/mitra', [MitraController::class, 'index'])->name('mitra');
+    Route::get('/mitra-distributor', [MitraController::class, 'index'])->name('mitra-distributor');
+    Route::post('/mitra', [MitraController::class, 'store'])->name('mitra.store');
+    Route::put('/mitra/{id}', [MitraController::class, 'update'])->name('mitra.update');
+    Route::delete('/mitra/{id}', [MitraController::class, 'destroy'])->name('mitra.destroy');
 
     // Manajemen Akun Petugas & Keamanan Akses
     Route::get('/petugas', [PetugasController::class, 'index'])->name('petugas');
@@ -142,6 +162,7 @@ Route::prefix('mobile-petugas')->name('mobile.petugas.')->group(function () {
         Route::get('/akun', function () {
             return view('mobile_web_petugas.petugas_distribusi.akun');
         })->name('akun');
+        Route::post('/profile', [PetugasProfileController::class, 'update'])->name('profile.update');
     });
 });
 
@@ -159,10 +180,13 @@ Route::prefix('petugas-pembibitan')->name('petugas.pembibitan.')->group(function
         Route::get('/', [PetugasPembibitanController::class, 'index'])->name('dashboard');
         Route::get('/form', [PetugasPembibitanController::class, 'form'])->name('form');
         Route::post('/form', [PetugasPembibitanController::class, 'storeBatch'])->name('store-batch');
+        Route::post('/batch/store', [PetugasPembibitanController::class, 'storeBatch'])->name('batch.store');
         Route::get('/log-pakan', [PetugasPembibitanController::class, 'logPakan'])->name('log-pakan');
+        Route::post('/log-pakan', [PetugasPembibitanController::class, 'storeLogPakan'])->name('log-pakan.store');
         Route::get('/akun', function () {
             return view('mobile_web_petugas.petugas_pembibitan.akun');
         })->name('akun');
+        Route::post('/profile', [PetugasProfileController::class, 'update'])->name('profile.update');
     });
 });
 
@@ -181,8 +205,16 @@ Route::prefix('petugas-pembesaran')->name('petugas.pembesaran.')->group(function
         Route::get('/create-batch', [PetugasPembesaranController::class, 'createBatch'])->name('create-batch');
         Route::post('/create-batch', [PetugasPembesaranController::class, 'storeBatch'])->name('store-batch');
         Route::get('/log-pakan', [PetugasPembesaranController::class, 'logPakan'])->name('log-pakan');
+        Route::post('/log-pakan', [PetugasPembesaranController::class, 'storeLogPakan'])->name('log-pakan.store');
         Route::get('/akun', function () {
             return view('mobile_web_petugas.petugas_pembesaran.akun');
         })->name('akun');
+        Route::post('/profile', [PetugasProfileController::class, 'update'])->name('profile.update');
     });
 });
+
+// Preview Email OTP Template (Development)
+Route::get('/preview-email-otp', function () {
+    return new App\Mail\SendOtpMail('482915', 'Adi Darmawan', 5);
+});
+

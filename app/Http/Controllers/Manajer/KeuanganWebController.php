@@ -35,24 +35,6 @@ class KeuanganWebController extends Controller
     public function index()
     {
         $keuanganRecords = Keuangan::with(['kolam', 'user'])->latest('tanggal_transaksi')->latest('id_keuangan')->get();
-        $kolams = Kolam::orderBy('nama_kolam')->get();
-
-        $transactions = [];
-        foreach ($keuanganRecords as $k) {
-            $refId = $k->ref_id ?: self::generateSopId($k->tanggal_transaksi);
-            $transactions[] = [
-                'raw_id'     => $k->id_keuangan,
-                'id'         => $refId,
-                'tanggal'    => $k->tanggal_transaksi ? Carbon::parse($k->tanggal_transaksi)->toDateString() : date('Y-m-d'),
-                'tipe'       => in_array(strtolower($k->tipe_transaksi), ['pemasukan', 'income']) ? 'income' : 'expense',
-                'nominal'    => (float) $k->nominal,
-                'kategori'   => $k->kategori,
-                'ref'        => $refId,
-                'id_kolam'   => $k->id_kolam,
-                'kolam'      => $k->kolam ? $k->kolam->nama_kolam : 'Tidak dialokasikan',
-                'keterangan' => $k->keterangan ?? '-'
-            ];
-        }
 
         $totalIncome = Keuangan::whereIn('tipe_transaksi', ['pemasukan', 'income'])->sum('nominal');
         $totalExpense = Keuangan::whereIn('tipe_transaksi', ['pengeluaran', 'expense'])->sum('nominal');
@@ -78,11 +60,11 @@ class KeuanganWebController extends Controller
         // Financial Health Score calculation
         if ($totalIncome == 0 && $totalExpense == 0) {
             $healthScore = 0.0;
-            $healthStatus = 'BELUM ADA TRANSAKSI';
+            $healthStatus = 'BELUM ADA DATA';
             $healthBadgeClass = 'bg-slate-100 text-slate-600';
         } elseif ($saldo >= 0) {
             $healthScore = round(min(10.0, 7.0 + ($netMargin / 33)), 1);
-            $healthStatus = 'STABLE';
+            $healthStatus = 'STABLE & SEHAT';
             $healthBadgeClass = 'bg-[#C6F6D5] text-[#22543D]';
         } else {
             $healthScore = round(max(1.0, 5.0 - (abs($saldo) / max(1, $totalExpense) * 4)), 1);
@@ -90,31 +72,50 @@ class KeuanganWebController extends Controller
             $healthBadgeClass = 'bg-[#FEE2E2] text-[#991B1B]';
         }
 
-        // Monthly Cash Flow Chart from database
+        // Monthly Cash Flow Data from database
         $currentYear = Carbon::now()->year;
         $monthlyGrouped = Keuangan::whereYear('tanggal_transaksi', $currentYear)
             ->selectRaw('MONTH(tanggal_transaksi) as bulan, 
                          SUM(CASE WHEN LOWER(tipe_transaksi) IN ("pemasukan", "income") THEN nominal ELSE 0 END) as total_income,
-                         SUM(CASE WHEN LOWER(tipe_transaksi) IN ("pengeluaran", "expense") THEN nominal ELSE 0 END) as total_expense')
+                         SUM(CASE WHEN LOWER(tipe_transaksi) IN ("pengeluaran", "expense") THEN nominal ELSE 0 END) as total_expense,
+                         COUNT(*) as total_trx')
             ->groupBy('bulan')
             ->orderBy('bulan')
             ->get()
             ->keyBy('bulan');
 
-        $monthNames = ['JAN', 'FEB', 'MAR', 'APR', 'MEI', 'JUN', 'JUL', 'AGU', 'SEP', 'OKT', 'NOV', 'DES'];
+        $monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        $monthShorts = ['JAN', 'FEB', 'MAR', 'APR', 'MEI', 'JUN', 'JUL', 'AGU', 'SEP', 'OKT', 'NOV', 'DES'];
         $currentMonthNum = Carbon::now()->month;
+        
         $monthlyCashflow = [
             'labels'  => [],
             'revenue' => [],
             'expense' => []
         ];
 
+        $monthlyBreakdownTable = [];
+
         for ($m = 1; $m <= $currentMonthNum; $m++) {
-            $monthlyCashflow['labels'][] = $monthNames[$m - 1];
+            $monthlyCashflow['labels'][] = $monthShorts[$m - 1];
             $row = $monthlyGrouped->get($m);
-            // In Juta (Jt) or raw Jt format
-            $monthlyCashflow['revenue'][] = $row ? round((float)$row->total_income / 1000000, 2) : 0;
-            $monthlyCashflow['expense'][] = $row ? round((float)$row->total_expense / 1000000, 2) : 0;
+            $rev = $row ? (float)$row->total_income : 0;
+            $exp = $row ? (float)$row->total_expense : 0;
+            $trxCount = $row ? (int)$row->total_trx : 0;
+            $net = $rev - $exp;
+
+            $monthlyCashflow['revenue'][] = round($rev / 1000000, 2);
+            $monthlyCashflow['expense'][] = round($exp / 1000000, 2);
+
+            $monthlyBreakdownTable[] = [
+                'bulan'        => $monthNames[$m - 1] . ' ' . $currentYear,
+                'pemasukan'    => $rev,
+                'pengeluaran'  => $exp,
+                'laba_bersih'  => $net,
+                'margin_pct'   => $rev > 0 ? round(($net / $rev) * 100, 1) : 0,
+                'total_trx'    => $trxCount,
+                'status'       => $net >= 0 ? 'Surplus' : 'Defisit'
+            ];
         }
 
         $kpis = [
@@ -134,7 +135,36 @@ class KeuanganWebController extends Controller
             'healthBadgeClass'     => $healthBadgeClass,
         ];
 
-        return view('layouts.keuangan.index', compact('transactions', 'kolams', 'totalIncome', 'totalExpense', 'saldo', 'kpis', 'monthlyCashflow'));
+        return view('layouts.keuangan.index', compact('totalIncome', 'totalExpense', 'saldo', 'kpis', 'monthlyCashflow', 'monthlyBreakdownTable', 'currentYear'));
+    }
+
+    public function transaksi()
+    {
+        $keuanganRecords = Keuangan::with(['kolam', 'user'])->latest('tanggal_transaksi')->latest('id_keuangan')->get();
+        $kolams = Kolam::orderBy('nama_kolam')->get();
+
+        $transactions = [];
+        foreach ($keuanganRecords as $k) {
+            $refId = $k->ref_id ?: self::generateSopId($k->tanggal_transaksi);
+            $transactions[] = [
+                'raw_id'     => $k->id_keuangan,
+                'id'         => $refId,
+                'tanggal'    => $k->tanggal_transaksi ? Carbon::parse($k->tanggal_transaksi)->toDateString() : date('Y-m-d'),
+                'tipe'       => in_array(strtolower($k->tipe_transaksi), ['pemasukan', 'income']) ? 'income' : 'expense',
+                'nominal'    => (float) $k->nominal,
+                'kategori'   => $k->kategori,
+                'ref'        => $refId,
+                'id_kolam'   => $k->id_kolam,
+                'kolam'      => $k->kolam ? $k->kolam->nama_kolam : 'Tidak dialokasikan',
+                'keterangan' => $k->keterangan ?? '-'
+            ];
+        }
+
+        $totalIncome = Keuangan::whereIn('tipe_transaksi', ['pemasukan', 'income'])->sum('nominal');
+        $totalExpense = Keuangan::whereIn('tipe_transaksi', ['pengeluaran', 'expense'])->sum('nominal');
+        $saldo = $totalIncome - $totalExpense;
+
+        return view('layouts.keuangan.transaksi', compact('transactions', 'kolams', 'totalIncome', 'totalExpense', 'saldo'));
     }
 
     public function store(Request $request)
@@ -176,7 +206,7 @@ class KeuanganWebController extends Controller
             ]);
         }
 
-        return redirect()->route('keuangan')->with('success', 'Transaksi keuangan berhasil dicatat!');
+        return redirect()->route('keuangan.transaksi')->with('success', 'Transaksi keuangan berhasil dicatat!');
     }
 
     public function update(Request $request, $id)
@@ -188,7 +218,7 @@ class KeuanganWebController extends Controller
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json(['success' => false, 'message' => 'Data transaksi tidak ditemukan.'], 404);
             }
-            return redirect()->route('keuangan')->with('error', 'Data transaksi tidak ditemukan.');
+            return redirect()->route('keuangan.transaksi')->with('error', 'Data transaksi tidak ditemukan.');
         }
 
         $request->validate([
@@ -244,7 +274,7 @@ class KeuanganWebController extends Controller
             ]);
         }
 
-        return redirect()->route('keuangan')->with('success', 'Data transaksi berhasil diperbarui!');
+        return redirect()->route('keuangan.transaksi')->with('success', 'Data transaksi berhasil diperbarui!');
     }
 
     public function destroy(Request $request, $id)
@@ -256,7 +286,7 @@ class KeuanganWebController extends Controller
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json(['success' => false, 'message' => 'Data transaksi tidak ditemukan.'], 404);
             }
-            return redirect()->route('keuangan')->with('error', 'Data transaksi tidak ditemukan.');
+            return redirect()->route('keuangan.transaksi')->with('error', 'Data transaksi tidak ditemukan.');
         }
 
         $keuangan->delete();
@@ -268,6 +298,6 @@ class KeuanganWebController extends Controller
             ]);
         }
 
-        return redirect()->route('keuangan')->with('success', 'Data transaksi berhasil dihapus!');
+        return redirect()->route('keuangan.transaksi')->with('success', 'Data transaksi berhasil dihapus!');
     }
 }

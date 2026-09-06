@@ -13,9 +13,16 @@
         
         <!-- Avatar Picture with Checkmark Badge -->
         <div class="relative z-10 mt-4">
-            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80" 
-                 alt="User Profile" 
-                 class="w-20 h-20 rounded-full border-4 border-white object-cover shadow-md mx-auto">
+            <template x-if="userPhoto">
+                <img :src="userPhoto" 
+                     alt="User Profile" 
+                     class="w-20 h-20 rounded-full border-4 border-white object-cover shadow-md mx-auto bg-slate-100">
+            </template>
+            <template x-if="!userPhoto">
+                <div class="w-20 h-20 rounded-full border-4 border-white shadow-md mx-auto bg-gradient-to-tr from-sky-600 to-navy-900 flex items-center justify-center text-white text-2xl font-black" 
+                     x-text="userName ? userName.charAt(0).toUpperCase() : 'P'">
+                </div>
+            </template>
             <span class="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center text-white text-[10px]">
                 <i class="fa-solid fa-check"></i>
             </span>
@@ -32,7 +39,7 @@
         </div>
 
         <!-- Edit Profile Button -->
-        <button @click="editProfileModal = true"
+        <button @click="openEditModal()"
                 class="mt-4 px-4 py-1.5 rounded-full border border-sky-600 text-sky-700 hover:bg-sky-50 text-xs font-extrabold flex items-center gap-1.5 transition-all">
             <i class="fa-solid fa-user-pen text-[11px]"></i>
             <span x-text="i18n[currentLang].editBtn">Edit Profil</span>
@@ -93,7 +100,8 @@
     <div x-show="editProfileModal" 
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0"
-         class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+         class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
+         style="display: none;">
         
         <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl p-5 space-y-4">
             <div class="flex items-center justify-between border-b border-slate-100 pb-2">
@@ -103,10 +111,27 @@
                 </button>
             </div>
 
+            <!-- Avatar Upload Inside Modal -->
+            <div class="flex flex-col items-center gap-2 pt-1 pb-2">
+                <div class="relative">
+                    <img :src="photoPreview" alt="Preview Foto" class="w-16 h-16 rounded-full object-cover border-2 border-sky-100 shadow-sm bg-slate-50">
+                    <button type="button" @click="$refs.photoInput.click()" 
+                            class="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-navy-800 hover:bg-navy-900 text-white flex items-center justify-center text-[10px] shadow-sm cursor-pointer"
+                            title="Unggah Foto">
+                        <i class="fa-solid fa-camera"></i>
+                    </button>
+                </div>
+                <button type="button" @click="$refs.photoInput.click()" class="text-[11px] font-bold text-sky-600 hover:underline cursor-pointer flex items-center gap-1">
+                    <i class="fa-solid fa-cloud-arrow-up text-[11px]"></i>
+                    <span>Pilih Foto dari Galeri</span>
+                </button>
+                <input type="file" x-ref="photoInput" @change="previewFile" accept="image/jpeg,image/png,image/jpg,image/webp" class="hidden">
+            </div>
+
             <div class="space-y-3">
                 <div>
                     <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1" x-text="i18n[currentLang].fullName">NAMA LENGKAP</label>
-                    <input type="text" x-model="userName" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:border-sky-600">
+                    <input type="text" x-model="tempName" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:border-sky-600">
                 </div>
                 <div>
                     <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1" x-text="i18n[currentLang].phone">NOMOR HP / WHATSAPP</label>
@@ -115,7 +140,7 @@
                             <span>🇮🇩</span>
                             <span>+62</span>
                         </span>
-                        <input type="tel" x-model="userPhone" placeholder="812-xxxx-xxxx" class="w-full px-3 py-2 text-xs font-semibold text-slate-800 bg-transparent border-0 focus:outline-none">
+                        <input type="tel" x-model="tempPhone" placeholder="812-xxxx-xxxx" class="w-full px-3 py-2 text-xs font-semibold text-slate-800 bg-transparent border-0 focus:outline-none">
                     </div>
                 </div>
                 <div>
@@ -124,10 +149,10 @@
                 </div>
             </div>
 
-            <button @click="editProfileModal = false; triggerToast(i18n[currentLang].profileUpdated, 'success')" 
-                    class="w-full py-2.5 rounded-xl bg-navy-800 hover:bg-navy-900 text-white font-bold text-xs shadow-xs transition-colors"
-                    x-text="i18n[currentLang].saveChanges">
-                Simpan Perubahan
+            <button @click="saveProfile()" :disabled="isSaving"
+                    class="w-full py-2.5 rounded-xl bg-navy-800 hover:bg-navy-900 text-white font-bold text-xs shadow-xs transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
+                <i class="fa-solid text-xs" :class="isSaving ? 'fa-spinner fa-spin' : 'fa-floppy-disk'"></i>
+                <span x-text="isSaving ? 'Menyimpan...' : i18n[currentLang].saveChanges">Simpan Perubahan</span>
             </button>
         </div>
     </div>
@@ -161,31 +186,13 @@
                             Aktif
                         </span>
                     </div>
-                    <p class="text-[10px] text-slate-500 font-medium">Verifikasi 6-digit OTP Google Authenticator saat login.</p>
-                </div>
-
-                <!-- Notifikasi Toggle -->
-                <div class="p-3.5 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-between">
-                    <div>
-                        <span class="font-extrabold text-navy-900 block">Notifikasi Push & Sound</span>
-                        <span class="text-[10px] text-slate-400 font-medium">Alert suhu, pH & pakan</span>
-                    </div>
-                    <input type="checkbox" checked class="w-4 h-4 accent-navy-800 rounded cursor-pointer">
-                </div>
-
-                <!-- Alert Kematian WhatsApp -->
-                <div class="p-3.5 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-between">
-                    <div>
-                        <span class="font-extrabold text-navy-900 block">Alert WhatsApp</span>
-                        <span class="text-[10px] text-slate-400 font-medium">Laporan kematian bibit</span>
-                    </div>
-                    <input type="checkbox" checked class="w-4 h-4 accent-navy-800 rounded cursor-pointer">
+                    <p class="text-[10px] text-slate-500 font-medium">Verifikasi 6-digit OTP Google Authenticator aktif melindungi akun Anda saat login.</p>
                 </div>
             </div>
 
-            <button @click="settingsModal = false; if(typeof triggerToast==='function') triggerToast('Pengaturan berhasil disimpan!', 'success')" 
+            <button @click="settingsModal = false" 
                     class="w-full py-2.5 rounded-xl bg-navy-800 hover:bg-navy-900 text-white font-bold text-xs shadow-xs transition-colors">
-                Simpan Pengaturan
+                Tutup
             </button>
         </div>
     </div>
@@ -285,9 +292,84 @@ function akunPetugasPembibitan() {
         settingsModal: false,
         langModal: false,
         logoutModal: false,
+        isSaving: false,
         userName: '{{ Auth::user()->nama ?? 'Tim Pembibitan' }}',
         userPhone: '{{ Auth::user()->no_tlp ?? '+62 812-9876-5432' }}',
+        userPhoto: '{{ Auth::user()->foto_profil_url ?? '' }}',
+        tempName: '',
+        tempPhone: '',
+        photoFile: null,
+        photoPreview: '',
         currentLang: localStorage.getItem('sim_lang') || 'id',
+
+        openEditModal() {
+            this.tempName = this.userName;
+            this.tempPhone = this.userPhone;
+            this.photoPreview = this.userPhoto;
+            this.photoFile = null;
+            this.editProfileModal = true;
+        },
+
+        previewFile(e) {
+            const file = e.target.files[0];
+            if (file) {
+                this.photoFile = file;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    this.photoPreview = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        },
+
+        async saveProfile() {
+            if (!this.tempName.trim()) {
+                if (typeof triggerToast === 'function') triggerToast('Nama tidak boleh kosong.', 'error');
+                return;
+            }
+
+            this.isSaving = true;
+            try {
+                const formData = new FormData();
+                formData.append('nama', this.tempName);
+                formData.append('no_tlp', this.tempPhone);
+                if (this.photoFile) {
+                    formData.append('foto_profil', this.photoFile);
+                }
+
+                const res = await fetch('{{ route('petugas.pembibitan.profile.update') }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
+
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    this.userName = data.user.nama;
+                    this.userPhone = data.user.no_tlp;
+                    if (data.user.foto_profil_url) {
+                        this.userPhoto = data.user.foto_profil_url;
+                    }
+                    this.editProfileModal = false;
+                    if (typeof triggerToast === 'function') {
+                        triggerToast(data.message || this.i18n[this.currentLang].profileUpdated, 'success');
+                    }
+                } else {
+                    if (typeof triggerToast === 'function') {
+                        triggerToast(data.message || 'Gagal menyimpan profil.', 'error');
+                    }
+                }
+            } catch(e) {
+                if (typeof triggerToast === 'function') {
+                    triggerToast('Terjadi kesalahan server.', 'error');
+                }
+            } finally {
+                this.isSaving = false;
+            }
+        },
 
         i18n: {
             id: {
