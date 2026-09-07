@@ -13,9 +13,9 @@
 <body style="font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #ffffff; margin: 0; padding: 32px 12px; color: #1e293b; -webkit-font-smoothing: antialiased;">
 
     @php
-        $logoUrl = isset($message) && method_exists($message, 'embed') && file_exists(public_path('build/images/Logo aquafarm.png'))
-            ? $message->embed(public_path('build/images/Logo aquafarm.png')) 
-            : asset('build/images/Logo aquafarm.png');
+        $logoUrl = isset($message) && method_exists($message, 'embed') && file_exists(public_path('images/Logo aquafarm.png'))
+            ? $message->embed(public_path('images/Logo aquafarm.png')) 
+            : asset('images/Logo aquafarm.png');
             
         try {
             $formattedDate = \Carbon\Carbon::now()->locale('id')->translatedFormat('d F Y');

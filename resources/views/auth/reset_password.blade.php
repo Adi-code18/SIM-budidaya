@@ -31,7 +31,7 @@
         
         <!-- Header Logo & Brand -->
         <div class="flex items-center gap-3.5 mb-6">
-            <img src="{{ asset('build/images/Logo aquafarm.png') }}" 
+            <img src="{{ ('images/Logo aquafarm.png') }}" 
                  alt="Logo Aquafarm" 
                  class="h-11 w-auto object-contain shrink-0">
             <div>

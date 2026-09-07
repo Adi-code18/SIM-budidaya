@@ -157,25 +157,6 @@
                 </p>
             </div>
 
-            <!-- Filter Tabs -->
-            <div class="flex items-center p-1 bg-slate-100 rounded-xl text-xs font-extrabold text-slate-600">
-                <button type="button" @click="stokFilter = 'semua'" 
-                        :class="stokFilter === 'semua' ? 'bg-white text-slate-900 shadow-xs rounded-lg' : 'hover:text-slate-900'"
-                        class="px-3 py-1.5 transition-all cursor-pointer">
-                    Semua Pakan
-                </button>
-                <button type="button" @click="stokFilter = 'pembibitan'" 
-                        :class="stokFilter === 'pembibitan' ? 'bg-white text-emerald-700 shadow-xs rounded-lg' : 'hover:text-emerald-700'"
-                        class="px-3 py-1.5 transition-all cursor-pointer flex items-center gap-1.5">
-                    <span>🌱 Pembibitan</span>
-                </button>
-                <button type="button" @click="stokFilter = 'pembesaran'" 
-                        :class="stokFilter === 'pembesaran' ? 'bg-white text-[#0B2570] shadow-xs rounded-lg' : 'hover:text-[#0B2570]'"
-                        class="px-3 py-1.5 transition-all cursor-pointer flex items-center gap-1.5">
-                    <span>🐟 Pembesaran</span>
-                </button>
-            </div>
-        </div>
 
         <!-- Stok Cards Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

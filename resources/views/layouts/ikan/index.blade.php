@@ -47,7 +47,7 @@
             </div>
             <div>
                 <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">RATA-RATA PENETASAN</span>
-                <span class="text-xl font-black text-slate-900 block">{{ $kpis['avgPenetasan'] ?? '3 Hari' }}</span>
+                <span class="text-xl font-black text-slate-900 block" x-text="avgPenetasan">{{ $kpis['avgPenetasan'] ?? '3 Hari' }}</span>
                 <span class="text-[11px] font-bold text-amber-600 mt-0.5 block">Masa Telur → Larva</span>
             </div>
         </div>
@@ -59,7 +59,7 @@
             </div>
             <div>
                 <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">RATA-RATA PEMBIBITAN</span>
-                <span class="text-xl font-black text-slate-900 block">{{ $kpis['avgPembibitan'] ?? '21 Hari' }}</span>
+                <span class="text-xl font-black text-slate-900 block" x-text="avgPembibitan">{{ $kpis['avgPembibitan'] ?? '21 Hari' }}</span>
                 <span class="text-[11px] font-bold text-emerald-600 mt-0.5 block">Larva → Fingerling Matang</span>
             </div>
         </div>
@@ -71,7 +71,7 @@
             </div>
             <div>
                 <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">TOTAL SIKLUS HATCHERY</span>
-                <span class="text-xl font-black text-slate-900 block">{{ $kpis['totalSiklus'] ?? '24 Hari' }}</span>
+                <span class="text-xl font-black text-slate-900 block" x-text="avgTotalSiklus">{{ $kpis['totalSiklus'] ?? '24 Hari' }}</span>
                 <span class="text-[11px] font-bold text-indigo-600 mt-0.5 block">Standar SOP Lengkap</span>
             </div>
         </div>
@@ -98,7 +98,7 @@
                     <p class="text-xs text-slate-500 font-medium">Tentukan parameter nama varietas serta pemetaan waktu tiap fase pembibitan.</p>
                 </div>
             </div>
-            <button type="button" @click="showForm = false" class="text-slate-400 hover:text-slate-600 text-lg p-1">
+            <button type="button" :disabled="isSubmitting" @click="showForm = false; resetForm();" class="text-slate-400 hover:text-slate-600 text-lg p-1 disabled:opacity-50 cursor-pointer">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
@@ -113,9 +113,10 @@
                     </label>
                     <input type="text" 
                            x-model="form.nama_ikan" 
+                           :disabled="isSubmitting"
                            placeholder="Contoh: Ikan Nila Hitam Super" 
                            required
-                           class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                           class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:opacity-60 disabled:cursor-not-allowed transition-all">
                     <p class="text-[10px] text-slate-400 font-medium">Varietas atau komoditas budidaya.</p>
                 </div>
 
@@ -125,16 +126,17 @@
                         DURASI MASA PENETASAN (HARI) <span class="text-rose-500">*</span>
                     </label>
                     <div class="flex items-center gap-2">
-                        <button type="button" @click="form.durasi_penetasan = Math.max(1, Number(form.durasi_penetasan) - 1)" class="w-9 h-9 rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 flex items-center justify-center font-bold text-sm">−</button>
+                        <button type="button" :disabled="isSubmitting" @click="form.durasi_penetasan = Math.max(1, Number(form.durasi_penetasan) - 1)" class="w-9 h-9 rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 flex items-center justify-center font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed">−</button>
                         <input type="number" 
                                x-model="form.durasi_penetasan" 
+                               :disabled="isSubmitting"
                                min="1" 
                                max="90"
                                required
                                onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E') event.preventDefault()"
                                @input="if(form.durasi_penetasan !== '' && Number(form.durasi_penetasan) < 1) form.durasi_penetasan = 1"
-                               class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-extrabold text-center text-amber-700 bg-amber-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all">
-                        <button type="button" @click="form.durasi_penetasan = Number(form.durasi_penetasan) + 1" class="w-9 h-9 rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 flex items-center justify-center font-bold text-sm">+</button>
+                               class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-extrabold text-center text-amber-700 bg-amber-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-60 disabled:cursor-not-allowed transition-all">
+                        <button type="button" :disabled="isSubmitting" @click="form.durasi_penetasan = Number(form.durasi_penetasan) + 1" class="w-9 h-9 rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 flex items-center justify-center font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed">+</button>
                     </div>
                     <p class="text-[10px] text-slate-400 font-medium">Masa inkubasi dari butir telur hingga menetas.</p>
                 </div>
@@ -145,16 +147,17 @@
                         DURASI MASA PEMBIBITAN (HARI) <span class="text-rose-500">*</span>
                     </label>
                     <div class="flex items-center gap-2">
-                        <button type="button" @click="form.durasi_pembibitan = Math.max(1, Number(form.durasi_pembibitan) - 1)" class="w-9 h-9 rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 flex items-center justify-center font-bold text-sm">−</button>
+                        <button type="button" :disabled="isSubmitting" @click="form.durasi_pembibitan = Math.max(1, Number(form.durasi_pembibitan) - 1)" class="w-9 h-9 rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 flex items-center justify-center font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed">−</button>
                         <input type="number" 
                                x-model="form.durasi_pembibitan" 
+                               :disabled="isSubmitting"
                                min="1" 
                                max="180"
                                required
                                onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E') event.preventDefault()"
                                @input="if(form.durasi_pembibitan !== '' && Number(form.durasi_pembibitan) < 1) form.durasi_pembibitan = 1"
-                               class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-extrabold text-center text-emerald-700 bg-emerald-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all">
-                        <button type="button" @click="form.durasi_pembibitan = Number(form.durasi_pembibitan) + 1" class="w-9 h-9 rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 flex items-center justify-center font-bold text-sm">+</button>
+                               class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-extrabold text-center text-emerald-700 bg-emerald-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed transition-all">
+                        <button type="button" :disabled="isSubmitting" @click="form.durasi_pembibitan = Number(form.durasi_pembibitan) + 1" class="w-9 h-9 rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 flex items-center justify-center font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed">+</button>
                     </div>
                     <p class="text-[10px] text-slate-400 font-medium">Masa pemeliharaan larva hingga ukuran siap tebar.</p>
                 </div>
@@ -214,14 +217,15 @@
             <!-- Form Actions -->
             <div class="flex items-center justify-end gap-3 pt-2">
                 <button type="button" 
-                        @click="showForm = false" 
-                        class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-xs transition-colors cursor-pointer">
+                        :disabled="isSubmitting"
+                        @click="showForm = false; resetForm();" 
+                        class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-xs transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                     Batal
                 </button>
                 <button type="submit" 
                         :disabled="isSubmitting"
-                        class="px-5 py-2.5 rounded-xl bg-[#0284C7] hover:bg-sky-600 active:scale-95 text-white font-extrabold text-xs shadow-md shadow-sky-600/20 transition-all flex items-center gap-2 cursor-pointer">
-                    <i class="fa-solid fa-check text-xs"></i>
+                        class="px-5 py-2.5 rounded-xl bg-[#0284C7] hover:bg-sky-600 active:scale-95 text-white font-extrabold text-xs shadow-md shadow-sky-600/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed">
+                    <i :class="isSubmitting ? 'fa-solid fa-circle-notch fa-spin text-xs' : 'fa-solid fa-check text-xs'"></i>
                     <span x-text="isSubmitting ? 'Menyimpan...' : (formMode === 'create' ? 'Simpan Jenis Ikan' : 'Perbarui Spesies')"></span>
                 </button>
             </div>
@@ -394,6 +398,25 @@ function ikanComponent() {
             );
         },
 
+        get avgPenetasan() {
+            if (!this.ikans || !this.ikans.length) return '0 Hari';
+            const sum = this.ikans.reduce((acc, i) => acc + (Number(i.durasi_penetasan) || 0), 0);
+            return Math.round(sum / this.ikans.length) + ' Hari';
+        },
+
+        get avgPembibitan() {
+            if (!this.ikans || !this.ikans.length) return '0 Hari';
+            const sum = this.ikans.reduce((acc, i) => acc + (Number(i.durasi_pembibitan) || 0), 0);
+            return Math.round(sum / this.ikans.length) + ' Hari';
+        },
+
+        get avgTotalSiklus() {
+            if (!this.ikans || !this.ikans.length) return '0 Hari';
+            const sumPenetasan = this.ikans.reduce((acc, i) => acc + (Number(i.durasi_penetasan) || 0), 0);
+            const sumPembibitan = this.ikans.reduce((acc, i) => acc + (Number(i.durasi_pembibitan) || 0), 0);
+            return Math.round((sumPenetasan + sumPembibitan) / this.ikans.length) + ' Hari';
+        },
+
         openCreateForm() {
             this.formMode = 'create';
             this.resetForm();
@@ -432,95 +455,149 @@ function ikanComponent() {
 
         async submitIkan() {
             if (!this.form.nama_ikan.trim()) {
-                alert('Nama jenis ikan wajib diisi!');
+                if (window.AppSwal) {
+                    AppSwal.warning('Validasi Data', 'Nama jenis / spesies ikan wajib diisi!');
+                } else {
+                    alert('Nama jenis / spesies ikan wajib diisi!');
+                }
                 return;
             }
             if (!this.form.durasi_penetasan || Number(this.form.durasi_penetasan) < 1) {
-                alert('Durasi penetasan harus minimal 1 hari!');
+                if (window.AppSwal) {
+                    AppSwal.warning('Validasi Data', 'Durasi masa penetasan harus minimal 1 hari!');
+                } else {
+                    alert('Durasi masa penetasan harus minimal 1 hari!');
+                }
                 return;
             }
             if (!this.form.durasi_pembibitan || Number(this.form.durasi_pembibitan) < 1) {
-                alert('Durasi pembibitan harus minimal 1 hari!');
-                return;
-            }
-
-            this.isSubmitting = true;
-
-            if (this.formMode === 'edit') {
-                try {
-                    const res = await fetch('/ikan/' + this.form.id_ikan, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        },
-                        body: JSON.stringify({
-                            nama_ikan: this.form.nama_ikan,
-                            durasi_penetasan: Number(this.form.durasi_penetasan),
-                            durasi_pembibitan: Number(this.form.durasi_pembibitan),
-                            id_batch: this.form.id_batch || null
-                        })
-                    });
-                    const data = await res.json();
-                    if (res.ok && data.success) {
-                        const idx = this.ikans.findIndex(i => i.id_ikan === this.form.id_ikan);
-                        if (idx !== -1) {
-                            this.ikans[idx].nama_ikan = this.form.nama_ikan;
-                            this.ikans[idx].durasi_penetasan = Number(this.form.durasi_penetasan);
-                            this.ikans[idx].durasi_pembibitan = Number(this.form.durasi_pembibitan);
-                            this.ikans[idx].id_batch = this.form.id_batch || null;
-                        }
-                        this.showForm = false;
-                        this.resetForm();
-                        this.triggerToast(data.message || 'Data jenis ikan berhasil diperbarui!');
-                    } else {
-                        alert(data.message || 'Gagal memperbarui data jenis ikan.');
-                    }
-                } catch (e) {
-                    alert('Terjadi kesalahan saat memperbarui data.');
-                } finally {
-                    this.isSubmitting = false;
+                if (window.AppSwal) {
+                    AppSwal.warning('Validasi Data', 'Durasi masa pembibitan harus minimal 1 hari!');
+                } else {
+                    alert('Durasi masa pembibitan harus minimal 1 hari!');
                 }
                 return;
             }
 
-            // Create Mode
+            const isEdit = (this.formMode === 'edit');
+            const actionLabel = isEdit ? 'memperbarui data spesies' : 'menambahkan jenis ikan baru';
+
+            // Notifikasi Konfirmasi di Tengah Layar Sebelum Simpan
+            if (window.AppSwal) {
+                const resConfirm = await AppSwal.confirm({
+                    title: isEdit ? 'Konfirmasi Perubahan' : 'Konfirmasi Simpan Data',
+                    text: `Apakah Anda yakin ingin ${actionLabel} "${this.form.nama_ikan.trim()}"?`,
+                    confirmText: isEdit ? 'Ya, Perbarui' : 'Ya, Simpan',
+                    cancelText: 'Periksa Kembali',
+                    icon: 'question',
+                    confirmColor: '#0284C7'
+                });
+                if (!resConfirm.isConfirmed) {
+                    return;
+                }
+            }
+
+            this.isSubmitting = true;
+
+            const targetUrl = isEdit ? ('/ikan/' + this.form.id_ikan) : '{{ route('ikan.store') }}';
+            const method = isEdit ? 'PUT' : 'POST';
+
             try {
-                const res = await fetch('{{ route('ikan.store') }}', {
-                    method: 'POST',
+                const res = await fetch(targetUrl, {
+                    method: method,
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
                     body: JSON.stringify({
-                        nama_ikan: this.form.nama_ikan,
+                        nama_ikan: this.form.nama_ikan.trim(),
                         durasi_penetasan: Number(this.form.durasi_penetasan),
                         durasi_pembibitan: Number(this.form.durasi_pembibitan),
                         id_batch: this.form.id_batch || null
                     })
                 });
+
                 const data = await res.json();
-                if (res.ok && data.success) {
-                    this.ikans.unshift(data.ikan);
+                const isSuccess = res.ok && (data.success || data.status === 'success');
+                const resultIkan = data.ikan || data.data;
+
+                if (isSuccess) {
+                    if (isEdit) {
+                        const idx = this.ikans.findIndex(i => i.id_ikan === this.form.id_ikan);
+                        if (idx !== -1) {
+                            if (resultIkan) {
+                                this.ikans[idx] = resultIkan;
+                            } else {
+                                this.ikans[idx].nama_ikan = this.form.nama_ikan.trim();
+                                this.ikans[idx].durasi_penetasan = Number(this.form.durasi_penetasan);
+                                this.ikans[idx].durasi_pembibitan = Number(this.form.durasi_pembibitan);
+                                this.ikans[idx].id_batch = this.form.id_batch || null;
+                            }
+                        }
+                    } else {
+                        if (resultIkan) {
+                            this.ikans.unshift(resultIkan);
+                        } else {
+                            this.ikans.unshift({
+                                id_ikan: Date.now(),
+                                nama_ikan: this.form.nama_ikan.trim(),
+                                durasi_penetasan: Number(this.form.durasi_penetasan),
+                                durasi_pembibitan: Number(this.form.durasi_pembibitan),
+                                id_batch: this.form.id_batch || null
+                            });
+                        }
+                    }
+
+                    // TUTUP FORM & RESET FORM INPUT SEHINGGA TIDAK TETAP MUNCUL SEOLAH BISA DIUBAH
                     this.showForm = false;
                     this.resetForm();
-                    this.triggerToast(data.message || 'Data jenis ikan baru berhasil disimpan!');
+
+                    const successMsg = data.message || (isEdit ? 'Data jenis ikan berhasil diperbarui!' : 'Data jenis ikan baru berhasil disimpan!');
+
+                    // Notifikasi Hasil Sukses di Tengah Layar
+                    if (window.AppSwal) {
+                        AppSwal.success('Berhasil!', successMsg);
+                    } else {
+                        this.triggerToast(successMsg);
+                    }
                 } else {
-                    alert(data.message || 'Gagal menambahkan jenis ikan.');
+                    const errMsg = data.message || (data.errors ? Object.values(data.errors).flat().join('\n') : 'Gagal menyimpan data jenis ikan.');
+                    if (window.AppSwal) {
+                        AppSwal.error('Gagal', errMsg);
+                    } else {
+                        alert(errMsg);
+                    }
                 }
             } catch (e) {
-                alert('Terjadi kesalahan saat menyimpan data.');
+                console.error(e);
+                if (window.AppSwal) {
+                    AppSwal.error('Kesalahan Jaringan', 'Terjadi kesalahan sistem saat menghubungi server.');
+                } else {
+                    alert('Terjadi kesalahan sistem saat menyimpan data.');
+                }
             } finally {
                 this.isSubmitting = false;
             }
         },
 
         async confirmDelete(item) {
-            if (!confirm(`Apakah Anda yakin ingin menghapus data spesies '${item.nama_ikan}'?`)) {
-                return;
+            let confirmed = false;
+            if (window.AppSwal) {
+                const resConfirm = await AppSwal.confirm({
+                    title: 'Hapus Jenis Ikan?',
+                    text: `Apakah Anda yakin ingin menghapus data spesies "${item.nama_ikan}"? Data ini akan dihapus dari sistem.`,
+                    confirmText: 'Ya, Hapus!',
+                    cancelText: 'Batal',
+                    icon: 'warning',
+                    confirmColor: '#e11d48'
+                });
+                confirmed = resConfirm.isConfirmed;
+            } else {
+                confirmed = confirm(`Apakah Anda yakin ingin menghapus data spesies '${item.nama_ikan}'?`);
             }
+
+            if (!confirmed) return;
 
             try {
                 const res = await fetch('/ikan/' + item.id_ikan, {
@@ -531,14 +608,30 @@ function ikanComponent() {
                     }
                 });
                 const data = await res.json();
-                if (res.ok && data.success) {
+                const isSuccess = res.ok && (data.success || data.status === 'success');
+                if (isSuccess) {
                     this.ikans = this.ikans.filter(i => i.id_ikan !== item.id_ikan);
-                    this.triggerToast(data.message || 'Data jenis ikan berhasil dihapus.');
+                    const msg = data.message || 'Data jenis ikan berhasil dihapus.';
+                    if (window.AppSwal) {
+                        AppSwal.success('Terhapus!', msg);
+                    } else {
+                        this.triggerToast(msg);
+                    }
                 } else {
-                    alert(data.message || 'Gagal menghapus data jenis ikan.');
+                    const errMsg = data.message || 'Gagal menghapus data jenis ikan.';
+                    if (window.AppSwal) {
+                        AppSwal.error('Gagal', errMsg);
+                    } else {
+                        alert(errMsg);
+                    }
                 }
             } catch (e) {
-                alert('Terjadi kesalahan saat menghapus data.');
+                console.error(e);
+                if (window.AppSwal) {
+                    AppSwal.error('Kesalahan Jaringan', 'Terjadi kesalahan saat menghapus data.');
+                } else {
+                    alert('Terjadi kesalahan saat menghapus data.');
+                }
             }
         }
     };

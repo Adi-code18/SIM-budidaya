@@ -124,7 +124,7 @@
                 
                 <!-- Logo & Brand Header -->
                 <div class="flex items-center gap-3.5 mb-8">
-                    <img src="{{ asset('build/images/Logo aquafarm.png') }}" 
+                    <img src="{{ ('images/Logo aquafarm.png') }}" 
                          alt="Logo Aquafarm" 
                          class="h-11 w-auto object-contain flex-shrink-0">
                     <div>
@@ -262,7 +262,7 @@
         <div class="hidden lg:flex lg:col-span-6 relative bg-gradient-to-br from-[#EEF6FD] via-[#F5FAFE] to-[#E8F3FC] p-8 lg:p-10 flex-col justify-between overflow-hidden border-l border-slate-100">
             <!-- Center Image (Full & Uncropped) -->
             <div class="my-auto flex items-center justify-center">
-                <img src="{{ asset('build/images/login ilustration.png') }}" 
+                <img src="{{ ('images/login ilustration.png') }}" 
                      alt="SIM-BUDIDAYA Illustration" 
                      class="w-full max-h-[280px] object-contain select-none pointer-events-none">
             </div>

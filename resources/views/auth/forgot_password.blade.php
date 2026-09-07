@@ -54,16 +54,7 @@
                      'gmaik.com': 'gmail.com', 'gmail.cm': 'gmail.com', 'gmaol.com': 'gmail.com',
                      'gmail.cpm': 'gmail.com', 'gmail.om': 'gmail.com', 'gmail.comm': 'gmail.com',
                      'gmai.co': 'gmail.com', 'gmail.co.id': 'gmail.com', 'g-mail.com': 'gmail.com',
-                     'gmail.net': 'gmail.com', 'gmail.org': 'gmail.com', 'gmail': 'gmail.com',
-                     'yaho.com': 'yahoo.com', 'yaho': 'yahoo.com', 'yahooo.com': 'yahoo.com',
-                     'yaho.co.id': 'yahoo.co.id', 'yaho.co': 'yahoo.com', 'yahoo.con': 'yahoo.com',
-                     'yahoo.comm': 'yahoo.com', 'yaho.id': 'yahoo.co.id', 'yahoo': 'yahoo.com',
-                     'outlok.com': 'outlook.com', 'outluk.com': 'outlook.com', 'outlook.con': 'outlook.com',
-                     'outlookk.com': 'outlook.com', 'outlook': 'outlook.com',
-                     'hotmial.com': 'hotmail.com', 'hotmai.com': 'hotmail.com', 'hotmaill.com': 'hotmail.com',
-                     'hotmail.con': 'hotmail.com', 'hotmail': 'hotmail.com',
-                     'icoud.com': 'icloud.com', 'iclod.com': 'icloud.com', 'icloud.con': 'icloud.com', 'icloud': 'icloud.com',
-                     'protonmial.com': 'protonmail.com', 'protonmai.com': 'protonmail.com'
+                     'gmail.net': 'gmail.com', 'gmail.org': 'gmail.com', 'gmail': 'gmail.com'
                  };
                  if (typoMap[domain]) return `${local}@${typoMap[domain]}`;
 
@@ -102,7 +93,7 @@
         
         <!-- Header Logo & Brand -->
         <div class="flex items-center gap-3.5 mb-6">
-            <img src="{{ asset('build/images/Logo aquafarm.png') }}" 
+            <img src="{{ asset('images/Logo aquafarm.png') }}" 
                  alt="Logo Aquafarm" 
                  class="h-11 w-auto object-contain shrink-0">
             <div>

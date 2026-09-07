@@ -17,7 +17,7 @@ class PetugasController extends Controller
 {
     public function index()
     {
-        $users = User::all();
+        $users = User::where('role', '!=', 'manajer')->get();
         return view('layouts.petugas.index', compact('users'));
     }
 

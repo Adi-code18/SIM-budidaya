@@ -20,10 +20,12 @@ Route::get('/', function () {
     ]);
 });
 
-// RESTful API Endpoint untuk Master Jenis Ikan
-Route::apiResource('ikan', \App\Http\Controllers\Api\IkanController::class);
-Route::apiResource('pembibitan', \App\Http\Controllers\Api\BatchPembibitanController::class);
-Route::apiResource('pembesaran', \App\Http\Controllers\Api\BatchPembesaranController::class);
+// RESTful API Endpoint untuk Master Jenis Ikan, Pembibitan, & Pembesaran
+Route::name('api.')->group(function () {
+    Route::apiResource('ikan', \App\Http\Controllers\Api\IkanController::class);
+    Route::apiResource('pembibitan', \App\Http\Controllers\Api\BatchPembibitanController::class);
+    Route::apiResource('pembesaran', \App\Http\Controllers\Api\BatchPembesaranController::class);
+});
 
 // Forgot Password via Email OTP (Semua Role)
 Route::post('/forgot-password/send-otp', [\App\Http\Controllers\Auth\ForgotPasswordOtpController::class, 'apiSendOtp']);

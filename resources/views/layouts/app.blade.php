@@ -22,6 +22,105 @@
     <!-- Alpine.js (with Collapse Plugin) -->
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- SweetAlert2 (Modal Dialog & Notifikasi Konfirmasi di Tengah) -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        window.AppSwal = {
+            success(title, text) {
+                if (window.Swal) {
+                    return Swal.fire({
+                        icon: 'success',
+                        title: title || 'Berhasil!',
+                        text: text,
+                        confirmButtonColor: '#0284C7',
+                        confirmButtonText: 'Selesai',
+                        customClass: {
+                            popup: 'rounded-2xl shadow-2xl font-sans',
+                            confirmButton: 'px-5 py-2.5 rounded-xl font-bold text-xs shadow-md shadow-sky-600/20'
+                        }
+                    });
+                }
+                alert((title ? title + '\n' : '') + text);
+                return Promise.resolve({ isConfirmed: true });
+            },
+            error(title, text) {
+                if (window.Swal) {
+                    return Swal.fire({
+                        icon: 'error',
+                        title: title || 'Terjadi Kesalahan',
+                        text: text,
+                        confirmButtonColor: '#ef4444',
+                        confirmButtonText: 'Tutup',
+                        customClass: {
+                            popup: 'rounded-2xl shadow-2xl font-sans',
+                            confirmButton: 'px-5 py-2.5 rounded-xl font-bold text-xs'
+                        }
+                    });
+                }
+                alert((title ? title + '\n' : '') + text);
+                return Promise.resolve({ isConfirmed: true });
+            },
+            warning(title, text) {
+                if (window.Swal) {
+                    return Swal.fire({
+                        icon: 'warning',
+                        title: title || 'Perhatian',
+                        text: text,
+                        confirmButtonColor: '#0284C7',
+                        confirmButtonText: 'Mengerti',
+                        customClass: {
+                            popup: 'rounded-2xl shadow-2xl font-sans',
+                            confirmButton: 'px-5 py-2.5 rounded-xl font-bold text-xs'
+                        }
+                    });
+                }
+                alert((title ? title + '\n' : '') + text);
+                return Promise.resolve({ isConfirmed: true });
+            },
+            confirm({ title, text, confirmText = 'Ya, Lanjutkan', cancelText = 'Batal', icon = 'question', confirmColor = '#0284C7' }) {
+                if (window.Swal) {
+                    return Swal.fire({
+                        title: title || 'Konfirmasi',
+                        text: text,
+                        icon: icon,
+                        showCancelButton: true,
+                        confirmButtonColor: confirmColor,
+                        cancelButtonColor: '#94a3b8',
+                        confirmButtonText: confirmText,
+                        cancelButtonText: cancelText,
+                        reverseButtons: true,
+                        customClass: {
+                            popup: 'rounded-2xl shadow-2xl font-sans',
+                            confirmButton: 'px-5 py-2.5 rounded-xl font-bold text-xs shadow-md',
+                            cancelButton: 'px-5 py-2.5 rounded-xl font-bold text-xs'
+                        }
+                    });
+                }
+                const res = confirm((title ? title + '\n' : '') + text);
+                return Promise.resolve({ isConfirmed: res });
+            }
+        };
+
+        // Intercept native browser alert to display modern centered modal popup
+        const _nativeAlert = window.alert;
+        window.alert = function(message) {
+            if (window.Swal) {
+                Swal.fire({
+                    title: 'Pemberitahuan',
+                    text: message,
+                    icon: 'info',
+                    confirmButtonColor: '#0284C7',
+                    confirmButtonText: 'Mengerti',
+                    customClass: {
+                        popup: 'rounded-2xl shadow-2xl font-sans',
+                        confirmButton: 'px-5 py-2.5 rounded-xl font-bold text-xs shadow-md'
+                    }
+                });
+            } else if (_nativeAlert) {
+                _nativeAlert(message);
+            }
+        };
+    </script>
     <!-- Tailwind CSS CDN Fallback -->
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -100,7 +199,7 @@
             <!-- App Branding -->
             <div class="h-20 px-5 flex items-center justify-between border-b border-white/10">
                 <a href="{{ route('dashboard') }}" class="flex items-center gap-3">
-                    <img src="{{ asset('build/images/Logo aquafarm.png') }}" 
+                    <img src="{{ ('images/Logo aquafarm.png') }}" 
                          alt="Logo Aquafarm" 
                          class="h-9 w-auto object-contain shrink-0 drop-shadow">
                     <div>

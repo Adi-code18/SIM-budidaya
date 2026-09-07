@@ -166,7 +166,7 @@
         <div>
             <!-- Top Logo Section -->
             <div class="pt-4 flex flex-col items-center text-center space-y-2.5">
-                <img src="{{ asset('build/images/Logo aquafarm.png') }}" 
+                <img src="{{ ('images/Logo aquafarm.png') }}" 
                      alt="Logo Aquafarm" 
                      class="h-14 w-auto object-contain drop-shadow-sm">
                 <div>

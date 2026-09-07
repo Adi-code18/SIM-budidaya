@@ -53,9 +53,11 @@ class IkanController extends Controller
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
+                'status'  => 'success',
                 'success' => true,
                 'message' => "Jenis Ikan '{$ikan->nama_ikan}' berhasil ditambahkan ke sistem!",
-                'ikan'    => $ikan
+                'ikan'    => $ikan,
+                'data'    => $ikan
             ]);
         }
 
@@ -82,9 +84,11 @@ class IkanController extends Controller
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
+                'status'  => 'success',
                 'success' => true,
                 'message' => "Data jenis ikan '{$ikan->nama_ikan}' berhasil diperbarui!",
-                'ikan'    => $ikan
+                'ikan'    => $ikan,
+                'data'    => $ikan
             ]);
         }
 
@@ -99,6 +103,7 @@ class IkanController extends Controller
 
         if (request()->wantsJson() || request()->ajax()) {
             return response()->json([
+                'status'  => 'success',
                 'success' => true,
                 'message' => "Jenis Ikan '{$nama}' berhasil dihapus dari sistem."
             ]);

@@ -333,11 +333,11 @@
                             <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1.5">TIPE MITRA</label>
                             <div class="flex flex-wrap items-center gap-2 p-1.5 bg-slate-100 rounded-xl text-xs font-bold" :class="formMode === 'view' ? 'opacity-80 pointer-events-none' : ''">
                                 <button type="button" 
-                                        @click="if(formMode !== 'view') form.tipeKey = 'distributor'" 
+                                        @click="if(formMode !== 'view') form.tipeKey = 'Rumah_makan'" 
                                         :disabled="formMode === 'view'"
-                                        :class="form.tipeKey === 'distributor' ? 'bg-[#051B44] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" 
+                                        :class="form.tipeKey === 'Rumah_makan' ? 'bg-[#051B44] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" 
                                         class="px-3 py-2 rounded-lg transition-all text-center flex-1 min-w-[100px]">
-                                    Distributor
+                                    Rumah Makan
                                 </button>
                                 <button type="button" 
                                         @click="if(formMode !== 'view') form.tipeKey = 'supplier'" 
@@ -563,7 +563,7 @@
                     <option value="supplier">Supplier Frozen Food</option>
                     <option value="pasar">Pasar Tradisional</option>
                     <option value="eksportir">Eksportir</option>
-                    <option value="distributor">Distributor</option>
+                    <option value="Rumah_makan">Rumah Makan</option>
                 </select>
             </div>
         </div>
@@ -639,11 +639,12 @@
                             <td class="py-4 px-6">
                                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase"
                                       :class="{
-                                          'bg-[#E0F2FE] text-[#0284C7]': mitra.tipeKey === 'restoran' || mitra.tipe.toLowerCase().includes('restoran'),
-                                          'bg-[#C6F6D5] text-[#22543D]': mitra.tipeKey === 'supplier' || mitra.tipe.toLowerCase().includes('supplier'),
-                                          'bg-[#E2E8F0] text-[#475569]': mitra.tipeKey === 'pasar' || mitra.tipe.toLowerCase().includes('pasar'),
-                                          'bg-[#051B44] text-white': mitra.tipeKey === 'eksportir' || mitra.tipe.toLowerCase().includes('eksportir'),
-                                          'bg-amber-100 text-amber-800': mitra.tipeKey === 'distributor' || mitra.tipe.toLowerCase().includes('distributor')
+                                          'bg-[#E0F2FE] text-[#0284C7]': mitra.tipeKey === 'restoran' || (mitra.tipe && mitra.tipe.toLowerCase().includes('restoran')),
+                                          'bg-[#C6F6D5] text-[#22543D]': mitra.tipeKey === 'supplier' || (mitra.tipe && mitra.tipe.toLowerCase().includes('supplier')),
+                                          'bg-[#E2E8F0] text-[#475569]': mitra.tipeKey === 'pasar' || (mitra.tipe && mitra.tipe.toLowerCase().includes('pasar')),
+                                          'bg-[#051B44] text-white': mitra.tipeKey === 'eksportir' || (mitra.tipe && mitra.tipe.toLowerCase().includes('eksportir')),
+                                          'bg-rose-100 text-rose-800': (mitra.tipeKey && mitra.tipeKey.toLowerCase().includes('rumah')) || (mitra.tipe && mitra.tipe.toLowerCase().includes('rumah')),
+                                          'bg-amber-100 text-amber-800': mitra.tipeKey === 'distributor' || (mitra.tipe && mitra.tipe.toLowerCase().includes('distributor'))
                                       }"
                                       x-text="mitra.tipe">
                                 </span>
@@ -797,8 +798,8 @@
                 const c = (classStr || "").toLowerCase();
 
                 // 1. Rumah Makan / Kuliner
-                if (t === "restaurant" || t === "cafe" || t === "fast_food" || t === "food_court" || n.includes("rumah makan") || n.includes("lesehan") || n.includes("resto") || n.includes("warung") || n.includes("kafe") || n.includes("cafe") || n.includes("kuliner") || n.includes("bakso") || n.includes("sate") || n.includes("seafood")) {
-                    return { label: "Rumah Makan / Kuliner", badgeClass: "bg-rose-50 text-rose-700 border-rose-200" };
+                if (t === "restaurant" || t === "cafe" || t === "fast_food" || t === "food_court" || n.includes("Rumah_makan") || n.includes("lesehan") || n.includes("resto") || n.includes("warung") || n.includes("kafe") || n.includes("cafe") || n.includes("kuliner") || n.includes("bakso") || n.includes("sate") || n.includes("seafood")) {
+                    return { label: "Rumah_Makan / Kuliner", badgeClass: "bg-rose-50 text-rose-700 border-rose-200" };
                 }
                 // 2. PT / Perusahaan / Gudang / Industri
                 if (n.startsWith("pt ") || n.startsWith("pt.") || n.startsWith("cv ") || n.startsWith("cv.") || n.includes("gudang") || n.includes("pabrik") || n.includes("industri") || n.includes("aquaculture") || n.includes("akuakultur") || c === "industrial" || c === "office") {
@@ -978,8 +979,8 @@
                     id_mitra: null,
                     id: nextIdStr,
                     nama: "",
-                    tipeKey: "distributor",
-                    tipe: "Distributor",
+                    tipeKey: "Rumah_makan",
+                    tipe: "Rumah Makan",
                     alamat: "",
                     lat: "-6.200000",
                     lng: "106.816666",
@@ -1033,13 +1034,15 @@
                 }
 
                 const tipeMap = {
-                    distributor: "Distributor",
+                    Rumah_makan: "Rumah Makan",
+                    rumah_makan: "Rumah Makan",
                     supplier: "Supplier Frozen Food",
                     restoran: "Restoran",
                     pasar: "Pasar Tradisional",
-                    eksportir: "Eksportir"
+                    eksportir: "Eksportir",
+                    distributor: "Distributor"
                 };
-                this.form.tipe = tipeMap[this.form.tipeKey] || "Distributor";
+                this.form.tipe = tipeMap[this.form.tipeKey] || "Rumah Makan";
 
                 this.isSaving = true;
 
@@ -1149,7 +1152,16 @@
 
             get filteredMitras() {
                 return this.mitras.filter(m => {
-                    const matchTipe = !this.filterTipe || m.tipeKey === this.filterTipe;
+                    const matchTipe = !this.filterTipe || (() => {
+                        const filterNorm = this.filterTipe.toLowerCase().replace(/[^a-z0-9]/g, '');
+                        const keyNorm = (m.tipeKey || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+                        const tipeNorm = (m.tipe || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+                        
+                        return keyNorm === filterNorm || 
+                               tipeNorm.includes(filterNorm) || 
+                               filterNorm.includes(keyNorm) ||
+                               (filterNorm.includes('rumah') && (tipeNorm.includes('rumah') || keyNorm.includes('rumah')));
+                    })();
                     const matchWilayah = !this.filterWilayah || (m.wilayah && m.wilayah === this.filterWilayah) || (m.alamat && m.alamat.toLowerCase().includes(this.filterWilayah.toLowerCase()));
                     const matchSearch = !this.searchQuery || m.nama.toLowerCase().includes(this.searchQuery.toLowerCase()) || m.id.toLowerCase().includes(this.searchQuery.toLowerCase()) || m.alamat.toLowerCase().includes(this.searchQuery.toLowerCase());
                     return matchTipe && matchWilayah && matchSearch;

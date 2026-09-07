@@ -24,7 +24,7 @@ class MitraController extends Controller
         ];
 
         foreach ($mitraRecords as $idx => $m) {
-            $tipeKey = strtolower(explode(' ', $m->tipe_mitra)[0] ?? 'distributor');
+            $tipeKey = $this->getTipeKey($m->tipe_mitra);
 
             $mitras[] = [
                 'id_mitra'  => $m->id_mitra,
@@ -43,6 +43,27 @@ class MitraController extends Controller
         }
 
         return view('layouts.mitra.index', compact('mitras'));
+    }
+
+    private function getTipeKey(?string $tipe): string
+    {
+        $raw = strtolower(trim($tipe ?? ''));
+        if (str_contains($raw, 'rumah') || str_contains($raw, 'makan')) {
+            return 'Rumah_makan';
+        }
+        if (str_contains($raw, 'supplier')) {
+            return 'supplier';
+        }
+        if (str_contains($raw, 'pasar')) {
+            return 'pasar';
+        }
+        if (str_contains($raw, 'eksportir')) {
+            return 'eksportir';
+        }
+        if (str_contains($raw, 'resto')) {
+            return 'restoran';
+        }
+        return 'distributor';
     }
 
     public function store(Request $request)
@@ -69,7 +90,7 @@ class MitraController extends Controller
             'longitude'  => $validated['lng'] ?? null,
         ]);
 
-        $tipeKey = strtolower(explode(' ', $mitra->tipe_mitra)[0] ?? 'distributor');
+        $tipeKey = $this->getTipeKey($mitra->tipe_mitra);
 
         $formatted = [
             'id_mitra'  => $mitra->id_mitra,
@@ -116,7 +137,7 @@ class MitraController extends Controller
             'longitude'  => $validated['lng'] ?? null,
         ]);
 
-        $tipeKey = strtolower(explode(' ', $mitra->tipe_mitra)[0] ?? 'distributor');
+        $tipeKey = $this->getTipeKey($mitra->tipe_mitra);
 
         $formatted = [
             'id_mitra'  => $mitra->id_mitra,

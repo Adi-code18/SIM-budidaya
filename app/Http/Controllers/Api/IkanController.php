@@ -51,8 +51,10 @@ class IkanController extends Controller
 
         return response()->json([
             'status'  => 'success',
+            'success' => true,
             'message' => 'Data jenis ikan berhasil ditambahkan',
-            'data'    => $ikan
+            'data'    => $ikan,
+            'ikan'    => $ikan
         ], 201);
     }
 
@@ -66,14 +68,17 @@ class IkanController extends Controller
         if (!$ikan) {
             return response()->json([
                 'status'  => 'error',
+                'success' => false,
                 'message' => 'Data jenis ikan tidak ditemukan'
             ], 404);
         }
 
         return response()->json([
             'status'  => 'success',
+            'success' => true,
             'message' => 'Detail jenis ikan berhasil diambil',
-            'data'    => $ikan
+            'data'    => $ikan,
+            'ikan'    => $ikan
         ], 200);
     }
 
@@ -87,6 +92,7 @@ class IkanController extends Controller
         if (!$ikan) {
             return response()->json([
                 'status'  => 'error',
+                'success' => false,
                 'message' => 'Data jenis ikan tidak ditemukan'
             ], 404);
         }
@@ -103,8 +109,10 @@ class IkanController extends Controller
 
         return response()->json([
             'status'  => 'success',
+            'success' => true,
             'message' => 'Data jenis ikan berhasil diperbarui',
-            'data'    => $ikan
+            'data'    => $ikan,
+            'ikan'    => $ikan
         ], 200);
     }
 
