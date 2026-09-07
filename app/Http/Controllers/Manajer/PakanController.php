@@ -120,7 +120,8 @@ class PakanController extends Controller
                 ];
             });
 
-        // 3. Kolam Aktif untuk Input Log Pakan (Pembesaran & Pembibitan)
+        // 3. Kolam Aktif untuk Input Log Pakan (Pembesaran & Pembibitan) dengan Auto Sinkronisasi DOC & Fase
+        $now = Carbon::now();
         $activeBatches = BatchPembesaran::with(['kolam', 'batchPembibitan'])
             ->where('status_siklus', '!=', 'selesai')
             ->where('status_siklus', '!=', 'gagal')
@@ -131,8 +132,31 @@ class PakanController extends Controller
             ->pluck('id_kolam')
             ->toArray();
 
-        $activeKolams = $activeBatches->map(function ($b) use ($fedTodayKolamIds) {
+        $activeKolams = $activeBatches->map(function ($b) use ($fedTodayKolamIds, $now) {
             $isFedToday = in_array($b->id_kolam, $fedTodayKolamIds);
+            $tgl = $b->tgl_tebar ? Carbon::parse($b->tgl_tebar) : Carbon::parse($b->created_at);
+            $doc = max(1, (int) $tgl->diffInDays($now) + 1);
+
+            if ($doc <= 20) {
+                $fase = 'Starter (Awal)';
+                $faseKey = 'starter';
+                $rekomendasiPakan = 'Pelet Starter Mikro (PF-1000 / 781-1)';
+                $ratePelet = 0.035;
+            } elseif ($doc <= 60) {
+                $fase = 'Grower (Pertumbuhan)';
+                $faseKey = 'grower';
+                $rekomendasiPakan = 'Pelet Apung Grower (781-2)';
+                $ratePelet = 0.028;
+            } else {
+                $fase = 'Finisher (Siap Panen)';
+                $faseKey = 'finisher';
+                $rekomendasiPakan = 'Pelet Apung Finisher (781-3)';
+                $ratePelet = 0.022;
+            }
+
+            $biomassa = (float) $b->biomassa_est;
+            $estPelet = max(1, round($biomassa * $ratePelet, 1));
+
             return [
                 'id_kolam'          => $b->id_kolam,
                 'id_pembesaran'     => $b->id_pembesaran,
@@ -140,44 +164,113 @@ class PakanController extends Controller
                 'nama_kolam'        => $b->kolam ? $b->kolam->nama_kolam : 'Kolam #' . $b->id_kolam,
                 'tipe_kolam'        => $b->kolam ? $b->kolam->tipe_kolam : 'Pembesaran',
                 'jenis_ikan'        => $b->jenis_ikan,
-                'biomassa_est'      => (float) $b->biomassa_est,
-                'biomassa_format'   => number_format($b->biomassa_est, 1, ',', '.'),
+                'biomassa_est'      => $biomassa,
+                'biomassa_format'   => number_format($biomassa, 1, ',', '.'),
                 'is_fed_today'      => $isFedToday,
-                'label'             => ($b->kolam ? $b->kolam->nama_kolam : 'Kolam #' . $b->id_kolam) . ' - #PB-' . str_pad($b->id_pembesaran, 5, '0', STR_PAD_LEFT) . ' (' . $b->jenis_ikan . ' • ' . number_format($b->biomassa_est, 1, ',', '.') . ' kg)' . ($isFedToday ? ' [Sudah Diberi Pakan Hari Ini]' : ' [Belum Diberi Pakan]'),
+                'doc'               => $doc,
+                'fase'              => $fase,
+                'fase_key'          => $faseKey,
+                'rekomendasi_pakan' => $rekomendasiPakan,
+                'est_pelet_kg'      => $estPelet,
+                'label'             => ($b->kolam ? $b->kolam->nama_kolam : 'Kolam #' . $b->id_kolam) . ' - DOC ' . $doc . ' (' . $fase . ' • ' . $b->jenis_ikan . ' • ' . number_format($biomassa, 1, ',', '.') . ' kg)' . ($isFedToday ? ' [Sudah Diberi Pakan]' : ' [Belum Diberi Pakan]'),
             ];
         });
 
-        // Kolam Pembibitan Aktif
+        // Kolam Pembibitan Aktif dengan Auto Sinkronisasi DOC & Fase
         $activeHatcheryBatches = BatchPembibitan::with('kolam')
             ->where('status', '!=', 'selesai')
             ->where('status', '!=', 'gagal')
             ->latest('id_batch')
             ->get();
 
-        $hatcheryKolams = $activeHatcheryBatches->map(function ($hb) {
+        $hatcheryKolams = $activeHatcheryBatches->map(function ($hb) use ($now) {
             $benihHidup = max(0, ((int) $hb->jumlah_bibitAwal) - ((int) $hb->jumlah_kematian));
+            $tgl = $hb->tgl_pemijahan ? Carbon::parse($hb->tgl_pemijahan) : Carbon::parse($hb->created_at);
+            $doc = max(1, (int) $tgl->diffInDays($now) + 1);
+
+            if ($doc <= 3) {
+                $fase = 'Telur / Inkubasi';
+                $faseKey = 'telur';
+                $rekomendasiPakan = 'Kuning Telur Rebus / Suspensi Artemia';
+                $estKg = 0.2;
+            } elseif ($doc <= 14) {
+                $fase = 'Larva';
+                $faseKey = 'larva';
+                $rekomendasiPakan = 'Cacing Sutra Segar / Artemia';
+                $estKg = 0.5;
+            } else {
+                $fase = 'Fingerling (Benih)';
+                $faseKey = 'fingerling';
+                $rekomendasiPakan = 'Pelet Mikro Starter Benih (PF-500)';
+                $estKg = 1.0;
+            }
+
             return [
-                'id_kolam'     => $hb->id_kolam,
-                'id_batch'     => $hb->id_batch,
-                'batch_id'     => '#BB-' . str_pad($hb->id_batch, 5, '0', STR_PAD_LEFT),
-                'nama_kolam'   => $hb->kolam ? $hb->kolam->nama_kolam : 'Hatchery #' . $hb->id_kolam,
-                'jenis_ikan'   => $hb->jenis_ikan ?? ($hb->ikan ? $hb->ikan->nama_ikan : 'Bibit Ikan'),
-                'jumlah_bibit' => $benihHidup,
-                'label'        => ($hb->kolam ? $hb->kolam->nama_kolam : 'Hatchery #' . $hb->id_kolam) . ' - #BB-' . str_pad($hb->id_batch, 5, '0', STR_PAD_LEFT) . ' (' . ($hb->jenis_ikan ?? 'Bibit') . ' • ' . number_format($benihHidup, 0, ',', '.') . ' ekor)',
+                'id_kolam'          => $hb->id_kolam,
+                'id_batch'          => $hb->id_batch,
+                'batch_id'          => '#BB-' . str_pad($hb->id_batch, 5, '0', STR_PAD_LEFT),
+                'nama_kolam'        => $hb->kolam ? $hb->kolam->nama_kolam : 'Hatchery #' . $hb->id_kolam,
+                'jenis_ikan'        => $hb->jenis_ikan ?? ($hb->ikan ? $hb->ikan->nama_ikan : 'Bibit Ikan'),
+                'jumlah_bibit'      => $benihHidup,
+                'doc'               => $doc,
+                'fase'              => $fase,
+                'fase_key'          => $faseKey,
+                'rekomendasi_pakan' => $rekomendasiPakan,
+                'est_pakan_kg'      => $estKg,
+                'label'             => ($hb->kolam ? $hb->kolam->nama_kolam : 'Hatchery #' . $hb->id_kolam) . ' - DOC ' . $doc . ' (' . $fase . ' • ' . ($hb->jenis_ikan ?? 'Bibit') . ' • ' . number_format($benihHidup, 0, ',', '.') . ' ekor)',
             ];
         });
 
         // 4. Riwayat Transaksi Pembelian Pakan dari Supplier
         $riwayatPembelian = PembelianPakan::with(['stokPakan', 'mitra', 'user'])
             ->latest('tgl_beli')
-            ->take(20)
-            ->get();
+            ->latest('id_pembelian')
+            ->take(50)
+            ->get()
+            ->map(function ($p) {
+                return [
+                    'id_pembelian'       => $p->id_pembelian,
+                    'no_nota'            => $p->no_nota ?: 'NOTA-' . str_pad($p->id_pembelian, 5, '0', STR_PAD_LEFT),
+                    'tgl_beli_raw'       => $p->tgl_beli ? Carbon::parse($p->tgl_beli)->toDateString() : '',
+                    'tgl_beli_formatted' => $p->tgl_beli ? Carbon::parse($p->tgl_beli)->translatedFormat('d M Y') : '-',
+                    'waktu'              => $p->created_at ? Carbon::parse($p->created_at)->format('H:i') . ' WIB' : '',
+                    'id_stok_pakan'      => $p->id_stok_pakan,
+                    'nama_pakan'         => $p->stokPakan ? $p->stokPakan->nama_pakan : 'Pakan #' . $p->id_stok_pakan,
+                    'satuan'             => $p->stokPakan ? $p->stokPakan->satuan : 'kg',
+                    'nama_mitra'         => $p->mitra ? $p->mitra->nama_mitra : ($p->supplier_nama ?? 'Supplier Mitra'),
+                    'jumlah'             => (float) $p->jumlah,
+                    'harga_satuan'       => (float) $p->harga_satuan,
+                    'total_biaya'        => (float) $p->total_biaya,
+                    'keterangan'         => $p->keterangan,
+                    'petugas'            => $p->user ? ($p->user->nama ?? $p->user->name) : 'Petugas Gudang',
+                ];
+            });
 
         // 5. Riwayat Log Pemberian Pakan Harian
         $logs = ManajemenPakan::with(['kolam', 'user', 'stokPakan'])
             ->latest('tgl_log')
-            ->take(25)
-            ->get();
+            ->latest('id_pakan')
+            ->take(50)
+            ->get()
+            ->map(function ($l) {
+                return [
+                    'id_pakan'          => $l->id_pakan,
+                    'tgl_log_raw'       => $l->tgl_log ? Carbon::parse($l->tgl_log)->toDateString() : '',
+                    'tgl_log_formatted' => $l->tgl_log ? Carbon::parse($l->tgl_log)->translatedFormat('d M Y') : '-',
+                    'waktu'             => $l->created_at ? Carbon::parse($l->created_at)->format('H:i') . ' WIB' : '',
+                    'id_kolam'          => $l->id_kolam,
+                    'nama_kolam'        => $l->kolam ? $l->kolam->nama_kolam : 'Kolam #' . $l->id_kolam,
+                    'kategori_fase'     => $l->kategori_fase ?? 'pembesaran',
+                    'kg_pelet'          => (float) $l->kg_pelet,
+                    'nama_pakan'        => $l->stokPakan ? $l->stokPakan->nama_pakan : null,
+                    'satuan'            => $l->stokPakan ? $l->stokPakan->satuan : 'kg',
+                    'kg_daun'           => (float) $l->kg_daun,
+                    'jenis_daun'        => $l->jenis_daun,
+                    'total_biaya'       => (float) $l->total_biaya,
+                    'ph_air'            => $l->ph_air ? (float) $l->ph_air : null,
+                    'petugas'           => $l->user ? ($l->user->nama ?? $l->user->name) : 'Petugas Lapangan',
+                ];
+            });
 
         // 6. Dynamic Chart Pakan 7 Hari Terakhir
         $pakanGrouped = ManajemenPakan::where('tgl_log', '>=', $startDate7)
@@ -306,10 +399,28 @@ class PakanController extends Controller
         }
 
         if ($request->wantsJson() || $request->ajax()) {
+            $log->load(['kolam', 'user', 'stokPakan']);
+            $logData = [
+                'id_pakan'          => $log->id_pakan,
+                'tgl_log_raw'       => $log->tgl_log ? Carbon::parse($log->tgl_log)->toDateString() : '',
+                'tgl_log_formatted' => $log->tgl_log ? Carbon::parse($log->tgl_log)->translatedFormat('d M Y') : '-',
+                'waktu'             => $log->created_at ? Carbon::parse($log->created_at)->format('H:i') . ' WIB' : 'Baru saja',
+                'id_kolam'          => $log->id_kolam,
+                'nama_kolam'        => $log->kolam ? $log->kolam->nama_kolam : 'Kolam #' . $log->id_kolam,
+                'kategori_fase'     => $log->kategori_fase ?? 'pembesaran',
+                'kg_pelet'          => (float) $log->kg_pelet,
+                'nama_pakan'        => $log->stokPakan ? $log->stokPakan->nama_pakan : null,
+                'satuan'            => $log->stokPakan ? $log->stokPakan->satuan : 'kg',
+                'kg_daun'           => (float) $log->kg_daun,
+                'jenis_daun'        => $log->jenis_daun,
+                'total_biaya'       => (float) $log->total_biaya,
+                'ph_air'            => $log->ph_air ? (float) $log->ph_air : null,
+                'petugas'           => $log->user ? ($log->user->nama ?? $log->user->name) : 'Petugas Lapangan',
+            ];
             return response()->json([
                 'success' => true,
                 'message' => 'Log pemberian pakan berhasil dicatat dan stok pakan telah otomatis disesuaikan!',
-                'log'     => $log->load(['kolam', 'user', 'stokPakan'])
+                'log'     => $logData
             ]);
         }
 

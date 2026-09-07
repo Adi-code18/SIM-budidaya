@@ -14,7 +14,7 @@ class PembibitanController extends Controller
 {
     public function index()
     {
-        $batchRecords = BatchPembibitan::with(['kolam', 'user', 'batchPembesaran.kolam'])->latest('id_batch')->get();
+        $batchRecords = BatchPembibitan::with(['kolam', 'user', 'batchPembesaran.kolam', 'ikan'])->latest('id_batch')->get();
         $kolams = Kolam::where(function($q) {
             $q->where('tipe_kolam', 'like', '%Hatchery%')
               ->orWhere('tipe_kolam', 'like', '%Pemijahan%')
@@ -157,6 +157,9 @@ class PembibitanController extends Controller
                 }
             }
             $bobotKgFormat = number_format($rawBobotKg, $rawBobotKg >= 100 ? 1 : 2, ',', '.') . ' kg';
+            $tglPemijahanCarbon = $b->tgl_pemijahan ? Carbon::parse($b->tgl_pemijahan) : Carbon::parse($b->created_at ?? now());
+            $sopDuration = $b->ikan ? (($b->ikan->durasi_penetasan ?? 14) + ($b->ikan->durasi_pembibitan ?? 30)) : 44;
+            $estDateCarbon = $b->est_prcs_pembibitaan ? Carbon::parse($b->est_prcs_pembibitaan) : $tglPemijahanCarbon->copy()->addDays($sopDuration);
 
             $batches[] = [
                 'id_batch'             => $b->id_batch,
@@ -165,8 +168,8 @@ class PembibitanController extends Controller
                 'tglPemijahan'         => $b->tgl_pemijahan,
                 'jenis_ikan'           => $b->ikan ? $b->ikan->nama_ikan : ($b->jenis_ikan ?? 'Ikan Nila'),
                 'id_ikan'              => $b->id_ikan,
-                'est_prcs_pembibitaan' => $b->est_prcs_pembibitaan ? Carbon::parse($b->est_prcs_pembibitaan)->translatedFormat('d M Y') : '-',
-                'est_prcs_raw'         => $b->est_prcs_pembibitaan ? Carbon::parse($b->est_prcs_pembibitaan)->format('Y-m-d') : '',
+                'est_prcs_pembibitaan' => $estDateCarbon->translatedFormat('d M Y'),
+                'est_prcs_raw'         => $estDateCarbon->format('Y-m-d'),
                 'fase'                 => $fase,
                 'faseClass'            => $faseClass,
                 'usia'                 => $days . ' Hari',
@@ -298,13 +301,22 @@ class PembibitanController extends Controller
 
         $jumlahKematian = ($fase === 'TELUR') ? 0 : ($request->jumlah_kematian ?? 0);
 
+        $sopDays = 44;
+        if ($idIkan) {
+            $ikObj = \App\Models\Ikan::find($idIkan);
+            if ($ikObj) {
+                $sopDays = ($ikObj->durasi_penetasan ?? 14) + ($ikObj->durasi_pembibitan ?? 30);
+            }
+        }
+        $estPrcs = $request->est_prcs_pembibitaan ?: Carbon::parse($tglPemijahan)->addDays($sopDays)->toDateString();
+
         $batch = BatchPembibitan::create([
             'id_kolam'             => $kolam ? $kolam->id_kolam : 1,
             'id_user'              => Auth::id() ?? 1,
             'id_ikan'              => $idIkan,
             'jenis_ikan'           => $jenisIkan,
             'tgl_pemijahan'        => $tglPemijahan,
-            'est_prcs_pembibitaan' => $request->est_prcs_pembibitaan,
+            'est_prcs_pembibitaan' => $estPrcs,
             'jumlah_bibitAwal'     => $request->jumlah_bibitAwal,
             'jumlah_kematian'      => $jumlahKematian,
             'total_bobot_kg'       => round($rawBobot, 2),

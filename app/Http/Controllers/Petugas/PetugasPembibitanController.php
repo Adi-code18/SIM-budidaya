@@ -110,17 +110,23 @@ class PetugasPembibitanController extends Controller
 
         $idIkan = $request->id_ikan ?: null;
         $jenisIkan = $request->jenis_ikan;
-        if ($idIkan && !$jenisIkan) {
+        $ik = null;
+        if ($idIkan) {
             $ik = \App\Models\Ikan::find($idIkan);
-            if ($ik) $jenisIkan = $ik->nama_ikan;
+            if ($ik && !$jenisIkan) $jenisIkan = $ik->nama_ikan;
         }
+
+        $tglPemijahan = $request->tgl_pemijahan ? Carbon::parse($request->tgl_pemijahan)->toDateString() : ($request->tgl_tebar ? Carbon::parse($request->tgl_tebar)->toDateString() : now()->toDateString());
+        $sopDays = $ik ? (($ik->durasi_penetasan ?? 14) + ($ik->durasi_pembibitan ?? 30)) : 44;
+        $estPrcs = $request->est_prcs_pembibitaan ?: Carbon::parse($tglPemijahan)->addDays($sopDays)->toDateString();
 
         $batch = BatchPembibitan::create([
             'id_kolam'             => $kolam->id_kolam,
             'id_user'              => Auth::id() ?? 1,
             'id_ikan'              => $idIkan,
             'jenis_ikan'           => $jenisIkan ?: 'Bibit Ikan',
-            'tgl_pemijahan'        => $request->tgl_pemijahan ? Carbon::parse($request->tgl_pemijahan)->toDateString() : ($request->tgl_tebar ? Carbon::parse($request->tgl_tebar)->toDateString() : now()->toDateString()),
+            'tgl_pemijahan'        => $tglPemijahan,
+            'est_prcs_pembibitaan' => $estPrcs,
             'jumlah_bibitAwal'     => (int) ($request->jumlah_bibitAwal ?? 100000),
             'jumlah_kematian'      => 0,
             'status'               => 'aktif',
@@ -142,12 +148,47 @@ class PetugasPembibitanController extends Controller
      */
     public function logPakan(Request $request)
     {
-        // 1. Ambil Batch Pembibitan Aktif
+        $now = Carbon::now();
+
+        // 1. Ambil Batch Pembibitan Aktif dengan Sinkronisasi DOC & Fase
         $activeBatches = BatchPembibitan::with(['kolam', 'ikan'])
             ->where('status', '!=', 'selesai')
             ->where('status', '!=', 'gagal')
             ->latest('id_batch')
-            ->get();
+            ->get()
+            ->map(function ($b) use ($now) {
+                $tgl = $b->tgl_pemijahan ? Carbon::parse($b->tgl_pemijahan) : Carbon::parse($b->created_at);
+                $doc = max(1, (int) $tgl->diffInDays($now) + 1);
+
+                if ($doc <= 3) {
+                    $fase = 'Telur / Inkubasi';
+                    $faseKey = 'telur';
+                    $faseBadge = 'bg-amber-100 text-amber-800 border-amber-200';
+                    $rekomendasiPakan = 'Kuning Telur Rebus / Suspensi Artemia';
+                    $estKg = 0.2;
+                } elseif ($doc <= 14) {
+                    $fase = 'Larva';
+                    $faseKey = 'larva';
+                    $faseBadge = 'bg-emerald-100 text-emerald-800 border-emerald-200';
+                    $rekomendasiPakan = 'Cacing Sutra Segar / Artemia';
+                    $estKg = 0.5;
+                } else {
+                    $fase = 'Fingerling (Benih)';
+                    $faseKey = 'fingerling';
+                    $faseBadge = 'bg-teal-100 text-teal-800 border-teal-200';
+                    $rekomendasiPakan = 'Pelet Mikro Starter Benih (PF-500)';
+                    $estKg = 1.0;
+                }
+
+                $b->doc = $doc;
+                $b->fase = $fase;
+                $b->fase_key = $faseKey;
+                $b->fase_badge = $faseBadge;
+                $b->rekomendasi_pakan = $rekomendasiPakan;
+                $b->est_pakan_kg = $estKg;
+
+                return $b;
+            });
 
         // 2. Ambil Master Stok Pakan khusus Pembibitan & Semua
         $stokPakanList = StokPakan::whereIn('kategori_peruntukan', ['pembibitan', 'semua'])->get();

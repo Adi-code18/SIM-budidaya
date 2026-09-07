@@ -458,17 +458,25 @@
 </style>
 <script>
     function dashboardData() {
+        const _now = new Date();
+        const _curY = _now.getFullYear();
+        const _curM = _now.getMonth() + 1;
+        const _curD = _now.getDate();
+        const _curW = Math.min(5, Math.ceil(_curD / 7));
+        const _mNamesShort = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
         return {
             datePickerOpen: false,
             pickerMode: 'minggu', // 'minggu' | 'bulan' | 'tahun'
-            currentYear: 2026,
-            currentMonth: 8, // Agustus 2026
-            minYear: 2025,
-            pickerYear: 2026,
-            pickerMonth: 8,
-            selectedPeriodKey: 'w_2026_8_1',
-            periodLabel: 'Minggu 1, Ags 2026',
-            fullPeriodLabel: 'Minggu 1 (01 - 07 Ags 2026)',
+            currentYear: _curY,
+            currentMonth: _curM,
+            currentDate: _curD,
+            minYear: _curY - 2,
+            pickerYear: _curY,
+            pickerMonth: _curM,
+            selectedPeriodKey: `w_${_curY}_${_curM}_${_curW}`,
+            periodLabel: `Minggu ${_curW}, ${_mNamesShort[_curM]} ${_curY}`,
+            fullPeriodLabel: `Minggu ${_curW} (Periode Berjalan ${_mNamesShort[_curM]} ${_curY})`,
             chartDropdownOpen: false,
             chartPeriodLabel: '7 Hari Terakhir',
             
@@ -511,7 +519,7 @@
                 { num: 5, name: 'Mei', short: 'Mei' },
                 { num: 6, name: 'Juni', short: 'Jun' },
                 { num: 7, name: 'Juli', short: 'Jul' },
-                { num: 8, name: 'Agustus', short: 'Ags' },
+                { num: 8, name: 'Agustus', short: 'Agu' },
                 { num: 9, name: 'September', short: 'Sep' },
                 { num: 10, name: 'Oktober', short: 'Okt' },
                 { num: 11, name: 'November', short: 'Nov' },
@@ -519,12 +527,15 @@
             ],
 
             // Daftar Tahun
-            yearList: [
-                { year: 2025, available: true, badge: 'Arsip 2025', description: 'Rekap Tahunan Periode 2025' },
-                { year: 2026, available: true, badge: 'Tahun Berjalan', description: 'Rekap Tahunan Periode 2026' },
-                { year: 2027, available: false, badge: 'Belum Ada Data', description: 'Tahun Mendatang (Sistem Belum Berjalan)' },
-                { year: 2028, available: false, badge: 'Belum Ada Data', description: 'Tahun Mendatang (Sistem Belum Berjalan)' },
-            ],
+            get yearList() {
+                const cy = this.currentYear;
+                return [
+                    { year: cy - 2, available: true, badge: `Arsip ${cy - 2}`, description: `Rekap Tahunan Periode ${cy - 2}` },
+                    { year: cy - 1, available: true, badge: `Arsip ${cy - 1}`, description: `Rekap Tahunan Periode ${cy - 1}` },
+                    { year: cy, available: true, badge: 'Tahun Berjalan', description: `Rekap Tahunan Periode ${cy}` },
+                    { year: cy + 1, available: false, badge: 'Belum Ada Data', description: 'Tahun Mendatang (Belum Terjadi)' },
+                ];
+            },
 
             prevYear() {
                 if (this.pickerYear > this.minYear) {
@@ -550,23 +561,45 @@
             },
 
             isMonthAvailable(mNum, year) {
-                if (year < this.minYear || year > this.currentYear) return false;
-                if (year === this.currentYear && mNum > this.currentMonth) return false;
-                return true;
+                if (year < this.minYear) return false;
+                if (year < this.currentYear) return true;
+                if (year === this.currentYear) return mNum <= this.currentMonth;
+                return false;
             },
 
             getWeeks(mNum, year) {
-                const isCurrentMonth = (year === this.currentYear && mNum === this.currentMonth);
                 const mName = this.getMonthName(mNum);
                 const lastDay = new Date(year, mNum, 0).getDate();
+                const isPastMonth = (year < this.currentYear) || (year === this.currentYear && mNum < this.currentMonth);
+                const isCurrentMonth = (year === this.currentYear && mNum === this.currentMonth);
 
-                return [
-                    { index: 1, label: 'Minggu 1', range: `01 - 07 ${mName.substring(0,3)}`, available: true },
-                    { index: 2, label: 'Minggu 2', range: `08 - 14 ${mName.substring(0,3)}`, available: !isCurrentMonth },
-                    { index: 3, label: 'Minggu 3', range: `15 - 21 ${mName.substring(0,3)}`, available: !isCurrentMonth },
-                    { index: 4, label: 'Minggu 4', range: `22 - 28 ${mName.substring(0,3)}`, available: !isCurrentMonth },
-                    { index: 5, label: 'Minggu 5', range: `29 - ${lastDay} ${mName.substring(0,3)}`, available: !isCurrentMonth && lastDay > 28 }
+                const rawWeeks = [
+                    { index: 1, startDay: 1, endDay: 7 },
+                    { index: 2, startDay: 8, endDay: 14 },
+                    { index: 3, startDay: 15, endDay: 21 },
+                    { index: 4, startDay: 22, endDay: 28 },
+                    { index: 5, startDay: 29, endDay: lastDay }
                 ];
+
+                return rawWeeks.filter(w => w.startDay <= lastDay).map(w => {
+                    const actualEnd = Math.min(w.endDay, lastDay);
+                    const sPad = String(w.startDay).padStart(2, '0');
+                    const ePad = String(actualEnd).padStart(2, '0');
+                    
+                    let available = false;
+                    if (isPastMonth) {
+                        available = true;
+                    } else if (isCurrentMonth) {
+                        available = (w.startDay <= this.currentDate);
+                    }
+
+                    return {
+                        index: w.index,
+                        label: `Minggu ${w.index}`,
+                        range: `${sPad} - ${ePad} ${mName.substring(0,3)}`,
+                        available: available
+                    };
+                });
             },
 
             applyWeek(weekObj) {

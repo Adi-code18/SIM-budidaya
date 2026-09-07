@@ -49,7 +49,8 @@ class PetugasPembesaranController extends Controller
             ->toArray();
 
         $kolams = Kolam::whereNotIn('id_kolam', $occupiedKolamIds)->get();
-        return view('mobile_web_petugas.petugas_pembesaran.create_batch', compact('kolams'));
+        $ikans = \App\Models\Ikan::orderBy('nama_ikan', 'asc')->get();
+        return view('mobile_web_petugas.petugas_pembesaran.create_batch', compact('kolams', 'ikans'));
     }
 
     /**
@@ -116,12 +117,50 @@ class PetugasPembesaranController extends Controller
      */
     public function logPakan(Request $request)
     {
-        // 1. Ambil Batch Pembesaran yang Sedang Aktif
+        $now = Carbon::now();
+
+        // 1. Ambil Batch Pembesaran yang Sedang Aktif dengan Sinkronisasi DOC & Fase
         $activeBatches = BatchPembesaran::with('kolam')
             ->where('status_siklus', '!=', 'selesai')
             ->where('status_siklus', '!=', 'gagal')
             ->latest('id_pembesaran')
-            ->get();
+            ->get()
+            ->map(function ($b) use ($now) {
+                $tgl = $b->tgl_tebar ? Carbon::parse($b->tgl_tebar) : Carbon::parse($b->created_at);
+                $doc = max(1, (int) $tgl->diffInDays($now) + 1);
+
+                if ($doc <= 20) {
+                    $fase = 'Starter (Awal)';
+                    $faseKey = 'starter';
+                    $faseBadge = 'bg-sky-100 text-sky-800 border-sky-200';
+                    $rekomendasiPakan = 'Pelet Starter Mikro (PF-1000 / 781-1)';
+                    $ratePelet = 0.035; // 3.5% biomassa
+                } elseif ($doc <= 60) {
+                    $fase = 'Grower (Pertumbuhan)';
+                    $faseKey = 'grower';
+                    $faseBadge = 'bg-indigo-100 text-indigo-800 border-indigo-200';
+                    $rekomendasiPakan = 'Pelet Apung Grower (781-2)';
+                    $ratePelet = 0.028; // 2.8% biomassa
+                } else {
+                    $fase = 'Finisher (Siap Panen)';
+                    $faseKey = 'finisher';
+                    $faseBadge = 'bg-emerald-100 text-emerald-800 border-emerald-200';
+                    $rekomendasiPakan = 'Pelet Apung Finisher (781-3)';
+                    $ratePelet = 0.022; // 2.2% biomassa
+                }
+
+                $biomassa = (float) $b->biomassa_est;
+                $estPelet = max(1, round($biomassa * $ratePelet, 1));
+
+                $b->doc = $doc;
+                $b->fase = $fase;
+                $b->fase_key = $faseKey;
+                $b->fase_badge = $faseBadge;
+                $b->rekomendasi_pakan = $rekomendasiPakan;
+                $b->est_pelet_kg = $estPelet;
+
+                return $b;
+            });
 
         // 2. Ambil Master Stok Pakan khusus Pembesaran & Semua
         $stokPakanList = StokPakan::whereIn('kategori_peruntukan', ['pembesaran', 'semua'])->get();

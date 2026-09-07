@@ -139,7 +139,7 @@ class PembesaranController extends Controller
             ];
         }
 
-        $availablePembibitan = \App\Models\BatchPembibitan::with(['kolam', 'batchPembesaran'])
+        $availablePembibitan = \App\Models\BatchPembibitan::with(['kolam', 'batchPembesaran', 'ikan'])
             ->where('status', '!=', 'gagal')
             ->whereDoesntHave('batchPembesaran')
             ->latest('id_batch')
@@ -147,16 +147,22 @@ class PembesaranController extends Controller
             ->map(function ($bp) {
                 $sisa = max(0, $bp->jumlah_bibitAwal - $bp->jumlah_kematian);
                 $statusText = $bp->status === 'siap_pindah' ? 'Siap Pindah' : ($bp->status === 'selesai' ? 'Selesai' : ucfirst($bp->status));
+                $namaIkan = $bp->jenis_ikan ?: ($bp->ikan ? $bp->ikan->nama_ikan : 'Ikan Lele');
+                $cleanJenis = preg_replace('/^Ikan\s+/i', '', $namaIkan);
                 return [
                     'id_batch'         => $bp->id_batch,
-                    'label'            => '#BT-' . str_pad($bp->id_batch, 5, '0', STR_PAD_LEFT) . ' (' . number_format($sisa, 0, ',', '.') . ' Ekor - ' . $statusText . ')',
+                    'label'            => '#BB-' . str_pad($bp->id_batch, 5, '0', STR_PAD_LEFT) . ' - ' . $namaIkan . ' (' . number_format($sisa, 0, ',', '.') . ' Ekor - ' . $statusText . ')',
+                    'jenis_ikan'       => $namaIkan,
+                    'clean_jenis'      => $cleanJenis,
                     'sisa_ekor'        => $sisa,
                     'est_biomassa'     => round($sisa * 0.02, 1),
                     'status'           => $bp->status,
                 ];
             });
 
-        return view('layouts.pembesaran.index', compact('batches', 'kolamList', 'kolams', 'totalBiomassa', 'avgFcr', 'availablePembibitan'));
+        $ikans = \App\Models\Ikan::orderBy('nama_ikan', 'asc')->get();
+
+        return view('layouts.pembesaran.index', compact('batches', 'kolamList', 'kolams', 'totalBiomassa', 'avgFcr', 'availablePembibitan', 'ikans'));
     }
 
     public function store(Request $request)

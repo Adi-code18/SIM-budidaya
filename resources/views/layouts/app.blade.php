@@ -199,7 +199,7 @@
             <!-- App Branding -->
             <div class="h-20 px-5 flex items-center justify-between border-b border-white/10">
                 <a href="{{ route('dashboard') }}" class="flex items-center gap-3">
-                    <img src="{{ ('images/Logo aquafarm.png') }}" 
+                    <img src="{{ asset('images/Logo aquafarm.png') }}" 
                          alt="Logo Aquafarm" 
                          class="h-9 w-auto object-contain shrink-0 drop-shadow">
                     <div>

@@ -50,15 +50,36 @@
                     <option value="">Pilih Kolam Hatchery...</option>
                     <template x-for="b in activeBatches" :key="b.id_batch">
                         <option :value="b.id_kolam" 
-                                x-text="(b.kolam ? b.kolam.nama_kolam : 'Kolam #' + b.id_kolam) + ' - #BB-' + String(b.id_batch).padStart(5, '0') + ' (' + (b.jenis_ikan || 'Benih') + ')'">
+                                x-text="(b.kolam ? b.kolam.nama_kolam : 'Kolam #' + b.id_kolam) + ' - Hari ke-' + b.doc + ' (DOC ' + b.doc + ') • ' + b.fase + ' (' + (b.jenis_ikan || 'Benih') + ')'">
                         </option>
                     </template>
                 </select>
 
                 <template x-if="selectedBatch">
-                    <div class="p-2.5 bg-emerald-50/70 rounded-xl border border-emerald-100 flex items-center justify-between text-[11px] text-emerald-900 mt-1.5">
-                        <span class="font-bold" x-text="'Ikan: ' + (selectedBatch.jenis_ikan || 'Benih')"></span>
-                        <span class="font-extrabold" x-text="'Populasi: ' + Number(selectedBatch.jumlah_bibitAwal - selectedBatch.jumlah_kematian).toLocaleString('id-ID') + ' ekor'"></span>
+                    <div class="p-3 bg-emerald-50/80 rounded-2xl border border-emerald-200 space-y-2 text-xs text-emerald-950 mt-2">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="font-extrabold" x-text="'Benih: ' + (selectedBatch.jenis_ikan || 'Bibit Ikan')"></span>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                <span class="text-[10px] font-black px-2 py-0.5 rounded-md bg-white border border-emerald-200 text-emerald-800"
+                                      x-text="'Hari ke-' + selectedBatch.doc + ' (DOC ' + selectedBatch.doc + ')'">
+                                </span>
+                                <span class="text-[10px] font-black px-2 py-0.5 rounded-md border"
+                                      :class="selectedBatch.fase_badge || 'bg-emerald-100 text-emerald-800 border-emerald-200'"
+                                      x-text="selectedBatch.fase">
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="pt-2 border-t border-emerald-200/70 flex flex-col gap-1.5 text-[11px]">
+                            <div class="flex items-center justify-between text-slate-600">
+                                <span>Populasi Benih:</span>
+                                <strong class="text-slate-900 font-extrabold" x-text="Number(selectedBatch.jumlah_bibitAwal - selectedBatch.jumlah_kematian).toLocaleString('id-ID') + ' ekor'"></strong>
+                            </div>
+                            <div class="flex items-center gap-1.5 text-emerald-950 font-bold bg-white/80 p-2.5 rounded-xl border border-emerald-100 text-[11px]">
+                                <i class="fa-solid fa-lightbulb text-amber-500 shrink-0"></i>
+                                <span>Rekomendasi Fase: <strong class="text-emerald-900" x-text="selectedBatch.rekomendasi_pakan"></strong></span>
+                            </div>
+                        </div>
                     </div>
                 </template>
             </div>
@@ -213,8 +234,8 @@ function petugasPembibitanLogComponent() {
         init() {
             if (this.activeBatches.length > 0) {
                 this.form.id_kolam = this.activeBatches[0].id_kolam;
-            }
-            if (this.stokPakanList.length > 0) {
+                this.onKolamChange();
+            } else if (this.stokPakanList.length > 0) {
                 this.form.id_stok_pakan = this.stokPakanList[0].id_stok_pakan;
                 this.recalculateCost();
             }
@@ -231,7 +252,30 @@ function petugasPembibitanLogComponent() {
         },
 
         onKolamChange() {
-            // Do nothing special, UI updates via selectedBatch
+            if (this.selectedBatch) {
+                // Auto porsi pakan benih sesuai kalkulasi fase DOC
+                this.form.kg_pelet = this.selectedBatch.est_pakan_kg || 1.0;
+
+                // Auto sarankan pakan di stok gudang yang paling pas
+                if (this.stokPakanList.length > 0) {
+                    const fKey = (this.selectedBatch.fase_key || '').toLowerCase();
+                    let matchedPakan = null;
+                    if (fKey === 'telur') {
+                        matchedPakan = this.stokPakanList.find(p => /kuning|telur|artemia|larva/i.test(p.nama_pakan));
+                    } else if (fKey === 'larva') {
+                        matchedPakan = this.stokPakanList.find(p => /cacing|sutra|artemia|nauplii/i.test(p.nama_pakan));
+                    } else if (fKey === 'fingerling') {
+                        matchedPakan = this.stokPakanList.find(p => /pf-500|pf-800|starter|benih/i.test(p.nama_pakan));
+                    }
+                    if (matchedPakan) {
+                        this.form.id_stok_pakan = matchedPakan.id_stok_pakan;
+                    } else if (!this.form.id_stok_pakan && this.stokPakanList.length > 0) {
+                        this.form.id_stok_pakan = this.stokPakanList[0].id_stok_pakan;
+                    }
+                }
+
+                this.recalculateCost();
+            }
         },
 
         recalculateCost() {

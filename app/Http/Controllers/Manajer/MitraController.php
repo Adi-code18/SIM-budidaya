@@ -48,8 +48,8 @@ class MitraController extends Controller
     private function getTipeKey(?string $tipe): string
     {
         $raw = strtolower(trim($tipe ?? ''));
-        if (str_contains($raw, 'rumah') || str_contains($raw, 'makan')) {
-            return 'Rumah_makan';
+        if (str_contains($raw, 'rumah') || str_contains($raw, 'makan') || str_contains($raw, 'warung') || str_starts_with($raw, 'rm ') || str_starts_with($raw, 'rm.')) {
+            return 'rumah_makan';
         }
         if (str_contains($raw, 'supplier')) {
             return 'supplier';
@@ -57,10 +57,10 @@ class MitraController extends Controller
         if (str_contains($raw, 'pasar')) {
             return 'pasar';
         }
-        if (str_contains($raw, 'eksportir')) {
+        if (str_contains($raw, 'eksportir') || str_contains($raw, 'ekspor')) {
             return 'eksportir';
         }
-        if (str_contains($raw, 'resto')) {
+        if (str_contains($raw, 'resto') || str_contains($raw, 'cafe') || str_contains($raw, 'kafe')) {
             return 'restoran';
         }
         return 'distributor';

@@ -50,15 +50,36 @@
                     <option value="">Pilih Kolam Pembesaran...</option>
                     <template x-for="b in activeBatches" :key="b.id_pembesaran">
                         <option :value="b.id_kolam" 
-                                x-text="(b.kolam ? b.kolam.nama_kolam : 'Kolam #' + b.id_kolam) + ' - #PB-' + String(b.id_pembesaran).padStart(5, '0') + ' (' + b.jenis_ikan + ' • ' + Number(b.biomassa_est).toFixed(1) + ' kg)'">
+                                x-text="(b.kolam ? b.kolam.nama_kolam : 'Kolam #' + b.id_kolam) + ' - Hari ke-' + b.doc + ' (DOC ' + b.doc + ') • ' + b.fase + ' (' + b.jenis_ikan + ')'">
                         </option>
                     </template>
                 </select>
 
                 <template x-if="selectedBatch">
-                    <div class="p-2.5 bg-sky-50/70 rounded-xl border border-sky-100 flex items-center justify-between text-[11px] text-sky-950 mt-1.5">
-                        <span class="font-bold" x-text="'Ikan: ' + selectedBatch.jenis_ikan"></span>
-                        <span class="font-extrabold" x-text="'Biomassa: ' + Number(selectedBatch.biomassa_est).toLocaleString('id-ID') + ' kg'"></span>
+                    <div class="p-3 bg-sky-50/80 rounded-2xl border border-sky-200 space-y-2 text-xs text-sky-950 mt-2">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="font-extrabold" x-text="'Ikan: ' + selectedBatch.jenis_ikan"></span>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                <span class="text-[10px] font-black px-2 py-0.5 rounded-md bg-white border border-sky-200 text-sky-800"
+                                      x-text="'Hari ke-' + selectedBatch.doc + ' (DOC ' + selectedBatch.doc + ')'">
+                                </span>
+                                <span class="text-[10px] font-black px-2 py-0.5 rounded-md border"
+                                      :class="selectedBatch.fase_badge || 'bg-sky-100 text-sky-800 border-sky-200'"
+                                      x-text="selectedBatch.fase">
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="pt-2 border-t border-sky-200/70 flex flex-col gap-1.5 text-[11px]">
+                            <div class="flex items-center justify-between text-slate-600">
+                                <span>Biomassa Kolam:</span>
+                                <strong class="text-slate-900 font-extrabold" x-text="Number(selectedBatch.biomassa_est).toLocaleString('id-ID') + ' kg'"></strong>
+                            </div>
+                            <div class="flex items-center gap-1.5 text-sky-950 font-bold bg-white/80 p-2.5 rounded-xl border border-sky-100 text-[11px]">
+                                <i class="fa-solid fa-lightbulb text-amber-500 shrink-0"></i>
+                                <span>Rekomendasi Fase: <strong class="text-[#051B44]" x-text="selectedBatch.rekomendasi_pakan"></strong></span>
+                            </div>
+                        </div>
                     </div>
                 </template>
             </div>
@@ -263,8 +284,25 @@ function petugasPembesaranLogComponent() {
 
         onKolamChange() {
             if (this.selectedBatch) {
-                const estPelet = Math.max(1, Math.round(this.selectedBatch.biomassa_est * 0.025 * 10) / 10);
-                this.form.kg_pelet = estPelet;
+                // Auto porsi pelet sesuai kalkulasi fase DOC
+                this.form.kg_pelet = this.selectedBatch.est_pelet_kg || Math.max(1, Math.round(this.selectedBatch.biomassa_est * 0.025 * 10) / 10);
+
+                // Auto sarankan pakan di gudang yang paling sesuai dengan fase DOC
+                if (this.stokPakanList.length > 0) {
+                    const fKey = (this.selectedBatch.fase_key || '').toLowerCase();
+                    let matchedPakan = null;
+                    if (fKey === 'starter') {
+                        matchedPakan = this.stokPakanList.find(p => /starter|pf-1000|781-1|benih/i.test(p.nama_pakan));
+                    } else if (fKey === 'grower') {
+                        matchedPakan = this.stokPakanList.find(p => /grower|781-2|apung/i.test(p.nama_pakan));
+                    } else if (fKey === 'finisher') {
+                        matchedPakan = this.stokPakanList.find(p => /finisher|781-3|panen|hi-pro/i.test(p.nama_pakan));
+                    }
+                    if (matchedPakan) {
+                        this.form.id_stok_pakan = matchedPakan.id_stok_pakan;
+                    }
+                }
+
                 this.recalculateCost();
             }
         },

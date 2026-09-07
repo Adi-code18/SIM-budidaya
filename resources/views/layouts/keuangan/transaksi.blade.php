@@ -342,19 +342,41 @@
                             <td class="py-4 px-6 font-extrabold" :class="transaction.tipe === 'income' ? 'text-emerald-600' : 'text-rose-600'"
                                 x-text="(transaction.tipe === 'income' ? '+ ' : '- ') + formatCurrency(transaction.nominal)"></td>
                             <td class="py-4 px-6 text-right">
-                                <div class="relative inline-block text-left" x-data="{ open: false }">
-                                    <button @click="open = !open" @click.away="open = false" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer">
+                                <div class="relative inline-block text-left" 
+                                     x-data="{ 
+                                         open: false,
+                                         menuStyle: '',
+                                         toggle(e) {
+                                             this.open = !this.open;
+                                             if (this.open) {
+                                                 const rect = this.$refs.btn.getBoundingClientRect();
+                                                 const spaceBelow = window.innerHeight - rect.bottom;
+                                                 const menuH = 145;
+                                                 const openUp = spaceBelow < menuH && rect.top > menuH;
+                                                 const topPos = openUp ? (rect.top - menuH - 4) : (rect.bottom + 4);
+                                                 const rightPos = window.innerWidth - rect.right;
+                                                 this.menuStyle = `position: fixed; z-index: 99999; top: ${topPos}px; right: ${rightPos}px;`;
+                                             }
+                                         }
+                                     }">
+                                    <button x-ref="btn" 
+                                            @click="toggle($event)" 
+                                            @click.away="open = false" 
+                                            class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer">
                                         <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
                                     </button>
 
                                     <div x-show="open"
+                                         @scroll.window="open = false"
                                          x-transition:enter="transition ease-out duration-100"
                                          x-transition:enter-start="transform opacity-0 scale-95"
                                          x-transition:enter-end="transform opacity-100 scale-100"
                                          x-transition:leave="transition ease-in duration-75"
                                          x-transition:leave-start="transform opacity-100 scale-100"
                                          x-transition:leave-end="transform opacity-0 scale-95"
-                                         class="absolute right-0 mt-2 w-44 rounded-xl bg-white border border-slate-200 shadow-xl py-1.5 z-50 text-left">
+                                         :style="menuStyle"
+                                         class="w-44 rounded-xl bg-white border border-slate-200 shadow-2xl py-1.5 z-50 text-left"
+                                         style="display: none;">
                                         
                                         <!-- View Detail Button -->
                                         <button type="button" @click="open = false; openViewForm(transaction)" class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 cursor-pointer">

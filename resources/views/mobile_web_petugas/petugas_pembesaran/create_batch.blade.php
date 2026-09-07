@@ -87,13 +87,11 @@
             <div class="space-y-1">
                 <label class="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider block">JENIS IKAN *</label>
                 <select x-model="jenisIkan" 
-                        class="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 text-xs font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-navy-800">
-                    <option value="">Pilih Komoditas...</option>
-                    <option value="Ikan Nila Merah">Ikan Nila Merah</option>
-                    <option value="Ikan Nila Hitam">Ikan Nila Hitam</option>
-                    <option value="Ikan Gurame Soang">Ikan Gurame Soang</option>
-                    <option value="Ikan Lele Sangkuriang">Ikan Lele Sangkuriang</option>
-                    <option value="Ikan Patin">Ikan Patin</option>
+                        class="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 text-xs font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-navy-800 cursor-pointer">
+                    <option value="">Pilih Komoditas dari Database...</option>
+                    @foreach($ikans ?? [] as $ik)
+                        <option value="{{ $ik->nama_ikan }}">{{ $ik->nama_ikan }}</option>
+                    @endforeach
                 </select>
             </div>
 

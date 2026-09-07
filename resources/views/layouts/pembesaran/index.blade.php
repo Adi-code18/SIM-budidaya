@@ -98,6 +98,15 @@
                                 <option :value="bp.id_batch" x-text="bp.label"></option>
                             </template>
                         </select>
+                        <template x-if="selectedPembibitan">
+                            <div class="p-2.5 rounded-xl bg-white border border-sky-200 flex items-center justify-between text-xs text-sky-950 mt-1.5 shadow-xs">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
+                                    <span>Tersinkron ke <strong><span x-text="selectedPembibitan.label"></span></strong></span>
+                                </div>
+                                <span class="font-extrabold text-sky-700" x-text="'Biomassa: ~' + (selectedPembibitan.est_biomassa || 0) + ' kg'"></span>
+                            </div>
+                        </template>
                         <p class="text-[10px] text-sky-700 italic">Memilih batch pembibitan akan otomatis mengisi jenis ikan dan mengalihkan status pembibitan menjadi Selesai/Dipindahkan.</p>
                     </div>
 
@@ -144,20 +153,18 @@
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">JENIS IKAN *</label>
-                            <select x-model="form.jenisIkan" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
-                                <option value="">Pilih jenis ikan...</option>
-                                <option value="Nila Hitam Super">Ikan Nila Hitam Super</option>
-                                <option value="Nila Merah">Ikan Nila Merah</option>
-                                <option value="Nila">Ikan Nila</option>
-                                <option value="Gurami Padang">Ikan Gurami Padang</option>
-                                <option value="Gurami">Ikan Gurami</option>
-                                <option value="Lele Sangkuriang">Ikan Lele Sangkuriang</option>
-                                <option value="Lele">Ikan Lele</option>
-                                <option value="Patin Siam">Ikan Patin Siam</option>
-                                <option value="Patin">Ikan Patin</option>
-                                <option value="Bawal Air Tawar">Ikan Bawal Air Tawar</option>
-                                <option value="Bawal">Ikan Bawal</option>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block">JENIS IKAN *</label>
+                                <a href="{{ route('ikan') }}" class="text-[10px] font-extrabold text-sky-600 hover:text-sky-800 flex items-center gap-1 transition-colors" title="Kelola di Master Data Ikan">
+                                    <i class="fa-solid fa-circle-plus"></i>
+                                    <span>+ Master Ikan</span>
+                                </a>
+                            </div>
+                            <select x-model="form.jenisIkan" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all cursor-pointer">
+                                <option value="">Pilih jenis ikan</option>
+                                <template x-for="ik in ikanOptions" :key="ik.value">
+                                    <option :value="ik.value" x-text="ik.label"></option>
+                                </template>
                             </select>
                         </div>
                         <div>
@@ -397,19 +404,40 @@
                         <!-- Action Buttons -->
                         <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
                             <span class="text-[11px] text-slate-400 font-medium" x-text="'pH ' + item.ph_air + ' • Tgl: ' + item.tgl_tebar"></span>
-                            <div class="relative inline-block text-left" x-data="{ open: false }">
-                                <button type="button" @click="open = !open" @click.away="open = false" 
-                                        class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 inline-flex items-center justify-center transition-colors">
+                            <div class="relative inline-block text-left" 
+                                 x-data="{ 
+                                     open: false,
+                                     menuStyle: '',
+                                     toggle(e) {
+                                         this.open = !this.open;
+                                         if (this.open) {
+                                             const rect = this.$refs.btn.getBoundingClientRect();
+                                             const spaceBelow = window.innerHeight - rect.bottom;
+                                             const menuH = 175;
+                                             const openUp = spaceBelow < menuH && rect.top > menuH;
+                                             const topPos = openUp ? (rect.top - menuH - 4) : (rect.bottom + 4);
+                                             const rightPos = window.innerWidth - rect.right;
+                                             this.menuStyle = `position: fixed; z-index: 99999; top: ${topPos}px; right: ${rightPos}px;`;
+                                         }
+                                     }
+                                 }">
+                                <button x-ref="btn" 
+                                        type="button" 
+                                        @click="toggle($event)" 
+                                        @click.away="open = false" 
+                                        class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 inline-flex items-center justify-center transition-colors cursor-pointer">
                                     <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
                                 </button>
                                 <div x-show="open" 
+                                     @scroll.window="open = false"
                                      x-transition:enter="transition ease-out duration-100" 
                                      x-transition:enter-start="transform opacity-0 scale-95" 
                                      x-transition:enter-end="transform opacity-100 scale-100" 
                                      x-transition:leave="transition ease-in duration-75" 
                                      x-transition:leave-start="transform opacity-100 scale-100" 
                                      x-transition:leave-end="transform opacity-0 scale-95" 
-                                     class="absolute right-0 bottom-full mb-1 w-48 rounded-xl bg-white border border-slate-200 shadow-xl py-1.5 z-50 text-left origin-bottom-right"
+                                     :style="menuStyle"
+                                     class="w-48 rounded-xl bg-white border border-slate-200 shadow-2xl py-1.5 text-left"
                                      style="display: none;">
                                     
                                     <!-- Detail Batch -->
@@ -932,9 +960,45 @@ function pembesaranComponent() {
         },
 
         availablePembibitan: {!! json_encode($availablePembibitan ?? []) !!},
+        ikans: {!! json_encode($ikans ?? []) !!},
         kolamList: {!! json_encode($kolamList ?? []) !!},
         batches: {!! json_encode($batches ?? []) !!},
         activeFilter: 'aktif',
+
+        get selectedPembibitan() {
+            if (!this.form.id_batch_pembibitan) return null;
+            return this.availablePembibitan.find(b => b.id_batch == this.form.id_batch_pembibitan) || null;
+        },
+
+        get ikanOptions() {
+            const list = [];
+            if (this.ikans && this.ikans.length > 0) {
+                this.ikans.forEach(ik => {
+                    const nama = (ik.nama_ikan || '').trim();
+                    const clean = nama.replace(/^Ikan\s+/i, '').trim();
+                    const label = nama.toLowerCase().startsWith('ikan ') ? nama : ('Ikan ' + nama);
+                    if (clean && !list.some(item => item.value.toLowerCase() === clean.toLowerCase())) {
+                        list.push({
+                            value: clean,
+                            label: label
+                        });
+                    }
+                });
+            }
+
+            // Jika sedang edit / memilih dari pembibitan, pertahankan nilai jenis ikan
+            if (this.form.jenisIkan) {
+                const currentClean = this.form.jenisIkan.replace(/^Ikan\s+/i, '').trim();
+                if (currentClean && !list.some(item => item.value.toLowerCase() === currentClean.toLowerCase())) {
+                    list.push({
+                        value: currentClean,
+                        label: 'Ikan ' + currentClean
+                    });
+                }
+            }
+
+            return list;
+        },
 
         get filteredBatches() {
             if (this.activeFilter === 'selesai') {
@@ -957,8 +1021,10 @@ function pembesaranComponent() {
         kolamForm: {
             nama_kolam: '',
             tipe_kolam: 'Kolam Pembesaran (Beton)',
-            kapasitas: 2500,
-            kesehatan_ph_air: 7.2
+            kapasitas: 1500,
+            panjang_m: 5,
+            lebar_m: 3,
+            kedalaman_m: 1.2
         },
         showToast: false,
         toastMessage: '',
@@ -967,15 +1033,21 @@ function pembesaranComponent() {
             this.kolamForm = {
                 nama_kolam: 'Kolam Pembesaran ' + String.fromCharCode(65 + Math.floor(Math.random() * 6)) + '-0' + (this.kolamList.length + 1),
                 tipe_kolam: 'Kolam Pembesaran (Beton)',
-                kapasitas: 2500,
-                kesehatan_ph_air: 7.2
+                kapasitas: 1500,
+                panjang_m: 5,
+                lebar_m: 3,
+                kedalaman_m: 1.2
             };
             this.kolamModalOpen = true;
         },
 
         async submitKolam() {
-            if (!this.kolamForm.nama_kolam || !this.kolamForm.kapasitas) {
-                alert('Nama kolam dan kapasitas wajib diisi!');
+            if (!this.kolamForm.nama_kolam) {
+                alert('Nama / Kode kolam wajib diisi!');
+                return;
+            }
+            if (!this.kolamForm.kapasitas || Number(this.kolamForm.kapasitas) <= 0) {
+                alert('Kapasitas kolam wajib diisi!');
                 return;
             }
 
@@ -991,19 +1063,24 @@ function pembesaranComponent() {
                     body: JSON.stringify({
                         nama_kolam: this.kolamForm.nama_kolam,
                         tipe_kolam: this.kolamForm.tipe_kolam,
-                        kapasitas: Number(this.kolamForm.kapasitas),
-                        kesehatan_ph_air: Number(this.kolamForm.kesehatan_ph_air || 7.2)
+                        kapasitas: Number(this.kolamForm.kapasitas) || 1000,
+                        kesehatan_ph_air: Number(this.kolamForm.kesehatan_ph_air) || 7.2
                     })
                 });
 
                 const data = await res.json();
                 if (res.ok && data.success) {
-                    this.kolamList.push(data.kolam);
-                    if (this.showForm) {
-                        this.form.kolam = data.kolam.nama_kolam;
-                    }
+                    const newKolam = data.kolam;
+                    this.kolamList.push({
+                        id_kolam: newKolam.id_kolam,
+                        nama_kolam: newKolam.nama_kolam,
+                        tipe_kolam: newKolam.tipe_kolam,
+                        kapasitas: newKolam.kapasitas,
+                        is_occupied: false
+                    });
+                    this.form.kolam = newKolam.nama_kolam;
                     this.kolamModalOpen = false;
-                    this.toastMessage = data.message || 'Kolam baru berhasil ditambahkan!';
+                    this.toastMessage = data.message || ("Kolam '" + newKolam.nama_kolam + "' berhasil ditambahkan & otomatis terpilih!");
                     this.showToast = true;
                     setTimeout(() => { this.showToast = false; }, 4000);
                 } else {
@@ -1025,12 +1102,18 @@ function pembesaranComponent() {
             if (!this.form.id_batch_pembibitan) return;
             const sel = this.availablePembibitan.find(b => b.id_batch == this.form.id_batch_pembibitan);
             if (sel) {
-                let clean = sel.jenis_ikan.replace(/^Ikan\s+/i, '');
-                this.form.jenisIkan = clean;
-                if (sel.est_biomassa && sel.est_biomassa > 0) {
-                    this.form.biomassaEst = Math.max(10, sel.est_biomassa);
+                const clean = (sel.clean_jenis || sel.jenis_ikan || 'Nila').replace(/^Ikan\s+/i, '').trim();
+                
+                // Cari opsi yang paling cocok (case insensitive)
+                const matchedOption = this.ikanOptions.find(o => o.value.toLowerCase() === clean.toLowerCase());
+                this.form.jenisIkan = matchedOption ? matchedOption.value : clean;
+
+                if (sel.est_biomassa && Number(sel.est_biomassa) > 0) {
+                    this.form.biomassaEst = Number(sel.est_biomassa);
+                } else if (sel.sisa_ekor && Number(sel.sisa_ekor) > 0) {
+                    this.form.biomassaEst = Math.max(1, Math.round(Number(sel.sisa_ekor) * 0.02 * 10) / 10);
                 }
-                this.form.targetPanenKg = Math.round(this.form.biomassaEst * 1.5);
+                this.form.targetPanenKg = Math.round((Number(this.form.biomassaEst) || 100) * 1.5);
             }
         },
 

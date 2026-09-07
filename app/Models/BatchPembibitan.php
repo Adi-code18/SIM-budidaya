@@ -17,6 +17,7 @@ class BatchPembibitan extends Model
         'id_user',
         'id_ikan',
         'tgl_pemijahan',
+        'est_prcs_pembibitaan',
         'jumlah_bibitAwal',
         'jenis_ikan',
         'fase_pertumbuhan',

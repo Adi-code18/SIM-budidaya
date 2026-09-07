@@ -166,7 +166,7 @@
         <div>
             <!-- Top Logo Section -->
             <div class="pt-4 flex flex-col items-center text-center space-y-2.5">
-                <img src="{{ ('images/Logo aquafarm.png') }}" 
+                <img src="{{ asset('images/Logo aquafarm.png') }}" 
                      alt="Logo Aquafarm" 
                      class="h-14 w-auto object-contain drop-shadow-sm">
                 <div>
@@ -244,16 +244,18 @@
                 <input type="hidden" name="selectedRole" :value="selectedRole">
 
                 <!-- Input 1: Email / No. HP -->
-                <div class="space-y-1">
-                    <label class="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider block">EMAIL / NO. HP</label>
-                    <div class="relative">
-                        <i class="fa-solid fa-user absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-bold text-slate-700 block">Email / No. HP</label>
+                    <div class="relative flex items-center">
+                        <span class="absolute left-3.5 flex items-center justify-center pointer-events-none text-slate-400 w-4 h-4">
+                            <i class="fa-solid fa-user text-xs"></i>
+                        </span>
                         <input type="text" 
                                name="email"
                                x-model="emailInput"
                                placeholder="Contoh: distribusi@example.com / 0812..."
                                required
-                               class="w-full pl-9 pr-4 py-2.5 rounded-2xl bg-slate-50 border {{ $errors->has('email') ? 'border-rose-300 ring-1 ring-rose-300' : 'border-slate-200' }} text-xs font-semibold text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-navy-800 transition-all">
+                               class="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50/90 border {{ $errors->has('email') ? 'border-rose-400 ring-2 ring-rose-200 bg-white' : 'border-slate-200/90' }} text-xs font-semibold text-slate-800 placeholder:text-slate-400 placeholder:font-normal focus:bg-white focus:border-sky-600 focus:ring-2 focus:ring-sky-500/20 focus:outline-none transition-all shadow-xs">
                     </div>
                     <!-- Typo suggestion chip -->
                     <div x-cloak x-show="emailSuggestion && emailSuggestion !== emailInput" class="p-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-[10px] flex items-center justify-between gap-1.5 animate-fadeIn">
@@ -268,37 +270,41 @@
                 </div>
 
                 <!-- Input 2: Password -->
-                <div class="space-y-1">
-                    <label class="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider block">KATA KUNCI</label>
-                    <div class="relative">
-                        <i class="fa-solid fa-lock absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-bold text-slate-700 block">Kata Sandi</label>
+                    <div class="relative flex items-center">
+                        <span class="absolute left-3.5 flex items-center justify-center pointer-events-none text-slate-400 w-4 h-4">
+                            <i class="fa-solid fa-lock text-xs"></i>
+                        </span>
                         <input :type="showPass ? 'text' : 'password'" 
                                name="password"
-                               placeholder="Masukkan kata kunci"
+                               placeholder="Masukkan kata sandi akun"
                                required
-                               class="w-full pl-9 pr-10 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-navy-800 transition-all">
-                        <button type="button" @click="showPass = !showPass" class="absolute right-3.5 top-3 text-slate-400 hover:text-slate-600">
-                            <i class="fa-solid" :class="showPass ? 'fa-eye-slash text-xs' : 'fa-eye text-xs'"></i>
+                               class="w-full pl-10 pr-11 py-3 rounded-xl bg-slate-50/90 border border-slate-200/90 text-xs font-semibold text-slate-800 placeholder:text-slate-400 placeholder:font-normal focus:bg-white focus:border-sky-600 focus:ring-2 focus:ring-sky-500/20 focus:outline-none transition-all shadow-xs">
+                        <button type="button" 
+                                @click="showPass = !showPass" 
+                                class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors flex items-center justify-center">
+                            <i class="fa-solid text-xs" :class="showPass ? 'fa-eye-slash text-sky-600' : 'fa-eye'"></i>
                         </button>
                     </div>
                     <div class="flex justify-end pt-0.5">
                         <a href="{{ route('forgot.password') }}" 
-                           class="text-[11px] font-bold text-sky-700 hover:underline cursor-pointer">
-                            Lupa Password?
+                           class="text-[11px] font-bold text-sky-700 hover:text-sky-900 hover:underline cursor-pointer">
+                            Lupa Kata Sandi?
                         </a>
                     </div>
                 </div>
 
                 <!-- Cloudflare Turnstile Widget -->
                 <div class="py-1 flex justify-center">
-                    <div class="cf-turnstile" data-sitekey="{{ config('services.turnstile.site_key') }}" data-[#051120] data-theme="light"></div>
+                    <div class="cf-turnstile" data-sitekey="{{ config('services.turnstile.site_key') }}" data-theme="light"></div>
                 </div>
 
                 <!-- Submit Button -->
                 <button type="submit" 
                         :disabled="lockoutSeconds > 0"
-                        :class="lockoutSeconds > 0 ? 'opacity-60 cursor-not-allowed bg-slate-400 shadow-none' : 'bg-navy-800 hover:bg-navy-900 active:scale-[0.99] shadow-md'"
-                        class="w-full py-3 rounded-2xl text-white font-extrabold text-xs flex items-center justify-center gap-2 transition-all">
+                        :class="lockoutSeconds > 0 ? 'opacity-60 cursor-not-allowed bg-slate-400 shadow-none' : 'bg-[#051B44] hover:bg-[#031330] active:scale-[0.99] shadow-md'"
+                        class="w-full py-3.5 rounded-xl text-white font-extrabold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer">
                     <span x-text="lockoutSeconds > 0 ? 'Coba lagi dalam (' + lockoutSeconds + 's)' : 'Masuk Petugas'"></span>
                     <i class="fa-solid text-xs" :class="lockoutSeconds > 0 ? 'fa-clock' : 'fa-arrow-right'"></i>
                 </button>
