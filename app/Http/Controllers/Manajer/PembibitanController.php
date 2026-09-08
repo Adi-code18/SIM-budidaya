@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Manajer;
 
 use App\Http\Controllers\Controller;
 use App\Models\BatchPembibitan;
+use App\Models\BatchPembesaran;
 use App\Models\Kolam;
+use App\Models\Ikan;
 use App\Models\ManajemenPakan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -53,6 +55,10 @@ class PembibitanController extends Controller
 
         $activeBatchCount = BatchPembibitan::where('status', '!=', 'selesai')->where('status', '!=', 'gagal')->count();
         
+        // Ambil kolam yang sudah diberi pakan hari ini
+        $today = Carbon::today()->toDateString();
+        $fedTodayKolamIds = ManajemenPakan::whereDate('tgl_log', $today)->pluck('id_kolam')->toArray();
+
         // Ambil pH murni dari log pencatatan riil tabel manajemen_pakan kolam hatchery
         $hatcheryKolamIds = $kolams->pluck('id_kolam')->toArray();
         $pakanPh = ManajemenPakan::whereIn('id_kolam', $hatcheryKolamIds)
@@ -92,19 +98,15 @@ class PembibitanController extends Controller
         $batches = [];
         foreach ($batchRecords as $b) {
             $days = $b->tgl_pemijahan ? (int) abs(Carbon::parse($b->tgl_pemijahan)->startOfDay()->diffInDays(now()->startOfDay())) : 0;
+            $sopDuration = $b->ikan ? (($b->ikan->durasi_penetasan ?? 14) + ($b->ikan->durasi_pembibitan ?? 30)) : 44;
 
-            // Use DB fase_pertumbuhan if available, otherwise calculate by age
-            $dbFase = strtoupper(trim($b->fase_pertumbuhan ?? ''));
-            if (in_array($dbFase, ['TELUR', 'LARVA', 'FINGERLING'])) {
-                $fase = $dbFase;
+            // Biologically calculate growth phase based on age
+            if ($days <= 3) {
+                $fase = 'TELUR';
+            } elseif ($days <= 14) {
+                $fase = 'LARVA';
             } else {
-                if ($days <= 3) {
-                    $fase = 'TELUR';
-                } elseif ($days <= 14) {
-                    $fase = 'LARVA';
-                } else {
-                    $fase = 'FINGERLING';
-                }
+                $fase = 'FINGERLING';
             }
 
             if ($fase === 'TELUR') {
@@ -115,8 +117,45 @@ class PembibitanController extends Controller
                 $faseClass = 'bg-indigo-100 text-indigo-700';
             }
 
-            // Sync with actual DB status column
+            // Sync with actual DB status column & auto-transition out of egg status if age > 3 days
             $rawStatus = strtolower($b->status ?? 'aktif');
+            $needsDbSync = false;
+            $newDbStatus = $rawStatus;
+            $newDbFase = $fase;
+
+            if ($b->fase_pertumbuhan !== $fase) {
+                $needsDbSync = true;
+            }
+
+            if ($rawStatus !== 'selesai' && $rawStatus !== 'gagal' && $rawStatus !== 'dibatalkan') {
+                if ($fase === 'TELUR') {
+                    if (!in_array($rawStatus, ['inkubasi', 'menetas'])) {
+                        $newDbStatus = $days <= 1 ? 'inkubasi' : 'menetas';
+                        $needsDbSync = true;
+                    }
+                } elseif ($fase === 'LARVA') {
+                    if (in_array($rawStatus, ['inkubasi', 'menetas'])) {
+                        $newDbStatus = 'aktif';
+                        $needsDbSync = true;
+                    }
+                } elseif ($fase === 'FINGERLING') {
+                    if (in_array($rawStatus, ['inkubasi', 'menetas'])) {
+                        $newDbStatus = ($days >= $sopDuration) ? 'siap_pindah' : 'aktif';
+                        $needsDbSync = true;
+                    } elseif ($days >= $sopDuration && $rawStatus === 'aktif') {
+                        $newDbStatus = 'siap_pindah';
+                        $needsDbSync = true;
+                    }
+                }
+            }
+
+            if ($needsDbSync) {
+                $b->fase_pertumbuhan = $newDbFase;
+                $b->status = $newDbStatus;
+                $b->save();
+                $rawStatus = $newDbStatus;
+            }
+
             $statusLabel = 'Aktif';
             $statusClass = 'bg-emerald-100 text-emerald-700';
             $dotClass = 'bg-emerald-500';
@@ -184,6 +223,8 @@ class PembibitanController extends Controller
                 'statusLabel'          => $statusLabel,
                 'statusClass'          => $statusClass,
                 'dotClass'             => $dotClass,
+                'is_fed_today'         => in_array($b->id_kolam, $fedTodayKolamIds),
+                'fed_status_label'     => in_array($b->id_kolam, $fedTodayKolamIds) ? 'Sudah Diberi Pakan' : 'Belum Diberi Pakan',
                 'kolam'                => $b->kolam ? $b->kolam->nama_kolam : 'Kolam #' . $b->id_kolam,
                 'phAir'                => ($logPh = ManajemenPakan::where('id_kolam', $b->id_kolam)->whereNotNull('ph_air')->where('ph_air', '>', 0)->latest('tgl_log')->value('ph_air')) ? number_format($logPh, 1) : '-',
                 'batch_pembesaran_id'  => $firstPb ? '#PB-' . str_pad($firstPb->id_pembesaran, 5, '0', STR_PAD_LEFT) : null,
@@ -230,13 +271,16 @@ class PembibitanController extends Controller
 
         $biomassa = $request->biomassa_est ? (float) $request->biomassa_est : ((float) $batchPembibitan->total_bobot_kg > 0 ? (float) $batchPembibitan->total_bobot_kg : 50.0);
 
+        $estTglPanen = $request->est_tgl_panen ?? now()->addDays(90)->toDateString();
+
         $pembesaran = BatchPembesaran::create([
             'id_kolam'             => $kolamBesar ? $kolamBesar->id_kolam : 1,
             'id_user'              => Auth::id() ?? 1,
             'id_batch_pembibitan'  => $batchPembibitan->id_batch,
             'tgl_tebar'            => now()->toDateString(),
+            'est_tgl_panen'        => $estTglPanen,
             'biomassa_est'         => $biomassa,
-            'fcr'                  => null,
+            'fcr'                  => 1.15,
             'target_panen_kg'      => $request->target_panen_kg,
             'jumlah_panen_kg'      => 0,
             'jenis_ikan'           => $batchPembibitan->ikan ? $batchPembibitan->ikan->nama_ikan : ($batchPembibitan->jenis_ikan ?? 'Ikan Air Tawar'),
@@ -253,9 +297,10 @@ class PembibitanController extends Controller
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
-                'success' => true,
-                'message' => "Batch berhasil dipindahkan ke Pembesaran ({$kodePB}) di {$namaKolam}!",
-                'data'    => $pembesaran
+                'success'          => true,
+                'message'          => "Batch berhasil dipindahkan ke Pembesaran ({$kodePB}) di {$namaKolam}!",
+                'batch_pembesaran' => $pembesaran,
+                'data'             => $pembesaran
             ]);
         }
 
@@ -284,13 +329,13 @@ class PembibitanController extends Controller
             if ($ik) $jenisIkan = $ik->nama_ikan;
         }
 
-        $tglPemijahan = $request->tgl_pemijahan ?? now();
-        $fase = $request->fase_pertumbuhan;
-        if (!$fase) {
-            $days = (int) abs(Carbon::parse($tglPemijahan)->startOfDay()->diffInDays(now()->startOfDay()));
+        $tglPemijahan = $request->tgl_pemijahan ?? now()->toDateString();
+        $days = (int) abs(Carbon::parse($tglPemijahan)->startOfDay()->diffInDays(now()->startOfDay()));
+        $fase = $request->fase_pertumbuhan ? strtoupper($request->fase_pertumbuhan) : null;
+        
+        // Auto-determine or correct phase according to biological age
+        if (!$fase || ($fase === 'TELUR' && $days > 3) || ($fase === 'LARVA' && $days > 14)) {
             $fase = $days <= 3 ? 'TELUR' : ($days <= 14 ? 'LARVA' : 'FINGERLING');
-        } else {
-            $fase = strtoupper($fase);
         }
 
         $rawBobot = $request->total_bobot_kg;
@@ -310,6 +355,11 @@ class PembibitanController extends Controller
         }
         $estPrcs = $request->est_prcs_pembibitaan ?: Carbon::parse($tglPemijahan)->addDays($sopDays)->toDateString();
 
+        $statusReq = strtolower($request->status ?? 'aktif');
+        if ($fase !== 'TELUR' && in_array($statusReq, ['inkubasi', 'menetas'])) {
+            $statusReq = ($days >= $sopDays) ? 'siap_pindah' : 'aktif';
+        }
+
         $batch = BatchPembibitan::create([
             'id_kolam'             => $kolam ? $kolam->id_kolam : 1,
             'id_user'              => Auth::id() ?? 1,
@@ -321,7 +371,7 @@ class PembibitanController extends Controller
             'jumlah_kematian'      => $jumlahKematian,
             'total_bobot_kg'       => round($rawBobot, 2),
             'fase_pertumbuhan'     => $fase,
-            'status'               => strtolower($request->status ?? 'aktif'),
+            'status'               => $statusReq,
         ]);
 
         if ($request->wantsJson() || $request->ajax()) {
@@ -375,8 +425,19 @@ class PembibitanController extends Controller
             $batch->est_prcs_pembibitaan = $request->est_prcs_pembibitaan;
         }
 
+        $effectiveTgl = $batch->tgl_pemijahan ?? now()->toDateString();
+        $days = (int) abs(Carbon::parse($effectiveTgl)->startOfDay()->diffInDays(now()->startOfDay()));
+        $sopDuration = $batch->ikan ? (($batch->ikan->durasi_penetasan ?? 14) + ($batch->ikan->durasi_pembibitan ?? 30)) : 44;
+
         if ($request->filled('fase_pertumbuhan')) {
-            $batch->fase_pertumbuhan = strtoupper($request->fase_pertumbuhan);
+            $reqFase = strtoupper($request->fase_pertumbuhan);
+            if (($reqFase === 'TELUR' && $days > 3) || ($reqFase === 'LARVA' && $days > 14)) {
+                $batch->fase_pertumbuhan = $days <= 3 ? 'TELUR' : ($days <= 14 ? 'LARVA' : 'FINGERLING');
+            } else {
+                $batch->fase_pertumbuhan = $reqFase;
+            }
+        } else {
+            $batch->fase_pertumbuhan = $days <= 3 ? 'TELUR' : ($days <= 14 ? 'LARVA' : 'FINGERLING');
         }
 
         if ($request->has('jumlah_bibitAwal')) {
@@ -406,7 +467,14 @@ class PembibitanController extends Controller
                 }
                 return redirect()->route('pembibitan')->with('success', "Batch telah dihapus karena status GAGAL.");
             }
+            if ($batch->fase_pertumbuhan !== 'TELUR' && in_array($statusVal, ['inkubasi', 'menetas'])) {
+                $statusVal = ($days >= $sopDuration) ? 'siap_pindah' : 'aktif';
+            }
             $batch->status = $statusVal;
+        } else {
+            if ($batch->fase_pertumbuhan !== 'TELUR' && in_array($batch->status, ['inkubasi', 'menetas'])) {
+                $batch->status = ($days >= $sopDuration) ? 'siap_pindah' : 'aktif';
+            }
         }
 
         $batch->save();

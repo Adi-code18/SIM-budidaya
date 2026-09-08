@@ -22,13 +22,14 @@ class PetugasDistribusiController extends Controller
         $allOrders = TransaksiDistribusi::all();
         $user = Auth::user();
 
-        $activeCount = $allOrders->where('status_order', 'dalam_pengiriman')->count();
+        $pemberokianCount = $allOrders->where('status_order', 'pemberokian')->count();
         $siapCount = $allOrders->whereIn('status_order', ['siap_kirim', 'pending'])->count();
+        $activeCount = $allOrders->where('status_order', 'dalam_pengiriman')->count();
         $selesaiCount = $allOrders->where('status_order', 'selesai')->count();
         $totalCount = $orders->count();
 
         return view('mobile_web_petugas.petugas_distribusi.index', compact(
-            'orders', 'user', 'activeCount', 'siapCount', 'selesaiCount', 'totalCount'
+            'orders', 'user', 'pemberokianCount', 'activeCount', 'siapCount', 'selesaiCount', 'totalCount'
         ));
     }
 

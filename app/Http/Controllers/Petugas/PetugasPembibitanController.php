@@ -45,7 +45,10 @@ class PetugasPembibitanController extends Controller
         $pakanPh = ManajemenPakan::whereIn('id_kolam', $hatcheryKolams->pluck('id_kolam'))->whereNotNull('ph_air')->where('ph_air', '>', 0)->avg('ph_air');
         $avgPh = $pakanPh ? round((float)$pakanPh, 1) : 0.0;
 
-        return view('mobile_web_petugas.petugas_pembibitan.index', compact('batches', 'totalBenih', 'totalTank', 'srRate', 'avgPh', 'totalAwal'));
+        $today = Carbon::today()->toDateString();
+        $fedTodayKolamIds = ManajemenPakan::whereDate('tgl_log', $today)->pluck('id_kolam')->toArray();
+
+        return view('mobile_web_petugas.petugas_pembibitan.index', compact('batches', 'totalBenih', 'totalTank', 'srRate', 'avgPh', 'totalAwal', 'fedTodayKolamIds'));
     }
 
     /**
@@ -150,35 +153,39 @@ class PetugasPembibitanController extends Controller
     {
         $now = Carbon::now();
 
-        // 1. Ambil Batch Pembibitan Aktif dengan Sinkronisasi DOC & Fase
+        // 1. Ambil Batch Pembibitan Aktif dengan Sinkronisasi Presisi (DOC, Fase DB, & Spesies)
         $activeBatches = BatchPembibitan::with(['kolam', 'ikan'])
             ->where('status', '!=', 'selesai')
             ->where('status', '!=', 'gagal')
             ->latest('id_batch')
             ->get()
             ->map(function ($b) use ($now) {
-                $tgl = $b->tgl_pemijahan ? Carbon::parse($b->tgl_pemijahan) : Carbon::parse($b->created_at);
-                $doc = max(1, (int) $tgl->diffInDays($now) + 1);
+                // Perhitungan usia hari sinkron dengan modul Manajer
+                $days = $b->tgl_pemijahan ? (int) abs(Carbon::parse($b->tgl_pemijahan)->startOfDay()->diffInDays($now->copy()->startOfDay())) : 0;
+                $doc = $days;
 
+                // Biologically accurate phase based on age
                 if ($doc <= 3) {
-                    $fase = 'Telur / Inkubasi';
+                    $fase = 'Telur';
                     $faseKey = 'telur';
                     $faseBadge = 'bg-amber-100 text-amber-800 border-amber-200';
-                    $rekomendasiPakan = 'Kuning Telur Rebus / Suspensi Artemia';
-                    $estKg = 0.2;
+                    $rekomendasiPakan = 'Tanpa Pakan (Fase Telur/Inkubasi)';
+                    $estKg = 0;
                 } elseif ($doc <= 14) {
                     $fase = 'Larva';
                     $faseKey = 'larva';
-                    $faseBadge = 'bg-emerald-100 text-emerald-800 border-emerald-200';
+                    $faseBadge = 'bg-sky-100 text-sky-800 border-sky-200';
                     $rekomendasiPakan = 'Cacing Sutra Segar / Artemia';
                     $estKg = 0.5;
                 } else {
-                    $fase = 'Fingerling (Benih)';
+                    $fase = 'Benih / Fingerling';
                     $faseKey = 'fingerling';
-                    $faseBadge = 'bg-teal-100 text-teal-800 border-teal-200';
+                    $faseBadge = 'bg-emerald-100 text-emerald-800 border-emerald-200';
                     $rekomendasiPakan = 'Pelet Mikro Starter Benih (PF-500)';
                     $estKg = 1.0;
                 }
+
+                $namaSpesies = $b->ikan ? $b->ikan->nama_ikan : ($b->jenis_ikan ?: 'Bibit Ikan');
 
                 $b->doc = $doc;
                 $b->fase = $fase;
@@ -186,49 +193,82 @@ class PetugasPembibitanController extends Controller
                 $b->fase_badge = $faseBadge;
                 $b->rekomendasi_pakan = $rekomendasiPakan;
                 $b->est_pakan_kg = $estKg;
+                $b->spesies = $namaSpesies;
+                $b->jenis_ikan = $namaSpesies;
+                $b->label = ($b->kolam ? $b->kolam->nama_kolam : 'Kolam #' . $b->id_kolam) . ' – Hari ke-' . $doc . ' (DOC ' . $doc . ') • ' . $fase . ' (' . $namaSpesies . ')';
 
                 return $b;
             });
 
-        // 2. Ambil Master Stok Pakan khusus Pembibitan & Semua
-        $stokPakanList = StokPakan::whereIn('kategori_peruntukan', ['pembibitan', 'semua'])->get();
-
-        // 3. Ambil Riwayat Log Pakan Pembibitan Terkini
-        $logs = ManajemenPakan::with(['kolam', 'stokPakan', 'user'])
+        // 2. Ambil Riwayat Pencatatan Log Pakan Pembibitan
+        $logs = ManajemenPakan::with(['kolam', 'user', 'stokPakan'])
             ->where('kategori_fase', 'pembibitan')
             ->latest('tgl_log')
-            ->take(15)
+            ->latest('id_manajemen_pakan')
+            ->take(20)
             ->get();
 
-        return view('mobile_web_petugas.petugas_pembibitan.log_pakan', compact('activeBatches', 'stokPakanList', 'logs'));
+        // 3. Stok Pakan Starter Pembibitan
+        $stokPakanList = StokPakan::where('stok_kg', '>', 0)
+            ->where(function ($q) {
+                $q->where('jenis_pakan', 'like', '%Starter%')
+                  ->orWhere('jenis_pakan', 'like', '%PF%')
+                  ->orWhere('jenis_pakan', 'like', '%Feng%')
+                  ->orWhere('jenis_pakan', 'like', '%Cacing%')
+                  ->orWhere('jenis_pakan', 'like', '%Artemia%')
+                  ->orWhere('jenis_pakan', 'like', '%Benih%')
+                  ->orWhere('jenis_pakan', 'like', '%Pelet%');
+            })
+            ->get();
+
+        if ($stokPakanList->isEmpty()) {
+            $stokPakanList = StokPakan::where('stok_kg', '>', 0)->get();
+        }
+
+        return view('mobile_web_petugas.petugas_pembibitan.log_pakan', compact('activeBatches', 'logs', 'stokPakanList'));
     }
 
     /**
-     * Simpan Log Pakan Pembibitan & Otomatis Potong Saldo Stok
+     * Simpan Pencatatan Log Pakan Pembibitan Baru via AJAX / POST.
      */
     public function storeLogPakan(Request $request)
     {
         $request->validate([
-            'id_kolam'      => 'required|exists:kolam,id_kolam',
-            'id_stok_pakan' => 'nullable|exists:stok_pakan,id_stok_pakan',
-            'tgl_log'       => 'nullable|date',
-            'kg_pelet'      => 'required|numeric|min:0.01|max:100',
-            'total_biaya'   => 'nullable|numeric|min:0',
-            'ph_air'        => 'nullable|numeric|min:0|max:14',
+            'id_kolam'       => 'required|exists:kolam,id_kolam',
+            'id_stok_pakan'  => 'nullable|exists:stok_pakan,id_stok_pakan',
+            'kg_pelet'       => 'required|numeric|min:0.01',
+            'tgl_log'        => 'nullable|date',
+            'waktu_pemberian'=> 'nullable|string',
+            'total_biaya'    => 'nullable|numeric|min:0',
         ], [
-            'kg_pelet.max'  => 'Pemberian pakan benih maksimal 100 kg per sesi.',
+            'id_kolam.required' => 'Pilih kolam pemeliharaan benih.',
+            'kg_pelet.required' => 'Jumlah pakan (kg) wajib diisi.',
+            'kg_pelet.min'      => 'Jumlah pakan minimal 0.01 kg.',
         ]);
 
-        // Validasi: Kolam harus memiliki batch pembibitan yang sedang aktif
-        $hasActiveBatch = BatchPembibitan::where('id_kolam', $request->id_kolam)
+        // Cari batch aktif di kolam ini
+        $activeBatch = BatchPembibitan::where('id_kolam', $request->id_kolam)
             ->where('status', '!=', 'selesai')
             ->where('status', '!=', 'gagal')
-            ->exists();
+            ->latest('id_batch')
+            ->first();
 
-        if (!$hasActiveBatch) {
+        if (!$activeBatch) {
             return response()->json([
                 'success' => false,
                 'message' => 'Kolam ini belum diisi benih aktif. Anda harus mencatat batch pemijahan terlebih dahulu!'
+            ], 422);
+        }
+
+        // Validasi Fase: Hanya batch usia <= 3 hari (Telur) yang tidak boleh diberi pakan
+        $days = $activeBatch->tgl_pemijahan ? (int) abs(Carbon::parse($activeBatch->tgl_pemijahan)->startOfDay()->diffInDays(Carbon::now()->startOfDay())) : 0;
+        $faseBatch = strtoupper(trim($activeBatch->fase_pertumbuhan ?? ''));
+        $isTelur = ($days <= 3) && (in_array($faseBatch, ['TELUR', 'INKUBASI']) || str_contains($faseBatch, 'TELUR') || $faseBatch === '');
+
+        if ($isTelur) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kolam ini masih dalam fase Telur/Inkubasi (DOC ' . $days . ') dan belum dapat diberi pakan pelet/cacing agar kualitas air penetasan tidak rusak!'
             ], 422);
         }
 

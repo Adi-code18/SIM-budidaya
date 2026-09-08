@@ -20,213 +20,20 @@
     </div>
     @endif
 
-    <!-- Top Hero Banner & Quick Actions -->
-    <div class="bg-[#051B44] p-6 sm:p-7 rounded-3xl text-white shadow-xl shadow-sky-950/10 relative overflow-hidden">
-
-        <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div class="space-y-2 max-w-2xl">
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-[11px] font-bold text-sky-200">
-                    <i class="fa-solid fa-boxes-stacked text-sky-300"></i>
-                    <span>Sistem Rantai Pasok & Inventori Pakan Terpadu</span>
-                </div>
-                <h1 class="text-xl sm:text-2xl font-black tracking-tight">Manajemen Pasokan &amp; Log Pakan Ikan</h1>
-                <p class="text-xs sm:text-sm text-sky-100/85 leading-relaxed">
-                    Pantau stok pakan real-time untuk pembibitan & pembesaran, kalkulasi estimasi sisa hari pemakaian, hubungi supplier via WhatsApp, dan catat pembelian langsung terhubung ke Buku Kas Keuangan.
-                </p>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="flex flex-wrap items-center gap-2.5 shrink-0">
-                <!-- Tombol Pesan via WhatsApp -->
-                <button type="button" @click="openSupplierModal()" 
-                        class="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white text-xs font-extrabold shadow-lg shadow-emerald-500/25 transition-all flex items-center gap-2 cursor-pointer">
-                    <i class="fa-brands fa-whatsapp text-sm"></i>
-                    <span>Hubungi Supplier WA</span>
-                </button>
-
-                <!-- Tombol Catat Pembelian Pakan -->
-                <button type="button" @click="openBeliModal()" 
-                        class="px-4 py-2.5 rounded-xl bg-white hover:bg-sky-50 active:scale-95 text-[#051B44] text-xs font-black shadow-lg shadow-black/10 transition-all flex items-center gap-2 cursor-pointer">
-                    <i class="fa-solid fa-cart-plus text-sky-600 text-sm"></i>
-                    <span>Catat Beli Pakan (+Stok)</span>
-                </button>
-
-                <!-- Tombol Tambah Master Pakan -->
-                <button type="button" @click="openMasterModal()" 
-                        class="px-3.5 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 active:scale-95 text-white text-xs font-bold backdrop-blur-md border border-white/20 transition-all flex items-center gap-1.5 cursor-pointer"
-                        title="Kelola Master Item Pakan">
-                    <i class="fa-solid fa-gear text-xs"></i>
-                    <span>Master Item</span>
-                </button>
-            </div>
+    <!-- Page Header & Action -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Log Pemberian Pakan</h1>
+            <p class="text-xs sm:text-sm text-slate-500 font-medium mt-1">
+                Pencatatan konsumsi pakan harian kolam pembibitan &amp; pembesaran, serta monitoring riwayat pemberian pakan.
+            </p>
         </div>
-    </div>
-
-    <!-- Summary KPI Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-        
-        <!-- Card 1: Total Stok Gudang -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-sky-300 transition-all">
-            <div class="flex items-center justify-between">
-                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Total Stok Gudang</span>
-                <div class="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center font-bold text-sm">
-                    <i class="fa-solid fa-warehouse"></i>
-                </div>
-            </div>
-            <div class="mt-3 flex items-baseline gap-1.5">
-                <span class="text-2xl font-black text-slate-900" x-text="Number(summary.total_stok_kg).toFixed(1)"></span>
-                <span class="text-xs font-extrabold text-slate-500">KG Total</span>
-            </div>
-            <p class="text-[11px] text-slate-400 mt-1">Gabungan seluruh jenis pakan aktif</p>
-        </div>
-
-        <!-- Card 2: Stok Pembibitan -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-sky-300 transition-all">
-            <div class="flex items-center justify-between">
-                <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-600 font-black">🌱 Khusus Pembibitan</span>
-                <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-sm">
-                    <i class="fa-solid fa-seedling"></i>
-                </div>
-            </div>
-            <div class="mt-3 flex items-baseline gap-1.5">
-                <span class="text-2xl font-black text-emerald-700" x-text="Number(summary.stok_pembibitan_kg).toFixed(1)"></span>
-                <span class="text-xs font-extrabold text-emerald-600">KG / Tray</span>
-            </div>
-            <p class="text-[11px] text-slate-400 mt-1">Cacing Sutra, Artemia, PF-500</p>
-        </div>
-
-        <!-- Card 3: Stok Pembesaran -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-sky-300 transition-all">
-            <div class="flex items-center justify-between">
-                <span class="text-[10px] font-extrabold uppercase tracking-wider text-blue-600 font-black">🐟 Khusus Pembesaran</span>
-                <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm">
-                    <i class="fa-solid fa-fish-fins"></i>
-                </div>
-            </div>
-            <div class="mt-3 flex items-baseline gap-1.5">
-                <span class="text-2xl font-black text-[#0B2570]" x-text="Number(summary.stok_pembesaran_kg).toFixed(1)"></span>
-                <span class="text-xs font-extrabold text-slate-500">KG Pelet & Daun</span>
-            </div>
-            <p class="text-[11px] text-slate-400 mt-1">Pelet 781-1/2, Azolla, Maggot</p>
-        </div>
-
-        <!-- Card 4: Restock Alert Status -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-sky-300 transition-all">
-            <div class="flex items-center justify-between">
-                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Status Restock</span>
-                <div class="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm"
-                     :class="summary.item_kritis_count > 0 ? 'bg-rose-50 text-rose-600' : (summary.item_waspada_count > 0 ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600')">
-                    <i class="fa-solid" :class="summary.item_kritis_count > 0 ? 'fa-triangle-exclamation' : (summary.item_waspada_count > 0 ? 'fa-clock-rotate-left' : 'fa-circle-check')"></i>
-                </div>
-            </div>
-            <div class="mt-3 flex items-center gap-2">
-                <template x-if="summary.item_kritis_count > 0">
-                    <span class="px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-rose-100 text-rose-700 border border-rose-200 flex items-center gap-1.5">
-                        <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
-                        <span x-text="summary.item_kritis_count + ' Item Kritis (< 2 Hari)'"></span>
-                    </span>
-                </template>
-                <template x-if="summary.item_kritis_count === 0 && summary.item_waspada_count > 0">
-                    <span class="px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-amber-100 text-amber-800 border border-amber-200 flex items-center gap-1.5">
-                        <i class="fa-solid fa-circle-exclamation text-amber-600"></i>
-                        <span x-text="summary.item_waspada_count + ' Item Perlu Restock'"></span>
-                    </span>
-                </template>
-                <template x-if="summary.item_kritis_count === 0 && summary.item_waspada_count === 0">
-                    <span class="px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1.5">
-                        <i class="fa-solid fa-check"></i>
-                        <span>Semua Stok Aman (> 7 Hari)</span>
-                    </span>
-                </template>
-            </div>
-            <p class="text-[11px] text-slate-400 mt-1.5">Berdasarkan burn-rate 7 hari terakhir</p>
-        </div>
-
-    </div>
-
-    <!-- Inventory & Burn-Rate Restock Alert Section -->
-    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 sm:p-6 space-y-4">
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
-            <div>
-                <div class="flex items-center gap-2">
-                    <h3 class="text-sm sm:text-base font-extrabold text-slate-900">Katalog Stok Pakan &amp; Estimasi Sisa Hari</h3>
-                    <span class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200">Real-time</span>
-                </div>
-                <p class="text-xs text-slate-500 font-medium mt-0.5">
-                    Monitoring laju konsumsi pakan harian dan peringatan dini sebelum stok di gudang habis.
-                </p>
-            </div>
-        </div>
-
-        <!-- Stok Cards Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <template x-for="item in filteredStokList" :key="item.id_stok_pakan">
-                <div class="rounded-2xl border p-4.5 flex flex-col justify-between transition-all hover:shadow-md"
-                     :class="item.status === 'kritis' ? 'border-rose-300 bg-rose-50/30' : (item.status === 'waspada' ? 'border-amber-300 bg-amber-50/20' : 'border-slate-200/90 bg-white')">
-                    
-                    <div class="space-y-2.5">
-                        <!-- Header Card -->
-                        <div class="flex items-start justify-between gap-2">
-                            <div>
-                                <span class="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md"
-                                      :class="item.kategori_peruntukan === 'pembibitan' ? 'bg-emerald-100 text-emerald-800' : (item.kategori_peruntukan === 'pembesaran' ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-700')"
-                                      x-text="item.kategori_peruntukan === 'pembibitan' ? '🌱 Fase Pembibitan' : (item.kategori_peruntukan === 'pembesaran' ? '🐟 Fase Pembesaran' : '📦 Semua Fase')">
-                                </span>
-                                <h4 class="font-black text-slate-900 text-sm mt-1.5" x-text="item.nama_pakan"></h4>
-                            </div>
-
-                            <!-- Status Badge -->
-                            <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full border shrink-0"
-                                  :class="item.status_badge"
-                                  x-text="item.status_label">
-                            </span>
-                        </div>
-
-                        <!-- Info Stok & Sisa Hari -->
-                        <div class="pt-2 border-t border-slate-100/80 grid grid-cols-2 gap-2">
-                            <div>
-                                <span class="text-[10px] font-bold text-slate-400 block uppercase">Sisa Stok</span>
-                                <div class="flex items-baseline gap-1 mt-0.5">
-                                    <span class="text-lg font-black text-slate-900" x-text="Number(item.stok_tersisa).toFixed(1)"></span>
-                                    <span class="text-[11px] font-bold text-slate-500" x-text="item.satuan"></span>
-                                </div>
-                                <span class="text-[10px] text-slate-400">Min: <span x-text="item.batas_minimum + ' ' + item.satuan"></span></span>
-                            </div>
-
-                            <div>
-                                <span class="text-[10px] font-bold text-slate-400 block uppercase">Estimasi Habis</span>
-                                <div class="flex items-baseline gap-1 mt-0.5">
-                                    <span class="text-lg font-black"
-                                          :class="item.status === 'kritis' ? 'text-rose-600' : (item.status === 'waspada' ? 'text-amber-600' : 'text-emerald-600')"
-                                          x-text="item.sisa_hari + ' Hari'">
-                                    </span>
-                                </div>
-                                <span class="text-[10px] text-slate-400" x-text="'~' + item.burn_rate_harian + ' ' + item.satuan + '/hari'"></span>
-                            </div>
-                        </div>
-
-                        <div class="text-[11px] text-slate-500 font-medium">
-                            <span>Harga Acuan: </span>
-                            <strong class="text-slate-800 font-extrabold" x-text="'Rp ' + Number(item.harga_per_satuan).toLocaleString('id-ID') + '/' + item.satuan"></strong>
-                        </div>
-                    </div>
-
-                    <!-- Footer Action Buttons -->
-                    <div class="pt-3 mt-3 border-t border-slate-100 flex items-center gap-2">
-                        <button type="button" @click="quickBeli(item)" 
-                                class="flex-1 py-1.5 px-2.5 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-extrabold transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
-                            <i class="fa-solid fa-cart-plus text-[11px]"></i>
-                            <span>Beli Pakan</span>
-                        </button>
-                        <button type="button" @click="openSupplierModal(item.nama_pakan)" 
-                                class="py-1.5 px-2.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-extrabold transition-colors flex items-center justify-center gap-1 cursor-pointer"
-                                title="Pesan via WhatsApp">
-                            <i class="fa-brands fa-whatsapp text-sm"></i>
-                        </button>
-                    </div>
-
-                </div>
-            </template>
+        <div class="flex items-center gap-2.5">
+            <a href="{{ route('stok-pakan') }}" 
+               class="px-4 py-2.5 rounded-xl bg-[#031B4E] hover:bg-sky-950 text-white font-bold text-xs sm:text-sm shadow-md shadow-sky-950/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98">
+                <i class="fa-solid fa-boxes-stacked text-xs"></i>
+                <span>Kelola Master Stok Pakan</span>
+            </a>
         </div>
     </div>
 
@@ -338,52 +145,75 @@
 
             <!-- Detail Batch Terpilih Info Card -->
             <template x-if="selectedKolamInfo">
-                <div class="p-4 sm:p-5 bg-gradient-to-r from-sky-50/90 via-blue-50/40 to-white rounded-2xl border border-sky-200/70 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs shadow-xs">
-                    <div class="flex items-center gap-3.5">
-                        <div class="w-11 h-11 rounded-2xl bg-white text-sky-600 border border-sky-200 flex items-center justify-center font-bold text-lg shrink-0 shadow-xs">
-                            <i class="fa-solid" :class="form.kategori_fase === 'pembibitan' ? 'fa-seedling text-emerald-600' : 'fa-fish text-sky-600'"></i>
+                <div class="space-y-3">
+                    <div class="p-4 sm:p-5 bg-gradient-to-r from-sky-50/90 via-blue-50/40 to-white rounded-2xl border border-sky-200/70 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs shadow-xs">
+                        <div class="flex items-center gap-3.5">
+                            <div class="w-11 h-11 rounded-2xl bg-white text-sky-600 border border-sky-200 flex items-center justify-center font-bold text-lg shrink-0 shadow-xs">
+                                <i class="fa-solid" :class="form.kategori_fase === 'pembibitan' ? 'fa-seedling text-emerald-600' : 'fa-fish text-sky-600'"></i>
+                            </div>
+                            <div class="space-y-1">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="font-black text-slate-900 text-sm" x-text="selectedKolamInfo.nama_kolam"></span>
+                                    <span class="text-[10px] font-bold text-sky-700 bg-white px-2.5 py-0.5 rounded-lg border border-sky-200" x-text="selectedKolamInfo.batch_id"></span>
+                                    <span class="text-[10px] font-black px-2.5 py-0.5 rounded-lg bg-white border border-sky-200 text-sky-900"
+                                          x-text="'Hari ke-' + selectedKolamInfo.doc + ' (DOC ' + selectedKolamInfo.doc + ')'">
+                                    </span>
+                                    <span class="text-[10px] font-black px-2.5 py-0.5 rounded-lg"
+                                          :class="isTelurPhase ? 'bg-amber-100 text-amber-900 border border-amber-200' : 'bg-sky-100 text-sky-800 border border-sky-200'"
+                                          x-text="'Fase: ' + selectedKolamInfo.fase">
+                                    </span>
+                                </div>
+                                <div class="text-xs text-slate-600 flex flex-wrap items-center gap-2 pt-0.5">
+                                    <span class="font-medium" x-text="form.kategori_fase === 'pembesaran' ? (selectedKolamInfo.jenis_ikan + ' • Estimasi Biomassa: ' + selectedKolamInfo.biomassa_format + ' kg') : (selectedKolamInfo.jenis_ikan + ' • Jumlah Benih: ' + Number(selectedKolamInfo.jumlah_bibit).toLocaleString('id-ID') + ' ekor')"></span>
+                                    <span class="text-slate-300">•</span>
+                                    <span class="font-bold text-sky-950 flex items-center gap-1.5 bg-white/80 px-2 py-0.5 rounded-md border border-sky-100">
+                                        <i class="fa-solid fa-lightbulb text-amber-500"></i>
+                                        <span>Rekomendasi: <strong :class="isTelurPhase ? 'text-amber-800' : 'text-sky-900'" x-text="selectedKolamInfo.rekomendasi_pakan"></strong></span>
+                                    </span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="space-y-1">
-                            <div class="flex flex-wrap items-center gap-2">
-                                <span class="font-black text-slate-900 text-sm" x-text="selectedKolamInfo.nama_kolam"></span>
-                                <span class="text-[10px] font-bold text-sky-700 bg-white px-2.5 py-0.5 rounded-lg border border-sky-200" x-text="selectedKolamInfo.batch_id"></span>
-                                <span class="text-[10px] font-black px-2.5 py-0.5 rounded-lg bg-white border border-sky-200 text-sky-900"
-                                      x-text="'Hari ke-' + selectedKolamInfo.doc + ' (DOC ' + selectedKolamInfo.doc + ')'">
+
+                        <div class="shrink-0">
+                            <template x-if="isTelurPhase">
+                                <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-extrabold bg-amber-100 text-amber-900 border border-amber-300 shadow-xs">
+                                    <i class="fa-solid fa-ban text-amber-600"></i>
+                                    <span>Tanpa Pakan (Fase Telur)</span>
                                 </span>
-                                <span class="text-[10px] font-black px-2.5 py-0.5 rounded-lg bg-sky-100 text-sky-800 border border-sky-200"
-                                      x-text="'Fase: ' + selectedKolamInfo.fase">
+                            </template>
+                            <template x-if="!isTelurPhase && selectedKolamInfo.is_fed_today">
+                                <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-xs">
+                                    <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                                    <span>Sudah Diberi Pakan Hari Ini</span>
                                 </span>
-                            </div>
-                            <div class="text-xs text-slate-600 flex flex-wrap items-center gap-2 pt-0.5">
-                                <span class="font-medium" x-text="form.kategori_fase === 'pembesaran' ? (selectedKolamInfo.jenis_ikan + ' • Estimasi Biomassa: ' + selectedKolamInfo.biomassa_format + ' kg') : (selectedKolamInfo.jenis_ikan + ' • Jumlah Benih: ' + Number(selectedKolamInfo.jumlah_bibit).toLocaleString('id-ID') + ' ekor')"></span>
-                                <span class="text-slate-300">•</span>
-                                <span class="font-bold text-sky-950 flex items-center gap-1.5 bg-white/80 px-2 py-0.5 rounded-md border border-sky-100">
-                                    <i class="fa-solid fa-lightbulb text-amber-500"></i>
-                                    <span>Rekomendasi: <strong class="text-sky-900" x-text="selectedKolamInfo.rekomendasi_pakan"></strong></span>
+                            </template>
+                            <template x-if="!isTelurPhase && !selectedKolamInfo.is_fed_today">
+                                <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800 border border-amber-300 shadow-xs">
+                                    <i class="fa-solid fa-clock text-amber-600"></i>
+                                    <span>Belum Diberi Pakan Hari Ini</span>
                                 </span>
-                            </div>
+                            </template>
                         </div>
                     </div>
 
-                    <div class="shrink-0">
-                        <template x-if="selectedKolamInfo.is_fed_today">
-                            <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-xs">
-                                <i class="fa-solid fa-circle-check text-emerald-600"></i>
-                                <span>Sudah Diberi Pakan Hari Ini</span>
-                            </span>
-                        </template>
-                        <template x-if="!selectedKolamInfo.is_fed_today">
-                            <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800 border border-amber-300 shadow-xs">
-                                <i class="fa-solid fa-clock text-amber-600"></i>
-                                <span>Belum Diberi Pakan Hari Ini</span>
-                            </span>
-                        </template>
-                    </div>
+                    <!-- Warning Alert Banner Khusus Fase Telur -->
+                    <template x-if="isTelurPhase">
+                        <div class="p-3.5 bg-amber-50/90 rounded-2xl border border-amber-200 text-amber-900 text-xs flex items-start gap-2.5 shadow-xs">
+                            <i class="fa-solid fa-triangle-exclamation text-amber-600 mt-0.5 shrink-0 text-sm"></i>
+                            <div class="space-y-0.5">
+                                <span class="font-black text-amber-950 block">Perhatian: Kolam Masih dalam Fase Telur / Inkubasi!</span>
+                                <p class="text-[11px] text-amber-800 leading-relaxed">
+                                    Telur dalam masa inkubasi belum memerlukan pakan buatan. Memberi pakan pada fase ini dapat menyebabkan pembusukan organik dan merusak kualitas air penetasan. Pemberian pakan akan otomatis aktif setelah telur menetas menjadi larva.
+                                </p>
+                            </div>
+                        </div>
+                    </template>
                 </div>
             </template>
 
             <!-- SECTION 2: Rincian Pakan Utama & Suplemen -->
-            <div class="p-5 sm:p-6 bg-slate-50/70 rounded-3xl border border-slate-200/80 space-y-5">
+            <div class="p-5 sm:p-6 bg-slate-50/70 rounded-3xl border border-slate-200/80 space-y-5"
+                 :class="isTelurPhase ? 'opacity-60 pointer-events-none' : ''">
                 <div class="flex items-center justify-between pb-3 border-b border-slate-200/70">
                     <div class="flex items-center gap-2.5">
                         <div class="w-8 h-8 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center text-sm font-bold">
@@ -394,7 +224,10 @@
                             <p class="text-[11px] text-slate-400 font-medium">Pilih pakan dari stok gudang dan masukkan jumlah yang diberikan</p>
                         </div>
                     </div>
-                    <span class="text-[10px] font-black uppercase px-2.5 py-1 rounded-lg bg-sky-100 text-sky-700">Wajib Diisi</span>
+                    <span class="text-[10px] font-black uppercase px-2.5 py-1 rounded-lg"
+                          :class="isTelurPhase ? 'bg-amber-100 text-amber-800' : 'bg-sky-100 text-sky-700'"
+                          x-text="isTelurPhase ? 'Terkunci (Fase Telur)' : 'Wajib Diisi'">
+                    </span>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-5">
@@ -405,7 +238,8 @@
                             ITEM PAKAN DARI GUDANG <span class="text-rose-500">*</span>
                         </label>
                         <select x-model="form.id_stok_pakan" @change="onStokPakanChange()" 
-                                class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-xs font-bold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all cursor-pointer shadow-xs">
+                                :disabled="isTelurPhase"
+                                class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-xs font-bold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all cursor-pointer shadow-xs disabled:bg-slate-100 disabled:cursor-not-allowed">
                             <option value="">-- Pilih Jenis Pakan Gudang --</option>
                             <template x-for="sp in relevantStokList" :key="sp.id_stok_pakan">
                                 <option :value="sp.id_stok_pakan" x-text="sp.nama_pakan + ' (Sisa: ' + sp.stok_tersisa + ' ' + sp.satuan + ')'"></option>
@@ -427,10 +261,11 @@
                         </label>
                         <div class="flex items-center rounded-2xl border border-slate-200 bg-white focus-within:ring-2 focus-within:ring-sky-500 focus-within:border-sky-500 transition-all overflow-hidden shadow-xs">
                             <input type="number" x-model="form.kg_pelet"
+                                :disabled="isTelurPhase"
                                 onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E' || event.key === '+') event.preventDefault()"
                                 @input="if(form.kg_pelet !== '' && Number(form.kg_pelet) < 0) form.kg_pelet = 0; if(Number(form.kg_pelet) > 100) form.kg_pelet = 100; recalculateCost()"
-                                step="0.1" min="0" max="100" placeholder="0.0"
-                                class="w-full px-4 py-3 text-sm font-black text-slate-900 bg-transparent border-0 focus:outline-none">
+                                step="0.1" min="0" max="100" :placeholder="isTelurPhase ? '0 (Fase Telur)' : '0.0'"
+                                class="w-full px-4 py-3 text-sm font-black text-slate-900 bg-transparent border-0 focus:outline-none disabled:bg-slate-100 disabled:cursor-not-allowed">
                             <span class="px-4 py-3 text-xs font-black text-slate-600 bg-slate-100 border-l border-slate-200 shrink-0" x-text="selectedPakanItem ? selectedPakanItem.satuan.toUpperCase() : 'KG'"></span>
                         </div>
                         <span class="text-[10px] text-slate-400 block px-1">Maksimal 100 per pencatatan log</span>
@@ -438,11 +273,15 @@
 
                 </div>
 
-                <!-- Sub-baris: Pakan Tambahan / Daun / Suplemen (Opsional) -->
-                <div class="pt-4 border-t border-slate-200/60 grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
+                <!-- Sub-baris: Pakan Tambahan / Daun / Suplemen (Hanya untuk Kolam Pembesaran, Tidak Ada pada Pembibitan) -->
+                <div x-show="form.kategori_fase === 'pembesaran'" 
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 -translate-y-2"
+                     x-transition:enter-end="opacity-100 translate-y-0"
+                     class="pt-4 border-t border-slate-200/60 grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
                     <div class="md:col-span-7 space-y-1.5">
                         <label class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 block">
-                            JENIS PAKAN TAMBAHAN / SUPLEMEN <span class="text-[10px] text-slate-400 font-normal lowercase">(opsional)</span>
+                            JENIS PAKAN TAMBAHAN / SUPLEMEN <span class="text-[10px] text-slate-400 font-normal lowercase">(opsional - khusus pembesaran)</span>
                         </label>
                         <select x-model="form.jenis_daun" 
                                 class="w-full px-4 py-2.5 rounded-2xl border border-slate-200 text-xs font-bold text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all cursor-pointer shadow-xs">
@@ -534,11 +373,11 @@
                         Reset Form
                     </button>
                     <button type="submit" 
-                            :disabled="isSubmittingLog"
-                            style="background-color: #0284c7;"
-                            class="px-6 py-3 rounded-2xl bg-sky-600 hover:bg-sky-700 active:scale-95 text-white font-black text-xs shadow-md shadow-sky-600/30 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50">
-                        <i class="fa-solid fa-check text-xs text-white"></i>
-                        <span class="text-white" x-text="isSubmittingLog ? 'Menyimpan Data...' : 'Simpan Log &amp; Potong Stok'">Simpan Log &amp; Potong Stok</span>
+                            :disabled="isSubmittingLog || isTelurPhase"
+                            :class="isTelurPhase ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : 'bg-sky-600 hover:bg-sky-700 active:scale-95 text-white shadow-md shadow-sky-600/30'"
+                            class="px-6 py-3 rounded-2xl font-black text-xs transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50">
+                        <i class="fa-solid text-xs" :class="isTelurPhase ? 'fa-ban' : 'fa-check text-white'"></i>
+                        <span x-text="isTelurPhase ? 'Tidak Dapat Diberi Pakan (Fase Telur)' : (isSubmittingLog ? 'Menyimpan Data...' : 'Simpan Log &amp; Potong Stok')"></span>
                     </button>
                 </div>
             </div>
@@ -1511,6 +1350,10 @@ function pakanHubComponent() {
             return this.stokList.filter(item => item.kategori_peruntukan === this.form.kategori_fase || item.kategori_peruntukan === 'semua');
         },
 
+        get isTelurPhase() {
+            return this.form.kategori_fase === 'pembibitan' && this.selectedKolamInfo && this.selectedKolamInfo.fase_key === 'telur';
+        },
+
         get selectedKolamInfo() {
             if (!this.form.id_kolam) return null;
             if (this.form.kategori_fase === 'pembesaran') {
@@ -1591,8 +1434,11 @@ function pakanHubComponent() {
             if (fase === 'pembibitan') {
                 this.form.kg_pelet = 1.5;
                 this.form.kg_daun = 0;
+                this.form.jenis_daun = '';
             } else {
                 this.form.kg_pelet = 10;
+                this.form.kg_daun = 0;
+                this.form.jenis_daun = '';
             }
             this.recalculateCost();
         },
@@ -1625,16 +1471,22 @@ function pakanHubComponent() {
 
         onHatcheryKolamChange() {
             if (this.selectedKolamInfo && this.form.kategori_fase === 'pembibitan') {
+                const fKey = (this.selectedKolamInfo.fase_key || '').toLowerCase();
+
+                if (fKey === 'telur') {
+                    this.form.kg_pelet = 0;
+                    this.form.id_stok_pakan = '';
+                    this.form.total_biaya = 0;
+                    return;
+                }
+
                 this.form.kg_pelet = this.selectedKolamInfo.est_pakan_kg || 1.0;
 
                 // Auto sarankan pakan benih di stok gudang yang paling sesuai
                 const rel = this.relevantStokList;
                 if (rel.length > 0) {
-                    const fKey = (this.selectedKolamInfo.fase_key || '').toLowerCase();
                     let matchedPakan = null;
-                    if (fKey === 'telur') {
-                        matchedPakan = rel.find(p => /kuning|telur|artemia|larva/i.test(p.nama_pakan));
-                    } else if (fKey === 'larva') {
+                    if (fKey === 'larva') {
                         matchedPakan = rel.find(p => /cacing|sutra|artemia|nauplii/i.test(p.nama_pakan));
                     } else if (fKey === 'fingerling') {
                         matchedPakan = rel.find(p => /pf-500|pf-800|starter|benih/i.test(p.nama_pakan));
@@ -1743,6 +1595,10 @@ function pakanHubComponent() {
                 alert('Silakan pilih Kolam aktif terlebih dahulu!');
                 return;
             }
+            if (this.isTelurPhase) {
+                alert('Kolam hatchery ini masih dalam fase Telur/Inkubasi dan tidak dapat diberi pakan!');
+                return;
+            }
             if (Number(this.form.kg_pelet || 0) <= 0 && Number(this.form.kg_daun || 0) <= 0) {
                 alert('Silakan masukkan jumlah pakan lebih dari 0!');
                 return;
@@ -1771,8 +1627,8 @@ function pakanHubComponent() {
                         kategori_fase: this.form.kategori_fase,
                         tgl_log: this.form.tgl_log,
                         kg_pelet: Math.min(100, Math.max(0, Number(this.form.kg_pelet) || 0)),
-                        kg_daun: Math.min(100, Math.max(0, Number(this.form.kg_daun) || 0)),
-                        jenis_daun: this.form.jenis_daun || null,
+                        kg_daun: this.form.kategori_fase === 'pembibitan' ? 0 : Math.min(100, Math.max(0, Number(this.form.kg_daun) || 0)),
+                        jenis_daun: this.form.kategori_fase === 'pembibitan' ? null : (this.form.jenis_daun || null),
                         total_biaya: Math.max(0, Number(this.form.total_biaya) || 0),
                         ph_air: Math.max(0, Math.min(14, Number(this.form.ph_air) || 7.2))
                     })
@@ -1879,7 +1735,7 @@ function pakanHubComponent() {
 
             this.isSubmittingMaster = true;
             try {
-                const res = await fetch('{{ route('log-pakan.stok.store') }}', {
+                const res = await fetch('{{ route('stok-pakan.store') }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

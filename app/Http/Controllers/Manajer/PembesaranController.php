@@ -16,8 +16,26 @@ class PembesaranController extends Controller
     {
         $batchRecords = BatchPembesaran::with(['kolam', 'user', 'batchPembibitan.kolam'])->latest('id_pembesaran')->get();
         
-        // Only load Pembesaran ponds (Beton, Terpal, Tanah, Bioflok for Pembesaran)
-        $kolams = Kolam::where('tipe_kolam', 'like', '%Pembesaran%')->get();
+        // Load Pembesaran ponds, holding ponds, and stock buffer ponds
+        $kolams = Kolam::where(function ($q) {
+            $q->where('tipe_kolam', 'like', '%Pembesaran%')
+              ->orWhere('tipe_kolam', 'like', '%Pemberokan%')
+              ->orWhere('tipe_kolam', 'like', '%Penampungan%')
+              ->orWhere('nama_kolam', 'like', '%Stok%');
+        })->get();
+        
+        // List dedicated for stock / buffer / holding destination
+        $kolamStokList = $kolams->map(function ($k) {
+            $isStok = stripos($k->nama_kolam, 'Stok') !== false || stripos($k->tipe_kolam, 'Pemberokan') !== false || stripos($k->tipe_kolam, 'Penampungan') !== false;
+            return [
+                'id_kolam'   => $k->id_kolam,
+                'nama_kolam' => $k->nama_kolam,
+                'tipe_kolam' => $k->tipe_kolam,
+                'kapasitas'  => $k->kapasitas,
+                'is_stok'    => $isStok,
+                'label'      => $k->nama_kolam . ' (' . $k->tipe_kolam . ' - Kap: ' . number_format($k->kapasitas, 0, ',', '.') . ' kg)' . ($isStok ? ' [Kolam Stok / Buffer]' : ''),
+            ];
+        })->sortByDesc('is_stok')->values();
         
         // Find which ponds are currently occupied by active batches
         $activeBatchKolamIds = BatchPembesaran::where('status_siklus', 'berjalan')->pluck('id_kolam')->toArray();
@@ -103,6 +121,16 @@ class PembesaranController extends Controller
             $estTglPanen = $b->est_tgl_panen ?? ($b->tgl_tebar ? Carbon::parse($b->tgl_tebar)->addDays(90)->toDateString() : null);
             $isHarvestDue = ($statusSiklus !== 'selesai') && ($estTglPanen ? Carbon::today()->gte(Carbon::parse($estTglPanen)) : ($doc >= 90));
 
+            // Active order linked to this batch
+            $activeOrder = \App\Models\TransaksiDistribusi::with('mitra')
+                ->where('id_pembesaran', $b->id_pembesaran)
+                ->where('status_order', '!=', 'selesai')
+                ->latest('id_transaksi')
+                ->first();
+
+            $orderTargetKg = $activeOrder ? (float)$activeOrder->Total_kg : 0;
+            $orderMitraNama = $activeOrder && $activeOrder->mitra ? $activeOrder->mitra->nama_mitra : null;
+
             $batches[] = [
                 'id_pembesaran'       => $b->id_pembesaran,
                 'id'                  => '#PB-' . str_pad($b->id_pembesaran, 5, '0', STR_PAD_LEFT),
@@ -120,6 +148,8 @@ class PembesaranController extends Controller
                 'est_tgl_panen'       => $estTglPanen,
                 'est_panen_format'    => $estTglPanen ? Carbon::parse($estTglPanen)->translatedFormat('d M Y') : '-',
                 'is_harvest_due'      => $isHarvestDue,
+                'order_target_kg'     => $orderTargetKg,
+                'order_mitra'         => $orderMitraNama,
                 'doc'                 => $doc,
                 'jenis_ikan'          => $b->jenis_ikan,
                 'clean_jenis'         => $cleanJenis,
@@ -162,7 +192,7 @@ class PembesaranController extends Controller
 
         $ikans = \App\Models\Ikan::orderBy('nama_ikan', 'asc')->get();
 
-        return view('layouts.pembesaran.index', compact('batches', 'kolamList', 'kolams', 'totalBiomassa', 'avgFcr', 'availablePembibitan', 'ikans'));
+        return view('layouts.pembesaran.index', compact('batches', 'kolamList', 'kolams', 'kolamStokList', 'totalBiomassa', 'avgFcr', 'availablePembibitan', 'ikans'));
     }
 
     public function store(Request $request)
@@ -319,8 +349,47 @@ class PembesaranController extends Controller
         if ($request->filled('status_siklus')) {
             $batch->status_siklus = strtolower($request->status_siklus);
             // If finishing harvest and jumlah_panen_kg not explicitly set, default to target or biomassa_est
-            if ($batch->status_siklus === 'selesai' && (!$batch->jumlah_panen_kg || $batch->jumlah_panen_kg == 0)) {
-                $batch->jumlah_panen_kg = $request->jumlah_panen_kg ?? $batch->target_panen_kg ?? $batch->biomassa_est;
+            if ($batch->status_siklus === 'selesai') {
+                $jumlahPanen = $request->jumlah_panen_kg ?? $batch->jumlah_panen_kg ?? $batch->target_panen_kg ?? $batch->biomassa_est;
+                $batch->jumlah_panen_kg = (float) $jumlahPanen;
+
+                // Handle surplus fish allocation to stock/buffer pond
+                $targetKolamStokId = $request->id_kolam_stok;
+                $surplusKg = (float) ($request->surplus_kg ?? 0);
+
+                if ($targetKolamStokId && $surplusKg > 0) {
+                    $targetKolam = Kolam::find($targetKolamStokId);
+                    if ($targetKolam) {
+                        $existingStockBatch = BatchPembesaran::where('id_kolam', $targetKolam->id_kolam)
+                            ->where('status_siklus', '!=', 'selesai')
+                            ->where('status_siklus', '!=', 'gagal')
+                            ->first();
+
+                        if ($existingStockBatch) {
+                            $existingStockBatch->biomassa_est += $surplusKg;
+                            $existingStockBatch->target_panen_kg += $surplusKg;
+                            $existingStockBatch->save();
+                        } else {
+                            $cleanJenis = $batch->jenis_ikan;
+                            if (stripos($cleanJenis, 'Ikan ') !== 0) {
+                                $cleanJenis = 'Ikan ' . $cleanJenis;
+                            }
+                            BatchPembesaran::create([
+                                'id_kolam'            => $targetKolam->id_kolam,
+                                'id_user'             => Auth::id() ?? 1,
+                                'id_batch_pembibitan' => null,
+                                'tgl_tebar'           => now()->toDateString(),
+                                'est_tgl_panen'       => now()->toDateString(),
+                                'biomassa_est'        => $surplusKg,
+                                'target_panen_kg'     => $surplusKg,
+                                'jumlah_panen_kg'     => 0.00,
+                                'fcr'                 => 1.00,
+                                'jenis_ikan'          => $cleanJenis,
+                                'status_siklus'       => 'siap_panen',
+                            ]);
+                        }
+                    }
+                }
             }
         }
 

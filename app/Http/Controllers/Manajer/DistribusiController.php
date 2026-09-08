@@ -20,10 +20,7 @@ class DistribusiController extends Controller
 
         $orders = [];
         foreach ($transaksiRecords as $t) {
-            $status = $t->status_order;
-            if ($status === 'dalam_pengiriman') {
-                $status = 'pemberokian'; // UI key
-            }
+            $status = $t->status_order ?: 'pending';
 
             $orders[] = [
                 'id_transaksi'  => $t->id_transaksi,
@@ -57,19 +54,56 @@ class DistribusiController extends Controller
             ];
         });
 
+        $batchRecords = BatchPembesaran::with('kolam')
+            ->where('status_siklus', '!=', 'gagal')
+            ->where('status_siklus', '!=', 'selesai')
+            ->latest('id_pembesaran')->get();
+
         $batches = $batchRecords->map(function ($b) {
             $kolamName = $b->kolam ? $b->kolam->nama_kolam : 'Kolam #' . $b->id_kolam;
+            $tipeKolam = $b->kolam ? $b->kolam->tipe_kolam : '';
+            $isStok = stripos($kolamName, 'Stok') !== false || stripos($tipeKolam, 'Pemberokan') !== false || stripos($tipeKolam, 'Penampungan') !== false;
             $stokBiomassa = number_format($b->biomassa_est, 0, ',', '.');
             return [
                 'id_pembesaran' => $b->id_pembesaran,
-                'label'         => '#PB-' . str_pad($b->id_pembesaran, 5, '0', STR_PAD_LEFT) . ' — ' . $b->jenis_ikan . ' (' . $kolamName . ' - Stok: ' . $stokBiomassa . ' kg)',
+                'id_kolam'      => $b->id_kolam,
+                'label'         => '#PB-' . str_pad($b->id_pembesaran, 5, '0', STR_PAD_LEFT) . ' — ' . $b->jenis_ikan . ' (' . $kolamName . ' - Stok: ' . $stokBiomassa . ' kg)' . ($isStok ? ' [Kolam Stok / Buffer]' : ''),
                 'jenis_ikan'    => $b->jenis_ikan,
                 'kolam'         => $kolamName,
+                'is_stok'       => $isStok,
                 'biomassa_est'  => (float) $b->biomassa_est,
             ];
         });
 
-        return view('layouts.distribusi.index', compact('orders', 'mitraList', 'mitraRecords', 'batches'));
+        $stockPonds = \App\Models\Kolam::where(function ($q) {
+            $q->where('nama_kolam', 'like', '%Stok%')
+              ->orWhere('tipe_kolam', 'like', '%Pemberokan%')
+              ->orWhere('tipe_kolam', 'like', '%Penampungan%');
+        })->get()->map(function ($k) {
+            return [
+                'id_kolam'   => $k->id_kolam,
+                'nama_kolam' => $k->nama_kolam,
+                'tipe_kolam' => $k->tipe_kolam,
+                'kapasitas'  => $k->kapasitas,
+            ];
+        });
+
+        $totalStokSiapPanen = (float) BatchPembesaran::where('status_siklus', '!=', 'gagal')
+            ->where('status_siklus', '!=', 'selesai')
+            ->sum('biomassa_est');
+
+        $totalBufferPemberokan = (float) TransaksiDistribusi::whereIn('status_order', ['dalam_pengiriman', 'pemberokian', 'siap_kirim'])
+            ->sum('Total_kg');
+
+        return view('layouts.distribusi.index', compact(
+            'orders', 
+            'mitraList', 
+            'mitraRecords', 
+            'batches',
+            'stockPonds',
+            'totalStokSiapPanen',
+            'totalBufferPemberokan'
+        ));
     }
 
     public function store(Request $request)
@@ -96,6 +130,48 @@ class DistribusiController extends Controller
         $totalKg = (float) $request->Total_kg;
         $hargaTotal = (float) ($request->harga_total ?? ($totalKg * 35000)); // default 35.000 / kg
 
+        $jenisOrder = $request->Jenis_order ?? 'Ikan Segar';
+
+        // Handle multi-source / deficit notes if supplied
+        $primaryBatch = BatchPembesaran::with('kolam')->find($request->id_pembesaran);
+        $alokasiDetail = $request->alokasi_detail;
+        if (!empty($alokasiDetail) && is_array($alokasiDetail)) {
+            $parts = [];
+            if (!empty($alokasiDetail['utama_kg'])) {
+                $kolamUtamaNama = $primaryBatch && $primaryBatch->kolam ? $primaryBatch->kolam->nama_kolam : 'Kolam Utama';
+                $parts[] = "{$kolamUtamaNama}: {$alokasiDetail['utama_kg']}kg";
+                if ($primaryBatch) {
+                    $primaryBatch->biomassa_est = max(0, $primaryBatch->biomassa_est - (float)$alokasiDetail['utama_kg']);
+                    $primaryBatch->save();
+                }
+            }
+            if (!empty($alokasiDetail['buffer_kg']) && (float)$alokasiDetail['buffer_kg'] > 0) {
+                $bufferNama = $alokasiDetail['buffer_nama'] ?? 'Kolam Stok';
+                $parts[] = "{$bufferNama}: {$alokasiDetail['buffer_kg']}kg";
+                if (!empty($alokasiDetail['id_batch_buffer'])) {
+                    $bufBatch = BatchPembesaran::find($alokasiDetail['id_batch_buffer']);
+                    if ($bufBatch) {
+                        $bufBatch->biomassa_est = max(0, $bufBatch->biomassa_est - (float)$alokasiDetail['buffer_kg']);
+                        $bufBatch->save();
+                    }
+                }
+            }
+            if (!empty($alokasiDetail['cross_kg']) && (float)$alokasiDetail['cross_kg'] > 0) {
+                $crossNama = $alokasiDetail['cross_nama'] ?? 'Cross-Batch';
+                $parts[] = "{$crossNama}: {$alokasiDetail['cross_kg']}kg";
+                if (!empty($alokasiDetail['id_batch_cross'])) {
+                    $crossBatch = BatchPembesaran::find($alokasiDetail['id_batch_cross']);
+                    if ($crossBatch) {
+                        $crossBatch->biomassa_est = max(0, $crossBatch->biomassa_est - (float)$alokasiDetail['cross_kg']);
+                        $crossBatch->save();
+                    }
+                }
+            }
+            if (count($parts) > 1) {
+                $jenisOrder = "Ikan Segar (Multi-Kolam: " . implode(', ', $parts) . ")";
+            }
+        }
+
         $transaksi = TransaksiDistribusi::create([
             'id_user'       => Auth::id() ?? 1,
             'id_mitra'      => $request->id_mitra,
@@ -104,7 +180,7 @@ class DistribusiController extends Controller
             'Total_kg'      => $totalKg,
             'harga_total'   => $hargaTotal,
             'status_order'  => $status,
-            'Jenis_order'   => $request->Jenis_order ?? 'Ikan Segar',
+            'Jenis_order'   => $jenisOrder,
         ]);
 
         if ($request->wantsJson() || $request->ajax()) {
@@ -128,11 +204,7 @@ class DistribusiController extends Controller
         }
 
         if ($request->filled('status_order')) {
-            $status = $request->status_order;
-            if ($status === 'pemberokian') {
-                $status = 'dalam_pengiriman';
-            }
-            $transaksi->status_order = $status;
+            $transaksi->status_order = $request->status_order;
         }
 
         if ($request->filled('Total_kg')) {

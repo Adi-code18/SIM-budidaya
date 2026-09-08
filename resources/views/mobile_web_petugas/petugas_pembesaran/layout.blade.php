@@ -17,6 +17,9 @@
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
+    <!-- SweetAlert2 (Modal Dialog & Toast Notifikasi Elegan) -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -89,7 +92,181 @@
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
         }
+
+        /* SweetAlert2 Modern Styling */
+        .swal2-popup {
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
+            border-radius: 1.25rem !important;
+            padding: 1.5rem !important;
+            box-shadow: 0 25px 50px -12px rgba(11, 25, 44, 0.25) !important;
+            border: 1px solid rgba(226, 232, 240, 0.8) !important;
+        }
+        .swal2-title {
+            font-size: 1.15rem !important;
+            font-weight: 800 !important;
+            color: #0F2C59 !important;
+            letter-spacing: -0.02em !important;
+        }
+        .swal2-html-container {
+            font-size: 0.875rem !important;
+            color: #475569 !important;
+            font-weight: 500 !important;
+            line-height: 1.5 !important;
+            margin-top: 0.5rem !important;
+        }
+        .swal2-confirm {
+            background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%) !important;
+            border-radius: 0.75rem !important;
+            font-size: 0.8125rem !important;
+            font-weight: 700 !important;
+            padding: 0.65rem 1.5rem !important;
+            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35) !important;
+            transition: all 0.2s ease !important;
+        }
+        .swal2-confirm:hover {
+            transform: translateY(-1px) !important;
+            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45) !important;
+        }
+        .swal2-cancel {
+            background-color: #f1f5f9 !important;
+            color: #64748b !important;
+            border-radius: 0.75rem !important;
+            font-size: 0.8125rem !important;
+            font-weight: 700 !important;
+            padding: 0.65rem 1.5rem !important;
+            transition: all 0.2s ease !important;
+        }
+        .swal2-cancel:hover {
+            background-color: #e2e8f0 !important;
+            color: #334155 !important;
+        }
+        .swal2-toast {
+            border-radius: 1rem !important;
+            padding: 0.875rem 1.25rem !important;
+            box-shadow: 0 15px 30px -5px rgba(11, 25, 44, 0.2) !important;
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
+        }
+        .swal2-toast .swal2-title {
+            font-size: 0.875rem !important;
+            font-weight: 700 !important;
+        }
     </style>
+    <script>
+        /**
+         * Global SweetAlert2 & Toast System
+         */
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        window.triggerToast = function(message, type = 'success') {
+            if (window.Swal) {
+                Toast.fire({
+                    icon: type,
+                    title: message
+                });
+            } else {
+                console.log(`[Toast ${type}]: ${message}`);
+            }
+        };
+
+        window.AppSwal = {
+            toast(message, type = 'success') {
+                return window.triggerToast(message, type);
+            },
+            success(title, text) {
+                if (window.Swal) {
+                    return Swal.fire({
+                        icon: 'success',
+                        title: title || 'Berhasil!',
+                        text: text,
+                        confirmButtonText: 'Selesai'
+                    });
+                }
+                alert((title ? title + '\n' : '') + text);
+                return Promise.resolve({ isConfirmed: true });
+            },
+            error(title, text) {
+                if (window.Swal) {
+                    return Swal.fire({
+                        icon: 'error',
+                        title: title || 'Terjadi Kesalahan',
+                        text: text,
+                        confirmButtonText: 'Tutup'
+                    });
+                }
+                alert((title ? title + '\n' : '') + text);
+                return Promise.resolve({ isConfirmed: true });
+            },
+            warning(title, text) {
+                if (window.Swal) {
+                    return Swal.fire({
+                        icon: 'warning',
+                        title: title || 'Perhatian',
+                        text: text,
+                        confirmButtonText: 'Mengerti'
+                    });
+                }
+                alert((title ? title + '\n' : '') + text);
+                return Promise.resolve({ isConfirmed: true });
+            },
+            confirm({ title, text, confirmText = 'Ya, Lanjutkan', cancelText = 'Batal', icon = 'question', confirmColor }) {
+                if (window.Swal) {
+                    return Swal.fire({
+                        title: title || 'Konfirmasi',
+                        text: text,
+                        icon: icon,
+                        showCancelButton: true,
+                        confirmButtonText: confirmText,
+                        cancelButtonText: cancelText,
+                        reverseButtons: true
+                    });
+                }
+                const res = confirm((title ? title + '\n' : '') + text);
+                return Promise.resolve({ isConfirmed: res });
+            }
+        };
+
+        // Intercept native browser alert -> Mengubah alert default menjadi modern SweetAlert2/Toast
+        const _nativeAlert = window.alert;
+        window.alert = function(message) {
+            if (!window.Swal) {
+                if (_nativeAlert) _nativeAlert(message);
+                return;
+            }
+            const msgLower = (message || '').toString().toLowerCase();
+            let iconType = 'info';
+            let titleText = 'Pemberitahuan';
+
+            if (msgLower.includes('berhasil') || msgLower.includes('sukses') || msgLower.includes('terpotong') || msgLower.includes('disimpan')) {
+                iconType = 'success';
+                titleText = 'Berhasil!';
+                Toast.fire({ icon: 'success', title: message });
+                return;
+            } else if (msgLower.includes('gagal') || msgLower.includes('kesalahan') || msgLower.includes('error') || msgLower.includes('rusak')) {
+                iconType = 'error';
+                titleText = 'Gagal!';
+            } else if (msgLower.includes('perhatian') || msgLower.includes('wajib') || msgLower.includes('harus') || msgLower.includes('tidak boleh') || msgLower.includes('pilih') || msgLower.includes('silakan')) {
+                iconType = 'warning';
+                titleText = 'Perhatian';
+            }
+
+            Swal.fire({
+                title: titleText,
+                text: message,
+                icon: iconType,
+                confirmButtonText: 'Mengerti'
+            });
+        };
+    </script>
     @stack('styles')
 </head>
 <body x-data="{ 
@@ -97,13 +274,7 @@
     searchQuery: '',
     toastShow: false,
     toastMessage: '',
-    toastType: 'success',
-    triggerToast(msg, type = 'success') {
-        this.toastMessage = msg;
-        this.toastType = type;
-        this.toastShow = true;
-        setTimeout(() => { this.toastShow = false; }, 3500);
-    }
+    toastType: 'success'
 }">
 
     <div class="mobile-screen-wrapper flex flex-col justify-between">

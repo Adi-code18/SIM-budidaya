@@ -381,10 +381,39 @@
                             </td>
                             <td class="py-4 px-6 font-bold text-slate-800" x-text="item.est_prcs_pembibitaan || '-'"></td>
                             <td class="py-4 px-6">
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold" :class="item.statusClass">
-                                    <span class="w-1.5 h-1.5 rounded-full" :class="item.dotClass"></span>
-                                    <span x-text="item.statusLabel || item.status"></span>
-                                </span>
+                                <div class="flex flex-col gap-1 items-start">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold" :class="item.statusClass">
+                                        <span class="w-1.5 h-1.5 rounded-full" :class="item.dotClass"></span>
+                                        <span x-text="item.statusLabel || item.status"></span>
+                                    </span>
+                                    <!-- Tag Status Pemberian Pakan Hari Ini (Reset Tiap Hari) -->
+                                    <template x-if="item.status !== 'selesai' && item.status !== 'gagal'">
+                                        <div>
+                                            <template x-if="item.fase === 'TELUR' || item.fase_pertumbuhan === 'TELUR' || item.status === 'inkubasi'">
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-extrabold bg-slate-100 text-slate-600 border border-slate-200" title="Fase telur tidak memerlukan pakan">
+                                                    <i class="fa-solid fa-ban text-[8px] text-slate-400"></i>
+                                                    <span>Tanpa Pakan (Telur)</span>
+                                                </span>
+                                            </template>
+                                            <template x-if="item.fase !== 'TELUR' && item.fase_pertumbuhan !== 'TELUR' && item.status !== 'inkubasi'">
+                                                <div>
+                                                    <template x-if="item.is_fed_today">
+                                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                            <i class="fa-solid fa-check text-[9px]"></i>
+                                                            <span>Sudah Diberi Pakan</span>
+                                                        </span>
+                                                    </template>
+                                                    <template x-if="!item.is_fed_today">
+                                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200">
+                                                            <i class="fa-solid fa-clock text-[9px]"></i>
+                                                            <span>Belum Diberi Pakan</span>
+                                                        </span>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
                             </td>
                             <td class="py-4 px-6 text-right">
                                 <div class="relative inline-block text-left" 
@@ -550,6 +579,32 @@
                         <span class="w-1.5 h-1.5 rounded-full" :class="selectedBatch?.dotClass"></span>
                         <span x-text="selectedBatch?.statusLabel || selectedBatch?.status"></span>
                     </span>
+                    <template x-if="selectedBatch?.status !== 'selesai' && selectedBatch?.status !== 'gagal'">
+                        <div class="mt-1.5">
+                            <template x-if="selectedBatch?.fase === 'TELUR' || selectedBatch?.fase_pertumbuhan === 'TELUR' || selectedBatch?.status === 'inkubasi'">
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-extrabold bg-slate-100 text-slate-600 border border-slate-200">
+                                    <i class="fa-solid fa-ban text-[8px] text-slate-400"></i>
+                                    <span>Tanpa Pakan (Fase Telur)</span>
+                                </span>
+                            </template>
+                            <template x-if="selectedBatch?.fase !== 'TELUR' && selectedBatch?.fase_pertumbuhan !== 'TELUR' && selectedBatch?.status !== 'inkubasi'">
+                                <div>
+                                    <template x-if="selectedBatch?.is_fed_today">
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                            <i class="fa-solid fa-check text-[9px]"></i>
+                                            <span>Sudah Diberi Pakan</span>
+                                        </span>
+                                    </template>
+                                    <template x-if="!selectedBatch?.is_fed_today">
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200">
+                                            <i class="fa-solid fa-clock text-[9px]"></i>
+                                            <span>Belum Diberi Pakan</span>
+                                        </span>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
                 </div>
                 <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
                     <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">USIA BATCH (DOC)</span>

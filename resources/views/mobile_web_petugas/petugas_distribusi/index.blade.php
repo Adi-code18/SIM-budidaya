@@ -41,20 +41,26 @@
     <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
         <button @click="activeFilter = 'semua'"
                 :class="activeFilter === 'semua' ? 'bg-navy-800 text-white shadow-sm font-bold' : 'bg-white text-slate-600 border border-slate-200 font-semibold'"
-                class="px-4 py-2 rounded-xl text-xs whitespace-nowrap transition-all">
-            Semua ({{ $totalCount ?? 3 }})
+                class="px-3.5 py-2 rounded-xl text-xs whitespace-nowrap transition-all">
+            Semua ({{ $totalCount ?? 0 }})
         </button>
-        <button @click="activeFilter = 'dalam_pengiriman'"
-                :class="activeFilter === 'dalam_pengiriman' ? 'bg-navy-800 text-white shadow-sm font-bold' : 'bg-white text-slate-600 border border-slate-200 font-semibold'"
-                class="px-4 py-2 rounded-xl text-xs whitespace-nowrap transition-all flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-            Dalam Pengiriman ({{ $activeCount ?? 1 }})
+        <button @click="activeFilter = 'pemberokian'"
+                :class="activeFilter === 'pemberokian' ? 'bg-navy-800 text-white shadow-sm font-bold' : 'bg-white text-slate-600 border border-slate-200 font-semibold'"
+                class="px-3.5 py-2 rounded-xl text-xs whitespace-nowrap transition-all flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-sky-500"></span>
+            Pemberokian ({{ $pemberokianCount ?? 0 }})
         </button>
         <button @click="activeFilter = 'siap_kirim'"
                 :class="activeFilter === 'siap_kirim' ? 'bg-navy-800 text-white shadow-sm font-bold' : 'bg-white text-slate-600 border border-slate-200 font-semibold'"
-                class="px-4 py-2 rounded-xl text-xs whitespace-nowrap transition-all flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-sky-500"></span>
-            Siap Kirim ({{ $siapCount ?? 2 }})
+                class="px-3.5 py-2 rounded-xl text-xs whitespace-nowrap transition-all flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+            Siap Kirim ({{ $siapCount ?? 0 }})
+        </button>
+        <button @click="activeFilter = 'dalam_pengiriman'"
+                :class="activeFilter === 'dalam_pengiriman' ? 'bg-navy-800 text-white shadow-sm font-bold' : 'bg-white text-slate-600 border border-slate-200 font-semibold'"
+                class="px-3.5 py-2 rounded-xl text-xs whitespace-nowrap transition-all flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+            Pengiriman ({{ $activeCount ?? 0 }})
         </button>
     </div>
 
@@ -63,11 +69,12 @@
         @if(isset($orders) && count($orders) > 0)
             @foreach($orders as $order)
                 @php
-                    $isPending = $order->status_order === 'siap_kirim' || $order->status_order === 'pending';
+                    $isPemberokian = $order->status_order === 'pemberokian';
+                    $isSiapKirim = $order->status_order === 'siap_kirim' || $order->status_order === 'pending';
                     $isInDelivery = $order->status_order === 'dalam_pengiriman';
                     $isSelesai = $order->status_order === 'selesai';
                 @endphp
-                <div x-show="activeFilter === 'semua' || (activeFilter === 'dalam_pengiriman' && '{{ $order->status_order }}' === 'dalam_pengiriman') || (activeFilter === 'siap_kirim' && '{{ $order->status_order }}' !== 'dalam_pengiriman')"
+                <div x-show="activeFilter === 'semua' || (activeFilter === 'pemberokian' && '{{ $order->status_order }}' === 'pemberokian') || (activeFilter === 'siap_kirim' && ('{{ $order->status_order }}' === 'siap_kirim' || '{{ $order->status_order }}' === 'pending')) || (activeFilter === 'dalam_pengiriman' && '{{ $order->status_order }}' === 'dalam_pengiriman')"
                      class="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs space-y-3.5 hover:shadow-md transition-all">
                     
                     <div class="flex items-center justify-between">
@@ -75,7 +82,12 @@
                             <span class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">ID PENGIRIMAN</span>
                             <h3 class="text-sm font-extrabold text-navy-900">#ORD-{{ str_pad($order->id_transaksi, 4, '0', STR_PAD_LEFT) }}</h3>
                         </div>
-                        @if($isInDelivery)
+                        @if($isPemberokian)
+                            <span class="px-3 py-1 rounded-full text-[10px] font-extrabold bg-sky-50 text-sky-700 border border-sky-200 flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-sky-500 animate-pulse"></span>
+                                PEMBEROKIAN
+                            </span>
+                        @elseif($isInDelivery)
                             <span class="px-3 py-1 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1.5">
                                 <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
                                 DALAM PENGIRIMAN
@@ -86,7 +98,7 @@
                                 SELESAI
                             </span>
                         @else
-                            <span class="px-3 py-1 rounded-full text-[10px] font-extrabold bg-sky-50 text-sky-700 border border-sky-200 flex items-center gap-1">
+                            <span class="px-3 py-1 rounded-full text-[10px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center gap-1">
                                 <i class="fa-solid fa-box text-[9px]"></i>
                                 SIAP KIRIM
                             </span>

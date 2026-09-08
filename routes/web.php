@@ -15,6 +15,7 @@ use App\Http\Controllers\Manajer\PembibitanController;
 use App\Http\Controllers\Manajer\PembudidayaController;
 use App\Http\Controllers\Manajer\PetugasController;
 use App\Http\Controllers\Manajer\PengaturanController;
+use App\Http\Controllers\Manajer\StokPakanController;
 use App\Http\Controllers\Petugas\PetugasDistribusiController;
 use App\Http\Controllers\Petugas\PetugasPembesaranController;
 use App\Http\Controllers\Petugas\PetugasPembibitanController;
@@ -96,13 +97,22 @@ Route::middleware(['auth', 'role:manajer'])->group(function () {
     // Monitoring Kolam & Pembudidaya
     Route::get('/pembudidaya', [PembudidayaController::class, 'index'])->name('pembudidaya');
 
-    // Log Stok & Pakan (Inventori, Pembelian Supplier, & Log Harian)
+    // Master Data Stok Pakan (Katalog, Restock & Saldo Gudang)
+    Route::get('/stok-pakan', [StokPakanController::class, 'index'])->name('stok-pakan');
+    Route::post('/stok-pakan', [StokPakanController::class, 'store'])->name('stok-pakan.store');
+    Route::put('/stok-pakan/{id}', [StokPakanController::class, 'update'])->name('stok-pakan.update');
+    Route::delete('/stok-pakan/{id}', [StokPakanController::class, 'destroy'])->name('stok-pakan.destroy');
+    Route::post('/stok-pakan/beli', [StokPakanController::class, 'storePembelian'])->name('stok-pakan.beli');
+
+    // Backward compatibility aliases
+    Route::post('/log-pakan/stok', [StokPakanController::class, 'store'])->name('log-pakan.stok.store');
+    Route::put('/log-pakan/stok/{id}', [StokPakanController::class, 'update'])->name('log-pakan.stok.update');
+    Route::delete('/log-pakan/stok/{id}', [StokPakanController::class, 'destroy'])->name('log-pakan.stok.destroy');
+
+    // Log Pakan Harian
     Route::get('/log-pakan', [PakanController::class, 'index'])->name('log-pakan');
     Route::post('/log-pakan', [PakanController::class, 'store'])->name('log-pakan.store');
     Route::post('/log-pakan/beli', [PakanController::class, 'storePembelian'])->name('log-pakan.beli');
-    Route::post('/log-pakan/stok', [PakanController::class, 'storeStokPakan'])->name('log-pakan.stok.store');
-    Route::put('/log-pakan/stok/{id}', [PakanController::class, 'updateStokPakan'])->name('log-pakan.stok.update');
-    Route::delete('/log-pakan/stok/{id}', [PakanController::class, 'destroyStokPakan'])->name('log-pakan.stok.destroy');
 
     // Distribusi & Pesanan
     Route::get('/distribusi', [DistribusiController::class, 'index'])->name('distribusi');

@@ -50,36 +50,51 @@
                     <option value="">Pilih Kolam Hatchery...</option>
                     <template x-for="b in activeBatches" :key="b.id_batch">
                         <option :value="b.id_kolam" 
-                                x-text="(b.kolam ? b.kolam.nama_kolam : 'Kolam #' + b.id_kolam) + ' - Hari ke-' + b.doc + ' (DOC ' + b.doc + ') • ' + b.fase + ' (' + (b.jenis_ikan || 'Benih') + ')'">
+                                x-text="b.label || ((b.kolam ? b.kolam.nama_kolam : 'Kolam #' + b.id_kolam) + ' – Hari ke-' + b.doc + ' (DOC ' + b.doc + ') • ' + b.fase + ' (' + (b.spesies || b.jenis_ikan || 'Benih') + ')')">
                         </option>
                     </template>
                 </select>
 
                 <template x-if="selectedBatch">
-                    <div class="p-3 bg-emerald-50/80 rounded-2xl border border-emerald-200 space-y-2 text-xs text-emerald-950 mt-2">
-                        <div class="flex items-center justify-between gap-2">
-                            <span class="font-extrabold" x-text="'Benih: ' + (selectedBatch.jenis_ikan || 'Bibit Ikan')"></span>
-                            <div class="flex items-center gap-1.5 shrink-0">
-                                <span class="text-[10px] font-black px-2 py-0.5 rounded-md bg-white border border-emerald-200 text-emerald-800"
-                                      x-text="'Hari ke-' + selectedBatch.doc + ' (DOC ' + selectedBatch.doc + ')'">
-                                </span>
-                                <span class="text-[10px] font-black px-2 py-0.5 rounded-md border"
-                                      :class="selectedBatch.fase_badge || 'bg-emerald-100 text-emerald-800 border-emerald-200'"
-                                      x-text="selectedBatch.fase">
-                                </span>
+                    <div class="space-y-2 mt-2">
+                        <div class="p-3 bg-emerald-50/80 rounded-2xl border border-emerald-200 space-y-2 text-xs text-emerald-950">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="font-extrabold" x-text="'Spesies / Benih: ' + (selectedBatch.spesies || selectedBatch.jenis_ikan || 'Bibit Ikan')"></span>
+                                <div class="flex items-center gap-1.5 shrink-0">
+                                    <span class="text-[10px] font-black px-2 py-0.5 rounded-md bg-white border border-emerald-200 text-emerald-800"
+                                          x-text="'Hari ke-' + selectedBatch.doc + ' (DOC ' + selectedBatch.doc + ')'">
+                                    </span>
+                                    <span class="text-[10px] font-black px-2 py-0.5 rounded-md border"
+                                          :class="selectedBatch.fase_badge || 'bg-emerald-100 text-emerald-800 border-emerald-200'"
+                                          x-text="selectedBatch.fase">
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="pt-2 border-t border-emerald-200/70 flex flex-col gap-1.5 text-[11px]">
+                                <div class="flex items-center justify-between text-slate-600">
+                                    <span>Populasi:</span>
+                                    <strong class="text-slate-900 font-extrabold" x-text="Number(selectedBatch.jumlah_bibitAwal - selectedBatch.jumlah_kematian).toLocaleString('id-ID') + (selectedBatch.fase_key === 'telur' ? ' butir telur' : ' ekor')"></strong>
+                                </div>
+                                <div class="flex items-center gap-1.5 text-emerald-950 font-bold bg-white/80 p-2.5 rounded-xl border border-emerald-100 text-[11px]">
+                                    <i class="fa-solid fa-lightbulb text-amber-500 shrink-0"></i>
+                                    <span>Status Pakan: <strong :class="selectedBatch.fase_key === 'telur' ? 'text-rose-700' : 'text-emerald-900'" x-text="selectedBatch.fase_key === 'telur' ? 'Tidak Memerlukan Pakan (Fase Telur)' : selectedBatch.rekomendasi_pakan"></strong></span>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="pt-2 border-t border-emerald-200/70 flex flex-col gap-1.5 text-[11px]">
-                            <div class="flex items-center justify-between text-slate-600">
-                                <span>Populasi Benih:</span>
-                                <strong class="text-slate-900 font-extrabold" x-text="Number(selectedBatch.jumlah_bibitAwal - selectedBatch.jumlah_kematian).toLocaleString('id-ID') + ' ekor'"></strong>
+                        <!-- Alert Khusus Fase Telur -->
+                        <template x-if="selectedBatch.fase_key === 'telur'">
+                            <div class="p-3 bg-rose-50 rounded-2xl border border-rose-200 text-rose-900 flex items-start gap-2.5">
+                                <i class="fa-solid fa-ban text-rose-500 text-sm shrink-0 mt-0.5"></i>
+                                <div class="space-y-0.5">
+                                    <span class="font-extrabold text-xs block text-rose-800">Fase Telur / Inkubasi (Tanpa Pakan)</span>
+                                    <p class="text-[10px] text-rose-700 font-medium leading-relaxed">
+                                        Telur yang belum menetas <strong>tidak boleh diberi pakan</strong> agar air tidak membusuk dan merusak daya tetas. Form pakan dinonaktifkan sampai telur menetas menjadi larva.
+                                    </p>
+                                </div>
                             </div>
-                            <div class="flex items-center gap-1.5 text-emerald-950 font-bold bg-white/80 p-2.5 rounded-xl border border-emerald-100 text-[11px]">
-                                <i class="fa-solid fa-lightbulb text-amber-500 shrink-0"></i>
-                                <span>Rekomendasi Fase: <strong class="text-emerald-900" x-text="selectedBatch.rekomendasi_pakan"></strong></span>
-                            </div>
-                        </div>
+                        </template>
                     </div>
                 </template>
             </div>
@@ -89,8 +104,8 @@
                 <label class="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider block">
                     TANGGAL PEMBERIAN <span class="text-rose-500">*</span>
                 </label>
-                <input type="date" x-model="form.tgl_log" required
-                       class="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 text-xs font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-700 transition-all">
+                <input type="date" x-model="form.tgl_log" :disabled="selectedBatch && selectedBatch.fase_key === 'telur'" required
+                       class="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 text-xs font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-700 transition-all disabled:bg-slate-100 disabled:text-slate-400">
             </div>
 
             <!-- Field 3: Pilih Jenis Pakan dari Gudang (Khusus Pembibitan) -->
@@ -98,8 +113,8 @@
                 <label class="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider block">
                     JENIS PAKAN BENIH (GUDANG) <span class="text-rose-500">*</span>
                 </label>
-                <select x-model="form.id_stok_pakan" @change="recalculateCost()" required
-                        class="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 text-xs font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-700 transition-all cursor-pointer">
+                <select x-model="form.id_stok_pakan" @change="recalculateCost()" :disabled="selectedBatch && selectedBatch.fase_key === 'telur'" required
+                        class="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 text-xs font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-700 transition-all cursor-pointer disabled:bg-slate-100 disabled:text-slate-400">
                     <option value="">Pilih Pakan Benih...</option>
                     <template x-for="pakan in stokPakanList" :key="pakan.id_stok_pakan">
                         <option :value="pakan.id_stok_pakan" 
@@ -108,7 +123,7 @@
                     </template>
                 </select>
 
-                <template x-if="selectedPakan">
+                <template x-if="selectedPakan && (!selectedBatch || selectedBatch.fase_key !== 'telur')">
                     <div class="flex items-center justify-between text-[11px] text-slate-500 px-1 pt-0.5">
                         <span>Stok Tersisa: <strong class="text-slate-800" x-text="selectedPakan.stok_tersisa + ' ' + selectedPakan.satuan"></strong></span>
                         <span>Harga: <strong class="text-emerald-700" x-text="'Rp ' + Number(selectedPakan.harga_per_satuan).toLocaleString('id-ID') + '/' + selectedPakan.satuan"></strong></span>
@@ -121,12 +136,14 @@
                 <label class="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider block">
                     JUMLAH PAKAN DIBERIKAN <span class="text-rose-500">*</span> <span class="text-[9px] text-slate-400 font-normal lowercase">(maks. 100 kg)</span>
                 </label>
-                <div class="flex items-center rounded-2xl border border-slate-200 overflow-hidden bg-slate-50 focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-700 transition-all">
+                <div class="flex items-center rounded-2xl border border-slate-200 overflow-hidden bg-slate-50 focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-700 transition-all"
+                     :class="(selectedBatch && selectedBatch.fase_key === 'telur') ? 'opacity-50 pointer-events-none' : ''">
                     <input type="number" step="0.01" min="0.01" max="100" x-model="form.kg_pelet" 
+                           :disabled="selectedBatch && selectedBatch.fase_key === 'telur'"
                            @keydown="if(['-', 'e', '+'].includes($event.key)) $event.preventDefault()"
                            @input="if(Number(form.kg_pelet) > 100) form.kg_pelet = 100; recalculateCost()" required
                            class="w-full px-3.5 py-2.5 text-xs font-extrabold text-slate-900 border-0 bg-transparent focus:outline-none"
-                           placeholder="Contoh: 1.5">
+                           :placeholder="(selectedBatch && selectedBatch.fase_key === 'telur') ? '0 (Fase Telur)' : 'Contoh: 1.5'">
                     <span class="px-3 py-2.5 bg-slate-100 text-slate-500 text-xs font-black uppercase" x-text="selectedPakan ? selectedPakan.satuan : 'KG'">KG</span>
                 </div>
             </div>
@@ -161,10 +178,12 @@
             </div>
 
             <!-- Submit Button -->
-            <button type="submit" :disabled="isSubmitting"
-                    class="w-full py-3.5 rounded-2xl bg-emerald-700 hover:bg-emerald-800 active:scale-[0.99] text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-md shadow-emerald-700/20 transition-all cursor-pointer">
-                <i class="fa-solid fa-floppy-disk text-xs"></i>
-                <span x-text="isSubmitting ? 'Menyimpan & Memotong Stok...' : 'Simpan Log Pakan & Potong Stok'"></span>
+            <button type="submit" 
+                    :disabled="isSubmitting || (selectedBatch && selectedBatch.fase_key === 'telur')"
+                    :class="(selectedBatch && selectedBatch.fase_key === 'telur') ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : 'bg-emerald-700 hover:bg-emerald-800 text-white cursor-pointer shadow-md shadow-emerald-700/20'"
+                    class="w-full py-3.5 rounded-2xl active:scale-[0.99] font-extrabold text-xs flex items-center justify-center gap-2 transition-all">
+                <i class="fa-solid text-xs" :class="(selectedBatch && selectedBatch.fase_key === 'telur') ? 'fa-ban' : 'fa-floppy-disk'"></i>
+                <span x-text="(selectedBatch && selectedBatch.fase_key === 'telur') ? 'Tidak Dapat Diberi Pakan (Fase Telur)' : (isSubmitting ? 'Menyimpan & Memotong Stok...' : 'Simpan Log Pakan & Potong Stok')"></span>
             </button>
 
         </form>
@@ -253,16 +272,22 @@ function petugasPembibitanLogComponent() {
 
         onKolamChange() {
             if (this.selectedBatch) {
+                const fKey = (this.selectedBatch.fase_key || '').toLowerCase();
+
+                if (fKey === 'telur') {
+                    this.form.kg_pelet = 0;
+                    this.form.id_stok_pakan = '';
+                    this.form.total_biaya = 0;
+                    return;
+                }
+
                 // Auto porsi pakan benih sesuai kalkulasi fase DOC
                 this.form.kg_pelet = this.selectedBatch.est_pakan_kg || 1.0;
 
                 // Auto sarankan pakan di stok gudang yang paling pas
                 if (this.stokPakanList.length > 0) {
-                    const fKey = (this.selectedBatch.fase_key || '').toLowerCase();
                     let matchedPakan = null;
-                    if (fKey === 'telur') {
-                        matchedPakan = this.stokPakanList.find(p => /kuning|telur|artemia|larva/i.test(p.nama_pakan));
-                    } else if (fKey === 'larva') {
+                    if (fKey === 'larva') {
                         matchedPakan = this.stokPakanList.find(p => /cacing|sutra|artemia|nauplii/i.test(p.nama_pakan));
                     } else if (fKey === 'fingerling') {
                         matchedPakan = this.stokPakanList.find(p => /pf-500|pf-800|starter|benih/i.test(p.nama_pakan));
@@ -294,6 +319,16 @@ function petugasPembibitanLogComponent() {
                 }
                 return;
             }
+
+            if (this.selectedBatch && this.selectedBatch.fase_key === 'telur') {
+                if (typeof triggerToast === 'function') {
+                    triggerToast('Kolam masih dalam fase Telur/Inkubasi dan tidak dapat diberi pakan!', 'warning');
+                } else {
+                    alert('Kolam masih dalam fase Telur/Inkubasi dan tidak dapat diberi pakan!');
+                }
+                return;
+            }
+
             if (Number(this.form.kg_pelet || 0) <= 0) {
                 if (typeof triggerToast === 'function') {
                     triggerToast('Jumlah pakan harus lebih dari 0 kg!', 'error');

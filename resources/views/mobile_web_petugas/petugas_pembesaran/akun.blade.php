@@ -161,34 +161,65 @@
          class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
          style="display: none;">
         
-        <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl p-5 space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+        <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
                 <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-gear text-emerald-600"></i>
-                    <h3 class="text-xs font-bold text-navy-900">Pengaturan Akun & Sistem</h3>
+                    <i class="fa-solid fa-shield-halved text-emerald-600 text-base"></i>
+                    <div>
+                        <h3 class="text-xs font-extrabold text-navy-900">Keamanan & 2FA Google Auth</h3>
+                        <p class="text-[10px] text-slate-400 font-medium">Pengaturan kode QR & OTP</p>
+                    </div>
                 </div>
-                <button @click="settingsModal = false" class="text-slate-400 hover:text-slate-600">
+                <button @click="settingsModal = false" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors">
                     <i class="fa-solid fa-xmark text-sm"></i>
                 </button>
             </div>
 
             <div class="space-y-3.5 text-xs">
                 <!-- 2FA Status -->
-                <div class="p-3.5 bg-slate-50 border border-slate-100 rounded-2xl space-y-2">
-                    <div class="flex items-center justify-between">
-                        <span class="font-extrabold text-navy-900 flex items-center gap-1.5">
-                            <i class="fa-solid fa-shield-halved text-emerald-600"></i> Autentikasi 2FA
-                        </span>
-                        <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            Aktif
-                        </span>
+                <div class="p-3 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="font-extrabold text-navy-900 text-xs">Status Autentikasi 2FA</span>
                     </div>
-                    <p class="text-[10px] text-slate-500 font-medium">Verifikasi 6-digit OTP Google Authenticator aktif melindungi akun Anda saat login.</p>
+                    <span class="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-emerald-100 text-emerald-800 border border-emerald-300">
+                        AKTIF
+                    </span>
+                </div>
+
+                <!-- Google Authenticator QR Card -->
+                <div class="p-4 bg-gradient-to-b from-slate-50 to-white border border-slate-200 rounded-2xl flex flex-col items-center justify-center text-center space-y-2.5">
+                    <span class="text-[11px] font-bold text-slate-700">Pindai QR di Google Authenticator:</span>
+                    
+                    <div class="p-2.5 bg-white rounded-2xl border border-slate-200 shadow-sm flex items-center justify-center max-w-[170px] max-h-[170px] overflow-hidden [&>svg]:w-full [&>svg]:h-full [&>img]:w-full [&>img]:h-full">
+                        {!! Auth::user()->two_factor_qr_code_svg !!}
+                    </div>
+
+                    <p class="text-[10px] text-slate-500 font-medium leading-relaxed">
+                        Buka aplikasi <strong>Google Authenticator</strong> di HP Anda, lalu pilih <em>Scan a QR code</em> untuk menghubungkan akun.
+                    </p>
+                </div>
+
+                <!-- Secret Key (Manual Code) -->
+                <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-1.5">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block">KUNCI RAHASIA (MANUAL SETUP):</span>
+                    <div class="flex items-center justify-between gap-2 bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 shadow-2xs">
+                        <code class="text-xs font-mono font-extrabold text-navy-900 tracking-wider truncate select-all">
+                            {{ Auth::user()->two_factor_secret_decrypted }}
+                        </code>
+                        <button type="button" 
+                                @click="copySecretKey('{{ Auth::user()->two_factor_secret_decrypted }}')" 
+                                class="shrink-0 text-[10px] font-bold px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 cursor-pointer"
+                                :class="copiedKey ? 'bg-emerald-100 text-emerald-700 font-extrabold' : 'bg-slate-100 text-slate-600 hover:bg-navy-800 hover:text-white'">
+                            <i class="fa-regular text-xs" :class="copiedKey ? 'fa-circle-check text-emerald-600' : 'fa-copy'"></i>
+                            <span x-text="copiedKey ? 'Tersalin!' : 'Salin'"></span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
             <button @click="settingsModal = false" 
-                    class="w-full py-2.5 rounded-xl bg-navy-800 hover:bg-navy-900 text-white font-bold text-xs shadow-xs transition-colors">
+                    class="w-full py-2.5 rounded-xl bg-navy-800 hover:bg-navy-900 text-white font-bold text-xs shadow-xs transition-colors cursor-pointer">
                 Tutup
             </button>
         </div>
@@ -200,43 +231,31 @@
          x-transition:enter-start="opacity-0"
          class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
         
-        <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl p-5 space-y-4 text-center">
+        <div class="bg-white rounded-3xl w-full max-w-xs overflow-hidden shadow-2xl p-5 space-y-4">
             <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-                <h3 class="text-xs font-bold text-navy-900" x-text="i18n[currentLang].languageModalTitle">Pilih Bahasa / Language</h3>
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-globe text-emerald-600"></i>
+                    <h3 class="text-xs font-bold text-navy-900" x-text="i18n[currentLang].selectLang">Pilih Bahasa</h3>
+                </div>
                 <button @click="langModal = false" class="text-slate-400 hover:text-slate-600">
                     <i class="fa-solid fa-xmark text-sm"></i>
                 </button>
             </div>
-            
-            <div class="space-y-2.5 text-left">
-                <!-- Option 1: Bahasa Indonesia -->
+
+            <div class="space-y-2 text-xs">
                 <button @click="setLanguage('id')" 
-                        class="w-full p-3.5 rounded-2xl border transition-all flex items-center justify-between font-bold text-xs cursor-pointer"
-                        :class="currentLang === 'id' ? 'border-emerald-500 bg-emerald-50/70 text-navy-900 shadow-xs' : 'border-slate-200 hover:bg-slate-50 text-slate-700'">
-                    <div class="flex items-center gap-3">
-                        <span class="text-xl">🇮🇩</span>
-                        <div>
-                            <span class="block text-xs font-extrabold text-slate-900">Bahasa Indonesia</span>
-                            <span class="block text-[10px] text-slate-400 font-normal">Gunakan Bahasa Indonesia sebagai bahasa utama</span>
-                        </div>
-                    </div>
-                    <div class="w-6 h-6 rounded-full flex items-center justify-center" :class="currentLang === 'id' ? 'bg-emerald-500 text-white' : 'border border-slate-300 text-transparent'">
+                        class="w-full p-3 rounded-2xl border text-left flex items-center justify-between transition-all"
+                        :class="currentLang === 'id' ? 'border-emerald-600 bg-emerald-50 text-emerald-800 font-extrabold' : 'border-slate-100 hover:bg-slate-50 text-slate-700'">
+                    <span class="flex items-center gap-2">🇮🇩 Bahasa Indonesia</span>
+                    <div x-show="currentLang === 'id'" class="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px]">
                         <i class="fa-solid fa-check text-[11px]"></i>
                     </div>
                 </button>
-
-                <!-- Option 2: English -->
                 <button @click="setLanguage('en')" 
-                        class="w-full p-3.5 rounded-2xl border transition-all flex items-center justify-between font-bold text-xs cursor-pointer"
-                        :class="currentLang === 'en' ? 'border-emerald-500 bg-emerald-50/70 text-navy-900 shadow-xs' : 'border-slate-200 hover:bg-slate-50 text-slate-700'">
-                    <div class="flex items-center gap-3">
-                        <span class="text-xl">🇬🇧</span>
-                        <div>
-                            <span class="block text-xs font-extrabold text-slate-900">English</span>
-                            <span class="block text-[10px] text-slate-400 font-normal">Use English as the primary interface language</span>
-                        </div>
-                    </div>
-                    <div class="w-6 h-6 rounded-full flex items-center justify-center" :class="currentLang === 'en' ? 'bg-emerald-500 text-white' : 'border border-slate-300 text-transparent'">
+                        class="w-full p-3 rounded-2xl border text-left flex items-center justify-between transition-all"
+                        :class="currentLang === 'en' ? 'border-emerald-600 bg-emerald-50 text-emerald-800 font-extrabold' : 'border-slate-100 hover:bg-slate-50 text-slate-700'">
+                    <span class="flex items-center gap-2">🇬🇧 English</span>
+                    <div x-show="currentLang === 'en'" class="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px]">
                         <i class="fa-solid fa-check text-[11px]"></i>
                     </div>
                 </button>
@@ -290,6 +309,7 @@ function akunPetugasPembesaran() {
         langModal: false,
         logoutModal: false,
         isSaving: false,
+        copiedKey: false,
         userName: '{{ Auth::user()->nama ?? 'Tim Pembesaran' }}',
         userPhone: '{{ Auth::user()->no_tlp ?? '+62 812-9876-5432' }}',
         userPhoto: '{{ Auth::user()->foto_profil_url ?? '' }}',
@@ -298,6 +318,24 @@ function akunPetugasPembesaran() {
         photoFile: null,
         photoPreview: '',
         currentLang: localStorage.getItem('sim_lang') || 'id',
+
+        copySecretKey(text) {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text);
+            } else {
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+            }
+            this.copiedKey = true;
+            if (typeof triggerToast === 'function') {
+                triggerToast('Kunci rahasia 2FA berhasil disalin!', 'success');
+            }
+            setTimeout(() => { this.copiedKey = false; }, 2500);
+        },
 
         openEditModal() {
             this.tempName = this.userName;

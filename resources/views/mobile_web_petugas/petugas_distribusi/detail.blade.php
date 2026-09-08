@@ -19,38 +19,64 @@
 
     <!-- Stepper Status Timeline Card -->
     <div class="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs space-y-3">
-        <span class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider block text-center">STATUS PENGIRIMAN</span>
+        <div class="flex items-center justify-between">
+            <span class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">STATUS PENGIRIMAN</span>
+            @if($transaksi->status_order === 'pemberokian')
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-100 text-sky-800 border border-sky-200">Dalam Pemberokian</span>
+            @elseif($transaksi->status_order === 'dalam_pengiriman')
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-200">Sedang Diperjalanan</span>
+            @elseif($transaksi->status_order === 'selesai')
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">Telah Selesai</span>
+            @else
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-100 text-indigo-800 border border-indigo-200">Siap Kirim</span>
+            @endif
+        </div>
         
         <!-- Timeline Steps -->
-        <div class="flex items-center justify-between relative px-4 py-2">
+        <div class="flex items-center justify-between relative px-2 py-2">
             
             <!-- Connecting Line -->
-            <div class="absolute left-10 right-10 top-5 h-1 bg-slate-200 -z-0"></div>
-            <div class="absolute left-10 top-5 h-1 bg-navy-800 transition-all duration-500 -z-0" :style="deliveryDone ? 'width: 80%' : 'width: 45%'"></div>
+            <div class="absolute left-6 right-6 top-5 h-1 bg-slate-200 -z-0"></div>
+            @php
+                $statusOrder = $transaksi->status_order ?? 'pending';
+                $progressWidth = '15%';
+                if ($statusOrder === 'pemberokian') $progressWidth = '25%';
+                elseif ($statusOrder === 'siap_kirim') $progressWidth = '55%';
+                elseif ($statusOrder === 'dalam_pengiriman') $progressWidth = '80%';
+                elseif ($statusOrder === 'selesai') $progressWidth = '100%';
+            @endphp
+            <div class="absolute left-6 top-5 h-1 bg-navy-800 transition-all duration-500 -z-0" style="width: {{ $progressWidth }}"></div>
 
-            <!-- Step 1: Dikirimkan -->
+            <!-- Step 1: Pemberokian -->
             <div class="flex flex-col items-center gap-1.5 relative z-10">
-                <div class="w-7 h-7 rounded-full bg-navy-800 text-white flex items-center justify-center text-xs font-bold ring-4 ring-white shadow-xs">
-                    <i class="fa-solid fa-check text-[10px]"></i>
+                <div class="w-7 h-7 rounded-full {{ in_array($statusOrder, ['pemberokian', 'siap_kirim', 'dalam_pengiriman', 'selesai']) ? 'bg-navy-800 text-white' : 'bg-slate-200 text-slate-500' }} flex items-center justify-center text-xs font-bold ring-4 ring-white shadow-xs">
+                    <i class="fa-solid fa-water text-[10px]"></i>
                 </div>
-                <span class="text-[10px] font-bold text-navy-900">Dikirimkan</span>
+                <span class="text-[9px] font-bold text-navy-900">Pemberokan</span>
             </div>
 
-            <!-- Step 2: Diproses -->
+            <!-- Step 2: Siap Kirim -->
             <div class="flex flex-col items-center gap-1.5 relative z-10">
-                <div class="w-7 h-7 rounded-full bg-navy-800 text-white flex items-center justify-center text-xs font-bold ring-4 ring-white shadow-xs">
+                <div class="w-7 h-7 rounded-full {{ in_array($statusOrder, ['siap_kirim', 'dalam_pengiriman', 'selesai']) ? 'bg-navy-800 text-white' : 'bg-slate-200 text-slate-500' }} flex items-center justify-center text-xs font-bold ring-4 ring-white shadow-xs">
+                    <i class="fa-solid fa-box text-[10px]"></i>
+                </div>
+                <span class="text-[9px] font-bold text-navy-900">Siap Kirim</span>
+            </div>
+
+            <!-- Step 3: Pengiriman -->
+            <div class="flex flex-col items-center gap-1.5 relative z-10">
+                <div class="w-7 h-7 rounded-full {{ in_array($statusOrder, ['dalam_pengiriman', 'selesai']) ? 'bg-navy-800 text-white' : 'bg-slate-200 text-slate-500' }} flex items-center justify-center text-xs font-bold ring-4 ring-white shadow-xs">
                     <i class="fa-solid fa-truck-fast text-[10px]"></i>
                 </div>
-                <span class="text-[10px] font-bold text-navy-900">Diproses</span>
+                <span class="text-[9px] font-bold text-navy-900">Kirim</span>
             </div>
 
-            <!-- Step 3: Selesai -->
+            <!-- Step 4: Selesai -->
             <div class="flex flex-col items-center gap-1.5 relative z-10">
-                <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ring-4 ring-white shadow-xs transition-all"
-                     :class="deliveryDone ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-500'">
-                    <i class="fa-solid" :class="deliveryDone ? 'fa-check text-[10px]' : 'fa-house-flag text-[10px]'"></i>
+                <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ring-4 ring-white shadow-xs transition-all {{ $statusOrder === 'selesai' ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-500' }}">
+                    <i class="fa-solid {{ $statusOrder === 'selesai' ? 'fa-check text-[10px]' : 'fa-house-flag text-[10px]' }}"></i>
                 </div>
-                <span class="text-[10px] font-bold" :class="deliveryDone ? 'text-emerald-700 font-extrabold' : 'text-slate-400'">Selesai</span>
+                <span class="text-[9px] font-bold {{ $statusOrder === 'selesai' ? 'text-emerald-700 font-extrabold' : 'text-slate-400' }}">Selesai</span>
             </div>
 
         </div>
@@ -61,13 +87,36 @@
         <div>
             <span class="text-[10px] font-extrabold text-slate-400 uppercase block tracking-wider">KOMODITAS & ID ORDER</span>
             <h2 class="text-base font-extrabold text-navy-900 mt-0.5">{{ $transaksi->batchPembesaran ? $transaksi->batchPembesaran->jenis_ikan : 'Ikan Konsumsi Segar' }}</h2>
-            <p class="text-xs text-slate-500 font-semibold mt-0.5">ID: <span class="text-navy-800 font-bold">#ORD-{{ str_pad($transaksi->id_transaksi, 4, '0', STR_PAD_LEFT) }}</span></p>
+            <div class="flex items-center gap-1.5 text-xs text-slate-500 font-semibold mt-0.5">
+                <span>ID: <strong class="text-navy-800">#ORD-{{ str_pad($transaksi->id_transaksi, 4, '0', STR_PAD_LEFT) }}</strong></span>
+                <span class="text-slate-300">•</span>
+                <span class="text-sky-700 font-bold flex items-center gap-1">
+                    <i class="fa-solid fa-warehouse text-[10px]"></i>
+                    <span>{{ $transaksi->batchPembesaran && $transaksi->batchPembesaran->kolam ? $transaksi->batchPembesaran->kolam->nama_kolam : 'Kolam Pembesaran / Buffer Pemberokan' }}</span>
+                </span>
+            </div>
         </div>
         <div class="px-3.5 py-2 rounded-xl bg-sky-50 border border-sky-200 text-sky-800 font-extrabold text-sm text-center shadow-2xs">
             <span>{{ number_format($transaksi->Total_kg, 0, ',', '.') }} KG</span>
-            <span class="text-[9px] font-bold block text-sky-600">Netto</span>
+            <span class="text-[9px] font-bold block text-sky-600">Netto Muat</span>
         </div>
     </div>
+
+    @php
+        $mitra = $transaksi->mitra;
+        $mitraNama = $mitra ? $mitra->nama_mitra : 'Mitra Distribusi';
+        $mitraAlamat = $mitra && $mitra->alamat ? $mitra->alamat : 'Kota Tasikmalaya, Jawa Barat';
+        
+        // Cek koordinat presisi
+        $hasCoords = $mitra && !empty($mitra->latitude) && !empty($mitra->longitude);
+        $lat = $hasCoords ? (float) $mitra->latitude : -7.3274;
+        $lng = $hasCoords ? (float) $mitra->longitude : 108.2207;
+        $coordDisplay = number_format($lat, 6) . ', ' . number_format($lng, 6);
+        
+        $mapQuery = $hasCoords ? ($lat . ',' . $lng) : urlencode($mitraAlamat);
+        $embedMapUrl = "https://maps.google.com/maps?q={$mapQuery}&z=15&output=embed";
+        $navDirectionUrl = "https://www.google.com/maps/dir/?api=1&destination={$mapQuery}";
+    @endphp
 
     <!-- Destination Address Box -->
     <div class="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs space-y-2.5">
@@ -79,8 +128,8 @@
         </div>
 
         <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs text-slate-700 leading-relaxed font-medium">
-            <strong class="text-slate-900 block font-bold text-xs mb-1">{{ $transaksi->mitra ? $transaksi->mitra->nama_mitra : 'Mitra Distribusi' }} ({{ $transaksi->mitra ? ($transaksi->mitra->penanggung_jawab ?? 'Penerima') : 'Penerima' }})</strong>
-            {{ $transaksi->mitra ? $transaksi->mitra->alamat : 'Kota Mataram, Nusa Tenggara Barat' }}
+            <strong class="text-slate-900 block font-bold text-xs mb-1">{{ $mitraNama }} ({{ $mitra ? ($mitra->penanggung_jawab ?? 'Penerima') : 'Penerima' }})</strong>
+            {{ $mitraAlamat }}
         </div>
     </div>
 
@@ -94,15 +143,7 @@
             <span>Navigasi via Maps</span>
         </button>
 
-        <!-- Button 2: Chat Mitra via WA -->
-        <a href="https://wa.me/{{ $transaksi->mitra ? preg_replace('/[^0-9]/', '', $transaksi->mitra->no_hp) : '6281234567890' }}?text=Halo%20{{ urlencode($transaksi->mitra ? $transaksi->mitra->nama_mitra : 'Mitra') }},%20saya%20petugas%20distribusi%20SIM-BUDIDAYA%20sedang%20dalam%20perjalanan." 
-           target="_blank"
-           class="w-full py-3 rounded-2xl bg-white border border-slate-300 hover:bg-slate-50 active:scale-[0.99] text-slate-800 font-bold text-xs flex items-center justify-center gap-2.5 shadow-2xs transition-all">
-            <i class="fa-brands fa-whatsapp text-emerald-600 text-base"></i>
-            <span>Chat Mitra via WA</span>
-        </a>
-
-        <!-- Button 3: Upload Foto Serah Terima -->
+        <!-- Button 2: Upload Foto Serah Terima -->
         <button @click="uploadModal = true" 
                 class="w-full py-3 rounded-2xl bg-white border border-slate-300 hover:bg-slate-50 active:scale-[0.99] text-slate-800 font-bold text-xs flex items-center justify-center gap-2.5 shadow-2xs transition-all">
             <i class="fa-solid fa-camera text-sky-600 text-sm"></i>
@@ -206,19 +247,20 @@
                 <div class="w-full h-48 bg-slate-200 rounded-2xl overflow-hidden relative border border-slate-200 flex items-center justify-center">
                     <!-- Leaflet map container iframe/placeholder simulation -->
                     <iframe width="100%" height="100%" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" 
-                            src="https://maps.google.com/maps?q=-8.5833,116.1167&z=14&output=embed">
+                            src="{{ $embedMapUrl }}">
                     </iframe>
                 </div>
 
                 <div class="bg-slate-50 p-3 rounded-xl text-xs space-y-1">
-                    <span class="text-slate-400 font-extrabold uppercase text-[9px] block">KOORDINAT TUJUAN</span>
-                    <p class="font-bold text-slate-800">-8.583333, 116.116667 (Mataram)</p>
+                    <span class="text-slate-400 font-extrabold uppercase text-[9px] block">LOKASI &amp; KOORDINAT TUJUAN</span>
+                    <p class="font-bold text-slate-800">{{ $coordDisplay }}</p>
+                    <p class="text-[11px] text-slate-600 font-medium">{{ $mitraAlamat }}</p>
                 </div>
 
-                <a href="https://maps.google.com/?q=-8.5833,116.1167" target="_blank"
-                   class="w-full py-2.5 rounded-xl bg-navy-800 text-white font-bold text-xs flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-up-right-from-square text-xs"></i>
-                    <span>Buka di Google Maps App</span>
+                <a href="{{ $navDirectionUrl }}" target="_blank"
+                   class="w-full py-2.5 rounded-xl bg-navy-800 hover:bg-navy-900 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-colors">
+                    <i class="fa-solid fa-diamond-turn-right text-sky-400 text-xs"></i>
+                    <span>Buka Rute di Google Maps</span>
                 </a>
             </div>
         </div>

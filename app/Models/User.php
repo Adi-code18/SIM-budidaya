@@ -96,16 +96,27 @@ class User extends Authenticatable
         return $this->hasMany(TransaksiDistribusi::class, 'id_user', 'id_user');
     }
 
-    public function getTwoFactorQrCodeSvgAttribute(): string
+    public function getTwoFactorSecretDecryptedAttribute(): string
     {
         if (!$this->two_factor_secret) {
-            return '';
+            $google2fa = new Google2FA();
+            $newSecret = $google2fa->generateSecretKey();
+            $this->update(['two_factor_secret' => encrypt($newSecret)]);
+            return $newSecret;
         }
 
         try {
-            $secret = decrypt($this->two_factor_secret);
+            return decrypt($this->two_factor_secret);
         } catch (\Throwable $e) {
-            $secret = (string) $this->two_factor_secret;
+            return (string) $this->two_factor_secret;
+        }
+    }
+
+    public function getTwoFactorQrCodeSvgAttribute(): string
+    {
+        $secret = $this->two_factor_secret_decrypted;
+        if (!$secret) {
+            return '';
         }
 
         $google2fa = new Google2FA();
@@ -119,7 +130,7 @@ class User extends Authenticatable
         if (class_exists(\BaconQrCode\Writer::class)) {
             try {
                 $renderer = new \BaconQrCode\Renderer\ImageRenderer(
-                    new \BaconQrCode\Renderer\RendererStyle\RendererStyle(190),
+                    new \BaconQrCode\Renderer\RendererStyle\RendererStyle(170),
                     new \BaconQrCode\Renderer\Image\SvgImageBackEnd()
                 );
                 $writer = new \BaconQrCode\Writer($renderer);
@@ -129,6 +140,6 @@ class User extends Authenticatable
             }
         }
 
-        return $google2fa->getQRCodeInlineHtml($qrCodeUrl, 190);
+        return $google2fa->getQRCodeInlineHtml($qrCodeUrl, 170);
     }
 }

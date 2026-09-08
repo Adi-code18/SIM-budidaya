@@ -177,7 +177,7 @@ class PakanController extends Controller
         });
 
         // Kolam Pembibitan Aktif dengan Auto Sinkronisasi DOC & Fase
-        $activeHatcheryBatches = BatchPembibitan::with('kolam')
+        $activeHatcheryBatches = BatchPembibitan::with(['kolam', 'ikan'])
             ->where('status', '!=', 'selesai')
             ->where('status', '!=', 'gagal')
             ->latest('id_batch')
@@ -185,39 +185,59 @@ class PakanController extends Controller
 
         $hatcheryKolams = $activeHatcheryBatches->map(function ($hb) use ($now) {
             $benihHidup = max(0, ((int) $hb->jumlah_bibitAwal) - ((int) $hb->jumlah_kematian));
-            $tgl = $hb->tgl_pemijahan ? Carbon::parse($hb->tgl_pemijahan) : Carbon::parse($hb->created_at);
-            $doc = max(1, (int) $tgl->diffInDays($now) + 1);
+            $days = $hb->tgl_pemijahan ? (int) abs(Carbon::parse($hb->tgl_pemijahan)->startOfDay()->diffInDays($now->copy()->startOfDay())) : 0;
+            $doc = $days;
 
-            if ($doc <= 3) {
-                $fase = 'Telur / Inkubasi';
+            $dbFase = strtoupper(trim($hb->fase_pertumbuhan ?? ''));
+            if (in_array($dbFase, ['TELUR', 'INKUBASI']) || str_contains($dbFase, 'TELUR')) {
+                $fase = 'Telur';
                 $faseKey = 'telur';
-                $rekomendasiPakan = 'Kuning Telur Rebus / Suspensi Artemia';
-                $estKg = 0.2;
-            } elseif ($doc <= 14) {
+                $rekomendasiPakan = 'Tanpa Pakan (Fase Telur/Inkubasi)';
+                $estKg = 0;
+            } elseif (in_array($dbFase, ['LARVA']) || str_contains($dbFase, 'LARVA')) {
                 $fase = 'Larva';
                 $faseKey = 'larva';
                 $rekomendasiPakan = 'Cacing Sutra Segar / Artemia';
                 $estKg = 0.5;
-            } else {
-                $fase = 'Fingerling (Benih)';
+            } elseif (in_array($dbFase, ['BENIH', 'FINGERLING']) || str_contains($dbFase, 'BENIH') || str_contains($dbFase, 'FINGERLING')) {
+                $fase = 'Benih / Fingerling';
                 $faseKey = 'fingerling';
                 $rekomendasiPakan = 'Pelet Mikro Starter Benih (PF-500)';
                 $estKg = 1.0;
+            } else {
+                if ($doc <= 3) {
+                    $fase = 'Telur';
+                    $faseKey = 'telur';
+                    $rekomendasiPakan = 'Tanpa Pakan (Fase Telur/Inkubasi)';
+                    $estKg = 0;
+                } elseif ($doc <= 14) {
+                    $fase = 'Larva';
+                    $faseKey = 'larva';
+                    $rekomendasiPakan = 'Cacing Sutra Segar / Artemia';
+                    $estKg = 0.5;
+                } else {
+                    $fase = 'Benih / Fingerling';
+                    $faseKey = 'fingerling';
+                    $rekomendasiPakan = 'Pelet Mikro Starter Benih (PF-500)';
+                    $estKg = 1.0;
+                }
             }
+
+            $namaSpesies = $hb->ikan ? $hb->ikan->nama_ikan : ($hb->jenis_ikan ?: 'Bibit Ikan');
 
             return [
                 'id_kolam'          => $hb->id_kolam,
                 'id_batch'          => $hb->id_batch,
                 'batch_id'          => '#BB-' . str_pad($hb->id_batch, 5, '0', STR_PAD_LEFT),
                 'nama_kolam'        => $hb->kolam ? $hb->kolam->nama_kolam : 'Hatchery #' . $hb->id_kolam,
-                'jenis_ikan'        => $hb->jenis_ikan ?? ($hb->ikan ? $hb->ikan->nama_ikan : 'Bibit Ikan'),
+                'jenis_ikan'        => $namaSpesies,
                 'jumlah_bibit'      => $benihHidup,
                 'doc'               => $doc,
                 'fase'              => $fase,
                 'fase_key'          => $faseKey,
                 'rekomendasi_pakan' => $rekomendasiPakan,
                 'est_pakan_kg'      => $estKg,
-                'label'             => ($hb->kolam ? $hb->kolam->nama_kolam : 'Hatchery #' . $hb->id_kolam) . ' - DOC ' . $doc . ' (' . $fase . ' • ' . ($hb->jenis_ikan ?? 'Bibit') . ' • ' . number_format($benihHidup, 0, ',', '.') . ' ekor)',
+                'label'             => ($hb->kolam ? $hb->kolam->nama_kolam : 'Hatchery #' . $hb->id_kolam) . ' – Hari ke-' . $doc . ' (DOC ' . $doc . ') • ' . $fase . ' (' . $namaSpesies . ' • ' . number_format($benihHidup, 0, ',', '.') . ' ekor)',
             ];
         });
 
@@ -327,11 +347,12 @@ class PakanController extends Controller
 
         // Validasi Sinkronisasi: Kolam WAJIB memiliki siklus/batch aktif yang belum selesai
         if ($fase === 'pembibitan') {
-            $hasActiveBatch = BatchPembibitan::where('id_kolam', $request->id_kolam)
+            $activeBatch = BatchPembibitan::where('id_kolam', $request->id_kolam)
                 ->where('status', '!=', 'selesai')
                 ->where('status', '!=', 'gagal')
-                ->exists();
-            if (!$hasActiveBatch) {
+                ->latest('id_batch')
+                ->first();
+            if (!$activeBatch) {
                 if ($request->wantsJson() || $request->ajax()) {
                     return response()->json([
                         'success' => false,
@@ -339,6 +360,21 @@ class PakanController extends Controller
                     ], 422);
                 }
                 return back()->with('error', 'Kolam ini belum diisi benih aktif. Silakan mulai siklus pembibitan terlebih dahulu!');
+            }
+
+            // Validasi Fase: Telur / Inkubasi tidak dapat diberi pakan
+            $faseBatch = strtoupper(trim($activeBatch->fase_pertumbuhan ?? ''));
+            $days = $activeBatch->tgl_pemijahan ? (int) abs(Carbon::parse($activeBatch->tgl_pemijahan)->startOfDay()->diffInDays(Carbon::now()->startOfDay())) : 0;
+            $isTelur = in_array($faseBatch, ['TELUR', 'INKUBASI']) || str_contains($faseBatch, 'TELUR') || ($faseBatch === '' && $days <= 3);
+
+            if ($isTelur) {
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Kolam hatchery ini masih dalam fase Telur/Inkubasi dan tidak dapat diberi pakan agar kualitas air penetasan tidak rusak!'
+                    ], 422);
+                }
+                return back()->with('error', 'Kolam hatchery ini masih dalam fase Telur/Inkubasi dan tidak dapat diberi pakan agar kualitas air penetasan tidak rusak!');
             }
         } else {
             $hasActiveBatch = BatchPembesaran::where('id_kolam', $request->id_kolam)
@@ -358,7 +394,8 @@ class PakanController extends Controller
 
         $tgl = $request->tgl_log ? Carbon::parse($request->tgl_log)->toDateString() : Carbon::today()->toDateString();
         $kgPelet = (float) ($request->kg_pelet ?? 0);
-        $kgDaun = (float) ($request->kg_daun ?? 0);
+        $kgDaun = ($fase === 'pembibitan') ? 0.0 : (float) ($request->kg_daun ?? 0);
+        $jenisDaun = ($fase === 'pembibitan') ? null : ($request->jenis_daun ?: ($stokItem ? $stokItem->nama_pakan : null));
         $totalKg = $kgPelet + $kgDaun;
 
         // Ambil harga referensi pakan jika ada
@@ -370,11 +407,11 @@ class PakanController extends Controller
             'id_user'        => Auth::id() ?? 1,
             'id_kolam'       => $request->id_kolam,
             'id_stok_pakan'  => $request->id_stok_pakan,
-            'kategori_fase'  => $request->kategori_fase ?? ($stokItem ? $stokItem->kategori_peruntukan : 'pembesaran'),
+            'kategori_fase'  => $fase,
             'tgl_log'        => $tgl,
             'kg_pelet'       => $kgPelet,
             'kg_daun'        => $kgDaun,
-            'jenis_daun'     => $request->jenis_daun ?: ($stokItem ? $stokItem->nama_pakan : null),
+            'jenis_daun'     => $jenisDaun,
             'total_biaya'    => $totalBiaya,
             'ph_air'         => $request->ph_air ?? 7.0,
         ]);

@@ -76,8 +76,8 @@ class DashboardController extends Controller
                 'nama'      => $m->nama_mitra,
                 'tipe'      => $m->tipe_mitra,
                 'alamat'    => $m->alamat,
-                'lat'       => (float) ($m->latitude ?? -8.5833),
-                'lng'       => (float) ($m->longitude ?? 116.1166),
+                'lat'       => (float) ($m->latitude ?? -7.3274),
+                'lng'       => (float) ($m->longitude ?? 108.2207),
                 'total_trx' => $m->transaksi_distribusi_count ?? 0,
             ];
         }

@@ -44,7 +44,7 @@
 
                     <div class="space-y-1">
                         <h3 class="text-xs font-extrabold text-slate-900">{{ $r->mitra ? $r->mitra->nama_mitra : 'Mitra Distribusi' }}</h3>
-                        <p class="text-[11px] text-slate-500 font-medium">{{ $r->mitra ? $r->mitra->alamat : 'Kota Mataram' }} • <span class="font-bold text-slate-700">{{ number_format($r->Total_kg, 0, ',', '.') }} KG</span></p>
+                        <p class="text-[11px] text-slate-500 font-medium">{{ $r->mitra ? $r->mitra->alamat : 'Kota Tasikmalaya, Jawa Barat' }} • <span class="font-bold text-slate-700">{{ number_format($r->Total_kg, 0, ',', '.') }} KG</span></p>
                         <p class="text-[10px] text-slate-400 font-medium"><i class="fa-regular fa-calendar-check mr-1"></i>Tanggal Order: {{ $r->tanggal_order }}</p>
                     </div>
 

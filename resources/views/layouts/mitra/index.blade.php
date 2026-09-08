@@ -3,8 +3,20 @@
 @section('title', 'Manajemen Mitra - SIM-BUDIDAYA')
 
 @section('content')
+{{-- =========================================================================
+    MODUL MANAJEMEN MITRA DISTRIBUSI & SUPPLIER
+    -------------------------------------------------------------------------
+    Teknologi yang Digunakan:
+    1. Laravel Blade & Controller: Rendering template & sinkronisasi data backend.
+    2. Alpine.js: Reaktif frontend state, mode switching (Create/Edit/View), filter, & async fetch.
+    3. Leaflet.js (v1.9.4): Engine peta interaktif GIS, pin marker dragging, & layer switching.
+    4. Esri World Imagery & OpenStreetMap: Tile provider untuk peta Satelit HD & Peta Jalan.
+    5. Nominatim & Komoot Photon: Full-text geocoding search & reverse geocoding alamat otomatis.
+    6. Tailwind CSS: Styling utility responsif, glassmorphism, & modal popups.
+========================================================================= --}}
 <div class="space-y-6" x-data="mitraApp()">
-    <!-- Toast Notification -->
+    
+    <!-- Toast Notification (Notifikasi Status Aksi Cepat) -->
     <div x-show="showToast"
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0 translate-y-2 scale-95"
@@ -19,22 +31,22 @@
         <span class="text-xs font-semibold" x-text="toastMessage"></span>
     </div>
 
-    <!-- Subtitle & Page Title Header -->
+    <!-- 1. Page Header (Judul Halaman & Tombol Aksi Tambah / Kembali) -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
             <h1 class="text-2xl font-extrabold text-[#0B2570] tracking-tight">Manajemen Mitra</h1>
-            <p class="text-xs text-slate-500 font-medium mt-0.5">Kelola hubungan dan distribusi hasil budidaya ke mitra strategis.</p>
+            <p class="text-xs text-slate-500 font-medium mt-0.5">Kelola hubungan dan distribusi hasil budidaya ke mitra strategis &amp; supplier pakan.</p>
         </div>
         <div>
             <button @click="if (showForm) { showForm = false; } else { openCreateForm(); }" 
-                    class="px-4 py-2 rounded-xl bg-[#051B44] hover:bg-navy-900 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-2">
+                    class="px-4 py-2 rounded-xl bg-[#051B44] hover:bg-navy-900 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-2 cursor-pointer active:scale-98">
                 <i class="fa-solid" :class="showForm ? 'fa-list' : 'fa-plus'"></i>
                 <span x-text="showForm ? 'Lihat Daftar Mitra' : 'Tambah Mitra Baru'"></span>
             </button>
         </div>
     </div>
 
-    <!-- Input / Edit / View Form Section (Shown when showForm is true) -->
+    <!-- 2. Form Section: Input / Edit / View Mitra (Ditampilkan saat showForm = true) -->
     <div x-show="showForm" 
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0 -translate-y-2"
@@ -344,7 +356,7 @@
                                         :disabled="formMode === 'view'"
                                         :class="form.tipeKey === 'supplier' ? 'bg-[#051B44] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" 
                                         class="px-3 py-2 rounded-lg transition-all text-center flex-1 min-w-[100px]">
-                                    Supplier
+                                    Supplier Pakan
                                 </button>
                                 <button type="button" 
                                         @click="if(formMode !== 'view') form.tipeKey = 'restoran'" 
@@ -560,7 +572,7 @@
                 <select x-model="filterTipe" class="w-full bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer mt-0.5">
                     <option value="">Semua Tipe</option>
                     <option value="restoran">Restoran</option>
-                    <option value="supplier">Supplier Frozen Food</option>
+                    <option value="supplier">Supplier Pakan</option>
                     <option value="pasar">Pasar Tradisional</option>
                     <option value="eksportir">Eksportir</option>
                     <option value="rumah_makan">Rumah Makan</option>
@@ -752,6 +764,17 @@
 
 @push('scripts')
 <script>
+    /**
+     * =========================================================================
+     * 1. ALPINE.JS STATE MANAGEMENT COMPONENT (mitraApp)
+     * =========================================================================
+     * Mengatur state interaktif pada halaman:
+     * - `formMode`: Mengatur mode formulir ('create' = tambah baru, 'edit' = ubah data, 'view' = read-only).
+     * - `searchAddressQuery`: Mengelola input pencarian geocoding alamat live.
+     * - `fetchAddressSuggestions`: Integrasi OpenStreetMap Nominatim & Komoot Photon API.
+     * - `filteredMitras`: Komputasi filter real-time (tipe mitra, wilayah, dan kata kunci pencarian).
+     * - `saveForm`: Mengirim request asynchronous (fetch) ke Laravel Controller untuk simpan/update data.
+     */
     function mitraApp() {
         return {
             init() {
@@ -1057,7 +1080,7 @@
                 const tipeMap = {
                     rumah_makan: "Rumah Makan",
                     Rumah_makan: "Rumah Makan",
-                    supplier: "Supplier Frozen Food",
+                    supplier: "Supplier Pakan",
                     restoran: "Restoran",
                     pasar: "Pasar Tradisional",
                     eksportir: "Eksportir",
@@ -1202,6 +1225,16 @@
         };
     }
 
+    /**
+     * =========================================================================
+     * 2. LEAFLET.JS GIS MAPPING ENGINE & GEOLOCATION
+     * =========================================================================
+     * Mengatur peta interaktif penentuan titik koordinat mitra:
+     * - `getMapTileLayer`: Menyediakan layer peta Google Satellite Hybrid (HD) & OpenStreetMap Standard.
+     * - `initMitraMap`: Inisialisasi peta Leaflet, event klik peta, & marker pin yang bisa digeser (draggable).
+     * - `reverseGeocode`: Otomatis mengubah koordinat GPS (lat, lng) menjadi teks alamat lengkap Indonesia.
+     * - `flyToLocation`: Animasi kamera terbang mulus (flyTo) menuju titik koordinat hasil pencarian alamat.
+     */
     let mitraMapInstance = null;
     let currentMarker = null;
 

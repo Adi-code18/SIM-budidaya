@@ -4,40 +4,140 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'SIM-BUDIDAYA - Management System')</title>
+
+    {{-- =========================================================================
+        1. DEPENDENCY ASSETS & EXTERNAL LIBRARIES
+        - Google Fonts (Plus Jakarta Sans): Tipografi modern aplikasi.
+        - Font Awesome 6: Icon set lengkap untuk navigasi, tombol, dan indikator.
+        - Chart.js: Library visualisasi data grafik & analitik budidaya.
+        - Leaflet.js & OpenStreetMap: Library pemetaan GIS interaktif & geocoding.
+        - Alpine.js 3: Framework JS reaktif ringan (pengganti Vue/React sederhana).
+        - SweetAlert2: Modal popup notifikasi, konfirmasi aksi, & pengganti alert browser.
+        - Tailwind CSS: Utility-first CSS framework untuk styling responsif & modern.
+    ========================================================================= --}}
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Chart.js -->
+    
+    <!-- Chart.js (Visualisasi Statistik & Grafik) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Leaflet.js Assets (Local & CDN Fallback) -->
+    
+    <!-- Leaflet.js Assets (Pemetaan GIS & Geocoding Lokasi Mitra/Kolam) -->
     <link rel="stylesheet" href="{{ asset('leaflet/leaflet.css') }}" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
     <script src="{{ asset('leaflet/leaflet.js') }}"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
-    <!-- Alpine.js (with Collapse Plugin) -->
+    
+    <!-- Alpine.js (State Management Reaktif di Frontend) -->
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <!-- SweetAlert2 (Modal Dialog & Notifikasi Konfirmasi di Tengah) -->
+    
+    {{-- SweetAlert2 (Modal Dialog & Toast Notifikasi Elegan) --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .swal2-popup {
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
+            border-radius: 1.25rem !important;
+            padding: 1.5rem !important;
+            box-shadow: 0 25px 50px -12px rgba(11, 25, 44, 0.25) !important;
+            border: 1px solid rgba(226, 232, 240, 0.8) !important;
+        }
+        .swal2-title {
+            font-size: 1.15rem !important;
+            font-weight: 800 !important;
+            color: #0F2C59 !important;
+            letter-spacing: -0.02em !important;
+        }
+        .swal2-html-container {
+            font-size: 0.875rem !important;
+            color: #475569 !important;
+            font-weight: 500 !important;
+            line-height: 1.5 !important;
+            margin-top: 0.5rem !important;
+        }
+        .swal2-confirm {
+            background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%) !important;
+            border-radius: 0.75rem !important;
+            font-size: 0.8125rem !important;
+            font-weight: 700 !important;
+            padding: 0.65rem 1.5rem !important;
+            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35) !important;
+            transition: all 0.2s ease !important;
+        }
+        .swal2-confirm:hover {
+            transform: translateY(-1px) !important;
+            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45) !important;
+        }
+        .swal2-cancel {
+            background-color: #f1f5f9 !important;
+            color: #64748b !important;
+            border-radius: 0.75rem !important;
+            font-size: 0.8125rem !important;
+            font-weight: 700 !important;
+            padding: 0.65rem 1.5rem !important;
+            transition: all 0.2s ease !important;
+        }
+        .swal2-cancel:hover {
+            background-color: #e2e8f0 !important;
+            color: #334155 !important;
+        }
+        .swal2-toast {
+            border-radius: 1rem !important;
+            padding: 0.875rem 1.25rem !important;
+            box-shadow: 0 15px 30px -5px rgba(11, 25, 44, 0.2) !important;
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
+        }
+        .swal2-toast .swal2-title {
+            font-size: 0.875rem !important;
+            font-weight: 700 !important;
+        }
+    </style>
     <script>
+        /**
+         * Global SweetAlert2 & Toast System
+         * Menyediakan notifikasi popup, toast modern, konfirmasi aksi, dan auto-interceptor alert()
+         */
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        window.triggerToast = function(message, type = 'success') {
+            if (window.Swal) {
+                Toast.fire({
+                    icon: type,
+                    title: message
+                });
+            } else {
+                console.log(`[Toast ${type}]: ${message}`);
+            }
+        };
+
         window.AppSwal = {
+            toast(message, type = 'success') {
+                return window.triggerToast(message, type);
+            },
             success(title, text) {
                 if (window.Swal) {
                     return Swal.fire({
                         icon: 'success',
                         title: title || 'Berhasil!',
                         text: text,
-                        confirmButtonColor: '#0284C7',
-                        confirmButtonText: 'Selesai',
-                        customClass: {
-                            popup: 'rounded-2xl shadow-2xl font-sans',
-                            confirmButton: 'px-5 py-2.5 rounded-xl font-bold text-xs shadow-md shadow-sky-600/20'
-                        }
+                        confirmButtonText: 'Selesai'
                     });
                 }
                 alert((title ? title + '\n' : '') + text);
@@ -49,12 +149,7 @@
                         icon: 'error',
                         title: title || 'Terjadi Kesalahan',
                         text: text,
-                        confirmButtonColor: '#ef4444',
-                        confirmButtonText: 'Tutup',
-                        customClass: {
-                            popup: 'rounded-2xl shadow-2xl font-sans',
-                            confirmButton: 'px-5 py-2.5 rounded-xl font-bold text-xs'
-                        }
+                        confirmButtonText: 'Tutup'
                     });
                 }
                 alert((title ? title + '\n' : '') + text);
@@ -66,34 +161,22 @@
                         icon: 'warning',
                         title: title || 'Perhatian',
                         text: text,
-                        confirmButtonColor: '#0284C7',
-                        confirmButtonText: 'Mengerti',
-                        customClass: {
-                            popup: 'rounded-2xl shadow-2xl font-sans',
-                            confirmButton: 'px-5 py-2.5 rounded-xl font-bold text-xs'
-                        }
+                        confirmButtonText: 'Mengerti'
                     });
                 }
                 alert((title ? title + '\n' : '') + text);
                 return Promise.resolve({ isConfirmed: true });
             },
-            confirm({ title, text, confirmText = 'Ya, Lanjutkan', cancelText = 'Batal', icon = 'question', confirmColor = '#0284C7' }) {
+            confirm({ title, text, confirmText = 'Ya, Lanjutkan', cancelText = 'Batal', icon = 'question', confirmColor }) {
                 if (window.Swal) {
                     return Swal.fire({
                         title: title || 'Konfirmasi',
                         text: text,
                         icon: icon,
                         showCancelButton: true,
-                        confirmButtonColor: confirmColor,
-                        cancelButtonColor: '#94a3b8',
                         confirmButtonText: confirmText,
                         cancelButtonText: cancelText,
-                        reverseButtons: true,
-                        customClass: {
-                            popup: 'rounded-2xl shadow-2xl font-sans',
-                            confirmButton: 'px-5 py-2.5 rounded-xl font-bold text-xs shadow-md',
-                            cancelButton: 'px-5 py-2.5 rounded-xl font-bold text-xs'
-                        }
+                        reverseButtons: true
                     });
                 }
                 const res = confirm((title ? title + '\n' : '') + text);
@@ -101,29 +184,41 @@
             }
         };
 
-        // Intercept native browser alert to display modern centered modal popup
+        // Intercept native browser alert -> Mengubah alert browser default menjadi modern SweetAlert2/Toast
         const _nativeAlert = window.alert;
         window.alert = function(message) {
-            if (window.Swal) {
-                Swal.fire({
-                    title: 'Pemberitahuan',
-                    text: message,
-                    icon: 'info',
-                    confirmButtonColor: '#0284C7',
-                    confirmButtonText: 'Mengerti',
-                    customClass: {
-                        popup: 'rounded-2xl shadow-2xl font-sans',
-                        confirmButton: 'px-5 py-2.5 rounded-xl font-bold text-xs shadow-md'
-                    }
-                });
-            } else if (_nativeAlert) {
-                _nativeAlert(message);
+            if (!window.Swal) {
+                if (_nativeAlert) _nativeAlert(message);
+                return;
             }
+            const msgLower = (message || '').toString().toLowerCase();
+            let iconType = 'info';
+            let titleText = 'Pemberitahuan';
+
+            if (msgLower.includes('berhasil') || msgLower.includes('sukses') || msgLower.includes('terpotong') || msgLower.includes('disimpan')) {
+                iconType = 'success';
+                titleText = 'Berhasil!';
+                Toast.fire({ icon: 'success', title: message });
+                return;
+            } else if (msgLower.includes('gagal') || msgLower.includes('kesalahan') || msgLower.includes('error') || msgLower.includes('rusak')) {
+                iconType = 'error';
+                titleText = 'Gagal!';
+            } else if (msgLower.includes('perhatian') || msgLower.includes('wajib') || msgLower.includes('harus') || msgLower.includes('tidak boleh') || msgLower.includes('pilih') || msgLower.includes('silakan')) {
+                iconType = 'warning';
+                titleText = 'Perhatian';
+            }
+
+            Swal.fire({
+                title: titleText,
+                text: message,
+                icon: iconType,
+                confirmButtonText: 'Mengerti'
+            });
         };
     </script>
-    <!-- Tailwind CSS CDN Fallback -->
+    
+    <!-- Tailwind CSS (Konfigurasi Palette & Custom Theme) -->
     <script src="https://cdn.tailwindcss.com"></script>
-
     <script>
         tailwind.config = {
             theme: {
@@ -139,7 +234,10 @@
             }
         }
     </script>
+    
+    {{-- Laravel Vite Compilation (CSS & JS Utama) --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
     <style>
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -157,7 +255,7 @@
             font-weight: 600;
             box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
         }
-        /* Custom scrollbar */
+        /* Custom Scrollbar Styling */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -179,9 +277,16 @@
 </head>
 <body class="antialiased text-slate-800 bg-slate-50 min-h-screen" x-data="{ sidebarOpen: false }">
 
+    {{-- =========================================================================
+        2. STRUKTUR UTAMA APLIKASI (APP SHELL)
+        Terdiri dari:
+        A. Backdrop Mobile (Penutup layar saat sidebar mobile terbuka)
+        B. Sidebar Navigasi (Menu utama, accordion submenu, status route aktif)
+        C. Main Content Container (Header navbar atas + Area konten halaman @yield)
+    ========================================================================= --}}
     <div class="flex h-screen overflow-hidden">
         
-        <!-- Mobile Sidebar Backdrop -->
+        {{-- A. Mobile Sidebar Backdrop --}}
         <div x-show="sidebarOpen" 
              x-transition:enter="transition-opacity ease-linear duration-300"
              x-transition:enter-start="opacity-0"
@@ -192,11 +297,11 @@
              @click="sidebarOpen = false"
              class="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-sm lg:hidden"></div>
 
-        <!-- Sidebar Navigation -->
+        {{-- B. Sidebar Navigasi (Menu Samping) --}}
         <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" 
                class="fixed inset-y-0 left-0 z-50 w-64 bg-[#031B4E] text-white flex flex-col transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 shrink-0 shadow-2xl">
             
-            <!-- App Branding -->
+            {{-- Branding / Logo Header Sidebar --}}
             <div class="h-20 px-5 flex items-center justify-between border-b border-white/10">
                 <a href="{{ route('dashboard') }}" class="flex items-center gap-3">
                     <img src="{{ asset('images/Logo aquafarm.png') }}" 
@@ -212,22 +317,22 @@
                 </button>
             </div>
 
-            <!-- Navigation Links -->
+            {{-- Menu Link & Accordion Group Navigasi --}}
             <nav class="flex-1 px-3.5 py-6 overflow-y-auto space-y-1.5"
                  x-data="{
-                    openMaster: {{ (request()->routeIs('ikan*') || request()->routeIs('petugas*') || request()->routeIs('mitra*')) ? 'true' : 'false' }},
+                    openMaster: {{ (request()->routeIs('ikan*') || request()->routeIs('petugas*') || request()->routeIs('mitra*') || request()->routeIs('stok-pakan*')) ? 'true' : 'false' }},
                     openBudidaya: {{ (request()->routeIs('pembibitan*') || request()->routeIs('pembesaran*') || request()->routeIs('pembudidaya*') || request()->routeIs('log-pakan*')) ? 'true' : 'false' }},
                     openKeuangan: {{ request()->routeIs('keuangan*') ? 'true' : 'false' }}
                  }">
                 
-                <!-- 1. Dashboard -->
+                {{-- 1. Dashboard --}}
                 <a href="{{ route('dashboard') }}" 
                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 text-xs font-semibold {{ request()->routeIs('dashboard') ? 'bg-[#0284C7] text-white shadow-md shadow-sky-600/30' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}">
                     <i class="fa-solid fa-table-cells-large text-sm w-5 text-center"></i>
                     <span>Dashboard</span>
                 </a>
 
-                <!-- 2. Master Data (Accordion) -->
+                {{-- 2. Master Data (Accordion) --}}
                 <div class="space-y-1">
                     <button type="button" 
                             @click="openMaster = !openMaster" 
@@ -239,11 +344,17 @@
                         <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 inline-block transition-transform duration-200" :style="openMaster ? 'transform: rotate(180deg);' : 'transform: rotate(0deg);'"></i>
                     </button>
                     
-                    <!-- Submenu Master Data -->
+                    {{-- Submenu Master Data --}}
                     <div x-show="openMaster" 
                          x-collapse
                          class="pl-4 pr-1 space-y-1 pt-1 pb-1 ml-4 border-l border-white/15">
                         
+                        <a href="{{ route('stok-pakan') }}" 
+                           class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium {{ request()->routeIs('stok-pakan*') ? 'bg-[#0284C7] text-white font-bold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/5' }}">
+                            <i class="fa-solid fa-boxes-stacked text-xs w-4 text-center"></i>
+                            <span>Master Stok Pakan</span>
+                        </a>
+
                         <a href="{{ route('ikan') }}" 
                            class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium {{ request()->routeIs('ikan*') ? 'bg-[#0284C7] text-white font-bold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/5' }}">
                             <i class="fa-solid fa-fish text-xs w-4 text-center"></i>
@@ -264,7 +375,7 @@
                     </div>
                 </div>
 
-                <!-- 3. Budidaya & Operasional (Accordion) -->
+                {{-- 3. Budidaya & Operasional (Accordion) --}}
                 <div class="space-y-1">
                     <button type="button" 
                             @click="openBudidaya = !openBudidaya" 
@@ -276,7 +387,7 @@
                         <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 inline-block transition-transform duration-200" :style="openBudidaya ? 'transform: rotate(180deg);' : 'transform: rotate(0deg);'"></i>
                     </button>
                     
-                    <!-- Submenu Budidaya -->
+                    {{-- Submenu Budidaya --}}
                     <div x-show="openBudidaya" 
                          x-collapse
                          class="pl-4 pr-1 space-y-1 pt-1 pb-1 ml-4 border-l border-white/15">
@@ -301,14 +412,14 @@
                     </div>
                 </div>
 
-                <!-- 4. Distribusi & Order (Single) -->
+                {{-- 4. Distribusi & Order (Single) --}}
                 <a href="{{ route('distribusi') }}" 
                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 text-xs font-semibold {{ request()->routeIs('distribusi*') ? 'bg-[#0284C7] text-white shadow-md shadow-sky-600/30' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}">
                     <i class="fa-solid fa-truck text-sm w-5 text-center"></i>
                     <span>Distribusi & Order</span>
                 </a>
 
-                <!-- 5. Keuangan (Accordion) -->
+                {{-- 5. Keuangan (Accordion) --}}
                 <div class="space-y-1">
                     <button type="button" 
                             @click="openKeuangan = !openKeuangan" 
@@ -320,7 +431,7 @@
                         <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 inline-block transition-transform duration-200" :style="openKeuangan ? 'transform: rotate(180deg);' : 'transform: rotate(0deg);'"></i>
                     </button>
                     
-                    <!-- Submenu Keuangan -->
+                    {{-- Submenu Keuangan --}}
                     <div x-show="openKeuangan" 
                          x-collapse
                          class="pl-4 pr-1 space-y-1 pt-1 pb-1 ml-4 border-l border-white/15">
@@ -341,19 +452,20 @@
             </nav>
         </aside>
 
-        <!-- Main Content Area -->
+        {{-- C. Main Content Area (Header Navbar + Dynamic Content) --}}
         <div class="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#F4F7FA]">
 
-            <!-- Top Header Bar -->
+            {{-- 1. Top Header Navbar --}}
             <header class="h-16 bg-white border-b border-slate-200/80 px-6 flex items-center justify-between sticky top-0 z-30 shadow-xs">
+                {{-- Sisi Kiri Header: Hamburger Mobile Button & Greeting User --}}
                 <div class="flex items-center gap-4">
-                    <button @click="sidebarOpen = true" class="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
+                    <button @click="sidebarOpen = true" class="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-xl transition-colors" title="Buka Menu">
                         <i class="fa-solid fa-bars text-lg"></i>
                     </button>
                     <span class="text-xs sm:text-sm font-medium text-slate-600">Selamat Datang, <strong>{{ Auth::user()->nama ?? 'Manajer' }}</strong></span>
                 </div>
                 
-                <!-- Profile Dropdown (Top-Right) -->
+                {{-- Sisi Kanan Header: Profile & Account Dropdown Menu (Alpine.js) --}}
                 <div class="relative" x-data="{ open: false }">
                     <button @click="open = !open" 
                             type="button" 
@@ -365,7 +477,7 @@
                         <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 group-hover:text-slate-600 inline-block transition-transform duration-200" :style="open ? 'transform: rotate(180deg);' : 'transform: rotate(0deg);'"></i>
                     </button>
 
-                    <!-- Dropdown Menu -->
+                    {{-- Dropdown Content --}}
                     <div x-show="open" 
                          @click.outside="open = false"
                          x-transition:enter="transition ease-out duration-150"
@@ -377,7 +489,7 @@
                          x-cloak
                          class="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-50 divide-y divide-slate-100">
                         
-                        <!-- User Info Header -->
+                        {{-- Header User Ringkas --}}
                         <div class="px-4 py-3 bg-slate-50/70">
                             <p class="text-xs font-bold text-slate-800 truncate">{{ Auth::user()->nama ?? 'Manajer' }}</p>
                             <p class="text-[11px] text-slate-500 truncate font-medium mt-0.5">{{ Auth::user()->email ?? '-' }}</p>
@@ -386,7 +498,7 @@
                             </span>
                         </div>
 
-                        <!-- Menu Options -->
+                        {{-- Opsi Pengaturan Profil --}}
                         <div class="py-1">
                             <a href="{{ route('pengaturan') }}" 
                                @click="open = false"
@@ -396,7 +508,7 @@
                             </a>
                         </div>
 
-                        <!-- Logout Option -->
+                        {{-- Opsi Logout Form --}}
                         <div class="py-1">
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
@@ -411,7 +523,7 @@
                 </div>
             </header>
 
-            <!-- Page Content -->
+            {{-- 2. Area Konten Utama Halaman (@yield('content')) --}}
             <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
                 @yield('content')
             </main>

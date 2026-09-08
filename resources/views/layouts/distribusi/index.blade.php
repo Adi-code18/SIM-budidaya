@@ -160,9 +160,105 @@
                         </div>
                     </div>
 
+                    <div x-show="form.totalBerat && Number(form.totalBerat) > 0 && form.id_pembesaran" class="pt-2">
+                        <!-- Skenario A: Stok Utama Mencukupi (Surplus Masuk Buffer) -->
+                        <template x-if="Number(form.totalBerat) <= Number(form.stok_biomassa || 0)">
+                            <div class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs space-y-1 shadow-xs">
+                                <div class="flex items-center gap-2 font-extrabold text-emerald-800">
+                                    <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                                    <span>Stok Kolam Utama Mencukupi (Surplus ke Buffer Pemberokan)</span>
+                                </div>
+                                <p class="text-[11px] text-emerald-700 leading-relaxed">
+                                    Pesanan <strong x-text="Number(form.totalBerat).toLocaleString('id-ID') + ' kg'"></strong> terpenuhi penuh dari batch ini. Sisa panen <strong x-text="'+' + (Number(form.stok_biomassa) - Number(form.totalBerat)).toLocaleString('id-ID') + ' kg'"></strong> akan otomatis ditampung di <strong>Buffer Stok Kolam Pemberokan / Cold Storage</strong>.
+                                </p>
+                            </div>
+                        </template>
+
+                        <!-- Skenario B: Stok Utama Kurang (Defisit Dipenuhi Cross-Batch / Buffer) -->
+                        <template x-if="Number(form.totalBerat) > Number(form.stok_biomassa || 0)">
+                            <div class="p-4 rounded-2xl bg-sky-50/80 border border-sky-200 text-sky-950 text-xs space-y-3.5 shadow-xs">
+                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-sky-200/70 pb-2.5">
+                                    <div class="flex items-center gap-2 font-extrabold text-sky-900">
+                                        <i class="fa-solid fa-arrows-split-up-and-left text-sky-600"></i>
+                                        <span>Alokasi Sumber Tambahan (Defisit Terdeteksi)</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="px-2 py-0.5 rounded-md bg-rose-100 border border-rose-200 text-rose-800 text-[10px] font-extrabold">
+                                            Defisit: <span x-text="'-' + defisitKg.toLocaleString('id-ID') + ' kg'"></span>
+                                        </span>
+                                        <button type="button" @click="autoFillDefisitFromBuffer()" class="px-2.5 py-1 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-[10px] font-bold shadow-2xs transition-all flex items-center gap-1 cursor-pointer">
+                                            <i class="fa-solid fa-wand-magic-sparkles text-[9px]"></i>
+                                            <span>Penuhi dari Kolam Stok</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <p class="text-[11px] text-sky-800 leading-relaxed">
+                                    Stok kolam utama <strong x-text="form.kolam_asal || 'Kolam Utama'"></strong> hanya tersedia <strong x-text="Number(form.stok_biomassa || 0).toLocaleString('id-ID') + ' kg'"></strong>. Silakan tentukan sumber pemenuhan sisa <strong class="text-rose-700" x-text="defisitKg.toLocaleString('id-ID') + ' kg'"></strong>:
+                                </p>
+
+                                <!-- Multi-Source Input Rows -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-white p-3.5 rounded-xl border border-sky-100">
+                                    <!-- Source 1: Kolam Stok / Buffer -->
+                                    <div class="space-y-1.5">
+                                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 block flex items-center gap-1">
+                                            <i class="fa-solid fa-boxes-stacked text-sky-600"></i>
+                                            <span>1. AMBIL DARI KOLAM STOK / BUFFER</span>
+                                        </label>
+                                        <select x-model="alokasi.id_batch_buffer" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-sky-500">
+                                            <option value="">-- Pilih Kolam Stok / Buffer --</option>
+                                            <template x-for="b in availableBufferBatches" :key="b.id_pembesaran">
+                                                <option :value="b.id_pembesaran" x-text="b.label"></option>
+                                            </template>
+                                        </select>
+                                        <div class="flex items-center gap-1.5">
+                                            <input type="number" step="0.1" min="0" x-model="alokasi.buffer_kg" placeholder="0.0" class="flex-1 px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-sky-800 bg-white focus:outline-none focus:ring-1 focus:ring-sky-500">
+                                            <span class="text-[11px] font-bold text-slate-400">kg</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Source 2: Kolam Pembesaran Lain (Cross-Batch) -->
+                                    <div class="space-y-1.5">
+                                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 block flex items-center gap-1">
+                                            <i class="fa-solid fa-shuffle text-emerald-600"></i>
+                                            <span>2. AMBIL DARI KOLAM LAIN (CROSS-BATCH)</span>
+                                        </label>
+                                        <select x-model="alokasi.id_batch_cross" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                            <option value="">-- Pilih Batch Kolam Lain --</option>
+                                            <template x-for="b in availableCrossBatches" :key="b.id_pembesaran">
+                                                <option :value="b.id_pembesaran" x-text="b.label"></option>
+                                            </template>
+                                        </select>
+                                        <div class="flex items-center gap-1.5">
+                                            <input type="number" step="0.1" min="0" x-model="alokasi.cross_kg" placeholder="0.0" class="flex-1 px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-emerald-800 bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                            <span class="text-[11px] font-bold text-slate-400">kg</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Live Fulfillment Balance Bar -->
+                                <div class="p-2.5 rounded-xl border flex flex-wrap items-center justify-between gap-2"
+                                     :class="totalAlokasiKg >= Number(form.totalBerat) ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-amber-50 border-amber-200 text-amber-900'">
+                                    <div class="flex items-center gap-2 text-[11px] font-bold">
+                                        <i class="fa-solid" :class="totalAlokasiKg >= Number(form.totalBerat) ? 'fa-circle-check text-emerald-600' : 'fa-triangle-exclamation text-amber-600'"></i>
+                                        <span>Status Alokasi: <strong x-text="totalAlokasiKg.toLocaleString('id-ID') + ' / ' + Number(form.totalBerat).toLocaleString('id-ID') + ' kg'"></strong></span>
+                                    </div>
+                                    <div>
+                                        <template x-if="totalAlokasiKg >= Number(form.totalBerat)">
+                                            <span class="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-extrabold">✓ Terpenuhi Lengkap</span>
+                                        </template>
+                                        <template x-if="totalAlokasiKg < Number(form.totalBerat)">
+                                            <span class="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 text-[10px] font-extrabold" x-text="'Kurang ' + (Number(form.totalBerat) - totalAlokasiKg).toLocaleString('id-ID') + ' kg lagi'"></span>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
                     <p class="text-[10px] text-slate-400 italic flex items-center gap-1">
                         <i class="fa-solid fa-circle-info text-sky-400"></i>
-                        *Harga per kg: <strong>Otomatis Dihitung</strong>
+                        *Harga per kg: <strong>Otomatis Dihitung Sesuai Berat Muat</strong>
                     </p>
                 </div>
 
@@ -185,6 +281,31 @@
     </div>
 
     <!-- ========= DIRECTORY / LIST MODE ========= -->
+
+    <!-- Info Banner Buffer & Cross-Batch System (Solid Clean Theme) -->
+    <div x-show="!showForm" class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div class="flex items-center gap-3.5">
+            <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-700 border border-sky-200 flex items-center justify-center shrink-0 text-lg">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div>
+                <h4 class="text-xs sm:text-sm font-extrabold tracking-wide uppercase text-slate-900">BUFFER STOK PEMBEROKAN &amp; CROSS-BATCH FULFILLMENT</h4>
+                <p class="text-xs text-slate-500 font-medium mt-0.5">
+                    Surplus panen otomatis masuk buffer pemberokan, sedangkan defisit order mitra terpenuhi melalui pasokan lintas kolam (*zero backorder*).
+                </p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3 shrink-0">
+            <div class="px-3.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-center">
+                <span class="text-[9px] uppercase tracking-wider text-slate-400 block font-extrabold">STOK SIAP PANEN</span>
+                <span class="text-xs font-extrabold text-slate-900">{{ number_format($totalStokSiapPanen ?? 0, 0, ',', '.') }} kg</span>
+            </div>
+            <div class="px-3.5 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-center">
+                <span class="text-[9px] uppercase tracking-wider text-emerald-700 block font-extrabold">BUFFER PEMBEROKAN</span>
+                <span class="text-xs font-extrabold text-emerald-800">{{ number_format($totalBufferPemberokan ?? 0, 0, ',', '.') }} kg</span>
+            </div>
+        </div>
+    </div>
 
     <!-- 4 Top Metric KPI Cards Grid -->
     <div x-show="!showForm" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -410,6 +531,40 @@ function distribusiComponent() {
         mitraList: {!! json_encode($mitraList ?? []) !!},
         batches: {!! json_encode($batches ?? []) !!},
 
+        alokasi: {
+            buffer_kg: '',
+            id_batch_buffer: '',
+            cross_kg: '',
+            id_batch_cross: ''
+        },
+
+        get availableBufferBatches() {
+            return (this.batches || []).filter(b => (b.is_stok || (b.kolam && (b.kolam.toLowerCase().includes('stok') || b.kolam.toLowerCase().includes('pemberokan') || b.kolam.toLowerCase().includes('penampungan')))) && b.id_pembesaran != this.form.id_pembesaran);
+        },
+
+        get availableCrossBatches() {
+            return (this.batches || []).filter(b => b.id_pembesaran != this.form.id_pembesaran && b.id_pembesaran != this.alokasi.id_batch_buffer);
+        },
+
+        get defisitKg() {
+            return Math.max(0, Number(this.form.totalBerat || 0) - Number(this.form.stok_biomassa || 0));
+        },
+
+        get totalAlokasiKg() {
+            const utama = Math.min(Number(this.form.totalBerat || 0), Number(this.form.stok_biomassa || 0));
+            const buf = Number(this.alokasi.buffer_kg || 0);
+            const crs = Number(this.alokasi.cross_kg || 0);
+            return Number((utama + buf + crs).toFixed(1));
+        },
+
+        autoFillDefisitFromBuffer() {
+            const deficit = this.defisitKg;
+            this.alokasi.buffer_kg = deficit;
+            if (!this.alokasi.id_batch_buffer && this.availableBufferBatches.length > 0) {
+                this.alokasi.id_batch_buffer = this.availableBufferBatches[0].id_pembesaran;
+            }
+        },
+
         form: {
             id: '#ORD-2023-0001',
             id_transaksi: null,
@@ -502,6 +657,9 @@ function distribusiComponent() {
                 if (this.form.totalBerat && Number(this.form.totalBerat) > 0 && !this.form.totalHarga) {
                     this.form.totalHarga = 'Rp ' + (Number(this.form.totalBerat) * 35000).toLocaleString('id-ID');
                 }
+                if (!this.alokasi.id_batch_buffer && this.availableBufferBatches.length > 0) {
+                    this.alokasi.id_batch_buffer = this.availableBufferBatches[0].id_pembesaran;
+                }
             } else {
                 this.form.jenis_ikan = '';
                 this.form.kolam_asal = '';
@@ -512,6 +670,12 @@ function distribusiComponent() {
         openCreateForm() {
             this.formMode = 'create';
             this.showForm = true;
+            this.alokasi = {
+                buffer_kg: '',
+                id_batch_buffer: this.availableBufferBatches.length > 0 ? this.availableBufferBatches[0].id_pembesaran : '',
+                cross_kg: '',
+                id_batch_cross: ''
+            };
             this.form = {
                 id: '#ORD-2023-' + String(this.orders.length + 1).padStart(4, '0'),
                 id_transaksi: null,
@@ -598,6 +762,30 @@ function distribusiComponent() {
                 const totalKg = Number(this.form.totalBerat);
                 const hargaTotal = this.form.totalHarga ? Number(String(this.form.totalHarga).replace(/[^0-9]/g, '')) : (totalKg * 35000);
 
+                const payload = {
+                    id_mitra: this.form.id_mitra,
+                    id_pembesaran: this.form.id_pembesaran,
+                    tanggal_order: this.form.tanggal,
+                    Total_kg: totalKg,
+                    harga_total: hargaTotal,
+                    Jenis_order: this.form.jenis_ikan || this.form.jenisOrder,
+                    status_order: this.form.status
+                };
+
+                if (totalKg > Number(this.form.stok_biomassa || 0)) {
+                    const selBuf = this.batches.find(b => b.id_pembesaran == this.alokasi.id_batch_buffer);
+                    const selCross = this.batches.find(b => b.id_pembesaran == this.alokasi.id_batch_cross);
+                    payload.alokasi_detail = {
+                        utama_kg: Math.min(totalKg, Number(this.form.stok_biomassa || 0)),
+                        buffer_kg: Number(this.alokasi.buffer_kg || 0),
+                        id_batch_buffer: this.alokasi.id_batch_buffer,
+                        buffer_nama: selBuf ? (selBuf.kolam || selBuf.label) : 'Kolam Stok',
+                        cross_kg: Number(this.alokasi.cross_kg || 0),
+                        id_batch_cross: this.alokasi.id_batch_cross,
+                        cross_nama: selCross ? (selCross.kolam || selCross.label) : 'Cross-Batch',
+                    };
+                }
+
                 try {
                     const res = await fetch('{{ route('distribusi.store') }}', {
                         method: 'POST',
@@ -606,20 +794,31 @@ function distribusiComponent() {
                             'Accept': 'application/json',
                             'X-CSRF-TOKEN': '{{ csrf_token() }}'
                         },
-                        body: JSON.stringify({
-                            id_mitra: this.form.id_mitra,
-                            id_pembesaran: this.form.id_pembesaran,
-                            tanggal_order: this.form.tanggal,
-                            Total_kg: totalKg,
-                            harga_total: hargaTotal,
-                            Jenis_order: this.form.jenis_ikan || this.form.jenisOrder,
-                            status_order: this.form.status
-                        })
+                        body: JSON.stringify(payload)
                     });
                     const data = await res.json();
                     if (res.ok && data.success) {
                         const newTrx = data.transaksi;
                         const matchedBatch = this.batches.find(b => b.id_pembesaran == this.form.id_pembesaran);
+                        
+                        // Deduct local stocks
+                        if (matchedBatch) {
+                            const takenUtama = Math.min(totalKg, Number(this.form.stok_biomassa || 0));
+                            matchedBatch.biomassa_est = Math.max(0, matchedBatch.biomassa_est - takenUtama);
+                        }
+                        if (payload.alokasi_detail && payload.alokasi_detail.id_batch_buffer) {
+                            const bBuf = this.batches.find(b => b.id_pembesaran == payload.alokasi_detail.id_batch_buffer);
+                            if (bBuf) {
+                                bBuf.biomassa_est = Math.max(0, bBuf.biomassa_est - payload.alokasi_detail.buffer_kg);
+                            }
+                        }
+                        if (payload.alokasi_detail && payload.alokasi_detail.id_batch_cross) {
+                            const bCrs = this.batches.find(b => b.id_pembesaran == payload.alokasi_detail.id_batch_cross);
+                            if (bCrs) {
+                                bCrs.biomassa_est = Math.max(0, bCrs.biomassa_est - payload.alokasi_detail.cross_kg);
+                            }
+                        }
+
                         this.orders.unshift({
                             id_transaksi: newTrx.id_transaksi,
                             id: '#ORD-2023-' + String(newTrx.id_transaksi).padStart(4, '0'),
@@ -630,7 +829,7 @@ function distribusiComponent() {
                             total_kg: totalKg,
                             harga_total: hargaTotal,
                             harga_format: 'Rp ' + Number(hargaTotal).toLocaleString('id-ID'),
-                            jenis_ikan: this.form.jenis_ikan || (newTrx.batch_pembesaran ? newTrx.batch_pembesaran.jenis_ikan : 'Ikan Segar'),
+                            jenis_ikan: newTrx.Jenis_order || this.form.jenis_ikan || 'Ikan Segar',
                             kolam_asal: this.form.kolam_asal,
                             batch_code: this.form.id_pembesaran ? ('#PB-' + String(this.form.id_pembesaran).padStart(5, '0')) : null,
                             status: this.form.status,

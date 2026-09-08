@@ -6,7 +6,14 @@ $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 use App\Models\TransaksiDistribusi;
 use App\Models\MitraDistributor;
 
-echo "--- MITRA DISTRIBUTOR ---\n";
+use App\Models\Kolam;
+
+echo "--- KOLAM LIST ---\n";
+foreach (Kolam::all() as $k) {
+    echo "ID: {$k->id_kolam} | Nama: {$k->nama_kolam} | Tipe: {$k->tipe_kolam} | Status: {$k->status}\n";
+}
+
+echo "\n--- MITRA DISTRIBUTOR ---\n";
 foreach (MitraDistributor::all() as $m) {
     echo "ID: {$m->id_mitra} | Nama: {$m->nama_mitra} | Tipe: {$m->tipe_mitra}\n";
 }

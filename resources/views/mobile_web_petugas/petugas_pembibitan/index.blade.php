@@ -105,11 +105,24 @@
                             <i class="fa-solid {{ $isWaspada ? 'fa-triangle-exclamation text-rose-500' : 'fa-fish text-slate-500' }}"></i>
                         </div>
                         <div>
-                            <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-1.5 flex-wrap">
                                 <h4 class="text-xs font-extrabold text-navy-900">{{ $batchCode }}</h4>
                                 <span class="px-2 py-0.2 rounded-full text-[9px] font-extrabold {{ $isWaspada ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200' }}">
                                     {{ $isWaspada ? 'WASPADA' : 'SEHAT' }}
                                 </span>
+                                @if($b->status !== 'selesai' && $b->status !== 'gagal')
+                                    @if(in_array($b->id_kolam, $fedTodayKolamIds ?? []))
+                                        <span class="px-2 py-0.2 rounded-full text-[9px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1">
+                                            <i class="fa-solid fa-check text-[8px]"></i>
+                                            <span>Sudah Pakan</span>
+                                        </span>
+                                    @else
+                                        <span class="px-2 py-0.2 rounded-full text-[9px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200 inline-flex items-center gap-1">
+                                            <i class="fa-solid fa-clock text-[8px]"></i>
+                                            <span>Belum Pakan</span>
+                                        </span>
+                                    @endif
+                                @endif
                             </div>
                             <p class="text-[11px] text-slate-500 font-medium mt-0.5">{{ $kolamName }} / {{ $b->jenis_ikan }} • {{ number_format($populasi, 0, ',', '.') }} Ekor</p>
                         </div>
@@ -193,9 +206,25 @@
                                 <i class="fa-solid" :class="item.icon"></i>
                             </div>
                             <div>
-                                <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-1.5 flex-wrap">
                                     <h4 class="text-xs font-extrabold text-navy-900" x-text="item.id"></h4>
                                     <span class="px-2 py-0.2 rounded-full text-[9px] font-extrabold border" :class="item.statusClass" x-text="item.status"></span>
+                                    <template x-if="item.rawStatus !== 'selesai' && item.rawStatus !== 'gagal'">
+                                        <div>
+                                            <template x-if="item.isFedToday">
+                                                <span class="px-2 py-0.2 rounded-full text-[9px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1">
+                                                    <i class="fa-solid fa-check text-[8px]"></i>
+                                                    <span>Sudah Pakan</span>
+                                                </span>
+                                            </template>
+                                            <template x-if="!item.isFedToday">
+                                                <span class="px-2 py-0.2 rounded-full text-[9px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200 inline-flex items-center gap-1">
+                                                    <i class="fa-solid fa-clock text-[8px]"></i>
+                                                    <span>Belum Pakan</span>
+                                                </span>
+                                            </template>
+                                        </div>
+                                    </template>
                                 </div>
                                 <p class="text-[10px] text-slate-500 font-medium mt-0.5" x-text="item.detail + ' • ' + item.populasi"></p>
                             </div>
@@ -230,14 +259,17 @@ function petugasPembibitanComponent() {
         searchQuery: '',
 
         allBatches: {!! json_encode(
-            (isset($batches) ? $batches : collect())->map(function($b) {
+            (isset($batches) ? $batches : collect())->map(function($b) use ($fedTodayKolamIds) {
                 $days = $b->tgl_pemijahan ? (int) abs(\Carbon\Carbon::parse($b->tgl_pemijahan)->startOfDay()->diffInDays(now()->startOfDay())) : 0;
                 $isWaspada = $b->jumlah_kematian > 3000;
+                $isFedToday = in_array($b->id_kolam, $fedTodayKolamIds ?? []);
                 return [
                     'id' => 'Batch-H-' . str_pad($b->id_batch, 3, '0', STR_PAD_LEFT),
                     'status' => $isWaspada ? 'WASPADA' : 'SEHAT',
                     'statusClass' => $isWaspada ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200',
                     'dotColor' => $isWaspada ? 'bg-rose-500' : 'bg-emerald-500',
+                    'isFedToday' => $isFedToday,
+                    'rawStatus' => strtolower($b->status ?? 'aktif'),
                     'detail' => ($b->kolam ? $b->kolam->nama_kolam : 'Hatchery') . ' / ' . $b->jenis_ikan,
                     'populasi' => number_format($b->jumlah_bibitAwal - $b->jumlah_kematian, 0, ',', '.') . ' Ekor',
                     'umur' => $days . ' Hari (DOC)',

@@ -404,71 +404,80 @@
                         <!-- Action Buttons -->
                         <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
                             <span class="text-[11px] text-slate-400 font-medium" x-text="'pH ' + item.ph_air + ' • Tgl: ' + item.tgl_tebar"></span>
-                            <div class="relative inline-block text-left" 
-                                 x-data="{ 
-                                     open: false,
-                                     menuStyle: '',
-                                     toggle(e) {
-                                         this.open = !this.open;
-                                         if (this.open) {
-                                             const rect = this.$refs.btn.getBoundingClientRect();
-                                             const spaceBelow = window.innerHeight - rect.bottom;
-                                             const menuH = 175;
-                                             const openUp = spaceBelow < menuH && rect.top > menuH;
-                                             const topPos = openUp ? (rect.top - menuH - 4) : (rect.bottom + 4);
-                                             const rightPos = window.innerWidth - rect.right;
-                                             this.menuStyle = `position: fixed; z-index: 99999; top: ${topPos}px; right: ${rightPos}px;`;
+                            <div class="flex items-center gap-1.5">
+                                <template x-if="item.status_siklus !== 'selesai'">
+                                    <button type="button" @click="triggerFinishHarvest(item)" class="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-[11px] flex items-center gap-1.5 transition-colors border border-emerald-200">
+                                        <i class="fa-solid fa-circle-check text-emerald-600 text-xs"></i>
+                                        <span>Selesaikan Panen</span>
+                                    </button>
+                                </template>
+
+                                <div class="relative inline-block text-left" 
+                                     x-data="{ 
+                                         open: false,
+                                         menuStyle: '',
+                                         toggle(e) {
+                                             this.open = !this.open;
+                                             if (this.open) {
+                                                 const rect = this.$refs.btn.getBoundingClientRect();
+                                                 const spaceBelow = window.innerHeight - rect.bottom;
+                                                 const menuH = 175;
+                                                 const openUp = spaceBelow < menuH && rect.top > menuH;
+                                                 const topPos = openUp ? (rect.top - menuH - 4) : (rect.bottom + 4);
+                                                 const rightPos = window.innerWidth - rect.right;
+                                                 this.menuStyle = `position: fixed; z-index: 99999; top: ${topPos}px; right: ${rightPos}px;`;
+                                             }
                                          }
-                                     }
-                                 }">
-                                <button x-ref="btn" 
-                                        type="button" 
-                                        @click="toggle($event)" 
-                                        @click.away="open = false" 
-                                        class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 inline-flex items-center justify-center transition-colors cursor-pointer">
-                                    <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
-                                </button>
-                                <div x-show="open" 
-                                     @scroll.window="open = false"
-                                     x-transition:enter="transition ease-out duration-100" 
-                                     x-transition:enter-start="transform opacity-0 scale-95" 
-                                     x-transition:enter-end="transform opacity-100 scale-100" 
-                                     x-transition:leave="transition ease-in duration-75" 
-                                     x-transition:leave-start="transform opacity-100 scale-100" 
-                                     x-transition:leave-end="transform opacity-0 scale-95" 
-                                     :style="menuStyle"
-                                     class="w-48 rounded-xl bg-white border border-slate-200 shadow-2xl py-1.5 text-left"
-                                     style="display: none;">
-                                    
-                                    <!-- Detail Batch -->
-                                    <button type="button" @click="open = false; openDetail(item)" class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
-                                        <i class="fa-solid fa-eye text-sky-600 w-4"></i>
-                                        <span>Detail Batch</span>
+                                     }">
+                                    <button x-ref="btn" 
+                                            type="button" 
+                                            @click="toggle($event)" 
+                                            @click.away="open = false" 
+                                            class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 inline-flex items-center justify-center transition-colors cursor-pointer">
+                                        <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
                                     </button>
-
-                                    <!-- Edit Batch (Hanya aktif jika belum selesai) -->
-                                    <template x-if="item.status_siklus !== 'selesai'">
-                                        <button type="button" @click="open = false; openEdit(item)" class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
-                                            <i class="fa-solid fa-pen-to-square text-amber-600 w-4"></i>
-                                            <span>Edit Batch</span>
+                                    <div x-show="open" 
+                                         @scroll.window="open = false"
+                                         x-transition:enter="transition ease-out duration-100" 
+                                         x-transition:enter-start="transform opacity-0 scale-95" 
+                                         x-transition:enter-end="transform opacity-100 scale-100" 
+                                         x-transition:leave="transition ease-in duration-75" 
+                                         x-transition:leave-start="transform opacity-100 scale-100" 
+                                         x-transition:leave-end="transform opacity-0 scale-95" 
+                                         :style="menuStyle"
+                                         class="w-48 rounded-xl bg-white border border-slate-200 shadow-2xl py-1.5 text-left"
+                                         style="display: none;">
+                                        
+                                        <!-- Detail Batch -->
+                                        <button type="button" @click="open = false; openDetail(item)" class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
+                                            <i class="fa-solid fa-eye text-sky-600 w-4"></i>
+                                            <span>Detail Batch</span>
                                         </button>
-                                    </template>
 
-                                    <!-- Selesaikan Panen (Hanya aktif jika belum selesai) -->
-                                    <template x-if="item.status_siklus !== 'selesai'">
-                                        <button type="button" @click="open = false; triggerFinishHarvest(item)" class="w-full px-3.5 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 flex items-center gap-2.5">
-                                            <i class="fa-solid fa-circle-check text-emerald-600 w-4"></i>
-                                            <span>Selesaikan Panen</span>
+                                        <!-- Edit Batch (Hanya aktif jika belum selesai) -->
+                                        <template x-if="item.status_siklus !== 'selesai'">
+                                            <button type="button" @click="open = false; openEdit(item)" class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
+                                                <i class="fa-solid fa-pen-to-square text-amber-600 w-4"></i>
+                                                <span>Edit Batch</span>
+                                            </button>
+                                        </template>
+
+                                        <!-- Selesaikan Panen (Hanya aktif jika belum selesai) -->
+                                        <template x-if="item.status_siklus !== 'selesai'">
+                                            <button type="button" @click="open = false; triggerFinishHarvest(item)" class="w-full px-3.5 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 flex items-center gap-2.5">
+                                                <i class="fa-solid fa-circle-check text-emerald-600 w-4"></i>
+                                                <span>Selesaikan Panen</span>
+                                            </button>
+                                        </template>
+
+                                        <div class="my-1 border-t border-slate-100"></div>
+
+                                        <!-- Hapus Batch -->
+                                        <button type="button" @click="open = false; deleteBatch(item)" class="w-full px-3.5 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2.5">
+                                            <i class="fa-solid fa-trash-can text-red-500 w-4"></i>
+                                            <span>Hapus Batch</span>
                                         </button>
-                                    </template>
-
-                                    <div class="my-1 border-t border-slate-100"></div>
-
-                                    <!-- Hapus Batch -->
-                                    <button type="button" @click="open = false; deleteBatch(item)" class="w-full px-3.5 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2.5">
-                                        <i class="fa-solid fa-trash-can text-red-500 w-4"></i>
-                                        <span>Hapus Batch</span>
-                                    </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -547,7 +556,7 @@
          style="display: none;">
         
         <div @click.outside="detailModalOpen = false" 
-             class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[90vh]">
+             class="bg-white w-full max-w-3xl rounded-3xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[90vh]">
             
             <!-- Modal Header Solid Navy -->
             <div class="p-6 bg-[#051B44] text-white flex items-center justify-between">
@@ -593,8 +602,9 @@
                         <span class="text-[10px] font-bold" :class="selectedBatch?.is_harvest_due ? 'text-rose-600' : 'text-slate-400'" x-text="selectedBatch?.is_harvest_due ? '⚠️ Waktunya Panen!' : 'Jadwal Panen'"></span>
                     </div>
 
+                    <div class="p-3 bg-sky-50/70 rounded-2xl border border-sky-100">
                         <span class="text-[10px] font-extrabold uppercase tracking-wider text-sky-800 block mb-0.5">KUALITAS AIR</span>
-                        <span class="font-extrabold text-[#0B2570] text-xs block" x-text="'pH Air ' + selectedBatch?.ph_air"></span>
+                        <span class="font-extrabold text-[#0B2570] text-xs block" x-text="'pH Air ' + (selectedBatch?.ph_air || '7.0')"></span>
                         <span class="text-[10px] text-emerald-700 font-bold">Kondisi Optimal</span>
                     </div>
                 </div>
@@ -742,41 +752,133 @@
              x-transition:leave="transition ease-in duration-150"
              x-transition:leave-start="opacity-100 scale-100 translate-y-0"
              x-transition:leave-end="opacity-0 scale-95 translate-y-3"
-             class="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-slate-100 p-6 space-y-4 text-center">
+             class="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-slate-100 p-6 space-y-4 text-center">
             
             <div class="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 mx-auto flex items-center justify-center text-2xl shadow-xs">
                 <i class="fa-solid fa-boxes-packing"></i>
             </div>
 
-            <div class="space-y-1.5">
-                <span class="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase bg-emerald-100 text-emerald-800 inline-block">
-                    Verifikasi Selesai Panen
+            <div class="space-y-1 text-center">
+                <span class="px-3 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-100 text-emerald-800 inline-block">
+                    Input Hasil Panen &amp; Alokasi Surplus
                 </span>
-                <h3 class="text-lg font-extrabold text-slate-900">Selesaikan Panen &amp; Kosongkan Kolam?</h3>
-                <p class="text-xs text-slate-600 font-medium leading-relaxed">
-                    Selesaikan siklus panen batch <strong class="text-slate-900" x-text="selectedBatchToHarvest?.id"></strong> di <strong class="text-slate-900" x-text="selectedBatchToHarvest?.nama_kolam"></strong>.
+                <h3 class="text-lg font-extrabold text-slate-900">Selesaikan Panen &amp; Pindahkan Surplus</h3>
+                <p class="text-xs text-slate-600 font-medium">
+                    Batch <strong class="text-slate-900" x-text="selectedBatchToHarvest?.id"></strong> di <strong class="text-slate-900" x-text="selectedBatchToHarvest?.nama_kolam"></strong> (<span x-text="selectedBatchToHarvest?.jenis_ikan"></span>)
                 </p>
             </div>
 
-            <!-- Input Realisasi Berat Panen (KG) -->
-            <div class="text-left bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
-                <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 block">TOTAL BERAT HASIL PANEN (KG) *</label>
-                <input type="number" step="0.1" min="0.1" x-model="harvestForm.jumlah_panen_kg"
-                       onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E') event.preventDefault()"
-                       @input="if(harvestForm.jumlah_panen_kg !== '' && Number(harvestForm.jumlah_panen_kg) < 0) harvestForm.jumlah_panen_kg = Math.abs(Number(harvestForm.jumlah_panen_kg)) || 0.1"
-                       placeholder="Contoh: 500"
-                       class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-extrabold text-emerald-700 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                <div class="flex items-center justify-between text-[10px] text-slate-500 pt-1">
-                    <span>Target: <strong x-text="selectedBatchToHarvest?.target_format + ' kg'"></strong></span>
-                    <span>Biomassa: <strong x-text="selectedBatchToHarvest?.biomassa_format + ' kg'"></strong></span>
+            <!-- Card 1: Kebutuhan Order / Biomassa Kolam -->
+            <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 text-left space-y-2 text-xs">
+                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block">Kebutuhan Target / Pesanan</span>
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="p-2.5 bg-white rounded-xl border border-slate-200">
+                        <span class="text-[9px] font-extrabold uppercase text-slate-400 block">STOK BIOMASSA KOLAM</span>
+                        <span class="font-extrabold text-slate-800 text-xs" x-text="(selectedBatchToHarvest?.biomassa_format || '0') + ' kg'"></span>
+                    </div>
+                    <div class="p-2.5 bg-white rounded-xl border" :class="selectedBatchToHarvest?.order_target_kg > 0 ? 'border-sky-300 bg-sky-50/50' : 'border-slate-200'">
+                        <span class="text-[9px] font-extrabold uppercase block" :class="selectedBatchToHarvest?.order_target_kg > 0 ? 'text-sky-700' : 'text-slate-400'">
+                            <span x-text="selectedBatchToHarvest?.order_target_kg > 0 ? 'PESANAN MITRA AKTIF' : 'TARGET PANEN SIKLUS'"></span>
+                        </span>
+                        <span class="font-black text-xs" :class="selectedBatchToHarvest?.order_target_kg > 0 ? 'text-sky-900' : 'text-slate-800'"
+                              x-text="selectedBatchToHarvest?.order_target_kg > 0 ? (selectedBatchToHarvest.order_target_kg + ' kg (' + selectedBatchToHarvest.order_mitra + ')') : ((selectedBatchToHarvest?.target_format || selectedBatchToHarvest?.biomassa_format || '0') + ' kg')"></span>
+                    </div>
                 </div>
             </div>
 
-            <div class="p-3 bg-amber-50 rounded-xl border border-amber-200/70 text-left text-xs text-amber-900 flex items-start gap-2.5">
-                <i class="fa-solid fa-circle-info text-amber-600 text-sm mt-0.5 shrink-0"></i>
-                <p class="text-[11px] leading-relaxed">
-                    Setelah berstatus <strong>Selesai Panen</strong>, batch diarsipkan ke riwayat panen dan kolam <strong x-text="selectedBatchToHarvest?.nama_kolam"></strong> otomatis <strong>dikosongkan / tersedia</strong> kembali.
-                </p>
+            <!-- Card 2: Input Realisasi Total Berat Panen yang Diangkat -->
+            <div class="text-left bg-emerald-50/70 p-4 rounded-2xl border border-emerald-200 space-y-2.5">
+                <div class="flex items-center justify-between">
+                    <label class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-950 block">
+                        TOTAL HASIL PANEN TIMBANG RIIL (KG) *
+                    </label>
+                    <span class="text-[9px] font-bold text-emerald-700 bg-white px-2 py-0.5 rounded-md border border-emerald-200">Wajib Diisi</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <input type="number" step="0.1" min="0.1" x-model="harvestForm.jumlah_panen_kg"
+                           @input="onHarvestKgInput()"
+                           placeholder="Ketik total kg panen (misal: 150)"
+                           class="flex-1 px-4 py-2.5 rounded-xl border border-emerald-300 text-sm font-extrabold text-emerald-900 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-2xs">
+                    <span class="px-3.5 py-2.5 bg-white border border-emerald-200 rounded-xl text-xs font-black text-emerald-800">Kg</span>
+                </div>
+                
+                <!-- Quick buttons -->
+                <div class="flex items-center gap-1.5 pt-0.5 text-[10px]">
+                    <span class="text-slate-400 font-bold">Pintasan:</span>
+                    <button type="button" @click="harvestForm.jumlah_panen_kg = (selectedBatchToHarvest?.order_target_kg > 0 ? selectedBatchToHarvest.order_target_kg : (selectedBatchToHarvest?.target_panen_kg || 100)); onHarvestKgInput()"
+                            class="px-2 py-0.5 rounded-md bg-white border border-emerald-200 text-emerald-800 font-bold hover:bg-emerald-100 transition-colors">
+                        Sesuai Target (<span x-text="(selectedBatchToHarvest?.order_target_kg > 0 ? selectedBatchToHarvest.order_target_kg : (selectedBatchToHarvest?.target_panen_kg || 100)) + ' kg'"></span>)
+                    </button>
+                    <button type="button" @click="harvestForm.jumlah_panen_kg = (selectedBatchToHarvest?.biomassa_est || 150); onHarvestKgInput()"
+                            class="px-2 py-0.5 rounded-md bg-white border border-emerald-200 text-emerald-800 font-bold hover:bg-emerald-100 transition-colors">
+                        Sesuai Biomassa (<span x-text="(selectedBatchToHarvest?.biomassa_est || 150) + ' kg'"></span>)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Card 3: Status Surplus & Pilihan Kolam Stok Tujuan -->
+            <div class="text-left bg-white p-4 rounded-2xl border border-slate-200 space-y-3 shadow-xs">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 block">ALOKASI &amp; TUJUAN PEMINDAHAN SURPLUS</span>
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black"
+                          :class="Number(harvestForm.surplus_kg || 0) > 0 ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-100 text-slate-600'"
+                          x-text="Number(harvestForm.surplus_kg || 0) > 0 ? ('Surplus: +' + harvestForm.surplus_kg + ' kg') : 'Tanpa Surplus'"></span>
+                </div>
+
+                <!-- JIKA ADA SURPLUS > 0 -->
+                <template x-if="Number(harvestForm.surplus_kg || 0) > 0">
+                    <div class="space-y-3">
+                        <div class="p-2.5 bg-emerald-50 rounded-xl border border-emerald-200 text-[11px] text-emerald-900 font-medium">
+                            <div class="font-extrabold text-emerald-800 flex items-center gap-1.5 mb-0.5">
+                                <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                                <span>Terdapat Kelebihan (Surplus) Panen Sebesar +<span x-text="harvestForm.surplus_kg"></span> Kg!</span>
+                            </div>
+                            <span>Hasil panen (<span x-text="harvestForm.jumlah_panen_kg"></span> kg) melebihi kebutuhan (<span x-text="getTargetRefKg()"></span> kg). Sisa kelebihan wajib dipindahkan ke kolam penampungan / kolam stok.</span>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 block">
+                                PILIH KOLAM PENAMPUNGAN / KOLAM STOK TUJUAN *
+                            </label>
+                            <select x-model="harvestForm.id_kolam_stok" 
+                                    class="w-full px-3 py-2.5 rounded-xl border border-sky-300 text-xs font-bold text-slate-800 bg-sky-50/40 focus:outline-none focus:ring-2 focus:ring-sky-500">
+                                <option value="">-- Pilih Kolam Penampungan / Kolam Stok --</option>
+                                <template x-for="k in kolamStokList" :key="k.id_kolam">
+                                    <option :value="k.id_kolam" x-text="k.label"></option>
+                                </template>
+                            </select>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <div class="flex-1">
+                                <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 block mb-1">
+                                    JUMLAH KG SURPLUS DITAMPUNG
+                                </label>
+                                <input type="number" step="0.1" min="0" x-model="harvestForm.surplus_kg"
+                                       placeholder="0.0"
+                                       class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-extrabold text-emerald-700 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
+                            </div>
+                        </div>
+
+                        <p class="text-[10px] text-slate-500 leading-relaxed">
+                            <i class="fa-solid fa-circle-info text-sky-600 mr-1"></i>
+                            Ikan surplus sebanyak <strong class="text-emerald-700" x-text="harvestForm.surplus_kg + ' kg'"></strong> akan otomatis ditampung di kolam stok terpilih, dan kolam <strong x-text="selectedBatchToHarvest?.nama_kolam"></strong> akan <strong>dikosongkan</strong>.
+                        </p>
+                    </div>
+                </template>
+
+                <!-- JIKA TANPA SURPLUS (PAS / KURANG) -->
+                <template x-if="Number(harvestForm.surplus_kg || 0) <= 0">
+                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-[11px] text-slate-600 space-y-1">
+                        <div class="flex items-center gap-1.5 font-bold text-slate-800">
+                            <i class="fa-solid fa-circle-info text-sky-600"></i>
+                            <span x-text="Number(harvestForm.jumlah_panen_kg || 0) > 0 ? 'Hasil Panen Pas / Tanpa Surplus Ke Kolam Stok' : 'Silakan Masukkan Total Kg Hasil Panen Terlebih Dahulu'"></span>
+                        </div>
+                        <p class="text-[10px] text-slate-400">
+                            Seluruh hasil panen dialokasikan untuk pesanan. Kolam <strong class="text-slate-700" x-text="selectedBatchToHarvest?.nama_kolam"></strong> akan otomatis dikosongkan setelah panen diselesaikan.
+                        </p>
+                    </div>
+                </template>
             </div>
 
             <div class="grid grid-cols-2 gap-3 pt-1">
@@ -784,10 +886,10 @@
                         class="w-full py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition-colors">
                     Batalkan
                 </button>
-                <button type="button" @click="executeFinishHarvest()" :disabled="isSubmitting"
-                        class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold text-xs shadow-md shadow-emerald-950/20 transition-all flex items-center justify-center gap-2 disabled:opacity-60">
+                <button type="button" @click="executeFinishHarvest()" :disabled="isSubmitting || !harvestForm.jumlah_panen_kg || Number(harvestForm.jumlah_panen_kg) <= 0 || (Number(harvestForm.surplus_kg || 0) > 0 && !harvestForm.id_kolam_stok)"
+                        class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold text-xs shadow-md shadow-emerald-950/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                     <i class="fa-solid" :class="isSubmitting ? 'fa-spinner fa-spin' : 'fa-check'"></i>
-                    <span>Ya, Selesaikan Panen</span>
+                    <span>Ya, Selesaikan &amp; Pindahkan</span>
                 </button>
             </div>
         </div>
@@ -962,6 +1064,7 @@ function pembesaranComponent() {
         availablePembibitan: {!! json_encode($availablePembibitan ?? []) !!},
         ikans: {!! json_encode($ikans ?? []) !!},
         kolamList: {!! json_encode($kolamList ?? []) !!},
+        kolamStokList: {!! json_encode($kolamStokList ?? []) !!},
         batches: {!! json_encode($batches ?? []) !!},
         activeFilter: 'aktif',
 
@@ -1014,7 +1117,9 @@ function pembesaranComponent() {
         harvestConfirmModalOpen: false,
         selectedBatchToHarvest: null,
         harvestForm: {
-            jumlah_panen_kg: 0
+            jumlah_panen_kg: 0,
+            id_kolam_stok: '',
+            surplus_kg: 0
         },
         kolamModalOpen: false,
         isSubmittingKolam: false,
@@ -1169,9 +1274,34 @@ function pembesaranComponent() {
             };
         },
 
+        getTargetRefKg() {
+            if (!this.selectedBatchToHarvest) return 0;
+            const b = this.selectedBatchToHarvest;
+            return Number(b.order_target_kg > 0 ? b.order_target_kg : (b.target_panen_kg || b.biomassa_est || 0));
+        },
+
+        onHarvestKgInput() {
+            if (!this.selectedBatchToHarvest) return;
+            const panen = Number(this.harvestForm.jumlah_panen_kg || 0);
+            const targetRef = this.getTargetRefKg();
+            if (panen > targetRef) {
+                this.harvestForm.surplus_kg = Math.round((panen - targetRef) * 10) / 10;
+            } else {
+                this.harvestForm.surplus_kg = 0;
+            }
+        },
+
         triggerFinishHarvest(item) {
             this.selectedBatchToHarvest = item;
-            this.harvestForm.jumlah_panen_kg = item.target_panen_kg || item.biomassa_est || 100;
+            const defaultKg = item.biomassa_est || item.target_panen_kg || 100;
+            this.harvestForm.jumlah_panen_kg = defaultKg;
+            
+            // Auto-select first stock pond (e.g. Kolam Stok Lele) if available
+            const stockPond = (this.kolamStokList || []).find(k => k.is_stok && k.id_kolam != item.id_kolam) 
+                           || (this.kolamStokList || []).find(k => k.id_kolam != item.id_kolam)
+                           || (this.kolamStokList && this.kolamStokList[0] ? this.kolamStokList[0] : null);
+            this.harvestForm.id_kolam_stok = stockPond ? stockPond.id_kolam : '';
+            this.onHarvestKgInput();
             this.harvestConfirmModalOpen = true;
         },
 
@@ -1179,7 +1309,18 @@ function pembesaranComponent() {
             if (!this.selectedBatchToHarvest) return;
             const item = this.selectedBatchToHarvest;
             const idPB = item.id_pembesaran || item.id.replace(/[^0-9]/g, '');
-            const jumlahPanen = Number(this.harvestForm.jumlah_panen_kg) || item.target_panen_kg || item.biomassa_est;
+            const jumlahPanen = Number(this.harvestForm.jumlah_panen_kg);
+            
+            if (!jumlahPanen || jumlahPanen <= 0) {
+                alert('Silakan masukkan total berat hasil panen yang diangkat (dalam Kg)!');
+                return;
+            }
+
+            const surplus = Number(this.harvestForm.surplus_kg || 0);
+            if (surplus > 0 && !this.harvestForm.id_kolam_stok) {
+                alert('Terdapat surplus ikan sebesar +' + surplus + ' kg. Silakan pilih kolam penampungan / kolam stok tujuan!');
+                return;
+            }
 
             this.isSubmitting = true;
             try {
@@ -1192,7 +1333,9 @@ function pembesaranComponent() {
                     },
                     body: JSON.stringify({
                         status_siklus: 'selesai',
-                        jumlah_panen_kg: jumlahPanen
+                        jumlah_panen_kg: jumlahPanen,
+                        id_kolam_stok: this.harvestForm.id_kolam_stok || null,
+                        surplus_kg: surplus
                     })
                 });
 
@@ -1213,9 +1356,14 @@ function pembesaranComponent() {
                     this.refreshPondOccupancy();
 
                     this.harvestConfirmModalOpen = false;
-                    this.toastMessage = "Sukses! Panen batch " + item.id + " (" + jumlahPanen.toLocaleString('id-ID') + " kg) selesai dicatat & kolam " + item.nama_kolam + " telah siap digunakan kembali.";
+                    let msg = "Sukses! Panen batch " + item.id + " (" + jumlahPanen.toLocaleString('id-ID') + " kg) selesai dicatat & kolam " + item.nama_kolam + " telah siap digunakan kembali.";
+                    if (surplus > 0 && this.harvestForm.id_kolam_stok) {
+                        const targetK = (this.kolamStokList || []).find(k => k.id_kolam == this.harvestForm.id_kolam_stok);
+                        msg += " Surplus sebesar +" + surplus.toFixed(1) + " kg berhasil ditampung di " + (targetK ? targetK.nama_kolam : 'Kolam Stok') + ".";
+                    }
+                    this.toastMessage = msg;
                     this.showToast = true;
-                    setTimeout(() => { this.showToast = false; }, 5000);
+                    setTimeout(() => { this.showToast = false; }, 6000);
                     this.selectedBatchToHarvest = null;
                 } else {
                     alert(data.message || 'Gagal menyelesaikan panen batch.');
