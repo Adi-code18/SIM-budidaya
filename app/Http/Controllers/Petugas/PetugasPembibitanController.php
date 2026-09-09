@@ -160,18 +160,22 @@ class PetugasPembibitanController extends Controller
             ->latest('id_batch')
             ->get()
             ->map(function ($b) use ($now) {
-                // Perhitungan usia hari sinkron dengan modul Manajer
+                // Perhitungan usia hari & fase sinkron dengan SOP spesies
                 $days = $b->tgl_pemijahan ? (int) abs(Carbon::parse($b->tgl_pemijahan)->startOfDay()->diffInDays($now->copy()->startOfDay())) : 0;
                 $doc = $days;
 
-                // Biologically accurate phase based on age
-                if ($doc <= 3) {
+                $penetasan = $b->ikan ? (int)($b->ikan->durasi_penetasan ?? 3) : 3;
+                $pembibitan = $b->ikan ? (int)($b->ikan->durasi_pembibitan ?? 21) : 21;
+                $larvaEndDay = $penetasan + max(5, (int) round($pembibitan * 0.45));
+
+                // Biologically accurate phase based on age & SOP
+                if ($doc <= $penetasan) {
                     $fase = 'Telur';
                     $faseKey = 'telur';
                     $faseBadge = 'bg-amber-100 text-amber-800 border-amber-200';
                     $rekomendasiPakan = 'Tanpa Pakan (Fase Telur/Inkubasi)';
                     $estKg = 0;
-                } elseif ($doc <= 14) {
+                } elseif ($doc <= $larvaEndDay) {
                     $fase = 'Larva';
                     $faseKey = 'larva';
                     $faseBadge = 'bg-sky-100 text-sky-800 border-sky-200';

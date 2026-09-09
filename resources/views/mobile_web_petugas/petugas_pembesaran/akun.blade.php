@@ -1,6 +1,6 @@
 @extends('mobile_web_petugas.petugas_pembesaran.layout')
 
-@section('title', 'Profile & Akun - SIM-BUDIDAYA Mobile')
+@section('title', 'Profile & Akun - AMS BUDIDAYA Mobile')
 
 @section('content')
 <div class="p-4 space-y-4" x-data="akunPetugasPembesaran()">

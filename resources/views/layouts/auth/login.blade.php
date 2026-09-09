@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login SIM-BUDIDAYA</title>
+    <title>Login AMS BUDIDAYA</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -128,7 +128,7 @@
                          alt="Logo Aquafarm" 
                          class="h-11 w-auto object-contain flex-shrink-0">
                     <div>
-                        <h1 class="font-extrabold text-xl text-[#051B44] tracking-tight leading-tight">SIM-BUDIDAYA</h1>
+                        <h1 class="font-extrabold text-xl text-[#051B44] tracking-tight leading-tight">AMS BUDIDAYA</h1>
                         <p class="text-[10px] font-bold text-slate-400 tracking-widest uppercase">PORTAL MANAJER</p>
                     </div>
                 </div>
@@ -263,7 +263,7 @@
             <!-- Center Image (Full & Uncropped) -->
             <div class="my-auto flex items-center justify-center">
                 <img src="{{ asset('images/login ilustration.png') }}" 
-                     alt="SIM-BUDIDAYA Illustration" 
+                     alt="AMS BUDIDAYA Illustration" 
                      class="w-full max-h-[280px] object-contain select-none pointer-events-none">
             </div>
 

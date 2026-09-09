@@ -1,6 +1,6 @@
 @extends('mobile_web_petugas.petugas_distribusi.layout')
 
-@section('title', 'Riwayat Pengiriman - SIM-BUDIDAYA Mobile')
+@section('title', 'Riwayat Pengiriman - AMS BUDIDAYA Mobile')
 
 @section('content')
 <div class="p-4 space-y-4" x-data="{ 

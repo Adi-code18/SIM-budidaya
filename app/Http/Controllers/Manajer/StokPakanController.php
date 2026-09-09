@@ -110,7 +110,7 @@ class StokPakanController extends Controller
                     'tipe_mitra'   => $s->tipe_mitra,
                     'alamat'       => $s->alamat,
                     'telepon'      => $phone,
-                    'wa_link'      => 'https://wa.me/' . $cleanPhone . '?text=' . urlencode("Halo {$s->nama_mitra}, saya dari SIM-BUDIDAYA ingin memesan pasokan pakan ikan. Apakah stok pakan tersedia?"),
+                    'wa_link'      => 'https://wa.me/' . $cleanPhone . '?text=' . urlencode("Halo {$s->nama_mitra}, saya dari AMS BUDIDAYA ingin memesan pasokan pakan ikan. Apakah stok pakan tersedia?"),
                 ];
             });
 

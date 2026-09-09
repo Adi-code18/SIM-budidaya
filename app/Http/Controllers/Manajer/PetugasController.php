@@ -17,7 +17,12 @@ class PetugasController extends Controller
 {
     public function index()
     {
-        $users = User::where('role', '!=', 'manajer')->get();
+        $users = User::where('role', '!=', 'manajer')->get()->map(function ($u) {
+            $u->secret_key = $u->two_factor_secret_decrypted;
+            $u->qr_code_svg = $u->two_factor_qr_code_svg;
+            return $u;
+        });
+
         return view('layouts.petugas.index', compact('users'));
     }
 
@@ -47,12 +52,17 @@ class PetugasController extends Controller
             $noTlp = $clean ?: $request->no_tlp;
         }
 
+        $google2fa = new \App\Services\Google2FA();
+        $secret = $google2fa->generateSecretKey();
+
         $user = User::create([
-            'nama'     => $request->nama,
-            'email'    => $request->email,
-            'password' => Hash::make($request->password),
-            'role'     => $request->role,
-            'no_tlp'   => $noTlp,
+            'nama'                    => $request->nama,
+            'email'                   => $request->email,
+            'password'                => Hash::make($request->password),
+            'role'                    => $request->role,
+            'no_tlp'                  => $noTlp,
+            'two_factor_secret'       => encrypt($secret),
+            'two_factor_confirmed_at' => now(),
         ]);
 
         if ($request->wantsJson() || $request->ajax()) {
@@ -69,6 +79,8 @@ class PetugasController extends Controller
     public function edit($id)
     {
         $user = User::findOrFail($id);
+        $user->secret_key = $user->two_factor_secret_decrypted;
+        $user->qr_code_svg = $user->two_factor_qr_code_svg;
         return view('layouts.petugas.edit', compact('user'));
     }
 
@@ -212,5 +224,26 @@ class PetugasController extends Controller
         }
 
         return redirect()->route('petugas')->with('success', "Google Authenticator 2FA untuk \"{$user->nama}\" berhasil direset!");
+    }
+
+    public function regenerate2fa(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+        $google2fa = new \App\Services\Google2FA();
+        $newSecret = $google2fa->generateSecretKey();
+        $user->two_factor_secret = encrypt($newSecret);
+        $user->two_factor_confirmed_at = now();
+        $user->save();
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success'     => true,
+                'message'     => "Kunci 2FA Google Authenticator baru untuk \"{$user->nama}\" berhasil dibuat!",
+                'secret_key'  => $newSecret,
+                'qr_code_svg' => $user->two_factor_qr_code_svg,
+            ]);
+        }
+
+        return redirect()->route('petugas')->with('success', "Kunci 2FA baru untuk \"{$user->nama}\" berhasil dibuat!");
     }
 }

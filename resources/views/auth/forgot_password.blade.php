@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lupa Kata Sandi - SIM-BUDIDAYA</title>
+    <title>Lupa Kata Sandi - AMS BUDIDAYA</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -97,7 +97,7 @@
                  alt="Logo Aquafarm" 
                  class="h-11 w-auto object-contain shrink-0">
             <div>
-                <h1 class="font-extrabold text-xl text-[#051B44] tracking-tight leading-tight">SIM-BUDIDAYA</h1>
+                <h1 class="font-extrabold text-xl text-[#051B44] tracking-tight leading-tight">AMS BUDIDAYA</h1>
                 <p class="text-[10px] font-bold text-slate-400 tracking-widest uppercase">PEMULIHAN KATA SANDI</p>
             </div>
         </div>

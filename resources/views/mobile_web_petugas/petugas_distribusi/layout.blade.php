@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>@yield('title', 'Petugas Distribusi - SIM-BUDIDAYA Mobile')</title>
+    <title>@yield('title', 'Petugas Distribusi - AMS BUDIDAYA Mobile')</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <!-- Google Fonts -->
@@ -318,7 +318,7 @@
                         <i class="fa-solid fa-fish-fins text-sm"></i>
                     </div>
                     <div>
-                        <span class="font-extrabold text-sm tracking-tight text-navy-900 block leading-none">SIM-BUDIDAYA</span>
+                        <span class="font-extrabold text-sm tracking-tight text-navy-900 block leading-none">AMS BUDIDAYA</span>
                         <span class="text-[9px] font-bold text-sky-600 tracking-wider uppercase block mt-0.5">Petugas Distribusi</span>
                     </div>
                 </a>

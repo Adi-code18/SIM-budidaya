@@ -24,7 +24,7 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Web Routes - SIM-BUDIDAYA
+| Web Routes - AMS BUDIDAYA
 |--------------------------------------------------------------------------
 | Terstruktur rapi berdasarkan peran (Auth, Manajer, Petugas)
 */
@@ -143,6 +143,7 @@ Route::middleware(['auth', 'role:manajer'])->group(function () {
     Route::delete('/petugas/{id}', [PetugasController::class, 'destroy'])->name('petugas.destroy');
     Route::put('/petugas/{id}/password', [PetugasController::class, 'updatePassword'])->name('petugas.password.update');
     Route::post('/petugas/{id}/reset-2fa', [PetugasController::class, 'reset2fa'])->name('petugas.2fa.reset');
+    Route::post('/petugas/{id}/regenerate-2fa', [PetugasController::class, 'regenerate2fa'])->name('petugas.2fa.regenerate');
 
     // Halaman Pengaturan & Profil
     Route::get('/pengaturan', [PengaturanController::class, 'index'])->name('pengaturan');
@@ -169,6 +170,7 @@ Route::prefix('mobile-petugas')->name('mobile.petugas.')->group(function () {
     Route::middleware(['auth', 'role:petugas_distribusi'])->group(function () {
         Route::get('/pengiriman', [PetugasDistribusiController::class, 'index'])->name('pengiriman');
         Route::get('/detail/{id?}', [PetugasDistribusiController::class, 'detail'])->name('detail');
+        Route::post('/start-delivery/{id}', [PetugasDistribusiController::class, 'startDelivery'])->name('startDelivery');
         Route::post('/complete/{id}', [PetugasDistribusiController::class, 'complete'])->name('complete');
         Route::get('/riwayat', [PetugasDistribusiController::class, 'riwayat'])->name('riwayat');
         Route::get('/akun', function () {

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIM-BUDIDAYA Mobile Splash</title>
+    <title>AMS BUDIDAYA Mobile Splash</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -66,11 +66,11 @@
                 <img src="{{ asset('images/Logo aquafarm.png') }}" 
                      alt="Logo Aquafarm" 
                      class="w-16 h-16 object-contain drop-shadow-sm">
-                <span class="text-xs font-black tracking-tighter text-navy-900 uppercase">SIM-BUDIDAYA</span>
+                <span class="text-xs font-black tracking-tighter text-navy-900 uppercase">AMS BUDIDAYA</span>
             </div>
 
             <div class="space-y-1">
-                <h1 class="text-2xl font-extrabold text-white tracking-wide">SIM-BUDIDAYA</h1>
+                <h1 class="text-2xl font-extrabold text-white tracking-wide">AMS BUDIDAYA</h1>
                 <p class="text-[10px] tracking-[0.2em] font-extrabold text-sky-400 uppercase">{{ $roleTitle }}</p>
             </div>
 

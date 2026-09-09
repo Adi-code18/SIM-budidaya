@@ -120,9 +120,9 @@ class User extends Authenticatable
         }
 
         $google2fa = new Google2FA();
-        $accountName = $this->email ?: ($this->no_tlp ?: ($this->nama ?: 'petugas@sim-budidaya.id'));
+        $accountName = $this->email ?: ($this->no_tlp ?: ($this->nama ?: 'petugas@ams-budidaya.id'));
         $qrCodeUrl = $google2fa->getQRCodeUrl(
-            config('app.name', 'SIM-BUDIDAYA'),
+            config('app.name', 'AMS BUDIDAYA'),
             $accountName,
             $secret
         );

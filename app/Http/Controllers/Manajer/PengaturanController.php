@@ -20,8 +20,8 @@ class PengaturanController extends Controller
 
         // Data dummy atau default preferensi sistem budidaya
         $settings = [
-            'nama_tambak' => config('app.name', 'SIM-BUDIDAYA Aquafarm'),
-            'email_notifikasi' => $user->email ?? 'manajer@simbudidaya.id',
+            'nama_tambak' => config('app.name', 'AMS BUDIDAYA'),
+            'email_notifikasi' => $user->email ?? 'manajer@amsbudidaya.id',
             'notif_wa' => true,
             'notif_email' => true,
             'threshold_kematian' => 3000,

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Transaksi Keuangan - SIM-BUDIDAYA')
+@section('title', 'Transaksi Keuangan - AMS BUDIDAYA')
 
 @section('content')
 <div class="space-y-6" x-data="transaksiKeuanganComponent()">

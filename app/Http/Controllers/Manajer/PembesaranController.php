@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Manajer;
 
 use App\Http\Controllers\Controller;
 use App\Models\BatchPembesaran;
+use App\Models\Keuangan;
 use App\Models\Kolam;
 use App\Models\ManajemenPakan;
 use Illuminate\Http\Request;
@@ -14,7 +15,12 @@ class PembesaranController extends Controller
 {
     public function index()
     {
-        $batchRecords = BatchPembesaran::with(['kolam', 'user', 'batchPembibitan.kolam'])->latest('id_pembesaran')->get();
+        $batchRecords = BatchPembesaran::with(['kolam', 'user', 'batchPembibitan.kolam'])
+            ->where('status_siklus', '!=', 'selesai')
+            ->where('status_siklus', '!=', 'gagal')
+            ->where('biomassa_est', '>', 0)
+            ->latest('id_pembesaran')
+            ->get();
         
         // Load Pembesaran ponds, holding ponds, and stock buffer ponds
         $kolams = Kolam::where(function ($q) {
@@ -38,10 +44,19 @@ class PembesaranController extends Controller
         })->sortByDesc('is_stok')->values();
         
         // Find which ponds are currently occupied by active batches
-        $activeBatchKolamIds = BatchPembesaran::where('status_siklus', 'berjalan')->pluck('id_kolam')->toArray();
+        $activeBatchKolamIds = BatchPembesaran::where('status_siklus', '!=', 'selesai')
+            ->where('status_siklus', '!=', 'gagal')
+            ->where(function ($q) {
+                $q->where('biomassa_est', '>', 0)
+                  ->orWhereIn('status_siklus', ['berjalan', 'aktif', 'siap_panen']);
+            })
+            ->pluck('id_kolam')->toArray();
 
-        $kolamList = $kolams->map(function ($k) use ($activeBatchKolamIds) {
-            $isOccupied = in_array($k->id_kolam, $activeBatchKolamIds);
+        $activeKolamIdsFromStatus = Kolam::where('status', 'aktif')->pluck('id_kolam')->toArray();
+        $allOccupiedKolamIds = array_unique(array_merge($activeBatchKolamIds, $activeKolamIdsFromStatus));
+
+        $kolamList = $kolams->map(function ($k) use ($allOccupiedKolamIds) {
+            $isOccupied = in_array($k->id_kolam, $allOccupiedKolamIds);
             return [
                 'id_kolam'    => $k->id_kolam,
                 'nama_kolam'  => $k->nama_kolam,
@@ -52,10 +67,10 @@ class PembesaranController extends Controller
             ];
         });
 
-        $totalBiomassaKg = BatchPembesaran::where('status_siklus', '!=', 'selesai')->sum('biomassa_est');
-        if ($totalBiomassaKg == 0) {
-            $totalBiomassaKg = BatchPembesaran::sum('biomassa_est');
-        }
+        $totalBiomassaKg = BatchPembesaran::where('status_siklus', '!=', 'selesai')
+            ->where('status_siklus', '!=', 'gagal')
+            ->where('biomassa_est', '>', 0)
+            ->sum('biomassa_est');
         $totalBiomassa = $totalBiomassaKg / 1000; // in Ton
 
         $avgFcrVal = BatchPembesaran::whereNotNull('fcr')->where('fcr', '>', 0)->avg('fcr');
@@ -165,13 +180,24 @@ class PembesaranController extends Controller
                 'status_siklus'       => $statusSiklus,
                 'status_label'        => $statusLabel,
                 'status_class'        => $statusClass,
+                'asal_bibit'          => $b->asal_bibit ?? ($b->id_batch_pembibitan ? 'pembibitan_sendiri' : 'beli_luar'),
+                'biaya_beli_bibit'    => (float) ($b->biaya_beli_bibit ?? 0),
+                'biaya_beli_bibit_format' => number_format($b->biaya_beli_bibit ?? 0, 0, ',', '.'),
                 'ph_air'              => ($logPh = ManajemenPakan::where('id_kolam', $b->id_kolam)->whereNotNull('ph_air')->where('ph_air', '>', 0)->latest('tgl_log')->value('ph_air')) ? number_format($logPh, 1) : '-',
             ];
         }
 
         $availablePembibitan = \App\Models\BatchPembibitan::with(['kolam', 'batchPembesaran', 'ikan'])
             ->where('status', '!=', 'gagal')
+            ->where('status', '!=', 'selesai')
             ->whereDoesntHave('batchPembesaran')
+            ->where(function ($q) {
+                $q->whereIn('fase_pertumbuhan', ['BENIH', 'FINGERLING', 'siap_pindah'])
+                  ->orWhere('fase_pertumbuhan', 'like', '%FINGERLING%')
+                  ->orWhere('fase_pertumbuhan', 'like', '%BENIH%')
+                  ->orWhere('status', 'siap_pindah');
+            })
+            ->whereNotIn('fase_pertumbuhan', ['TELUR', 'INKUBASI', 'LARVA'])
             ->latest('id_batch')
             ->get()
             ->map(function ($bp) {
@@ -179,13 +205,15 @@ class PembesaranController extends Controller
                 $statusText = $bp->status === 'siap_pindah' ? 'Siap Pindah' : ($bp->status === 'selesai' ? 'Selesai' : ucfirst($bp->status));
                 $namaIkan = $bp->jenis_ikan ?: ($bp->ikan ? $bp->ikan->nama_ikan : 'Ikan Lele');
                 $cleanJenis = preg_replace('/^Ikan\s+/i', '', $namaIkan);
+                $faseLabel = $bp->fase_pertumbuhan ?: 'FINGERLING';
                 return [
                     'id_batch'         => $bp->id_batch,
-                    'label'            => '#BB-' . str_pad($bp->id_batch, 5, '0', STR_PAD_LEFT) . ' - ' . $namaIkan . ' (' . number_format($sisa, 0, ',', '.') . ' Ekor - ' . $statusText . ')',
+                    'label'            => '#BB-' . str_pad($bp->id_batch, 5, '0', STR_PAD_LEFT) . ' - ' . $namaIkan . ' (' . number_format($sisa, 0, ',', '.') . ' Ekor - Fase ' . $faseLabel . ')',
                     'jenis_ikan'       => $namaIkan,
                     'clean_jenis'      => $cleanJenis,
                     'sisa_ekor'        => $sisa,
                     'est_biomassa'     => round($sisa * 0.02, 1),
+                    'fase'             => $faseLabel,
                     'status'           => $bp->status,
                 ];
             });
@@ -201,10 +229,11 @@ class PembesaranController extends Controller
             'id_kolam'             => 'required',
             'jenis_ikan'           => 'required|string',
             'id_batch_pembibitan'  => 'nullable|numeric',
+            'biaya_beli_bibit'     => 'nullable|numeric|min:0',
             'tgl_tebar'            => 'nullable|date',
             'est_tgl_panen'        => 'nullable|date',
-            'biomassa_est'         => 'required|numeric|min:1',
-            'target_panen_kg'      => 'required|numeric|min:1',
+            'biomassa_est'         => 'required|numeric|min:0.1',
+            'target_panen_kg'      => 'required|numeric|min:0.1',
             'fcr'                  => 'nullable|numeric|min:0.5',
             'status_siklus'        => 'nullable|string',
         ]);
@@ -230,6 +259,20 @@ class PembesaranController extends Controller
             }
         }
 
+        // Validasi: Jika mengambil dari pembibitan, pastikan batch pembibitan sudah fase Fingerling / Benih
+        if ($request->filled('id_batch_pembibitan')) {
+            $sourceBatch = \App\Models\BatchPembibitan::find($request->id_batch_pembibitan);
+            if ($sourceBatch) {
+                $fase = strtoupper(trim($sourceBatch->fase_pertumbuhan ?? ''));
+                if (in_array($fase, ['TELUR', 'INKUBASI', 'LARVA'])) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Batch pembibitan #BB-" . str_pad($sourceBatch->id_batch, 5, '0', STR_PAD_LEFT) . " masih dalam fase {$fase}! Bibit belum dapat dipindahkan ke kolam pembesaran sebelum memasuki fase FINGERLING / BENIH."
+                    ], 422);
+                }
+            }
+        }
+
         $jenis = $request->jenis_ikan;
         if (stripos($jenis, 'Ikan ') !== 0) {
             $jenis = 'Ikan ' . $jenis;
@@ -238,10 +281,15 @@ class PembesaranController extends Controller
         $tglTebar = $request->tgl_tebar ?? now();
         $estTglPanen = $request->est_tgl_panen ?? ($request->tgl_tebar ? Carbon::parse($request->tgl_tebar)->addDays(90)->toDateString() : now()->addDays(90)->toDateString());
 
+        $asalBibit = $request->filled('id_batch_pembibitan') ? 'pembibitan_sendiri' : 'beli_luar';
+        $biayaBeliBibit = $asalBibit === 'beli_luar' ? (float) ($request->biaya_beli_bibit ?? 0) : 0.0;
+
         $batch = BatchPembesaran::create([
             'id_kolam'            => $kolam->id_kolam,
             'id_user'             => Auth::id() ?? 1,
-            'id_batch_pembibitan' => $request->id_batch_pembibitan,
+            'id_batch_pembibitan' => $request->id_batch_pembibitan ?: null,
+            'asal_bibit'          => $asalBibit,
+            'biaya_beli_bibit'    => $biayaBeliBibit,
             'tgl_tebar'           => $tglTebar,
             'est_tgl_panen'       => $estTglPanen,
             'biomassa_est'        => $request->biomassa_est,
@@ -260,10 +308,31 @@ class PembesaranController extends Controller
             ]);
         }
 
+        // OTOMATISASI KAS KELUAR: Jika Beli Bibit Luar dan ada biaya pembelian bibit
+        if ($asalBibit === 'beli_luar' && $biayaBeliBibit > 0) {
+            $pbRef = 'BELI-BIBIT-PB-' . str_pad($batch->id_pembesaran, 4, '0', STR_PAD_LEFT);
+            \App\Models\Keuangan::updateOrCreate(
+                ['ref_id' => $pbRef],
+                [
+                    'id_user'           => Auth::id() ?? 1,
+                    'id_kolam'          => $kolam->id_kolam,
+                    'tanggal_transaksi' => Carbon::parse($tglTebar)->toDateString(),
+                    'tipe_transaksi'    => 'pengeluaran',
+                    'kategori'          => 'Pembelian Bibit ' . $jenis,
+                    'nominal'           => $biayaBeliBibit,
+                    'keterangan'        => "Pembelian bibit luar {$jenis} (" . number_format($batch->biomassa_est, 1, ',', '.') . " kg) untuk tebar di {$kolam->nama_kolam} (#PB-" . str_pad($batch->id_pembesaran, 5, '0', STR_PAD_LEFT) . ")",
+                ]
+            );
+        }
+
         if ($request->wantsJson() || $request->ajax()) {
+            $msg = "Batch pembesaran {$batch->jenis_ikan} di {$kolam->nama_kolam} berhasil ditambahkan!";
+            if ($asalBibit === 'beli_luar' && $biayaBeliBibit > 0) {
+                $msg .= " Biaya pembelian bibit sebesar Rp " . number_format($biayaBeliBibit, 0, ',', '.') . " telah otomatis dibukukan ke Keuangan.";
+            }
             return response()->json([
                 'success' => true,
-                'message' => "Batch pembesaran {$batch->jenis_ikan} di {$kolam->nama_kolam} berhasil ditambahkan!",
+                'message' => $msg,
                 'batch'   => $batch->load('kolam')
             ]);
         }
@@ -348,11 +417,9 @@ class PembesaranController extends Controller
 
         if ($request->filled('status_siklus')) {
             $batch->status_siklus = strtolower($request->status_siklus);
-            // If finishing harvest and jumlah_panen_kg not explicitly set, default to target or biomassa_est
-            if ($batch->status_siklus === 'selesai') {
-                $jumlahPanen = $request->jumlah_panen_kg ?? $batch->jumlah_panen_kg ?? $batch->target_panen_kg ?? $batch->biomassa_est;
-                $batch->jumlah_panen_kg = (float) $jumlahPanen;
-
+            
+            // If finishing harvest
+            if ($batch->status_siklus === 'selesai' || $batch->biomassa_est <= 0) {
                 // Handle surplus fish allocation to stock/buffer pond
                 $targetKolamStokId = $request->id_kolam_stok;
                 $surplusKg = (float) ($request->surplus_kg ?? 0);
@@ -387,9 +454,37 @@ class PembesaranController extends Controller
                                 'jenis_ikan'          => $cleanJenis,
                                 'status_siklus'       => 'siap_panen',
                             ]);
+                            $targetKolam->update(['status' => 'aktif']);
                         }
                     }
                 }
+
+                // Kosongkan kolam asal agar siap ditebar kembali
+                $kolamAsal = $batch->kolam;
+                $batch->biomassa_est = 0;
+                $batch->status_siklus = 'selesai';
+                $batch->save();
+
+                if ($kolamAsal) {
+                    $otherActive = BatchPembesaran::where('id_kolam', $kolamAsal->id_kolam)
+                        ->where('id_pembesaran', '!=', $batch->id_pembesaran)
+                        ->where('status_siklus', '!=', 'selesai')
+                        ->where('biomassa_est', '>', 0)
+                        ->exists();
+                    if (!$otherActive) {
+                        $kolamAsal->update(['status' => 'kosong']);
+                    }
+                }
+
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => "Panen selesai! Kolam telah dikosongkan dan siap digunakan untuk tebar batch baru.",
+                        'batch'   => null
+                    ]);
+                }
+
+                return redirect()->route('pembesaran')->with('success', 'Panen selesai dan kolam siap digunakan kembali!');
             }
         }
 
@@ -414,6 +509,10 @@ class PembesaranController extends Controller
         if (!$batch) {
             return response()->json(['success' => false, 'message' => 'Batch pembesaran tidak ditemukan.'], 404);
         }
+
+        // Hapus entri kas pembelian bibit jika ada
+        $pbRef = 'BELI-BIBIT-PB-' . str_pad($cleanId, 4, '0', STR_PAD_LEFT);
+        Keuangan::where('ref_id', $pbRef)->delete();
 
         $batch->delete();
 

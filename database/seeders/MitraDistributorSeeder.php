@@ -62,6 +62,14 @@ class MitraDistributorSeeder extends Seeder
                 'latitude'   => -7.32450000,
                 'longitude'  => 108.22340000,
             ],
+            [
+                'id_user'    => $userId,
+                'nama_mitra' => 'Kedai Mitra91',
+                'tipe_mitra' => 'Kedai Kuliner',
+                'alamat'     => 'Jalan Mitra Batik, Cipedes, Tasikmalaya, Jawa Barat, 46112, Indonesia',
+                'latitude'   => -7.32740000,
+                'longitude'  => 108.22070000,
+            ],
         ];
 
         foreach ($mitraList as $mitra) {

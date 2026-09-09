@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Pengaturan Sistem & Profil - SIM-BUDIDAYA')
+@section('title', 'Pengaturan Sistem & Profil - AMS BUDIDAYA')
 
 @section('content')
 <div x-data="{ 

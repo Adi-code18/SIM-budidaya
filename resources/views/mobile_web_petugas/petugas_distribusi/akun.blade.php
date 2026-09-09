@@ -1,6 +1,6 @@
 @extends('mobile_web_petugas.petugas_distribusi.layout')
 
-@section('title', 'Akun Pengguna - SIM-BUDIDAYA Mobile')
+@section('title', 'Akun Pengguna - AMS BUDIDAYA Mobile')
 
 @section('content')
 <div class="p-4 space-y-4" x-data="akunPetugasDistribusi()">
@@ -286,7 +286,7 @@
             
             <div>
                 <h3 class="text-sm font-extrabold text-slate-900" x-text="i18n[currentLang].logoutConfirm">Konfirmasi Keluar</h3>
-                <p class="text-xs text-slate-500 font-medium mt-1" x-text="i18n[currentLang].logoutMessage">Apakah Anda yakin ingin keluar dari akun SIM-BUDIDAYA Mobile?</p>
+                <p class="text-xs text-slate-500 font-medium mt-1" x-text="i18n[currentLang].logoutMessage">Apakah Anda yakin ingin keluar dari akun AMS BUDIDAYA Mobile?</p>
             </div>
 
             <div class="grid grid-cols-2 gap-2 pt-2">
@@ -435,7 +435,7 @@ function akunPetugasDistribusi() {
                 languageModalTitle: 'Pilih Bahasa / Language',
                 logout: 'Keluar',
                 logoutConfirm: 'Konfirmasi Keluar',
-                logoutMessage: 'Apakah Anda yakin ingin keluar dari akun SIM-BUDIDAYA Mobile?',
+                logoutMessage: 'Apakah Anda yakin ingin keluar dari akun AMS BUDIDAYA Mobile?',
                 cancel: 'Batal',
                 yesLogout: 'Ya, Keluar',
                 langChanged: 'Bahasa berhasil diubah ke Bahasa Indonesia (🇮🇩)'
@@ -458,7 +458,7 @@ function akunPetugasDistribusi() {
                 languageModalTitle: 'Select Language',
                 logout: 'Log Out',
                 logoutConfirm: 'Confirm Log Out',
-                logoutMessage: 'Are you sure you want to log out of SIM-BUDIDAYA Mobile?',
+                logoutMessage: 'Are you sure you want to log out of AMS BUDIDAYA Mobile?',
                 cancel: 'Cancel',
                 yesLogout: 'Yes, Log Out',
                 langChanged: 'Language successfully changed to English (🇬🇧)'

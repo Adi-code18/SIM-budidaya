@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Mobile Petugas - SIM-BUDIDAYA</title>
+    <title>Login Mobile Petugas - AMS BUDIDAYA</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -171,7 +171,7 @@
                      class="h-14 w-auto object-contain drop-shadow-sm">
                 <div>
                     <p class="text-[11px] text-slate-500 font-medium mt-0.5 max-w-xs leading-relaxed">
-                        Masuk ke aplikasi SIM-BUDIDAYA Mobile sesuai peran petugas operasional Anda.
+                        Masuk ke aplikasi AMS BUDIDAYA Mobile sesuai peran petugas operasional Anda.
                     </p>
                 </div>
             </div>

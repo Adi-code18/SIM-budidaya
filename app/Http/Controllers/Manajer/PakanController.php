@@ -116,7 +116,7 @@ class PakanController extends Controller
                     'tipe_mitra'   => $s->tipe_mitra,
                     'alamat'       => $s->alamat,
                     'telepon'      => $phone,
-                    'wa_link'      => 'https://wa.me/' . $cleanPhone . '?text=' . urlencode("Halo {$s->nama_mitra}, saya dari SIM-BUDIDAYA ingin memesan pasokan pakan ikan. Apakah stok pakan tersedia?"),
+                    'wa_link'      => 'https://wa.me/' . $cleanPhone . '?text=' . urlencode("Halo {$s->nama_mitra}, saya dari AMS BUDIDAYA ingin memesan pasokan pakan ikan. Apakah stok pakan tersedia?"),
                 ];
             });
 
@@ -329,18 +329,19 @@ class PakanController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'id_kolam'       => 'required|exists:kolam,id_kolam',
-            'id_stok_pakan'  => 'nullable|exists:stok_pakan,id_stok_pakan',
-            'kategori_fase'  => 'nullable|in:pembibitan,pembesaran',
-            'tgl_log'        => 'nullable|date',
-            'kg_pelet'       => 'nullable|numeric|min:0|max:100',
-            'kg_daun'        => 'nullable|numeric|min:0|max:100',
-            'jenis_daun'     => 'nullable|string',
-            'total_biaya'    => 'nullable|numeric|min:0',
-            'ph_air'         => 'nullable|numeric',
+            'id_kolam'          => 'required|exists:kolam,id_kolam',
+            'id_stok_pakan'     => 'nullable|exists:stok_pakan,id_stok_pakan',
+            'id_stok_suplemen'  => 'nullable|exists:stok_pakan,id_stok_pakan',
+            'kategori_fase'     => 'nullable|in:pembibitan,pembesaran',
+            'tgl_log'           => 'nullable|date',
+            'kg_pelet'          => 'nullable|numeric|min:0|max:100',
+            'kg_daun'           => 'nullable|numeric|min:0|max:100',
+            'jenis_daun'        => 'nullable|string',
+            'total_biaya'       => 'nullable|numeric|min:0',
+            'ph_air'            => 'nullable|numeric',
         ], [
-            'kg_pelet.max'   => 'Pemberian pelet maksimal 100 kg per sesi.',
-            'kg_daun.max'    => 'Pemberian pakan daun maksimal 100 kg per sesi.',
+            'kg_pelet.max'      => 'Pemberian pelet maksimal 100 kg per sesi.',
+            'kg_daun.max'       => 'Pemberian pakan daun maksimal 100 kg per sesi.',
         ]);
 
         $fase = $request->kategori_fase ?? 'pembesaran';
@@ -395,13 +396,29 @@ class PakanController extends Controller
         $tgl = $request->tgl_log ? Carbon::parse($request->tgl_log)->toDateString() : Carbon::today()->toDateString();
         $kgPelet = (float) ($request->kg_pelet ?? 0);
         $kgDaun = ($fase === 'pembibitan') ? 0.0 : (float) ($request->kg_daun ?? 0);
-        $jenisDaun = ($fase === 'pembibitan') ? null : ($request->jenis_daun ?: ($stokItem ? $stokItem->nama_pakan : null));
-        $totalKg = $kgPelet + $kgDaun;
 
-        // Ambil harga referensi pakan jika ada
+        // 1. Ambil pakan utama (pelet)
         $stokItem = $request->id_stok_pakan ? StokPakan::find($request->id_stok_pakan) : null;
-        $hargaPerKg = $stokItem ? (float) $stokItem->harga_per_satuan : 12500;
-        $totalBiaya = (float) ($request->total_biaya ?? ($totalKg * $hargaPerKg));
+        $hargaPelet = $stokItem ? (float) $stokItem->harga_per_satuan : 12500;
+
+        // 2. Ambil pakan suplemen / dedaunan dari Master Stok Pakan
+        $suplemenItem = null;
+        if ($fase !== 'pembibitan') {
+            if ($request->filled('id_stok_suplemen')) {
+                $suplemenItem = StokPakan::find($request->id_stok_suplemen);
+            } elseif ($request->filled('jenis_daun')) {
+                $suplemenItem = StokPakan::where('nama_pakan', 'like', '%' . $request->jenis_daun . '%')->first();
+            }
+        }
+        $hargaSuplemen = $suplemenItem ? (float) $suplemenItem->harga_per_satuan : 0;
+        $jenisDaun = ($fase === 'pembibitan') ? null : ($suplemenItem ? $suplemenItem->nama_pakan : ($request->jenis_daun ?: null));
+
+        // Kalkulasi: Total Biaya = (kg_pelet * harga_pelet) + (kg_daun * harga_suplemen)
+        $calcBiaya = ($kgPelet * $hargaPelet) + ($kgDaun * $hargaSuplemen);
+        $totalBiaya = (float) ($request->total_biaya ?? $calcBiaya);
+        if ($totalBiaya <= 0 && ($kgPelet > 0 || $kgDaun > 0)) {
+            $totalBiaya = $calcBiaya;
+        }
 
         $log = ManajemenPakan::create([
             'id_user'        => Auth::id() ?? 1,
@@ -417,15 +434,25 @@ class PakanController extends Controller
         ]);
 
         // POTONG SALDO STOK PAKAN OTOMATIS
-        if ($stokItem && $totalKg > 0) {
-            $newStok = max(0, (float) $stokItem->stok_tersisa - $totalKg);
-            $stokItem->update(['stok_tersisa' => $newStok]);
+        // 1. Potong Stok Pelet / Pakan Utama
+        if ($stokItem && $kgPelet > 0) {
+            $stokItem->update([
+                'stok_tersisa' => max(0, (float) $stokItem->stok_tersisa - $kgPelet)
+            ]);
         } elseif ($kgPelet > 0) {
-            // Fallback potong stok pelet default jika ada
             $defaultPelet = StokPakan::where('nama_pakan', 'like', '%Pelet%')->first();
             if ($defaultPelet) {
-                $defaultPelet->update(['stok_tersisa' => max(0, (float) $defaultPelet->stok_tersisa - $kgPelet)]);
+                $defaultPelet->update([
+                    'stok_tersisa' => max(0, (float) $defaultPelet->stok_tersisa - $kgPelet)
+                ]);
             }
+        }
+
+        // 2. Potong Stok Dedaunan / Pakan Suplemen
+        if ($suplemenItem && $kgDaun > 0) {
+            $suplemenItem->update([
+                'stok_tersisa' => max(0, (float) $suplemenItem->stok_tersisa - $kgDaun)
+            ]);
         }
 
         // Update kolam ph air jika diisi

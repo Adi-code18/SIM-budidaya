@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return response()->json([
-        'app' => config('app.name', 'SIM-BUDIDAYA'),
+        'app' => config('app.name', 'AMS BUDIDAYA'),
         'version' => '1.0.0',
         'status' => 'online'
     ]);

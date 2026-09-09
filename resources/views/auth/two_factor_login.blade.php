@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verifikasi 2FA - SIM-BUDIDAYA</title>
+    <title>Verifikasi 2FA - AMS BUDIDAYA</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -16,16 +16,7 @@
 </head>
 <body class="bg-[#f4f6f9] min-h-screen flex items-center justify-center p-4">
 
-    <div class="w-full max-w-md bg-white rounded-3xl shadow-xl border border-slate-100 p-6 sm:p-8 my-6"
-         x-data="{ 
-             copied: false,
-             showQr: true,
-             copyKey() {
-                 navigator.clipboard.writeText('{{ $secretKey ?? '' }}');
-                 this.copied = true;
-                 setTimeout(() => this.copied = false, 2000);
-             }
-         }">
+    <div class="w-full max-w-md bg-white rounded-3xl shadow-xl border border-slate-100 p-6 sm:p-8 my-6">
         
         <!-- Header -->
         <div class="text-center mb-6">
@@ -33,7 +24,7 @@
                 <i class="fa-solid fa-shield-halved text-2xl text-sky-400"></i>
             </div>
             <h1 class="text-xl font-extrabold text-[#051B44]">Verifikasi Google Authenticator</h1>
-            <p class="text-xs text-slate-500 font-medium mt-1">Pindai kode QR atau masukkan 6 digit kode OTP dari aplikasi untuk masuk.</p>
+            <p class="text-xs text-slate-500 font-medium mt-1">Masukkan 6-digit kode OTP dari aplikasi Google Authenticator Anda.</p>
         </div>
 
         @if ($errors->any())
@@ -50,35 +41,12 @@
         </div>
         @endif
 
-        @if(!empty($qrCodeSvg))
-        <!-- QR Code Card -->
-        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/90 flex flex-col items-center justify-center mb-5">
-            <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-center max-w-[180px] max-h-[180px] mb-3 overflow-hidden [&>svg]:w-full [&>svg]:h-full [&>img]:w-full [&>img]:h-full">
-                {!! $qrCodeSvg !!}
-            </div>
-
-            @if(!empty($secretKey))
-            <p class="text-[11px] text-slate-500 font-semibold mb-1 text-center">Atau kunci rahasia manual:</p>
-            <div class="inline-flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-3 py-1.5 shadow-xs max-w-full">
-                <code class="text-xs font-mono font-bold text-slate-800 tracking-wider truncate">{{ $secretKey }}</code>
-                <button type="button" 
-                        @click="copyKey()" 
-                        class="text-xs px-2 py-0.5 rounded-lg font-bold transition-all text-slate-500 hover:text-[#051B44] hover:bg-slate-100 flex items-center gap-1 cursor-pointer"
-                        title="Salin Kunci">
-                    <i class="fa-regular" :class="copied ? 'fa-circle-check text-emerald-600' : 'fa-copy'"></i>
-                    <span x-text="copied ? 'Tersalin' : 'Salin'"></span>
-                </button>
-            </div>
-            @endif
-        </div>
-        @endif
-
         <!-- OTP Form -->
-        <form action="{{ route('2fa.verify') }}" method="POST" class="space-y-4">
+        <form action="{{ route('2fa.verify') }}" method="POST" class="space-y-5">
             @csrf
 
             <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1.5 text-center">
+                <label class="block text-xs font-bold text-slate-700 mb-2 text-center">
                     Kode OTP 6-Digit
                 </label>
                 <div class="relative max-w-xs mx-auto">
@@ -87,12 +55,13 @@
                            maxlength="6"
                            pattern="[0-9]*"
                            inputmode="numeric"
-                           placeholder="123456" 
+                           placeholder="000000" 
                            required 
                            autofocus
                            autocomplete="one-time-code"
-                           class="w-full text-center tracking-[0.5em] text-2xl font-extrabold py-3 px-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:bg-white focus:border-[#051B44] focus:ring-2 focus:ring-[#051B44]/10 transition-all">
+                           class="w-full text-center tracking-[0.5em] text-2xl font-extrabold py-3.5 px-4 bg-slate-50 border-2 border-slate-200 rounded-2xl focus:outline-none focus:bg-white focus:border-[#051B44] focus:ring-4 focus:ring-sky-500/10 transition-all">
                 </div>
+                <p class="text-[11px] text-slate-400 text-center font-medium mt-2">Buka aplikasi Google Authenticator di ponsel Anda untuk melihat kode aktif.</p>
             </div>
 
             <button type="submit" class="w-full py-3.5 bg-[#051B44] hover:bg-[#09265c] text-white font-bold text-xs rounded-xl shadow-lg shadow-[#051B44]/20 transition-all flex items-center justify-center gap-2 cursor-pointer">

@@ -1,6 +1,6 @@
 @extends('mobile_web_petugas.petugas_distribusi.layout')
 
-@section('title', 'Detail & Tracking Pengiriman - SIM-BUDIDAYA Mobile')
+@section('title', 'Detail & Tracking Pengiriman - AMS BUDIDAYA Mobile')
 
 @section('content')
 <div class="p-4 space-y-4" x-data="detailTrackingData()">
@@ -21,60 +21,84 @@
     <div class="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs space-y-3">
         <div class="flex items-center justify-between">
             <span class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">STATUS PENGIRIMAN</span>
-            @if($transaksi->status_order === 'pemberokian')
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-100 text-sky-800 border border-sky-200">Dalam Pemberokian</span>
-            @elseif($transaksi->status_order === 'dalam_pengiriman')
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-200">Sedang Diperjalanan</span>
+            @if($transaksi->status_order === 'pending')
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-200 flex items-center gap-1">
+                    <i class="fa-solid fa-clock"></i> Pending (Persiapan)
+                </span>
+            @elseif($transaksi->status_order === 'pemberokian')
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-100 text-sky-800 border border-sky-200 flex items-center gap-1">
+                    <i class="fa-solid fa-water"></i> Dalam Pemberokian
+                </span>
+            @elseif($transaksi->status_order === 'siap_kirim')
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-100 text-indigo-800 border border-indigo-200 flex items-center gap-1">
+                    <i class="fa-solid fa-box-check"></i> Siap Kirim
+                </span>
+            @elseif($transaksi->status_order === 'dalam_pengiriman' || $transaksi->status_order === 'dikirim')
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-800 border border-blue-200 flex items-center gap-1 animate-pulse">
+                    <i class="fa-solid fa-truck-fast"></i> Sedang Diperjalanan
+                </span>
             @elseif($transaksi->status_order === 'selesai')
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">Telah Selesai</span>
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                    <i class="fa-solid fa-circle-check"></i> Telah Selesai
+                </span>
             @else
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-100 text-indigo-800 border border-indigo-200">Siap Kirim</span>
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-800 border border-slate-200">
+                    {{ ucfirst($transaksi->status_order) }}
+                </span>
             @endif
         </div>
         
         <!-- Timeline Steps -->
         <div class="flex items-center justify-between relative px-2 py-2">
             
-            <!-- Connecting Line -->
+            <!-- Connecting Line Base -->
             <div class="absolute left-6 right-6 top-5 h-1 bg-slate-200 -z-0"></div>
             @php
                 $statusOrder = $transaksi->status_order ?? 'pending';
-                $progressWidth = '15%';
-                if ($statusOrder === 'pemberokian') $progressWidth = '25%';
-                elseif ($statusOrder === 'siap_kirim') $progressWidth = '55%';
-                elseif ($statusOrder === 'dalam_pengiriman') $progressWidth = '80%';
+                $progressWidth = '0%';
+                if ($statusOrder === 'pemberokian') $progressWidth = '33%';
+                elseif ($statusOrder === 'siap_kirim') $progressWidth = '66%';
+                elseif (in_array($statusOrder, ['dalam_pengiriman', 'dikirim'])) $progressWidth = '85%';
                 elseif ($statusOrder === 'selesai') $progressWidth = '100%';
             @endphp
             <div class="absolute left-6 top-5 h-1 bg-navy-800 transition-all duration-500 -z-0" style="width: {{ $progressWidth }}"></div>
 
-            <!-- Step 1: Pemberokian -->
+            <!-- Step 1: Pending / Persiapan -->
             <div class="flex flex-col items-center gap-1.5 relative z-10">
-                <div class="w-7 h-7 rounded-full {{ in_array($statusOrder, ['pemberokian', 'siap_kirim', 'dalam_pengiriman', 'selesai']) ? 'bg-navy-800 text-white' : 'bg-slate-200 text-slate-500' }} flex items-center justify-center text-xs font-bold ring-4 ring-white shadow-xs">
+                <div class="w-7 h-7 rounded-full {{ in_array($statusOrder, ['pending', 'pemberokian', 'siap_kirim', 'dalam_pengiriman', 'dikirim', 'selesai']) ? 'bg-navy-800 text-white' : 'bg-slate-200 text-slate-500' }} flex items-center justify-center text-xs font-bold ring-4 ring-white shadow-xs">
+                    <i class="fa-solid fa-hourglass-start text-[10px]"></i>
+                </div>
+                <span class="text-[9px] font-bold text-navy-900">Pending</span>
+            </div>
+
+            <!-- Step 2: Pemberokian -->
+            <div class="flex flex-col items-center gap-1.5 relative z-10">
+                <div class="w-7 h-7 rounded-full {{ in_array($statusOrder, ['pemberokian', 'siap_kirim', 'dalam_pengiriman', 'dikirim', 'selesai']) ? 'bg-navy-800 text-white' : 'bg-slate-200 text-slate-500' }} flex items-center justify-center text-xs font-bold ring-4 ring-white shadow-xs">
                     <i class="fa-solid fa-water text-[10px]"></i>
                 </div>
                 <span class="text-[9px] font-bold text-navy-900">Pemberokan</span>
             </div>
 
-            <!-- Step 2: Siap Kirim -->
+            <!-- Step 3: Siap Kirim -->
             <div class="flex flex-col items-center gap-1.5 relative z-10">
-                <div class="w-7 h-7 rounded-full {{ in_array($statusOrder, ['siap_kirim', 'dalam_pengiriman', 'selesai']) ? 'bg-navy-800 text-white' : 'bg-slate-200 text-slate-500' }} flex items-center justify-center text-xs font-bold ring-4 ring-white shadow-xs">
+                <div class="w-7 h-7 rounded-full {{ in_array($statusOrder, ['siap_kirim', 'dalam_pengiriman', 'dikirim', 'selesai']) ? 'bg-navy-800 text-white' : 'bg-slate-200 text-slate-500' }} flex items-center justify-center text-xs font-bold ring-4 ring-white shadow-xs">
                     <i class="fa-solid fa-box text-[10px]"></i>
                 </div>
                 <span class="text-[9px] font-bold text-navy-900">Siap Kirim</span>
             </div>
 
-            <!-- Step 3: Pengiriman -->
+            <!-- Step 4: Kirim -->
             <div class="flex flex-col items-center gap-1.5 relative z-10">
-                <div class="w-7 h-7 rounded-full {{ in_array($statusOrder, ['dalam_pengiriman', 'selesai']) ? 'bg-navy-800 text-white' : 'bg-slate-200 text-slate-500' }} flex items-center justify-center text-xs font-bold ring-4 ring-white shadow-xs">
+                <div class="w-7 h-7 rounded-full {{ in_array($statusOrder, ['dalam_pengiriman', 'dikirim', 'selesai']) ? 'bg-navy-800 text-white' : 'bg-slate-200 text-slate-500' }} flex items-center justify-center text-xs font-bold ring-4 ring-white shadow-xs">
                     <i class="fa-solid fa-truck-fast text-[10px]"></i>
                 </div>
                 <span class="text-[9px] font-bold text-navy-900">Kirim</span>
             </div>
 
-            <!-- Step 4: Selesai -->
+            <!-- Step 5: Selesai -->
             <div class="flex flex-col items-center gap-1.5 relative z-10">
                 <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ring-4 ring-white shadow-xs transition-all {{ $statusOrder === 'selesai' ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-500' }}">
-                    <i class="fa-solid {{ $statusOrder === 'selesai' ? 'fa-check text-[10px]' : 'fa-house-flag text-[10px]' }}"></i>
+                    <i class="fa-solid {{ $statusOrder === 'selesai' ? 'fa-check text-[10px]' : 'fa-flag-checkered text-[10px]' }}"></i>
                 </div>
                 <span class="text-[9px] font-bold {{ $statusOrder === 'selesai' ? 'text-emerald-700 font-extrabold' : 'text-slate-400' }}">Selesai</span>
             </div>
@@ -133,92 +157,222 @@
         </div>
     </div>
 
-    <!-- Interactive Action Buttons Stack -->
-    <div class="space-y-2.5 pt-1">
-        
-        <!-- Button 1: Navigasi via Maps -->
-        <button @click="mapModal = true" 
-                class="w-full py-3 rounded-2xl bg-navy-800 hover:bg-navy-900 active:scale-[0.99] text-white font-bold text-xs flex items-center justify-center gap-2.5 shadow-sm transition-all">
-            <i class="fa-solid fa-map-location-dot text-sm text-sky-300"></i>
-            <span>Navigasi via Maps</span>
-        </button>
+    <!-- STATUS WORKFLOW CONDITIONALS -->
 
-        <!-- Button 2: Upload Foto Serah Terima -->
-        <button @click="uploadModal = true" 
-                class="w-full py-3 rounded-2xl bg-white border border-slate-300 hover:bg-slate-50 active:scale-[0.99] text-slate-800 font-bold text-xs flex items-center justify-center gap-2.5 shadow-2xs transition-all">
-            <i class="fa-solid fa-camera text-sky-600 text-sm"></i>
-            <span x-text="uploadedImage ? 'Foto Serah Terima (Tergugah ✓)' : 'Upload Foto Serah Terima'">Upload Foto Serah Terima</span>
-        </button>
-
-    </div>
-
-    <!-- Sticky Bottom Slide-to-Confirm Action Bar -->
-    <div class="pt-2">
-        <template x-if="!deliveryDone">
-            <div class="relative w-full h-14 bg-[#0F2C59] rounded-2xl p-1.5 flex items-center select-none overflow-hidden shadow-lg border border-sky-950/40"
-                 style="touch-action: none; -webkit-user-select: none; user-select: none;"
-                 x-ref="sliderTrack"
-                 x-init="initSlider()">
-                
-                <!-- Dynamic Gradient Fill on Slide -->
-                <div class="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-sky-600 via-sky-500 to-emerald-500 rounded-2xl pointer-events-none"
-                     :class="isDragging ? '' : 'transition-all duration-300 ease-out'"
-                     :style="'width: ' + (currentX + 52) + 'px'">
+    <!-- Case 1: Status PENDING atau PEMBEROKIAN -->
+    @if(in_array($transaksi->status_order, ['pending', 'pemberokian']))
+        <div class="p-4 rounded-2xl bg-amber-50/90 border border-amber-200 text-amber-900 space-y-3">
+            <div class="flex items-start gap-3">
+                <div class="w-8 h-8 rounded-xl bg-amber-200 text-amber-800 flex items-center justify-center shrink-0 mt-0.5">
+                    <i class="fa-solid fa-lock text-sm"></i>
                 </div>
+                <div>
+                    <h4 class="font-extrabold text-xs text-amber-900">
+                        @if($transaksi->status_order === 'pending')
+                            Pesanan Masih Dalam Persiapan (Pending)
+                        @else
+                            Ikan Masih Dalam Proses Pemberokan
+                        @endif
+                    </h4>
+                    <p class="text-[11px] text-amber-800 mt-1 leading-relaxed">
+                        @if($transaksi->status_order === 'pending')
+                            Menunggu verifikasi dan persiapan muatan dari manajer operasional. Navigasi dan konfirmasi kirim masih dikunci.
+                        @else
+                            Ikan sedang dikarantina/dibersihkan di kolam pemberokan. Tombol kirim akan aktif otomatis saat status berubah menjadi <strong>Siap Kirim</strong>.
+                        @endif
+                    </p>
+                </div>
+            </div>
+            
+            <div class="pt-1">
+                <a href="{{ route('mobile.petugas.pengiriman') }}" 
+                   class="w-full py-2.5 rounded-xl bg-white border border-amber-300 text-amber-900 font-bold text-xs flex items-center justify-center gap-2 shadow-2xs hover:bg-amber-100 transition-colors">
+                    <i class="fa-solid fa-arrow-left text-xs"></i>
+                    <span>Kembali ke Daftar Tugas</span>
+                </a>
+            </div>
+        </div>
 
-                <!-- Text & Animated Chevrons in Center -->
-                <div class="absolute inset-0 flex items-center justify-center pointer-events-none px-12 transition-opacity duration-200"
-                     :style="'opacity: ' + Math.max(0, 1 - progress * 1.6)">
-                    <div class="flex items-center gap-2 text-white font-extrabold text-xs tracking-wide">
-                        <div class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-white text-[10px]">
-                            <i class="fa-solid fa-circle-check"></i>
+    <!-- Case 2: Status SIAP KIRIM (Tampilkan Tombol Konfirmasi Kirim Sekarang) -->
+    @elseif($transaksi->status_order === 'siap_kirim')
+        <div class="p-4 rounded-2xl bg-indigo-50/90 border border-indigo-200 text-indigo-950 space-y-3">
+            <div class="flex items-start gap-3">
+                <div class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
+                    <i class="fa-solid fa-truck-ramp-box text-sm"></i>
+                </div>
+                <div>
+                    <h4 class="font-extrabold text-xs text-indigo-950">Pesanan Siap Dikirim!</h4>
+                    <p class="text-[11px] text-indigo-800 mt-0.5 leading-relaxed">
+                        Ikan sudah dimuat ke armada. Tekan tombol di bawah untuk mulai perjalanan dan membuka rute navigasi Google Maps.
+                    </p>
+                </div>
+            </div>
+
+            <form action="{{ route('mobile.petugas.startDelivery', ['id' => $transaksi->id_transaksi]) }}" method="POST">
+                @csrf
+                <button type="submit" 
+                        class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-navy-800 via-navy-900 to-sky-900 text-white font-extrabold text-xs flex items-center justify-center gap-2.5 shadow-md hover:shadow-lg transition-all active:scale-[0.98]">
+                    <i class="fa-solid fa-paper-plane text-sky-300 text-sm"></i>
+                    <span>Konfirmasi Mulai Kirim Sekarang & Buka Navigasi</span>
+                </button>
+            </form>
+        </div>
+
+    <!-- Case 3: Status DALAM PENGIRIMAN -->
+    @elseif(in_array($transaksi->status_order, ['dalam_pengiriman', 'dikirim']))
+        
+        <!-- Notice Wajib Upload Foto -->
+        <div class="p-3.5 rounded-2xl bg-sky-50 border border-sky-200 text-sky-900 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+                <div class="w-7 h-7 rounded-lg bg-sky-600 text-white flex items-center justify-center text-xs shrink-0">
+                    <i class="fa-solid fa-camera"></i>
+                </div>
+                <div class="text-[11px] leading-tight">
+                    <strong class="font-extrabold block text-navy-900">Wajib Foto Serah Terima</strong>
+                    <span class="text-sky-700" x-text="uploadedImage ? 'Foto sudah terlampir. Anda siap menyelesaikan pengiriman!' : 'Ambil foto fisik serah terima sebelum menandai selesai.'"></span>
+                </div>
+            </div>
+            <template x-if="uploadedImage">
+                <span class="px-2 py-1 bg-emerald-100 text-emerald-800 font-extrabold text-[10px] rounded-lg border border-emerald-300 shrink-0">
+                    ✓ Terpasang
+                </span>
+            </template>
+        </div>
+
+        <!-- Interactive Action Buttons Stack -->
+        <div class="space-y-2.5 pt-1">
+            
+            <!-- Button 1: Navigasi via Maps -->
+            <button @click="mapModal = true" 
+                    class="w-full py-3 rounded-2xl bg-navy-800 hover:bg-navy-900 active:scale-[0.99] text-white font-bold text-xs flex items-center justify-center gap-2.5 shadow-sm transition-all">
+                <i class="fa-solid fa-map-location-dot text-sm text-sky-300"></i>
+                <span>Navigasi via Maps</span>
+            </button>
+
+            <!-- Button 2: Upload Foto Serah Terima -->
+            <button @click="uploadModal = true" 
+                    class="w-full py-3 rounded-2xl border active:scale-[0.99] font-bold text-xs flex items-center justify-center gap-2.5 shadow-2xs transition-all"
+                    :class="uploadedImage ? 'bg-emerald-50 border-emerald-300 text-emerald-800' : 'bg-white border-slate-300 text-slate-800 hover:bg-slate-50'">
+                <i class="fa-solid fa-camera text-sm" :class="uploadedImage ? 'text-emerald-600' : 'text-sky-600'"></i>
+                <span x-text="uploadedImage ? 'Foto Serah Terima Terlampir (Klik Ubah)' : 'Ambil / Upload Foto Serah Terima *'">Ambil / Upload Foto Serah Terima *</span>
+            </button>
+
+        </div>
+
+        <!-- Sticky Bottom Slide-to-Confirm Action Bar -->
+        <div class="pt-2">
+            <template x-if="!deliveryDone">
+                <div>
+                    <!-- Warning Prompt when user tries without photo -->
+                    <div x-show="!uploadedImage" class="text-center pb-2">
+                        <span class="text-[10px] font-bold text-amber-700 bg-amber-50 px-3 py-1 rounded-full border border-amber-200 inline-flex items-center gap-1.5">
+                            <i class="fa-solid fa-lock text-[9px]"></i> Geser akan aktif setelah Foto Serah Terima diunggah
+                        </span>
+                    </div>
+
+                    <div class="relative w-full h-14 rounded-2xl p-1.5 flex items-center select-none overflow-hidden shadow-lg border transition-colors"
+                         :class="uploadedImage ? 'bg-[#0F2C59] border-sky-950/40 cursor-grab' : 'bg-slate-700/80 border-slate-600 cursor-not-allowed opacity-80'"
+                         style="touch-action: none; -webkit-user-select: none; user-select: none;"
+                         x-ref="sliderTrack"
+                         x-init="initSlider()">
+                        
+                        <!-- Dynamic Gradient Fill on Slide -->
+                        <div class="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-sky-600 via-sky-500 to-emerald-500 rounded-2xl pointer-events-none"
+                             :class="isDragging ? '' : 'transition-all duration-300 ease-out'"
+                             :style="'width: ' + (currentX + 52) + 'px'">
                         </div>
-                        <span>Tandai Barang Sudah Tiba</span>
-                        <i class="fa-solid fa-angles-right text-[10px] text-sky-300 animate-pulse"></i>
+
+                        <!-- Text & Animated Chevrons in Center -->
+                        <div class="absolute inset-0 flex items-center justify-center pointer-events-none px-12 transition-opacity duration-200"
+                             :style="'opacity: ' + Math.max(0, 1 - progress * 1.6)">
+                            <div class="flex items-center gap-2 text-white font-extrabold text-xs tracking-wide">
+                                <div class="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px]"
+                                     :class="uploadedImage ? 'bg-white/20' : 'bg-amber-500/50'">
+                                    <i class="fa-solid" :class="uploadedImage ? 'fa-circle-check' : 'fa-lock'"></i>
+                                </div>
+                                <span x-text="uploadedImage ? 'Tandai Barang Diterima' : 'Kunci: Upload Foto Dulu'">Tandai Barang Diterima</span>
+                                <i x-show="uploadedImage" class="fa-solid fa-angles-right text-[10px] text-sky-300 animate-pulse"></i>
+                            </div>
+                        </div>
+
+                        <!-- Draggable Slider Handle (Thumb) with Pointer Capture -->
+                        <div x-ref="sliderThumb"
+                             @pointerdown="startDrag($event)"
+                             @pointermove="onDrag($event)"
+                             @pointerup="endDrag($event)"
+                             @pointercancel="endDrag($event)"
+                             class="relative z-10 w-11 h-11 rounded-xl flex items-center justify-center text-white shadow-md select-none transition-transform duration-150"
+                             :class="[
+                                 uploadedImage ? 'bg-sky-500 hover:bg-sky-400 cursor-grab active:cursor-grabbing' : 'bg-slate-500 cursor-not-allowed',
+                                 isDragging ? 'shadow-sky-500/60 scale-105' : 'transition-transform duration-300 ease-out'
+                             ]"
+                             :style="'transform: translateX(' + currentX + 'px); touch-action: none;'">
+                            <i class="fa-solid" :class="!uploadedImage ? 'fa-lock text-xs' : (progress > 0.7 ? 'fa-check text-base' : 'fa-arrow-right text-xs')"></i>
+                        </div>
+
+                        <!-- Right Hint Badge -->
+                        <div class="absolute right-4 text-[9px] font-extrabold text-sky-200/60 pointer-events-none uppercase tracking-wider flex items-center gap-1"
+                             :style="'opacity: ' + Math.max(0, 1 - progress * 2)">
+                            <span x-text="uploadedImage ? 'GESER' : 'TERKUNCI'">GESER</span>
+                            <i class="fa-solid fa-chevron-right text-[8px]"></i>
+                        </div>
+
                     </div>
                 </div>
+            </template>
 
-                <!-- Draggable Slider Handle (Thumb) with Pointer Capture -->
-                <div x-ref="sliderThumb"
-                     @pointerdown="startDrag($event)"
-                     @pointermove="onDrag($event)"
-                     @pointerup="endDrag($event)"
-                     @pointercancel="endDrag($event)"
-                     class="relative z-10 w-11 h-11 rounded-xl bg-sky-500 hover:bg-sky-400 active:scale-95 flex items-center justify-center text-white shadow-md cursor-grab active:cursor-grabbing select-none"
-                     :class="isDragging ? 'shadow-sky-500/60 scale-105' : 'transition-transform duration-300 ease-out'"
-                     :style="'transform: translateX(' + currentX + 'px); touch-action: none;'">
-                    <i class="fa-solid" :class="progress > 0.7 ? 'fa-check text-base' : 'fa-arrow-right text-xs'"></i>
+            <template x-if="deliveryDone">
+                <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-center space-y-2">
+                    <div class="w-10 h-10 rounded-full bg-emerald-600 text-white mx-auto flex items-center justify-center text-lg shadow-sm">
+                        <i class="fa-solid fa-check"></i>
+                    </div>
+                    <h3 class="font-extrabold text-emerald-900 text-sm">Pengiriman Berhasil Diselesaikan!</h3>
+                    <p class="text-xs text-emerald-700 font-medium">Status order #ORD-{{ str_pad($transaksi->id_transaksi, 4, '0', STR_PAD_LEFT) }} telah selesai dan tersimpan ke riwayat.</p>
+                    <div class="pt-2 flex items-center justify-center gap-2">
+                        <a href="{{ route('mobile.petugas.riwayat') }}" class="px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow-xs transition-colors flex items-center gap-1.5">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                            <span>Lihat di Riwayat</span>
+                        </a>
+                        <a href="{{ route('mobile.petugas.pengiriman') }}" class="px-4 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-700 font-bold text-xs hover:bg-slate-50 transition-colors">
+                            Daftar Tugas
+                        </a>
+                    </div>
                 </div>
+            </template>
+        </div>
 
-                <!-- Right Hint Badge -->
-                <div class="absolute right-4 text-[9px] font-extrabold text-sky-200/60 pointer-events-none uppercase tracking-wider flex items-center gap-1"
-                     :style="'opacity: ' + Math.max(0, 1 - progress * 2)">
-                    <span>GESER</span>
-                    <i class="fa-solid fa-chevron-right text-[8px]"></i>
+    <!-- Case 4: Status SELESAI -->
+    @elseif($transaksi->status_order === 'selesai')
+        <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-3">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-base shrink-0 shadow-xs">
+                    <i class="fa-solid fa-circle-check"></i>
                 </div>
-
-            </div>
-        </template>
-
-        <template x-if="deliveryDone">
-            <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-center space-y-2">
-                <div class="w-10 h-10 rounded-full bg-emerald-600 text-white mx-auto flex items-center justify-center text-lg shadow-sm">
-                    <i class="fa-solid fa-check"></i>
-                </div>
-                <h3 class="font-extrabold text-emerald-900 text-sm">Pengiriman Selesai!</h3>
-                <p class="text-xs text-emerald-700 font-medium">Status order #ORD-{{ str_pad($transaksi->id_transaksi, 4, '0', STR_PAD_LEFT) }} telah dipindahkan ke Riwayat Pengiriman.</p>
-                <div class="pt-2 flex items-center justify-center gap-2">
-                    <a href="{{ route('mobile.petugas.riwayat') }}" class="px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow-xs transition-colors flex items-center gap-1.5">
-                        <i class="fa-solid fa-clock-rotate-left"></i>
-                        <span>Lihat di Riwayat</span>
-                    </a>
-                    <a href="{{ route('mobile.petugas.pengiriman') }}" class="px-4 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-700 font-bold text-xs hover:bg-slate-50 transition-colors">
-                        Daftar Tugas
-                    </a>
+                <div>
+                    <h4 class="font-extrabold text-xs text-emerald-900">Pengiriman Selesai Diterima</h4>
+                    <p class="text-[11px] text-emerald-700">Barang telah diserahterimakan kepada mitra.</p>
                 </div>
             </div>
-        </template>
-    </div>
+
+            @if($transaksi->Bukti_sampai)
+                <div class="pt-2 space-y-1">
+                    <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block">Foto Bukti Serah Terima:</span>
+                    <img src="{{ asset('storage/' . $transaksi->Bukti_sampai) }}" 
+                         alt="Bukti Serah Terima" 
+                         class="w-full h-44 object-cover rounded-2xl border border-emerald-200 shadow-xs">
+                </div>
+            @endif
+
+            <div class="pt-2 flex items-center gap-2">
+                <a href="{{ route('mobile.petugas.riwayat') }}" class="flex-1 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs text-center shadow-xs transition-colors">
+                    Lihat di Riwayat
+                </a>
+                <a href="{{ route('mobile.petugas.pengiriman') }}" class="flex-1 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-700 font-bold text-xs text-center hover:bg-slate-50 transition-colors">
+                    Daftar Tugas
+                </a>
+            </div>
+        </div>
+    @endif
 
     <!-- ================= MODALS ================= -->
 
@@ -245,7 +399,6 @@
 
             <div class="p-4 space-y-3">
                 <div class="w-full h-48 bg-slate-200 rounded-2xl overflow-hidden relative border border-slate-200 flex items-center justify-center">
-                    <!-- Leaflet map container iframe/placeholder simulation -->
                     <iframe width="100%" height="100%" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" 
                             src="{{ $embedMapUrl }}">
                     </iframe>
@@ -280,7 +433,7 @@
             <div class="bg-navy-800 text-white p-4 flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-camera text-sky-400"></i>
-                    <h3 class="text-xs font-bold">Bukti Foto Serah Terima</h3>
+                    <h3 class="text-xs font-bold">Bukti Foto Serah Terima Fisik</h3>
                 </div>
                 <button @click="uploadModal = false" class="text-slate-300 hover:text-white">
                     <i class="fa-solid fa-xmark text-sm"></i>
@@ -327,6 +480,7 @@ function detailTrackingData() {
         mapModal: false,
         uploadedImage: null,
         deliveryDone: false,
+        isSubmitting: false,
         
         // Slider Variables
         isDragging: false,
@@ -351,7 +505,19 @@ function detailTrackingData() {
         },
 
         startDrag(e) {
-            if (this.deliveryDone) return;
+            if (this.deliveryDone || this.isSubmitting) return;
+
+            // VALIDASI: Wajib foto terlebih dahulu
+            if (!this.uploadedImage) {
+                if (typeof triggerToast === 'function') {
+                    triggerToast('Harap ambil/upload Foto Serah Terima terlebih dahulu!', 'warning');
+                } else {
+                    alert('Harap ambil/upload Foto Serah Terima terlebih dahulu!');
+                }
+                this.uploadModal = true;
+                return;
+            }
+
             this.updateMax();
             this.isDragging = true;
             this.startX = e.clientX - this.currentX;
@@ -363,7 +529,7 @@ function detailTrackingData() {
         },
 
         onDrag(e) {
-            if (!this.isDragging || this.deliveryDone) return;
+            if (!this.isDragging || this.deliveryDone || !this.uploadedImage) return;
             const deltaX = e.clientX - this.startX;
             this.currentX = Math.max(0, Math.min(deltaX, this.maxSlide));
             this.progress = this.maxSlide > 0 ? (this.currentX / this.maxSlide) : 0;
@@ -378,13 +544,17 @@ function detailTrackingData() {
                 } catch(err) {}
             }
 
+            if (!this.uploadedImage) {
+                this.resetSlider();
+                return;
+            }
+
             if (this.progress >= 0.65) {
                 this.currentX = this.maxSlide;
                 this.progress = 1;
                 this.confirmArrived();
             } else {
-                this.currentX = 0;
-                this.progress = 0;
+                this.resetSlider();
             }
         },
 
@@ -395,23 +565,52 @@ function detailTrackingData() {
         },
 
         async confirmArrived() {
-            this.deliveryDone = true;
+            if (!this.uploadedImage) {
+                if (typeof triggerToast === 'function') {
+                    triggerToast('Foto bukti serah terima wajib diunggah!', 'error');
+                }
+                this.resetSlider();
+                this.uploadModal = true;
+                return;
+            }
+
+            this.isSubmitting = true;
+
             try {
                 const res = await fetch('{{ route('mobile.petugas.complete', ['id' => $transaksi->id_transaksi ?? 1]) }}', {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json',
                         'Accept': 'application/json'
-                    }
+                    },
+                    body: JSON.stringify({
+                        foto_base64: this.uploadedImage
+                    })
                 });
+
                 const data = await res.json();
-                if (typeof triggerToast === 'function') {
-                    triggerToast(data.message || 'Pengiriman berhasil diselesaikan dan masuk ke riwayat!', 'success');
+                
+                if (res.ok && data.success) {
+                    this.deliveryDone = true;
+                    if (typeof triggerToast === 'function') {
+                        triggerToast(data.message || 'Pengiriman berhasil diselesaikan dan masuk ke riwayat!', 'success');
+                    }
+                } else {
+                    this.resetSlider();
+                    if (typeof triggerToast === 'function') {
+                        triggerToast(data.message || 'Gagal menyelesaikan pengiriman.', 'error');
+                    } else {
+                        alert(data.message || 'Gagal menyelesaikan pengiriman.');
+                    }
                 }
             } catch (err) {
+                this.resetSlider();
                 if (typeof triggerToast === 'function') {
-                    triggerToast('Pengiriman berhasil diselesaikan!', 'success');
+                    triggerToast('Terjadi kesalahan saat memproses data.', 'error');
                 }
+            } finally {
+                this.isSubmitting = false;
             }
         },
 
@@ -421,6 +620,9 @@ function detailTrackingData() {
                 const reader = new FileReader();
                 reader.onload = (evt) => {
                     this.uploadedImage = evt.target.result;
+                    if (typeof triggerToast === 'function') {
+                        triggerToast('Foto serah terima berhasil diunggah! Sekarang Anda dapat menggeser tombol konfirmasi.', 'success');
+                    }
                 };
                 reader.readAsDataURL(file);
             }

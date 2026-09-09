@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Manajer;
 
 use App\Http\Controllers\Controller;
 use App\Models\BatchPembesaran;
+use App\Models\Keuangan;
 use App\Models\MitraDistributor;
 use App\Models\TransaksiDistribusi;
 use Illuminate\Http\Request;
@@ -144,117 +145,36 @@ class DistribusiController extends Controller
         ]);
 
         $status = $request->status_order ?? 'pending';
-        if ($status === 'pemberokian') {
-            $status = 'dalam_pengiriman';
-        }
-
         $totalKg = (float) $request->Total_kg;
-        $hargaTotal = (float) ($request->harga_total ?? ($totalKg * 35000)); // default 35.000 / kg
-
+        $hargaTotal = (float) ($request->harga_total ?? ($totalKg * 35000));
         $jenisOrder = $request->Jenis_order ?? 'Ikan Segar';
 
         $primaryBatch = BatchPembesaran::with('kolam')->find($request->id_pembesaran);
-        $alokasiDetail = $request->alokasi_detail;
+        if (!$primaryBatch) {
+            return response()->json(['success' => false, 'message' => 'Batch pembesaran tidak ditemukan.'], 404);
+        }
 
-        // 1. Handle multi-source / deficit allocation if supplied
-        if (!empty($alokasiDetail) && is_array($alokasiDetail)) {
-            $parts = [];
-            if (!empty($alokasiDetail['utama_kg'])) {
-                $kolamUtamaNama = $primaryBatch && $primaryBatch->kolam ? $primaryBatch->kolam->nama_kolam : 'Kolam Utama';
-                $parts[] = "{$kolamUtamaNama}: {$alokasiDetail['utama_kg']}kg";
-                if ($primaryBatch) {
-                    $primaryBatch->biomassa_est = max(0, $primaryBatch->biomassa_est - (float)$alokasiDetail['utama_kg']);
-                    if ($primaryBatch->biomassa_est <= 0) {
-                        $primaryBatch->status_siklus = 'selesai';
-                        if ($primaryBatch->kolam) {
-                            $primaryBatch->kolam->update(['status' => 'kosong']);
-                        }
-                    }
-                    $primaryBatch->save();
-                }
-            }
-            if (!empty($alokasiDetail['buffer_kg']) && (float)$alokasiDetail['buffer_kg'] > 0) {
-                $bufferNama = $alokasiDetail['buffer_nama'] ?? 'Kolam Stok';
-                $parts[] = "{$bufferNama}: {$alokasiDetail['buffer_kg']}kg";
-                if (!empty($alokasiDetail['id_batch_buffer'])) {
-                    $bufBatch = BatchPembesaran::find($alokasiDetail['id_batch_buffer']);
-                    if ($bufBatch) {
-                        $bufBatch->biomassa_est = max(0, $bufBatch->biomassa_est - (float)$alokasiDetail['buffer_kg']);
-                        if ($bufBatch->biomassa_est <= 0) {
-                            $bufBatch->status_siklus = 'selesai';
-                        }
-                        $bufBatch->save();
-                    }
-                }
-            }
-            if (!empty($alokasiDetail['cross_kg']) && (float)$alokasiDetail['cross_kg'] > 0) {
-                $crossNama = $alokasiDetail['cross_nama'] ?? 'Cross-Batch';
-                $parts[] = "{$crossNama}: {$alokasiDetail['cross_kg']}kg";
-                if (!empty($alokasiDetail['id_batch_cross'])) {
-                    $crossBatch = BatchPembesaran::find($alokasiDetail['id_batch_cross']);
-                    if ($crossBatch) {
-                        $crossBatch->biomassa_est = max(0, $crossBatch->biomassa_est - (float)$alokasiDetail['cross_kg']);
-                        if ($crossBatch->biomassa_est <= 0) {
-                            $crossBatch->status_siklus = 'selesai';
-                        }
-                        $crossBatch->save();
-                    }
-                }
-            }
-            if (count($parts) > 1) {
-                $jenisOrder = "Ikan Segar (Multi-Kolam: " . implode(', ', $parts) . ")";
-            }
-        } else {
-            // Skenario Tunggal: Cek apakah panen kuras dengan surplus dipindahkan
-            if ($request->boolean('panen_kuras') && $request->filled('id_kolam_surplus') && (float)$request->surplus_kg > 0) {
-                $surplusKg = (float) $request->surplus_kg;
-                $targetKolam = \App\Models\Kolam::find($request->id_kolam_surplus);
+        // Jika status langsung 'pemberokian' atau 'siap_kirim', eksekusi alokasi stok ikan
+        if (in_array($status, ['pemberokian', 'siap_kirim'])) {
+            $allocationResult = $this->allocateFishStock(
+                $primaryBatch,
+                $totalKg,
+                $request->boolean('panen_kuras'),
+                $request->id_kolam_surplus,
+                $request->alokasi_detail
+            );
 
-                if ($targetKolam && $primaryBatch) {
-                    $kolamAsalNama = $primaryBatch->kolam ? $primaryBatch->kolam->nama_kolam : 'Kolam Asal';
-                    
-                    // Habiskan batch asal
-                    $primaryBatch->biomassa_est = 0;
-                    $primaryBatch->status_siklus = 'selesai';
-                    $primaryBatch->save();
-                    if ($primaryBatch->kolam) {
-                        $primaryBatch->kolam->update(['status' => 'kosong']);
-                    }
-
-                    // Pindahkan surplus ke kolam tujuan
-                    $targetBatch = BatchPembesaran::where('id_kolam', $targetKolam->id_kolam)
-                        ->where('status_siklus', 'aktif')
-                        ->first();
-
-                    if ($targetBatch) {
-                        $targetBatch->biomassa_est = (float)$targetBatch->biomassa_est + $surplusKg;
-                        $targetBatch->save();
-                    } else {
-                        BatchPembesaran::create([
-                            'id_kolam'            => $targetKolam->id_kolam,
-                            'id_user'             => Auth::id() ?? 1,
-                            'id_batch_pembibitan' => $primaryBatch->id_batch_pembibitan,
-                            'tgl_tebar'           => Carbon::today()->toDateString(),
-                            'biomassa_est'        => $surplusKg,
-                            'target_panen_kg'     => $surplusKg,
-                            'jenis_ikan'          => $primaryBatch->jenis_ikan ?? 'Ikan Segar',
-                            'status_siklus'       => 'aktif',
-                        ]);
-                        $targetKolam->update(['status' => 'aktif']);
-                    }
-
-                    $jenisOrder = ($primaryBatch->jenis_ikan ?? 'Ikan Segar') . " (Kuras: sisa {$surplusKg}kg -> {$targetKolam->nama_kolam})";
+            if (!$allocationResult['success']) {
+                // Jika stok di seluruh kolam sejenis tidak mencukupi, paksa status tetap 'pending'
+                $status = 'pending';
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $allocationResult['message'] . ' Pesanan disimpan dengan status PENDING.'
+                    ], 422);
                 }
-            } elseif ($primaryBatch) {
-                // Potong biasa
-                $primaryBatch->biomassa_est = max(0, $primaryBatch->biomassa_est - $totalKg);
-                if ($primaryBatch->biomassa_est <= 0) {
-                    $primaryBatch->status_siklus = 'selesai';
-                    if ($primaryBatch->kolam) {
-                        $primaryBatch->kolam->update(['status' => 'kosong']);
-                    }
-                }
-                $primaryBatch->save();
+            } else {
+                $jenisOrder = $allocationResult['jenis_order'] ?? $jenisOrder;
             }
         }
 
@@ -269,10 +189,15 @@ class DistribusiController extends Controller
             'Jenis_order'   => $jenisOrder,
         ]);
 
+        // Otomatisasi Kas Masuk ke Buku Keuangan saat status SIAP KIRIM (SOP Pelunasan di Awal)
+        if ($transaksi->status_order === 'siap_kirim') {
+            $this->recordIncomeToKeuangan($transaksi);
+        }
+
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success'   => true,
-                'message'   => 'Pesanan distribusi baru berhasil ditambahkan!',
+                'message'   => 'Pesanan distribusi baru berhasil ditambahkan' . ($status === 'pending' ? ' (Status: PENDING - Menunggu Panen/Verifikasi)' : ($status === 'siap_kirim' ? ' (Status: SIAP KIRIM - Kas Masuk Otomatis Terbukukan ke Keuangan)' : ' dan dialokasikan ke pemberokian!')) . '!',
                 'transaksi' => $transaksi->load(['mitra', 'batchPembesaran'])
             ]);
         }
@@ -283,34 +208,303 @@ class DistribusiController extends Controller
     public function update(Request $request, $id)
     {
         $cleanId = is_numeric($id) ? $id : (int) preg_replace('/[^0-9]/', '', $id);
-        $transaksi = TransaksiDistribusi::find($cleanId);
+        $transaksi = TransaksiDistribusi::with(['batchPembesaran.kolam', 'mitra'])->find($cleanId);
 
         if (!$transaksi) {
             return response()->json(['success' => false, 'message' => 'Transaksi tidak ditemukan.'], 404);
         }
 
-        if ($request->filled('status_order')) {
-            $transaksi->status_order = $request->status_order;
-        }
+        $oldStatus = $transaksi->status_order ?? 'pending';
+        $newStatus = $request->input('status_order', $oldStatus);
 
         if ($request->filled('Total_kg')) {
-            $transaksi->Total_kg = $request->Total_kg;
+            $transaksi->Total_kg = (float) $request->Total_kg;
         }
 
         if ($request->filled('harga_total')) {
-            $transaksi->harga_total = $request->harga_total;
+            $transaksi->harga_total = (float) $request->harga_total;
         }
 
+        // Jika status berubah dari 'pending' menjadi 'pemberokian' atau 'siap_kirim'
+        if ($oldStatus === 'pending' && in_array($newStatus, ['pemberokian', 'siap_kirim'])) {
+            $primaryBatch = $transaksi->batchPembesaran;
+
+            if (!$primaryBatch) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Batch pembesaran asal tidak ditemukan.'
+                ], 404);
+            }
+
+            $allocationResult = $this->allocateFishStock(
+                $primaryBatch,
+                (float) $transaksi->Total_kg,
+                $request->boolean('panen_kuras'),
+                $request->id_kolam_surplus,
+                $request->alokasi_detail
+            );
+
+            if (!$allocationResult['success']) {
+                // Jangan ubah status, tetap PENDING
+                return response()->json([
+                    'success' => false,
+                    'message' => $allocationResult['message']
+                ], 422);
+            }
+
+            if (!empty($allocationResult['jenis_order'])) {
+                $transaksi->Jenis_order = $allocationResult['jenis_order'];
+            }
+        }
+
+        $transaksi->status_order = $newStatus;
         $transaksi->save();
 
+        // Otomatisasi Kas Masuk ke Buku Keuangan saat status SIAP KIRIM (SOP Pelunasan di Awal)
+        if ($newStatus === 'siap_kirim') {
+            $this->recordIncomeToKeuangan($transaksi);
+        } elseif (in_array($newStatus, ['pending', 'pemberokian', 'dibatalkan'])) {
+            $orderRef = 'ORD-' . str_pad($transaksi->id_transaksi, 4, '0', STR_PAD_LEFT);
+            Keuangan::where('ref_id', $orderRef)->delete();
+        }
+
         if ($request->wantsJson() || $request->ajax()) {
+            $msg = 'Status order distribusi berhasil diperbarui ke: ' . strtoupper(str_replace('_', ' ', $newStatus)) . '!';
+            if ($newStatus === 'siap_kirim') {
+                $msg .= ' Kas masuk telah otomatis dibukukan ke Keuangan.';
+            }
             return response()->json([
                 'success'   => true,
-                'message'   => 'Status order distribusi berhasil diperbarui!',
+                'message'   => $msg,
                 'transaksi' => $transaksi->load(['mitra', 'batchPembesaran'])
             ]);
         }
 
         return redirect()->route('distribusi')->with('success', 'Transaksi berhasil diperbarui!');
+    }
+
+    /**
+     * Otomatis Catat Kas Masuk (Pemasukan Penjualan Ikan) saat status menjadi Siap Kirim (SOP Lunas di Muka)
+     */
+    private function recordIncomeToKeuangan(TransaksiDistribusi $transaksi)
+    {
+        $transaksi->loadMissing(['mitra', 'batchPembesaran.kolam']);
+        $mitraNama = $transaksi->mitra ? $transaksi->mitra->nama_mitra : ('Mitra #' . $transaksi->id_mitra);
+        $species = $transaksi->batchPembesaran ? $transaksi->batchPembesaran->jenis_ikan : ($transaksi->Jenis_order ?? 'Ikan Segar');
+        $idKolam = $transaksi->batchPembesaran ? $transaksi->batchPembesaran->id_kolam : null;
+        $orderRef = 'ORD-' . str_pad($transaksi->id_transaksi, 4, '0', STR_PAD_LEFT);
+        $totalKgFormatted = number_format($transaksi->Total_kg, 1, ',', '.');
+
+        Keuangan::updateOrCreate(
+            ['ref_id' => $orderRef],
+            [
+                'id_user'           => Auth::id() ?? 1,
+                'id_kolam'          => $idKolam,
+                'tanggal_transaksi' => $transaksi->tanggal_order ? Carbon::parse($transaksi->tanggal_order)->toDateString() : Carbon::today()->toDateString(),
+                'tipe_transaksi'    => 'pemasukan',
+                'kategori'          => 'Penjualan Panen ' . $species,
+                'nominal'           => (float) $transaksi->harga_total,
+                'keterangan'        => "Pelunasan transaksi #{$orderRef} ({$totalKgFormatted} kg {$species}) oleh {$mitraNama} [Status: Siap Kirim]",
+            ]
+        );
+    }
+
+    /**
+     * Helper untuk alokasi stok ikan ke pemberokian, transfer surplus ke kolam stok, dan cross-batch.
+     */
+    private function allocateFishStock(BatchPembesaran $primaryBatch, float $totalKg, bool $panenKuras = false, $idKolamSurplus = null, $alokasiDetail = null)
+    {
+        $species = $primaryBatch->jenis_ikan ?? 'Ikan Segar';
+        $primaryAvailable = (float) $primaryBatch->biomassa_est;
+
+        // Cari kolam stok / buffer penampungan default jika tidak dipilih
+        $targetKolamSurplus = null;
+        if (!empty($idKolamSurplus)) {
+            $targetKolamSurplus = \App\Models\Kolam::find($idKolamSurplus);
+        }
+        if (!$targetKolamSurplus) {
+            $targetKolamSurplus = \App\Models\Kolam::where('status', 'kosong')
+                ->orWhere('nama_kolam', 'like', '%Stok%')
+                ->orWhere('tipe_kolam', 'like', '%Pemberokan%')
+                ->orWhere('tipe_kolam', 'like', '%Penampungan%')
+                ->first();
+        }
+
+        // 1. Jika pengguna memberikan rincian alokasi manual (multi-kolam)
+        if (!empty($alokasiDetail) && is_array($alokasiDetail)) {
+            $parts = [];
+            $allocatedTotal = 0;
+
+            if (!empty($alokasiDetail['utama_kg'])) {
+                $takeUtama = min($primaryAvailable, (float)$alokasiDetail['utama_kg']);
+                $kolamUtamaNama = $primaryBatch->kolam ? $primaryBatch->kolam->nama_kolam : 'Kolam Utama';
+                $parts[] = "{$kolamUtamaNama}: {$takeUtama}kg";
+                $primaryBatch->biomassa_est = max(0, $primaryBatch->biomassa_est - $takeUtama);
+                if ($primaryBatch->biomassa_est <= 0) {
+                    $primaryBatch->status_siklus = 'selesai';
+                    if ($primaryBatch->kolam) $primaryBatch->kolam->update(['status' => 'kosong']);
+                }
+                $primaryBatch->save();
+                $allocatedTotal += $takeUtama;
+            }
+
+            if (!empty($alokasiDetail['buffer_kg']) && (float)$alokasiDetail['buffer_kg'] > 0 && !empty($alokasiDetail['id_batch_buffer'])) {
+                $bufBatch = BatchPembesaran::with('kolam')->find($alokasiDetail['id_batch_buffer']);
+                if ($bufBatch) {
+                    $takeBuf = min((float)$bufBatch->biomassa_est, (float)$alokasiDetail['buffer_kg']);
+                    $bufferNama = $bufBatch->kolam ? $bufBatch->kolam->nama_kolam : 'Kolam Stok';
+                    $parts[] = "{$bufferNama}: {$takeBuf}kg";
+                    $bufBatch->biomassa_est = max(0, $bufBatch->biomassa_est - $takeBuf);
+                    if ($bufBatch->biomassa_est <= 0) {
+                        $bufBatch->status_siklus = 'selesai';
+                        if ($bufBatch->kolam) $bufBatch->kolam->update(['status' => 'kosong']);
+                    }
+                    $bufBatch->save();
+                    $allocatedTotal += $takeBuf;
+                }
+            }
+
+            if (!empty($alokasiDetail['cross_kg']) && (float)$alokasiDetail['cross_kg'] > 0 && !empty($alokasiDetail['id_batch_cross'])) {
+                $crossBatch = BatchPembesaran::with('kolam')->find($alokasiDetail['id_batch_cross']);
+                if ($crossBatch) {
+                    $takeCross = min((float)$crossBatch->biomassa_est, (float)$alokasiDetail['cross_kg']);
+                    $crossNama = $crossBatch->kolam ? $crossBatch->kolam->nama_kolam : 'Cross-Batch';
+                    $parts[] = "{$crossNama}: {$takeCross}kg";
+                    $crossBatch->biomassa_est = max(0, $crossBatch->biomassa_est - $takeCross);
+                    if ($crossBatch->biomassa_est <= 0) {
+                        $crossBatch->status_siklus = 'selesai';
+                        if ($crossBatch->kolam) $crossBatch->kolam->update(['status' => 'kosong']);
+                    }
+                    $crossBatch->save();
+                    $allocatedTotal += $takeCross;
+                }
+            }
+
+            if ($allocatedTotal < $totalKg) {
+                return [
+                    'success' => false,
+                    'message' => "Total alokasi ({$allocatedTotal} kg) masih kurang dari kebutuhan order ({$totalKg} kg)."
+                ];
+            }
+
+            return [
+                'success'     => true,
+                'jenis_order' => "{$species} (Multi-Kolam: " . implode(', ', $parts) . ")"
+            ];
+        }
+
+        // 2. Skenario Otomatis: Stok Kolam Utama Mencukupi / Surplus
+        if ($primaryAvailable >= $totalKg) {
+            $surplusKg = $primaryAvailable - $totalKg;
+
+            if ($panenKuras && $targetKolamSurplus && $surplusKg > 0) {
+                // Kuras kolam utama, habiskan batch asal
+                $primaryBatch->biomassa_est = 0;
+                $primaryBatch->status_siklus = 'selesai';
+                $primaryBatch->save();
+                if ($primaryBatch->kolam) {
+                    $primaryBatch->kolam->update(['status' => 'kosong']);
+                }
+
+                // Pindahkan surplus ke kolam stok/penampungan
+                $targetBatch = BatchPembesaran::where('id_kolam', $targetKolamSurplus->id_kolam)
+                    ->whereIn('status_siklus', ['aktif', 'siap_panen'])
+                    ->where('jenis_ikan', $species)
+                    ->first();
+
+                if ($targetBatch) {
+                    $targetBatch->biomassa_est = (float)$targetBatch->biomassa_est + $surplusKg;
+                    $targetBatch->save();
+                } else {
+                    BatchPembesaran::create([
+                        'id_kolam'            => $targetKolamSurplus->id_kolam,
+                        'id_user'             => Auth::id() ?? 1,
+                        'id_batch_pembibitan' => $primaryBatch->id_batch_pembibitan,
+                        'tgl_tebar'           => Carbon::today()->toDateString(),
+                        'biomassa_est'        => $surplusKg,
+                        'target_panen_kg'     => $surplusKg,
+                        'jenis_ikan'          => $species,
+                        'status_siklus'       => 'siap_panen',
+                    ]);
+                    $targetKolamSurplus->update(['status' => 'aktif']);
+                }
+
+                return [
+                    'success'     => true,
+                    'jenis_order' => "{$species} (Panen Kuras: {$totalKg}kg ke Pemberokian, sisa {$surplusKg}kg -> {$targetKolamSurplus->nama_kolam})"
+                ];
+            } else {
+                // Sisakan di kolam utama
+                $primaryBatch->biomassa_est = $surplusKg;
+                if ($surplusKg <= 0) {
+                    $primaryBatch->status_siklus = 'selesai';
+                    if ($primaryBatch->kolam) $primaryBatch->kolam->update(['status' => 'kosong']);
+                }
+                $primaryBatch->save();
+
+                return [
+                    'success'     => true,
+                    'jenis_order' => "{$species}"
+                ];
+            }
+        }
+
+        // 3. Skenario Otomatis: Stok Kolam Utama Kurang (Defisit) -> Cari Kolam Lain Sejenis
+        $deficitKg = $totalKg - $primaryAvailable;
+
+        // Cari kolam lain yang memiliki jenis ikan yang SAMA dan status aktif / siap_panen
+        $otherBatches = BatchPembesaran::with('kolam')
+            ->where('id_pembesaran', '!=', $primaryBatch->id_pembesaran)
+            ->where('jenis_ikan', $species)
+            ->whereIn('status_siklus', ['aktif', 'siap_panen'])
+            ->where('biomassa_est', '>', 0)
+            ->orderByDesc('biomassa_est')
+            ->get();
+
+        $totalOtherAvailable = (float) $otherBatches->sum('biomassa_est');
+        $totalPoolAvailable = $primaryAvailable + $totalOtherAvailable;
+
+        // VALIDASI KETAT: Jika seluruh kolam sejenis belum mencukupi -> GAGAL / PENDING
+        if ($totalPoolAvailable < $totalKg) {
+            return [
+                'success' => false,
+                'message' => "Stok ikan {$species} dari seluruh kolam belum mencukupi (Total tersedia: {$totalPoolAvailable} kg, Order: {$totalKg} kg). Tidak ada kolam lain dengan jenis ikan dan bobot yang memenuhi. Status pesanan tetap PENDING hingga kolam siap panen."
+            ];
+        }
+
+        // Jika mencukupi: Kuras kolam utama dulu
+        $parts = [];
+        $kolamUtamaNama = $primaryBatch->kolam ? $primaryBatch->kolam->nama_kolam : 'Kolam Utama';
+        $parts[] = "{$kolamUtamaNama}: {$primaryAvailable}kg";
+
+        $primaryBatch->biomassa_est = 0;
+        $primaryBatch->status_siklus = 'selesai';
+        if ($primaryBatch->kolam) $primaryBatch->kolam->update(['status' => 'kosong']);
+        $primaryBatch->save();
+
+        // Ambil sisa defisit dari kolam-kolam lain yang sejenis
+        $remainingNeeded = $deficitKg;
+        foreach ($otherBatches as $other) {
+            if ($remainingNeeded <= 0) break;
+
+            $avail = (float) $other->biomassa_est;
+            $take = min($avail, $remainingNeeded);
+            $remainingNeeded -= $take;
+
+            $otherKolamNama = $other->kolam ? $other->kolam->nama_kolam : 'Kolam #' . $other->id_kolam;
+            $parts[] = "{$otherKolamNama}: {$take}kg";
+
+            $other->biomassa_est = max(0, $avail - $take);
+            if ($other->biomassa_est <= 0) {
+                $other->status_siklus = 'selesai';
+                if ($other->kolam) $other->kolam->update(['status' => 'kosong']);
+            }
+            $other->save();
+        }
+
+        return [
+            'success'     => true,
+            'jenis_order' => "{$species} (Lintas Kolam: " . implode(', ', $parts) . ")"
+        ];
     }
 }

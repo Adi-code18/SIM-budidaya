@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Distribusi & Order - SIM-BUDIDAYA')
+@section('title', 'Distribusi & Order - AMS BUDIDAYA')
 
 @section('content')
 <div class="space-y-6" x-data="distribusiComponent()">
@@ -228,12 +228,15 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-white p-3.5 rounded-xl border border-sky-100">
                                     <!-- Source 1: Kolam Stok / Buffer -->
                                     <div class="space-y-1.5">
-                                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 block flex items-center gap-1">
-                                            <i class="fa-solid fa-boxes-stacked text-sky-600"></i>
-                                            <span>1. AMBIL DARI KOLAM STOK / BUFFER</span>
+                                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 block flex items-center justify-between gap-1">
+                                            <span class="flex items-center gap-1">
+                                                <i class="fa-solid fa-boxes-stacked text-sky-600"></i>
+                                                <span>1. AMBIL DARI KOLAM STOK / BUFFER</span>
+                                            </span>
+                                            <span class="text-[9px] text-sky-700 font-bold" x-show="form.jenis_ikan" x-text="'(Jenis: ' + form.jenis_ikan + ')'"></span>
                                         </label>
                                         <select x-model="alokasi.id_batch_buffer" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-sky-500">
-                                            <option value="">-- Pilih Kolam Stok / Buffer --</option>
+                                            <option value="" x-text="availableBufferBatches.length > 0 ? '-- Pilih Kolam Stok / Buffer --' : '-- Tidak ada stok buffer sejenis --'"></option>
                                             <template x-for="b in availableBufferBatches" :key="b.id_pembesaran">
                                                 <option :value="b.id_pembesaran" x-text="b.label"></option>
                                             </template>
@@ -246,12 +249,15 @@
 
                                     <!-- Source 2: Kolam Pembesaran Lain (Cross-Batch) -->
                                     <div class="space-y-1.5">
-                                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 block flex items-center gap-1">
-                                            <i class="fa-solid fa-shuffle text-emerald-600"></i>
-                                            <span>2. AMBIL DARI KOLAM LAIN (CROSS-BATCH)</span>
+                                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 block flex items-center justify-between gap-1">
+                                            <span class="flex items-center gap-1">
+                                                <i class="fa-solid fa-shuffle text-emerald-600"></i>
+                                                <span>2. AMBIL DARI KOLAM LAIN (CROSS-BATCH)</span>
+                                            </span>
+                                            <span class="text-[9px] text-emerald-700 font-bold" x-show="form.jenis_ikan" x-text="'(Jenis: ' + form.jenis_ikan + ')'"></span>
                                         </label>
                                         <select x-model="alokasi.id_batch_cross" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
-                                            <option value="">-- Pilih Batch Kolam Lain --</option>
+                                            <option value="" x-text="availableCrossBatches.length > 0 ? '-- Pilih Batch Kolam Lain --' : '-- Tidak ada kolam lain sejenis --'"></option>
                                             <template x-for="b in availableCrossBatches" :key="b.id_pembesaran">
                                                 <option :value="b.id_pembesaran" x-text="b.label"></option>
                                             </template>
@@ -569,11 +575,22 @@ function distribusiComponent() {
         },
 
         get availableBufferBatches() {
-            return (this.batches || []).filter(b => (b.is_stok || (b.kolam && (b.kolam.toLowerCase().includes('stok') || b.kolam.toLowerCase().includes('pemberokan') || b.kolam.toLowerCase().includes('penampungan')))) && b.id_pembesaran != this.form.id_pembesaran);
+            const currentSpecies = (this.form.jenis_ikan || '').toLowerCase().trim();
+            return (this.batches || []).filter(b => {
+                const isDifferentBatch = b.id_pembesaran != this.form.id_pembesaran;
+                const isSameSpecies = !currentSpecies || (b.jenis_ikan || '').toLowerCase().trim() === currentSpecies;
+                const isBufferPond = b.is_stok || (b.kolam && (b.kolam.toLowerCase().includes('stok') || b.kolam.toLowerCase().includes('pemberokan') || b.kolam.toLowerCase().includes('penampungan')));
+                return isDifferentBatch && isSameSpecies && isBufferPond;
+            });
         },
 
         get availableCrossBatches() {
-            return (this.batches || []).filter(b => b.id_pembesaran != this.form.id_pembesaran && b.id_pembesaran != this.alokasi.id_batch_buffer);
+            const currentSpecies = (this.form.jenis_ikan || '').toLowerCase().trim();
+            return (this.batches || []).filter(b => {
+                const isDifferentBatch = b.id_pembesaran != this.form.id_pembesaran && b.id_pembesaran != this.alokasi.id_batch_buffer;
+                const isSameSpecies = !currentSpecies || (b.jenis_ikan || '').toLowerCase().trim() === currentSpecies;
+                return isDifferentBatch && isSameSpecies;
+            });
         },
 
         get defisitKg() {
@@ -592,6 +609,10 @@ function distribusiComponent() {
             this.alokasi.buffer_kg = deficit;
             if (!this.alokasi.id_batch_buffer && this.availableBufferBatches.length > 0) {
                 this.alokasi.id_batch_buffer = this.availableBufferBatches[0].id_pembesaran;
+            } else if (!this.alokasi.id_batch_cross && this.availableCrossBatches.length > 0) {
+                this.alokasi.id_batch_cross = this.availableCrossBatches[0].id_pembesaran;
+                this.alokasi.cross_kg = deficit;
+                this.alokasi.buffer_kg = 0;
             }
         },
 
@@ -687,13 +708,21 @@ function distribusiComponent() {
                 if (this.form.totalBerat && Number(this.form.totalBerat) > 0 && !this.form.totalHarga) {
                     this.form.totalHarga = 'Rp ' + (Number(this.form.totalBerat) * 35000).toLocaleString('id-ID');
                 }
-                if (!this.alokasi.id_batch_buffer && this.availableBufferBatches.length > 0) {
-                    this.alokasi.id_batch_buffer = this.availableBufferBatches[0].id_pembesaran;
+                // Pastikan id buffer & cross batch sesuai jenis ikan yang sama
+                const validBuffer = this.availableBufferBatches.find(b => b.id_pembesaran == this.alokasi.id_batch_buffer);
+                if (!validBuffer) {
+                    this.alokasi.id_batch_buffer = this.availableBufferBatches.length > 0 ? this.availableBufferBatches[0].id_pembesaran : '';
+                }
+                const validCross = this.availableCrossBatches.find(b => b.id_pembesaran == this.alokasi.id_batch_cross);
+                if (!validCross) {
+                    this.alokasi.id_batch_cross = '';
                 }
             } else {
                 this.form.jenis_ikan = '';
                 this.form.kolam_asal = '';
                 this.form.stok_biomassa = null;
+                this.alokasi.id_batch_buffer = '';
+                this.alokasi.id_batch_cross = '';
             }
         },
 
@@ -754,6 +783,36 @@ function distribusiComponent() {
         async saveForm() {
             if (this.formMode === 'edit') {
                 const rawId = this.form.id_transaksi || String(this.form.id).replace(/[^0-9]/g, '');
+                const totalKg = Number(this.form.totalBerat) || 0;
+                const hargaTotal = this.form.totalHarga ? Number(String(this.form.totalHarga).replace(/[^0-9]/g, '')) : (totalKg * 35000);
+
+                const editPayload = {
+                    status_order: this.form.status,
+                    Total_kg: totalKg,
+                    harga_total: hargaTotal
+                };
+
+                if (this.panen_kuras && this.id_kolam_surplus) {
+                    const surplusKg = Math.max(0, Number(this.form.stok_biomassa || 0) - totalKg);
+                    editPayload.panen_kuras = true;
+                    editPayload.id_kolam_surplus = this.id_kolam_surplus;
+                    editPayload.surplus_kg = surplusKg;
+                }
+
+                if (totalKg > Number(this.form.stok_biomassa || 0) && this.form.status === 'pemberokian') {
+                    const selBuf = this.batches.find(b => b.id_pembesaran == this.alokasi.id_batch_buffer);
+                    const selCross = this.batches.find(b => b.id_pembesaran == this.alokasi.id_batch_cross);
+                    editPayload.alokasi_detail = {
+                        utama_kg: Math.min(totalKg, Number(this.form.stok_biomassa || 0)),
+                        buffer_kg: Number(this.alokasi.buffer_kg || 0),
+                        id_batch_buffer: this.alokasi.id_batch_buffer,
+                        buffer_nama: selBuf ? (selBuf.kolam || selBuf.label) : 'Kolam Stok',
+                        cross_kg: Number(this.alokasi.cross_kg || 0),
+                        id_batch_cross: this.alokasi.id_batch_cross,
+                        cross_nama: selCross ? (selCross.kolam || selCross.label) : 'Cross-Batch',
+                    };
+                }
+
                 try {
                     const res = await fetch('/distribusi/' + rawId, {
                         method: 'PUT',
@@ -762,17 +821,27 @@ function distribusiComponent() {
                             'Accept': 'application/json',
                             'X-CSRF-TOKEN': '{{ csrf_token() }}'
                         },
-                        body: JSON.stringify({
-                            status_order: this.form.status,
-                            Total_kg: Number(this.form.totalBerat) || 0,
-                            harga_total: Number(String(this.form.totalHarga).replace(/[^0-9]/g, '')) || 0
-                        })
+                        body: JSON.stringify(editPayload)
                     });
-                } catch(e) {}
+                    const data = await res.json();
 
-                const target = this.orders.find(item => item.id === this.form.id || item.id_transaksi == rawId);
-                if (target) {
-                    target.status = this.form.status;
+                    if (!res.ok || !data.success) {
+                        alert(data.message || 'Gagal mengubah status pesanan.');
+                        return;
+                    }
+
+                    const target = this.orders.find(item => item.id === this.form.id || item.id_transaksi == rawId);
+                    if (target) {
+                        target.status = data.transaksi ? data.transaksi.status_order : this.form.status;
+                        if (data.transaksi && data.transaksi.Jenis_order) {
+                            target.jenis_ikan = data.transaksi.Jenis_order;
+                        }
+                    }
+
+                    alert(data.message || 'Perubahan pesanan berhasil disimpan!');
+                } catch(e) {
+                    alert('Terjadi kesalahan koneksi saat memperbarui pesanan.');
+                    return;
                 }
             } else {
                 if (this.form.tanggal && this.form.tanggal > this.maxDate) {
@@ -920,7 +989,7 @@ function distribusiComponent() {
 function printLabel(order) {
     if (!order) return;
     const content = [
-        'ORDER LABEL - DISTRIBUSI SIM-BUDIDAYA',
+        'ORDER LABEL - DISTRIBUSI AMS BUDIDAYA',
         '---------------------------------------',
         'ID Order    : ' + order.id,
         'Komoditas   : ' + (order.jenis_ikan || 'Ikan Konsumsi') + (order.batch_code ? ' (' + order.batch_code + ')' : ''),

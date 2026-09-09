@@ -32,7 +32,7 @@ class SendResetPasswordOtpMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Kode OTP Pemulihan Kata Sandi - SIM-BUDIDAYA',
+            subject: 'Kode OTP Pemulihan Kata Sandi - AMS BUDIDAYA',
         );
     }
 

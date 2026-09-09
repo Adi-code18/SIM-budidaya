@@ -96,14 +96,43 @@ class PembibitanController extends Controller
         ];
 
         $batches = [];
+        $firstDefaultIkan = \App\Models\Ikan::first();
+
         foreach ($batchRecords as $b) {
             $days = $b->tgl_pemijahan ? (int) abs(Carbon::parse($b->tgl_pemijahan)->startOfDay()->diffInDays(now()->startOfDay())) : 0;
-            $sopDuration = $b->ikan ? (($b->ikan->durasi_penetasan ?? 14) + ($b->ikan->durasi_pembibitan ?? 30)) : 44;
+            
+            // Resolusi fleksibel data varietas ikan
+            $ikanObj = $b->ikan;
+            if (!$ikanObj && $b->id_ikan) {
+                $ikanObj = \App\Models\Ikan::find($b->id_ikan);
+            }
+            if (!$ikanObj && $b->jenis_ikan) {
+                $cleanName = trim(preg_replace('/^ikan\s+/i', '', $b->jenis_ikan));
+                $ikanObj = \App\Models\Ikan::where('nama_ikan', $b->jenis_ikan)
+                    ->orWhere('nama_ikan', 'like', "%{$cleanName}%")
+                    ->first();
+            }
+            // Jika belum terhubung, cocokkan berdasarkan total durasi SOP tanggal pemijahan -> estimasi selesai
+            if (!$ikanObj && $b->tgl_pemijahan && $b->est_prcs_pembibitaan) {
+                $batchTotalDays = (int) abs(Carbon::parse($b->tgl_pemijahan)->startOfDay()->diffInDays(Carbon::parse($b->est_prcs_pembibitaan)->startOfDay()));
+                $ikanObj = \App\Models\Ikan::all()->first(function($ik) use ($batchTotalDays) {
+                    return ($ik->durasi_penetasan + $ik->durasi_pembibitan) === $batchTotalDays;
+                });
+            }
+            if (!$ikanObj) {
+                $ikanObj = $firstDefaultIkan;
+            }
 
-            // Biologically calculate growth phase based on age
-            if ($days <= 3) {
+            $penetasan = $ikanObj ? (int)($ikanObj->durasi_penetasan ?? 3) : 3;
+            $pembibitan = $ikanObj ? (int)($ikanObj->durasi_pembibitan ?? 21) : 21;
+            $sopDuration = $penetasan + $pembibitan;
+            // Fase Larva berlangsung dari hari (penetasan + 1) hingga pertengahan masa pembibitan
+            $larvaEndDay = $penetasan + (int) round($pembibitan * 0.5);
+
+            // Kalkulasi biologis fase pertumbuhan fleksibel sesuai SOP spesifik jenis ikan
+            if ($days <= $penetasan) {
                 $fase = 'TELUR';
-            } elseif ($days <= 14) {
+            } elseif ($days <= $larvaEndDay) {
                 $fase = 'LARVA';
             } else {
                 $fase = 'FINGERLING';
@@ -117,7 +146,7 @@ class PembibitanController extends Controller
                 $faseClass = 'bg-indigo-100 text-indigo-700';
             }
 
-            // Sync with actual DB status column & auto-transition out of egg status if age > 3 days
+            // Sync with actual DB status column & auto-transition based on age & SOP
             $rawStatus = strtolower($b->status ?? 'aktif');
             $needsDbSync = false;
             $newDbStatus = $rawStatus;
@@ -129,8 +158,9 @@ class PembibitanController extends Controller
 
             if ($rawStatus !== 'selesai' && $rawStatus !== 'gagal' && $rawStatus !== 'dibatalkan') {
                 if ($fase === 'TELUR') {
+                    $expectedStatus = ($days <= 1) ? 'inkubasi' : 'menetas';
                     if (!in_array($rawStatus, ['inkubasi', 'menetas'])) {
-                        $newDbStatus = $days <= 1 ? 'inkubasi' : 'menetas';
+                        $newDbStatus = $expectedStatus;
                         $needsDbSync = true;
                     }
                 } elseif ($fase === 'LARVA') {
@@ -324,18 +354,37 @@ class PembibitanController extends Controller
 
         $idIkan = $request->id_ikan ?: null;
         $jenisIkan = $request->jenis_ikan;
-        if ($idIkan && !$jenisIkan) {
-            $ik = \App\Models\Ikan::find($idIkan);
-            if ($ik) $jenisIkan = $ik->nama_ikan;
+        $ikObj = null;
+        if ($idIkan) {
+            $ikObj = \App\Models\Ikan::find($idIkan);
+            if ($ikObj && !$jenisIkan) $jenisIkan = $ikObj->nama_ikan;
+        } elseif ($jenisIkan) {
+            $cleanName = trim(preg_replace('/^ikan\s+/i', '', $jenisIkan));
+            $ikObj = \App\Models\Ikan::where('nama_ikan', $jenisIkan)
+                ->orWhere('nama_ikan', 'like', "%{$cleanName}%")
+                ->first();
+            if ($ikObj) $idIkan = $ikObj->id_ikan;
         }
 
         $tglPemijahan = $request->tgl_pemijahan ?? now()->toDateString();
         $days = (int) abs(Carbon::parse($tglPemijahan)->startOfDay()->diffInDays(now()->startOfDay()));
+        
+        $penetasan = $ikObj ? (int)($ikObj->durasi_penetasan ?? 3) : 3;
+        $pembibitan = $ikObj ? (int)($ikObj->durasi_pembibitan ?? 21) : 21;
+        $sopDays = $penetasan + $pembibitan;
+        $larvaEndDay = $penetasan + (int) round($pembibitan * 0.5);
+
         $fase = $request->fase_pertumbuhan ? strtoupper($request->fase_pertumbuhan) : null;
         
-        // Auto-determine or correct phase according to biological age
-        if (!$fase || ($fase === 'TELUR' && $days > 3) || ($fase === 'LARVA' && $days > 14)) {
-            $fase = $days <= 3 ? 'TELUR' : ($days <= 14 ? 'LARVA' : 'FINGERLING');
+        // Auto-determine or correct phase according to biological age & species SOP
+        if (!$fase || ($fase === 'TELUR' && $days > $penetasan) || ($fase === 'LARVA' && $days > $larvaEndDay)) {
+            if ($days <= $penetasan) {
+                $fase = 'TELUR';
+            } elseif ($days <= $larvaEndDay) {
+                $fase = 'LARVA';
+            } else {
+                $fase = 'FINGERLING';
+            }
         }
 
         $rawBobot = $request->total_bobot_kg;
@@ -345,19 +394,17 @@ class PembibitanController extends Controller
         }
 
         $jumlahKematian = ($fase === 'TELUR') ? 0 : ($request->jumlah_kematian ?? 0);
-
-        $sopDays = 44;
-        if ($idIkan) {
-            $ikObj = \App\Models\Ikan::find($idIkan);
-            if ($ikObj) {
-                $sopDays = ($ikObj->durasi_penetasan ?? 14) + ($ikObj->durasi_pembibitan ?? 30);
-            }
-        }
         $estPrcs = $request->est_prcs_pembibitaan ?: Carbon::parse($tglPemijahan)->addDays($sopDays)->toDateString();
 
         $statusReq = strtolower($request->status ?? 'aktif');
-        if ($fase !== 'TELUR' && in_array($statusReq, ['inkubasi', 'menetas'])) {
+        if ($fase === 'TELUR') {
+            if (!in_array($statusReq, ['inkubasi', 'menetas'])) {
+                $statusReq = ($days <= 1) ? 'inkubasi' : 'menetas';
+            }
+        } elseif (in_array($statusReq, ['inkubasi', 'menetas'])) {
             $statusReq = ($days >= $sopDays) ? 'siap_pindah' : 'aktif';
+        } elseif ($days >= $sopDays && $statusReq === 'aktif') {
+            $statusReq = 'siap_pindah';
         }
 
         $batch = BatchPembibitan::create([
@@ -441,17 +488,29 @@ class PembibitanController extends Controller
 
         $effectiveTgl = $batch->tgl_pemijahan ?? now()->toDateString();
         $days = (int) abs(Carbon::parse($effectiveTgl)->startOfDay()->diffInDays(now()->startOfDay()));
-        $sopDuration = $batch->ikan ? (($batch->ikan->durasi_penetasan ?? 14) + ($batch->ikan->durasi_pembibitan ?? 30)) : 44;
+        
+        $ikanObj = $batch->ikan;
+        if (!$ikanObj && $batch->jenis_ikan) {
+            $cleanName = trim(preg_replace('/^ikan\s+/i', '', $batch->jenis_ikan));
+            $ikanObj = \App\Models\Ikan::where('nama_ikan', $batch->jenis_ikan)
+                ->orWhere('nama_ikan', 'like', "%{$cleanName}%")
+                ->first();
+        }
+
+        $penetasan = $ikanObj ? (int)($ikanObj->durasi_penetasan ?? 3) : 3;
+        $pembibitan = $ikanObj ? (int)($ikanObj->durasi_pembibitan ?? 21) : 21;
+        $sopDuration = $penetasan + $pembibitan;
+        $larvaEndDay = $penetasan + (int) round($pembibitan * 0.5);
 
         if ($request->filled('fase_pertumbuhan')) {
             $reqFase = strtoupper($request->fase_pertumbuhan);
-            if (($reqFase === 'TELUR' && $days > 3) || ($reqFase === 'LARVA' && $days > 14)) {
-                $batch->fase_pertumbuhan = $days <= 3 ? 'TELUR' : ($days <= 14 ? 'LARVA' : 'FINGERLING');
+            if (($reqFase === 'TELUR' && $days > $penetasan) || ($reqFase === 'LARVA' && $days > $larvaEndDay)) {
+                $batch->fase_pertumbuhan = $days <= $penetasan ? 'TELUR' : ($days <= $larvaEndDay ? 'LARVA' : 'FINGERLING');
             } else {
                 $batch->fase_pertumbuhan = $reqFase;
             }
         } else {
-            $batch->fase_pertumbuhan = $days <= 3 ? 'TELUR' : ($days <= 14 ? 'LARVA' : 'FINGERLING');
+            $batch->fase_pertumbuhan = $days <= $penetasan ? 'TELUR' : ($days <= $larvaEndDay ? 'LARVA' : 'FINGERLING');
         }
 
         if ($request->has('jumlah_bibitAwal')) {

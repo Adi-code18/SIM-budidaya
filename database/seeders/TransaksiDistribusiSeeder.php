@@ -20,6 +20,7 @@ class TransaksiDistribusiSeeder extends Seeder
         $warung88 = MitraDistributor::where('nama_mitra', 'like', '%Warung Seafood 88%')->first() ?? MitraDistributor::first();
         $eksporBahari = MitraDistributor::where('nama_mitra', 'like', '%PT Bahari%')->first() ?? MitraDistributor::first();
         $rmBerkah = MitraDistributor::where('nama_mitra', 'like', '%Berkah Utama%')->first() ?? MitraDistributor::first();
+        $kedaiMitra91 = MitraDistributor::where('nama_mitra', 'like', '%Kedai Mitra91%')->first() ?? MitraDistributor::first();
 
         $batches = BatchPembesaran::all();
         $batch1 = $batches->get(0) ?? BatchPembesaran::first();
@@ -30,6 +31,7 @@ class TransaksiDistribusiSeeder extends Seeder
 
         $transaksiList = [
             [
+                'id_transaksi' => 1,
                 'id_user' => $userId,
                 'id_mitra' => $restoQu->id_mitra,
                 'id_pembesaran' => $batch1->id_pembesaran,
@@ -41,6 +43,7 @@ class TransaksiDistribusiSeeder extends Seeder
                 'Bukti_sampai' => null,
             ],
             [
+                'id_transaksi' => 2,
                 'id_user' => $userId,
                 'id_mitra' => $pasarModern->id_mitra,
                 'id_pembesaran' => $batch2->id_pembesaran,
@@ -52,6 +55,7 @@ class TransaksiDistribusiSeeder extends Seeder
                 'Bukti_sampai' => null,
             ],
             [
+                'id_transaksi' => 3,
                 'id_user' => $userId,
                 'id_mitra' => $warung88->id_mitra,
                 'id_pembesaran' => $batch3->id_pembesaran,
@@ -63,6 +67,7 @@ class TransaksiDistribusiSeeder extends Seeder
                 'Bukti_sampai' => null,
             ],
             [
+                'id_transaksi' => 4,
                 'id_user' => $userId,
                 'id_mitra' => $eksporBahari->id_mitra,
                 'id_pembesaran' => $batch4->id_pembesaran,
@@ -74,6 +79,7 @@ class TransaksiDistribusiSeeder extends Seeder
                 'Bukti_sampai' => 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=500&auto=format&fit=crop&q=80',
             ],
             [
+                'id_transaksi' => 5,
                 'id_user' => $userId,
                 'id_mitra' => $rmBerkah->id_mitra,
                 'id_pembesaran' => $batch5->id_pembesaran,
@@ -84,10 +90,34 @@ class TransaksiDistribusiSeeder extends Seeder
                 'Jenis_order' => 'Ikan Nila Merah',
                 'Bukti_sampai' => 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
             ],
+            [
+                'id_transaksi' => 6,
+                'id_user' => $userId,
+                'id_mitra' => $restoQu->id_mitra,
+                'id_pembesaran' => $batch1->id_pembesaran,
+                'tanggal_order' => now()->toDateString(),
+                'Total_kg' => 120.00,
+                'harga_total' => 4200000.00,
+                'status_order' => 'pending',
+                'Jenis_order' => 'Ikan Nila Hitam',
+                'Bukti_sampai' => null,
+            ],
+            [
+                'id_transaksi' => 7,
+                'id_user' => $userId,
+                'id_mitra' => $kedaiMitra91->id_mitra,
+                'id_pembesaran' => $batch3->id_pembesaran,
+                'tanggal_order' => '2026-09-08',
+                'Total_kg' => 50.00,
+                'harga_total' => 1750000.00,
+                'status_order' => 'pemberokian',
+                'Jenis_order' => 'Ikan Lele Segar',
+                'Bukti_sampai' => null,
+            ],
         ];
 
         foreach ($transaksiList as $transaksi) {
-            TransaksiDistribusi::create($transaksi);
+            TransaksiDistribusi::updateOrCreate(['id_transaksi' => $transaksi['id_transaksi']], $transaksi);
         }
     }
 }

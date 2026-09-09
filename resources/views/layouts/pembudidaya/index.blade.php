@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Manajemen Pembudidaya & Kolam - SIM-BUDIDAYA')
+@section('title', 'Manajemen Pembudidaya & Kolam - AMS BUDIDAYA')
 
 @section('content')
 <div class="space-y-6" x-data="pembudidayaComponent()">

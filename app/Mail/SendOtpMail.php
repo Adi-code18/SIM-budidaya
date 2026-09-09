@@ -32,7 +32,7 @@ class SendOtpMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Kode Verifikasi Login (OTP) - SIM-BUDIDAYA',
+            subject: 'Kode Verifikasi Login (OTP) - AMS BUDIDAYA',
         );
     }
 

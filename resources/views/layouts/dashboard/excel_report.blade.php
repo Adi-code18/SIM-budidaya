@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Laporan SIM-Budidaya</title>
+    <title>Laporan AMS Budidaya</title>
     <style>
         body {
             font-family: 'Calibri', 'Arial', sans-serif;
@@ -89,7 +89,7 @@
         <tr>
             <td colspan="8" class="title-cell">
                 LAPORAN OPERASIONAL &amp; EKSEKUTIF LENGKAP<br>
-                <span style="font-size: 10pt; font-weight: normal; color: #bae6fd;">SISTEM INFORMASI MANAJEMEN BUDIDAYA IKAN (SIM-BUDIDAYA)</span>
+                <span style="font-size: 10pt; font-weight: normal; color: #bae6fd;">AQUAFARM MANAGEMENT SYSTEM BUDIDAYA (AMS BUDIDAYA)</span>
             </td>
         </tr>
         <tr>

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Laporan & Analisis Keuangan - SIM-BUDIDAYA')
+@section('title', 'Laporan & Analisis Keuangan - AMS BUDIDAYA')
 
 @section('content')
 <div class="space-y-6">

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Master Stok Pakan - SIM-BUDIDAYA')
+@section('title', 'Master Stok Pakan - AMS BUDIDAYA')
 
 @section('content')
 <div class="space-y-6" x-data="stokPakanComponent()">

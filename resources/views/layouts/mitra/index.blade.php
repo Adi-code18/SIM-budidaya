@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Manajemen Mitra - SIM-BUDIDAYA')
+@section('title', 'Manajemen Mitra - AMS BUDIDAYA')
 
 @section('content')
 {{-- =========================================================================

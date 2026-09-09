@@ -16,6 +16,8 @@ class BatchPembesaran extends Model
         'id_kolam',
         'id_user',
         'id_batch_pembibitan',
+        'asal_bibit',
+        'biaya_beli_bibit',
         'tgl_tebar',
         'est_tgl_panen',
         'biomassa_est',

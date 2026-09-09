@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'SIM-BUDIDAYA - Management System')</title>
+    <title>@yield('title', 'AMS BUDIDAYA - Management System')</title>
 
     {{-- =========================================================================
         1. DEPENDENCY ASSETS & EXTERNAL LIBRARIES
@@ -308,7 +308,7 @@
                          alt="Logo Aquafarm" 
                          class="h-9 w-auto object-contain shrink-0 drop-shadow">
                     <div>
-                        <span class="font-extrabold text-base tracking-wide text-white block leading-tight">SIM-BUDIDAYA</span>
+                        <span class="font-extrabold text-base tracking-wide text-white block leading-tight">AMS BUDIDAYA</span>
                         <span class="text-[9px] tracking-[0.16em] uppercase text-sky-300 font-semibold block mt-0.5">AQUAFARM MANAGEMENT</span>
                     </div>
                 </a>

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Manajemen Pembesaran - SIM-BUDIDAYA')
+@section('title', 'Manajemen Pembesaran - AMS BUDIDAYA')
 
 @section('content')
 <div class="space-y-6" x-data="pembesaranComponent()">
@@ -90,24 +90,74 @@
                     </div>
 
                     <!-- Pilih dari Pembibitan (Integrasi Alur) -->
-                    <div x-show="formMode === 'create'" class="p-3.5 bg-sky-50/70 rounded-xl border border-sky-100 space-y-1.5">
-                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-sky-900 block">AMBIL DARI BATCH PEMBIBITAN (OPSIONAL - MENCEGAH DOUBLE INPUT)</label>
-                        <select x-model="form.id_batch_pembibitan" @change="onPembibitanChange()" class="w-full px-3.5 py-2 rounded-xl border border-sky-200 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
-                            <option value="">-- Input Manual (Bukan dari Pembibitan) --</option>
-                            <template x-for="bp in availablePembibitan" :key="bp.id_batch">
-                                <option :value="bp.id_batch" x-text="bp.label"></option>
-                            </template>
-                        </select>
-                        <template x-if="selectedPembibitan">
-                            <div class="p-2.5 rounded-xl bg-white border border-sky-200 flex items-center justify-between text-xs text-sky-950 mt-1.5 shadow-xs">
-                                <div class="flex items-center gap-2">
-                                    <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
-                                    <span>Tersinkron ke <strong><span x-text="selectedPembibitan.label"></span></strong></span>
+                    <div x-show="formMode === 'create'" class="p-4 bg-slate-50/80 rounded-2xl border border-slate-200/80 space-y-3">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                            <!-- Kolom 1: Sumber Benih / Batch Asal -->
+                            <div class="space-y-1.5">
+                                <div class="flex items-center justify-between">
+                                    <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-600 block">
+                                        SUMBER BENIH / BATCH ASAL *
+                                    </label>
+                                    <span class="text-[10px] px-2 py-0.5 rounded-md font-extrabold"
+                                          :class="form.id_batch_pembibitan ? 'bg-sky-100 text-sky-800 border border-sky-200' : 'bg-amber-100 text-amber-800 border border-amber-200'"
+                                          x-text="form.id_batch_pembibitan ? 'Hatchery Internal' : 'Beli Bibit Luar'">
+                                    </span>
                                 </div>
-                                <span class="font-extrabold text-sky-700" x-text="'Biomassa: ~' + (selectedPembibitan.est_biomassa || 0) + ' kg'"></span>
+                                <select x-model="form.id_batch_pembibitan" @change="onPembibitanChange()"
+                                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-2xs">
+                                    <option value="">-- Beli Bibit Luar (Input Manual) --</option>
+                                    <template x-for="bp in availablePembibitan" :key="bp.id_batch">
+                                        <option :value="bp.id_batch" x-text="bp.label"></option>
+                                    </template>
+                                </select>
+                                <p class="text-[10px] text-slate-400 italic">
+                                    Pilih batch pembibitan fingerling internal atau input manual bila membeli bibit luar.
+                                </p>
                             </div>
-                        </template>
-                        <p class="text-[10px] text-sky-700 italic">Memilih batch pembibitan akan otomatis mengisi jenis ikan dan mengalihkan status pembibitan menjadi Selesai/Dipindahkan.</p>
+
+                            <!-- Kolom 2: Biaya Beli Bibit (jika beli luar) atau Info Sinkronisasi Hatchery -->
+                            <div>
+                                <template x-if="!form.id_batch_pembibitan">
+                                    <div class="space-y-1.5">
+                                        <div class="flex items-center justify-between">
+                                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-900 flex items-center gap-1.5">
+                                                <i class="fa-solid fa-money-bill-wave text-emerald-600"></i>
+                                                <span>BIAYA / HARGA BELI BIBIT (RP)</span>
+                                            </label>
+                                            <span class="text-[9px] px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 font-bold border border-emerald-200">
+                                                Otomatis Kas Keluar
+                                            </span>
+                                        </div>
+                                        <div class="flex items-stretch rounded-xl border border-emerald-300 bg-white shadow-2xs overflow-hidden focus-within:ring-2 focus-within:ring-emerald-500 transition-all">
+                                            <div class="px-3.5 flex items-center bg-emerald-50 text-emerald-900 font-black text-xs border-r border-emerald-200 select-none">
+                                                Rp
+                                            </div>
+                                            <input type="number" step="1000" min="0" x-model="form.biayaBeliBibit" 
+                                                   placeholder="Contoh: 1500000"
+                                                   onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E') event.preventDefault()"
+                                                   class="w-full px-3.5 py-2.5 text-xs font-extrabold text-slate-800 bg-white focus:outline-none">
+                                        </div>
+                                        <p class="text-[10px] text-slate-500 italic leading-snug">
+                                            <i class="fa-solid fa-circle-info text-sky-500 mr-0.5"></i> Biaya ini otomatis dibukukan sebagai transaksi pengeluaran di Keuangan.
+                                        </p>
+                                    </div>
+                                </template>
+
+                                <template x-if="selectedPembibitan">
+                                    <div class="p-3 rounded-xl bg-sky-50 border border-sky-200 space-y-1 text-xs text-sky-950 shadow-2xs">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-[10px] font-extrabold uppercase text-sky-800 flex items-center gap-1">
+                                                <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                                                <span>Sinkron Hatchery Internal</span>
+                                            </span>
+                                            <span class="font-extrabold text-sky-700 text-xs" x-text="'~' + (selectedPembibitan.est_biomassa || 0) + ' kg'"></span>
+                                        </div>
+                                        <p class="text-[11px] font-semibold text-slate-700 truncate" x-text="selectedPembibitan.label"></p>
+                                        <span class="text-[10px] text-sky-700 block italic">Status batch pembibitan akan otomatis dialihkan menjadi Selesai/Dipindahkan (tanpa beban kas pengeluaran).</span>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -308,21 +358,13 @@
                         <i class="fa-solid fa-grip text-sky-600"></i>
                         <span>Daftar Kolam &amp; Batch Pembesaran Aktif</span>
                     </h3>
-                    <p class="text-xs text-slate-500 font-medium">Hanya menampilkan kolam dengan siklus pembesaran yang sedang berjalan.</p>
+                    <p class="text-xs text-slate-500 font-medium">Hanya menampilkan kolam dengan siklus pembesaran aktif.</p>
                 </div>
                 <div class="flex items-center gap-2">
-                    <div class="inline-flex p-1 bg-slate-100 rounded-xl text-[11px] font-bold">
-                        <button type="button" @click="activeFilter = 'aktif'"
-                                :class="activeFilter === 'aktif' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'"
-                                class="px-3 py-1 rounded-lg transition-all">
-                            Aktif (<span x-text="batches.filter(b => b.status_siklus !== 'selesai').length"></span>)
-                        </button>
-                        <button type="button" @click="activeFilter = 'selesai'"
-                                :class="activeFilter === 'selesai' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'"
-                                class="px-3 py-1 rounded-lg transition-all">
-                            Riwayat Panen (<span x-text="batches.filter(b => b.status_siklus === 'selesai').length"></span>)
-                        </button>
-                    </div>
+                    <span class="px-3 py-1.5 rounded-xl bg-sky-50 border border-sky-200 text-sky-900 font-extrabold text-xs flex items-center gap-1.5 shadow-2xs">
+                        <i class="fa-solid fa-fish text-sky-600"></i>
+                        <span>Siklus Aktif: <strong x-text="batches.length"></strong> Kolam</span>
+                    </span>
                 </div>
             </div>
 
@@ -348,7 +390,17 @@
                                         <h4 class="font-extrabold text-slate-900 text-sm" x-text="item.nama_kolam"></h4>
                                         <span class="text-[10px] font-bold text-sky-600 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-100" x-text="item.id"></span>
                                     </div>
-                                    <span class="text-[10px] text-slate-400 block mt-0.5" x-text="item.jenis_ikan + ' • ' + item.tipe_kolam"></span>
+                                    <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                                        <span class="text-[10px] text-slate-500 font-medium" x-text="item.jenis_ikan + ' • ' + item.tipe_kolam"></span>
+                                        <template x-if="item.asal_bibit === 'beli_luar'">
+                                            <span class="text-[9px] px-1.5 py-0.5 rounded font-bold bg-amber-50 text-amber-700 border border-amber-200" :title="'Biaya beli bibit: Rp ' + (item.biaya_beli_bibit_format || '0')">
+                                                Beli Luar <span x-show="item.biaya_beli_bibit > 0" x-text="'(Rp ' + item.biaya_beli_bibit_format + ')'"></span>
+                                            </span>
+                                        </template>
+                                        <template x-if="item.asal_bibit !== 'beli_luar' && item.id_batch_pembibitan">
+                                            <span class="text-[9px] px-1.5 py-0.5 rounded font-bold bg-sky-50 text-sky-700 border border-sky-200" x-text="item.id_batch_pembibitan"></span>
+                                        </template>
+                                    </div>
                                 </div>
                                 <div class="flex flex-col items-end gap-1">
                                     <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase"
@@ -644,10 +696,24 @@
                     <div class="p-3.5 bg-slate-50 border-b border-slate-200/80 flex items-center justify-between">
                         <div class="flex items-center gap-2 font-bold text-slate-800 text-xs">
                             <i class="fa-solid fa-table-list text-sky-600"></i>
-                            <span>Daftar Benih dari Batch Pembibitan Asal (Hatchery)</span>
+                            <span>Asal Usul Sumber Bibit</span>
                         </div>
-                        <span class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-md bg-sky-100 text-sky-800"
-                              x-text="(selectedBatch?.bibit_list ? selectedBatch.bibit_list.length : 1) + ' Sumber Bibit'"></span>
+                        <div class="flex items-center gap-2">
+                            <template x-if="selectedBatch?.asal_bibit === 'beli_luar'">
+                                <span class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-200 flex items-center gap-1">
+                                    <i class="fa-solid fa-cart-shopping text-[9px]"></i>
+                                    <span>Beli Luar <strong x-show="selectedBatch?.biaya_beli_bibit > 0" x-text="'(Rp ' + selectedBatch?.biaya_beli_bibit_format + ')'"></strong></span>
+                                </span>
+                            </template>
+                            <template x-if="selectedBatch?.asal_bibit !== 'beli_luar'">
+                                <span class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-md bg-sky-100 text-sky-800 border border-sky-200 flex items-center gap-1">
+                                    <i class="fa-solid fa-dna text-[9px]"></i>
+                                    <span>Hatchery Internal</span>
+                                </span>
+                            </template>
+                            <span class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700"
+                                  x-text="(selectedBatch?.bibit_list ? selectedBatch.bibit_list.length : 1) + ' Sumber Bibit'"></span>
+                        </div>
                     </div>
 
                     <div class="overflow-x-auto">
@@ -1051,6 +1117,7 @@ function pembesaranComponent() {
             id: '',
             id_pembesaran: null,
             id_batch_pembibitan: '',
+            biayaBeliBibit: '',
             kolam: '',
             tglTebar: new Date().toISOString().split('T')[0],
             estTglPanen: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -1067,6 +1134,10 @@ function pembesaranComponent() {
         kolamStokList: {!! json_encode($kolamStokList ?? []) !!},
         batches: {!! json_encode($batches ?? []) !!},
         activeFilter: 'aktif',
+
+        init() {
+            this.refreshPondOccupancy();
+        },
 
         get selectedPembibitan() {
             if (!this.form.id_batch_pembibitan) return null;
@@ -1104,11 +1175,7 @@ function pembesaranComponent() {
         },
 
         get filteredBatches() {
-            if (this.activeFilter === 'selesai') {
-                return this.batches.filter(b => b.status_siklus === 'selesai');
-            }
-            // Default: hanya tampilkan batch aktif yang sedang berjalan / siap panen
-            return this.batches.filter(b => b.status_siklus !== 'selesai');
+            return this.batches.filter(b => Number(b.biomassa_est) > 0);
         },
 
         detailModalOpen: false,
@@ -1243,6 +1310,7 @@ function pembesaranComponent() {
                 id: item.id,
                 id_pembesaran: item.id_pembesaran,
                 id_batch_pembibitan: item.id_batch_pembibitan || '',
+                biayaBeliBibit: item.biaya_beli_bibit || 0,
                 kolam: item.nama_kolam,
                 tglTebar: item.tgl_tebar || new Date().toISOString().split('T')[0],
                 estTglPanen: item.est_tgl_panen || (item.tgl_tebar ? new Date(new Date(item.tgl_tebar).getTime() + 90*86400000).toISOString().split('T')[0] : new Date(Date.now() + 90*86400000).toISOString().split('T')[0]),
@@ -1263,6 +1331,7 @@ function pembesaranComponent() {
                 id: '',
                 id_pembesaran: null,
                 id_batch_pembibitan: '',
+                biayaBeliBibit: '',
                 kolam: '',
                 tglTebar: today,
                 estTglPanen: defaultEst,
@@ -1494,6 +1563,7 @@ function pembesaranComponent() {
 
             // Create Mode
             try {
+                const biayaBeliVal = (!this.form.id_batch_pembibitan && this.form.biayaBeliBibit) ? Number(this.form.biayaBeliBibit) : 0;
                 const res = await fetch('{{ route('pembesaran.store') }}', {
                     method: 'POST',
                     headers: {
@@ -1504,6 +1574,7 @@ function pembesaranComponent() {
                     body: JSON.stringify({
                         id_kolam: this.form.kolam,
                         id_batch_pembibitan: this.form.id_batch_pembibitan || null,
+                        biaya_beli_bibit: biayaBeliVal,
                         jenis_ikan: this.form.jenisIkan,
                         tgl_tebar: this.form.tglTebar,
                         est_tgl_panen: this.form.estTglPanen,
@@ -1517,12 +1588,17 @@ function pembesaranComponent() {
                 const data = await res.json();
                 if (res.ok && data.success) {
                     const newBatch = data.batch;
+                    const asalBibitVal = this.form.id_batch_pembibitan ? 'pembibitan_sendiri' : 'beli_luar';
                     this.batches.unshift({
                         id_pembesaran: newBatch.id_pembesaran,
                         id: '#PB-' + String(newBatch.id_pembesaran).padStart(5, '0'),
                         id_kolam: newBatch.id_kolam,
                         nama_kolam: newBatch.kolam ? newBatch.kolam.nama_kolam : this.form.kolam,
                         tipe_kolam: newBatch.kolam ? newBatch.kolam.tipe_kolam : 'Pembesaran',
+                        id_batch_pembibitan: this.form.id_batch_pembibitan ? ('#BT-' + String(this.form.id_batch_pembibitan).padStart(5, '0')) : null,
+                        asal_bibit: asalBibitVal,
+                        biaya_beli_bibit: biayaBeliVal,
+                        biaya_beli_bibit_format: biayaBeliVal.toLocaleString('id-ID'),
                         tgl_tebar: this.form.tglTebar,
                         est_tgl_panen: this.form.estTglPanen,
                         est_panen_format: estPanenFormat,
@@ -1562,7 +1638,7 @@ function pembesaranComponent() {
 
         refreshPondOccupancy() {
             const activeKolamNames = this.batches
-                .filter(b => b.status_siklus === 'berjalan')
+                .filter(b => b.status_siklus !== 'selesai' && b.status_siklus !== 'gagal' && (Number(b.biomassa_est) > 0 || ['berjalan', 'aktif', 'siap_panen'].includes(b.status_siklus)))
                 .map(b => b.nama_kolam);
 
             this.kolamList.forEach(k => {

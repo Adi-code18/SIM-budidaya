@@ -1,6 +1,6 @@
 @extends('mobile_web_petugas.petugas_pembesaran.layout')
 
-@section('title', 'Dashboard Petugas Pembesaran - SIM-BUDIDAYA Mobile')
+@section('title', 'Dashboard Petugas Pembesaran - AMS BUDIDAYA Mobile')
 
 @section('content')
 <div class="p-4 space-y-4">

@@ -1,6 +1,6 @@
 @extends('mobile_web_petugas.petugas_pembesaran.layout')
 
-@section('title', 'Input Batch Pembesaran - SIM-BUDIDAYA Mobile')
+@section('title', 'Input Batch Pembesaran - AMS BUDIDAYA Mobile')
 
 @section('content')
 <div class="p-4 space-y-4" x-data="{
@@ -9,6 +9,7 @@
     jenisIkan: '',
     kolamTebar: '',
     sumberBenih: 'Hatchery Internal',
+    biayaBeliBibit: '',
     biomassaAwal: 0,
     targetPanenTgl: '',
     targetPanenKg: 1000,
@@ -32,6 +33,8 @@
                     jenis_ikan: this.jenisIkan,
                     id_kolam: this.kolamTebar,
                     tgl_tebar: this.tanggalTebar,
+                    sumber_benih: this.sumberBenih,
+                    biaya_beli_bibit: this.sumberBenih === 'Pemasok Eksternal' ? Number(this.biayaBeliBibit) : 0,
                     biomassa_est: this.biomassaAwal,
                     target_panen_kg: this.targetPanenKg
                 })
@@ -130,11 +133,31 @@
                     <label class="flex items-start gap-2.5 p-3 rounded-2xl border border-slate-200 bg-slate-50 hover:bg-slate-100/80 cursor-pointer transition-colors">
                         <input type="radio" name="sumber" value="Pemasok Eksternal" x-model="sumberBenih" class="mt-0.5 accent-navy-800">
                         <div>
-                            <span class="text-xs font-bold text-slate-900 block">Pemasok Eksternal</span>
-                            <span class="text-[10px] text-slate-400 block font-medium">Beli dari pihak luar</span>
+                            <span class="text-xs font-bold text-slate-900 block">Pemasok Eksternal (Beli Luar)</span>
+                            <span class="text-[10px] text-slate-400 block font-medium">Beli dari pihak luar / vendor</span>
                         </div>
                     </label>
                 </div>
+
+                <!-- Input Khusus Biaya Beli Bibit Jika Beli Luar -->
+                <template x-if="sumberBenih === 'Pemasok Eksternal'">
+                    <div class="p-3 bg-emerald-50/80 rounded-2xl border border-emerald-200 space-y-1.5 mt-2">
+                        <div class="flex items-center justify-between">
+                            <label class="text-[10px] font-extrabold uppercase text-emerald-900 tracking-wider block">BIAYA / HARGA BELI BIBIT (RP) *</label>
+                            <span class="text-[9px] px-2 py-0.5 rounded-md bg-emerald-200 text-emerald-900 font-bold">Otomatis Kas Keluar</span>
+                        </div>
+                        <div class="flex items-stretch rounded-xl border border-emerald-300 bg-white overflow-hidden shadow-2xs focus-within:ring-2 focus-within:ring-emerald-500">
+                            <div class="px-3.5 flex items-center bg-emerald-100 text-emerald-900 font-black text-xs border-r border-emerald-200 select-none">
+                                Rp
+                            </div>
+                            <input type="number" step="1000" min="0" x-model="biayaBeliBibit" placeholder="Contoh: 1500000"
+                                   class="w-full px-3.5 py-2.5 text-xs font-extrabold text-emerald-950 bg-white focus:outline-none">
+                        </div>
+                        <p class="text-[10px] text-slate-500 italic leading-tight">
+                            Biaya bibit ini otomatis dibukukan ke Keuangan sebagai beban pengeluaran.
+                        </p>
+                    </div>
+                </template>
             </div>
 
             <!-- Field 6: Estimasi Biomassa Awal -->

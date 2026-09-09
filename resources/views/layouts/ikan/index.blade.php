@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Master Data Jenis Ikan - SIM-BUDIDAYA')
+@section('title', 'Master Data Jenis Ikan - AMS BUDIDAYA')
 
 @section('content')
 <div class="space-y-6" x-data="ikanComponent()">

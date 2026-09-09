@@ -1,6 +1,6 @@
 @extends('mobile_web_petugas.petugas_distribusi.layout')
 
-@section('title', 'Logistik Pengiriman - SIM-BUDIDAYA Mobile')
+@section('title', 'Logistik Pengiriman - AMS BUDIDAYA Mobile')
 
 @section('content')
 <div class="p-4 space-y-4" x-data="{ activeFilter: 'semua' }">
@@ -44,6 +44,12 @@
                 class="px-3.5 py-2 rounded-xl text-xs whitespace-nowrap transition-all">
             Semua ({{ $totalCount ?? 0 }})
         </button>
+        <button @click="activeFilter = 'pending'"
+                :class="activeFilter === 'pending' ? 'bg-navy-800 text-white shadow-sm font-bold' : 'bg-white text-slate-600 border border-slate-200 font-semibold'"
+                class="px-3.5 py-2 rounded-xl text-xs whitespace-nowrap transition-all flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+            Pending ({{ $pendingCount ?? 0 }})
+        </button>
         <button @click="activeFilter = 'pemberokian'"
                 :class="activeFilter === 'pemberokian' ? 'bg-navy-800 text-white shadow-sm font-bold' : 'bg-white text-slate-600 border border-slate-200 font-semibold'"
                 class="px-3.5 py-2 rounded-xl text-xs whitespace-nowrap transition-all flex items-center gap-1.5">
@@ -69,12 +75,13 @@
         @if(isset($orders) && count($orders) > 0)
             @foreach($orders as $order)
                 @php
+                    $isPending = $order->status_order === 'pending' || empty($order->status_order);
                     $isPemberokian = $order->status_order === 'pemberokian';
-                    $isSiapKirim = $order->status_order === 'siap_kirim' || $order->status_order === 'pending';
-                    $isInDelivery = $order->status_order === 'dalam_pengiriman';
+                    $isSiapKirim = $order->status_order === 'siap_kirim';
+                    $isInDelivery = in_array($order->status_order, ['dalam_pengiriman', 'dikirim']);
                     $isSelesai = $order->status_order === 'selesai';
                 @endphp
-                <div x-show="activeFilter === 'semua' || (activeFilter === 'pemberokian' && '{{ $order->status_order }}' === 'pemberokian') || (activeFilter === 'siap_kirim' && ('{{ $order->status_order }}' === 'siap_kirim' || '{{ $order->status_order }}' === 'pending')) || (activeFilter === 'dalam_pengiriman' && '{{ $order->status_order }}' === 'dalam_pengiriman')"
+                <div x-show="activeFilter === 'semua' || (activeFilter === 'pending' && '{{ $order->status_order }}' === 'pending') || (activeFilter === 'pemberokian' && '{{ $order->status_order }}' === 'pemberokian') || (activeFilter === 'siap_kirim' && '{{ $order->status_order }}' === 'siap_kirim') || (activeFilter === 'dalam_pengiriman' && ('{{ $order->status_order }}' === 'dalam_pengiriman' || '{{ $order->status_order }}' === 'dikirim'))"
                      class="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs space-y-3.5 hover:shadow-md transition-all">
                     
                     <div class="flex items-center justify-between">
@@ -82,10 +89,21 @@
                             <span class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">ID PENGIRIMAN</span>
                             <h3 class="text-sm font-extrabold text-navy-900">#ORD-{{ str_pad($order->id_transaksi, 4, '0', STR_PAD_LEFT) }}</h3>
                         </div>
-                        @if($isPemberokian)
+                        
+                        @if($isPending)
+                            <span class="px-3 py-1 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-600 border border-slate-200 flex items-center gap-1.5">
+                                <i class="fa-solid fa-hourglass-half text-[9px] text-amber-500"></i>
+                                PENDING (PERSIAPAN)
+                            </span>
+                        @elseif($isPemberokian)
                             <span class="px-3 py-1 rounded-full text-[10px] font-extrabold bg-sky-50 text-sky-700 border border-sky-200 flex items-center gap-1.5">
                                 <span class="w-2 h-2 rounded-full bg-sky-500 animate-pulse"></span>
                                 PEMBEROKIAN
+                            </span>
+                        @elseif($isSiapKirim)
+                            <span class="px-3 py-1 rounded-full text-[10px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center gap-1.5 shadow-2xs">
+                                <i class="fa-solid fa-box text-[9px] text-indigo-600"></i>
+                                SIAP KIRIM
                             </span>
                         @elseif($isInDelivery)
                             <span class="px-3 py-1 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1.5">
@@ -98,9 +116,8 @@
                                 SELESAI
                             </span>
                         @else
-                            <span class="px-3 py-1 rounded-full text-[10px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center gap-1">
-                                <i class="fa-solid fa-box text-[9px]"></i>
-                                SIAP KIRIM
+                            <span class="px-3 py-1 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-700 border border-slate-200">
+                                {{ strtoupper($order->status_order) }}
                             </span>
                         @endif
                     </div>
@@ -123,12 +140,46 @@
                         </div>
                     </div>
 
-                    <!-- Action Button -->
-                    <a href="{{ route('mobile.petugas.detail', ['id' => $order->id_transaksi]) }}" 
-                       class="w-full py-2.5 rounded-xl bg-navy-800 hover:bg-navy-900 active:scale-[0.99] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all">
-                        <span>Detail & Navigasi Pengiriman</span>
-                        <i class="fa-solid fa-arrow-right text-xs"></i>
-                    </a>
+                    <!-- Action Button Based On Workflow Status -->
+                    @if($isPending)
+                        <!-- Case 1: Status Pending -> Disabled with Lock Icon -->
+                        <div class="w-full py-2.5 px-3 rounded-xl bg-slate-100 border border-slate-200 text-slate-400 font-bold text-xs flex items-center justify-center gap-2 select-none cursor-not-allowed">
+                            <i class="fa-solid fa-lock text-[11px] text-slate-400"></i>
+                            <span>Detail & Navigasi Terkunci (Menunggu Persiapan Manajer)</span>
+                        </div>
+                    @elseif($isPemberokian)
+                        <!-- Case 2: Status Pemberokian -> Disabled Waiting Process -->
+                        <div class="w-full py-2.5 px-3 rounded-xl bg-sky-50/70 border border-sky-200/80 text-sky-600 font-bold text-xs flex items-center justify-center gap-2 select-none cursor-not-allowed">
+                            <i class="fa-solid fa-water text-[11px] text-sky-500 animate-pulse"></i>
+                            <span>Ikan Sedang Dalam Pemberokan (Belum Siap Kirim)</span>
+                        </div>
+                    @elseif($isSiapKirim)
+                        <!-- Case 3: Status Siap Kirim -> Action Button to Confirm Start Delivery -->
+                        <form action="{{ route('mobile.petugas.startDelivery', ['id' => $order->id_transaksi]) }}" method="POST" class="w-full">
+                            @csrf
+                            <button type="submit" 
+                                    class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-[0.99] text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 transition-all cursor-pointer">
+                                <i class="fa-solid fa-truck-fast text-xs"></i>
+                                <span>Konfirmasi Kirim Sekarang & Buka Rute</span>
+                                <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                            </button>
+                        </form>
+                    @elseif($isInDelivery)
+                        <!-- Case 4: Status Dalam Pengiriman -> Active Navigation & Completion Screen -->
+                        <a href="{{ route('mobile.petugas.detail', ['id' => $order->id_transaksi]) }}" 
+                           class="w-full py-2.5 rounded-xl bg-navy-800 hover:bg-navy-900 active:scale-[0.99] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all">
+                            <i class="fa-solid fa-map-location-dot text-sky-300 text-xs"></i>
+                            <span>Lanjutkan Detail & Navigasi Pengiriman</span>
+                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </a>
+                    @else
+                        <!-- Case 5: Selesai -->
+                        <a href="{{ route('mobile.petugas.detail', ['id' => $order->id_transaksi]) }}" 
+                           class="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center gap-2 transition-all">
+                            <i class="fa-solid fa-circle-info text-xs"></i>
+                            <span>Lihat Detail Pengiriman</span>
+                        </a>
+                    @endif
                 </div>
             @endforeach
         @else

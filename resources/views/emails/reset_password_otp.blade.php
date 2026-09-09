@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kode OTP Pemulihan Kata Sandi - SIM-BUDIDAYA</title>
+    <title>Kode OTP Pemulihan Kata Sandi - AMS BUDIDAYA</title>
     <!--[if mso]>
     <style type="text/css">
         body, table, td, a { font-family: Arial, Helvetica, sans-serif !important; }
@@ -45,7 +45,7 @@
                                         <img src="{{ $logoUrl }}" alt="Logo Aquafarm" width="44" height="44" style="display: block; width: 44px; height: 44px; object-fit: contain; border-radius: 10px;" />
                                     </td>
                                     <td valign="middle" style="vertical-align: middle; padding-left: 12px;">
-                                        <span style="font-size: 17px; font-weight: 900; color: #051b44; letter-spacing: -0.3px; display: block; line-height: 1.1;">SIM-BUDIDAYA</span>
+                                        <span style="font-size: 17px; font-weight: 900; color: #051b44; letter-spacing: -0.3px; display: block; line-height: 1.1;">AMS BUDIDAYA</span>
                                         <span style="font-size: 10px; font-weight: 800; color: #0284c7; letter-spacing: 1.2px; text-transform: uppercase;">PUSAT KEAMANAN AKUN</span>
                                     </td>
                                 </tr>
@@ -80,7 +80,7 @@
 
                             <!-- Description -->
                             <p style="font-size: 13px; line-height: 1.65; color: #475569; margin: 0 0 22px 0;">
-                                Kami menerima permintaan untuk mengatur ulang kata sandi akun <strong style="color: #051b44;">SIM-BUDIDAYA</strong> Anda. Gunakan kode <strong>One-Time Password (OTP)</strong> berikut untuk memverifikasi identitas Anda:
+                                Kami menerima permintaan untuk mengatur ulang kata sandi akun <strong style="color: #051b44;">AMS BUDIDAYA</strong> Anda. Gunakan kode <strong>One-Time Password (OTP)</strong> berikut untuk memverifikasi identitas Anda:
                             </p>
 
                             <!-- Modern OTP Box (Sky Blue Gradient) -->
@@ -105,7 +105,7 @@
                             <!-- Security Notice Box -->
                             <div style="background-color: #f0fdf4; border-left: 4px solid #10b981; padding: 12px 16px; border-radius: 10px; margin-bottom: 22px; border-top: 1px solid #dcfce7; border-right: 1px solid #dcfce7; border-bottom: 1px solid #dcfce7;">
                                 <p style="font-size: 12px; line-height: 1.55; color: #065f46; margin: 0;">
-                                    <strong style="color: #047857;">Penting:</strong> Jangan berikan kode OTP ini kepada siapapun termasuk staf/petugas pengelola SIM-BUDIDAYA demi keamanan data Anda.
+                                    <strong style="color: #047857;">Penting:</strong> Jangan berikan kode OTP ini kepada siapapun termasuk staf/petugas pengelola AMS BUDIDAYA demi keamanan data Anda.
                                 </p>
                             </div>
 
@@ -126,7 +126,7 @@
                                             Pusat Keamanan & Otentikasi
                                         </div>
                                         <div style="font-size: 11px; font-weight: 500; color: #64748b; line-height: 1.2; margin-top: 2px;">
-                                            SIM-BUDIDAYA Akuakultur Management System
+                                            AMS BUDIDAYA Aquaculture Management System
                                         </div>
                                     </td>
                                 </tr>
@@ -142,7 +142,7 @@
         <tr>
             <td style="padding: 16px 32px 28px 32px; text-align: center; background-color: #fafbfc; border-top: 1px solid #f1f5f9;">
                 <p style="font-size: 11px; line-height: 1.5; color: #64748b; margin: 0 0 4px 0;">
-                    &copy; {{ date('Y') }} <strong>SIM-BUDIDAYA</strong>. Hak Cipta Dilindungi Undang-Undang.
+                    &copy; {{ date('Y') }} <strong>AMS BUDIDAYA</strong>. Hak Cipta Dilindungi Undang-Undang.
                 </p>
                 <p style="font-size: 10px; color: #94a3b8; margin: 0;">
                     Email ini dikirim secara otomatis oleh protokol keamanan sistem saat ada permintaan reset kata sandi akun.

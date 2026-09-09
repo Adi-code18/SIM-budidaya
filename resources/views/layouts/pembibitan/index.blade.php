@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Manajemen Pembibitan - SIM-BUDIDAYA')
+@section('title', 'Manajemen Pembibitan - AMS BUDIDAYA')
 
 @section('content')
 <div class="space-y-6" x-data="pembibitanComponent()">
@@ -54,7 +54,7 @@
                         <select x-model="selectedIkanId" 
                                 @change="onIkanSelected()"
                                 class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-sky-800 bg-sky-50/60 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
-                            <option value="">-- Manual / Tanpa SOP --</option>
+                            <option value="">-- Pilih Cuy --</option>
                             @foreach($ikans ?? [] as $ik)
                                 <option value="{{ $ik->id_ikan }}">{{ $ik->nama_ikan }} (SOP: {{ $ik->durasi_penetasan + $ik->durasi_pembibitan }} Hari)</option>
                             @endforeach
@@ -96,6 +96,8 @@
                     <div>
                         <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">TANGGAL PEMIJAHAN / TEBAR AWAL *</label>
                         <input type="date" x-model="form.tglPemijahan"
+                               @change="syncFaseAndStatusFromSOP()"
+                               @input="syncFaseAndStatusFromSOP()"
                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
                     </div>
                     <div>
@@ -905,14 +907,55 @@ function pembibitanComponent() {
         toastMessage: '',
 
         onIkanSelected() {
-            if (!this.selectedIkanId) return;
-            const found = this.ikansList.find(i => String(i.id_ikan) === String(this.selectedIkanId));
-            if (found && this.form.tglPemijahan) {
-                const totalDays = Number(found.durasi_penetasan || 0) + Number(found.durasi_pembibitan || 0);
+            this.syncFaseAndStatusFromSOP();
+        },
+
+        syncFaseAndStatusFromSOP() {
+            if (!this.form.tglPemijahan) return;
+
+            let penetasan = 3;
+            let pembibitan = 21;
+            if (this.selectedIkanId) {
+                const found = (this.ikansList || []).find(i => String(i.id_ikan) === String(this.selectedIkanId));
+                if (found) {
+                    penetasan = Number(found.durasi_penetasan || 3);
+                    pembibitan = Number(found.durasi_pembibitan || 21);
+                }
+            }
+
+            const totalDays = penetasan + pembibitan;
+            const larvaEndDay = penetasan + Math.round(pembibitan * 0.5);
+
+            // Hitung usia hari dari tanggal pemijahan s/d hari ini
+            const tgl = new Date(this.form.tglPemijahan);
+            const today = new Date();
+            const diffTime = today.setHours(0,0,0,0) - tgl.setHours(0,0,0,0);
+            const days = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
+
+            // Sinkronkan fase pertumbuhan berdasarkan SOP & Usia Hari
+            if (days <= penetasan) {
+                this.form.fase_pertumbuhan = 'TELUR';
+                this.form.jumlahKematian = 0;
+                if (this.form.statusBatch !== 'gagal') {
+                    this.form.statusBatch = (days <= 1) ? 'inkubasi' : 'menetas';
+                }
+            } else if (days <= larvaEndDay) {
+                this.form.fase_pertumbuhan = 'LARVA';
+                if (this.form.statusBatch !== 'gagal') {
+                    this.form.statusBatch = 'aktif';
+                }
+            } else {
+                this.form.fase_pertumbuhan = 'FINGERLING';
+                if (this.form.statusBatch !== 'gagal') {
+                    this.form.statusBatch = (days >= totalDays) ? 'siap_pindah' : 'aktif';
+                }
+            }
+
+            // Sinkronkan estimasi tanggal selesai proses pembibitan
+            if (this.isEstLocked) {
                 const d = new Date(this.form.tglPemijahan);
                 d.setDate(d.getDate() + totalDays);
                 this.form.est_prcs_pembibitaan = d.toISOString().split('T')[0];
-                this.isEstLocked = true;
             }
         },
 
@@ -921,6 +964,7 @@ function pembibitanComponent() {
             this.selectedIkanId = '';
             this.isEstLocked = true;
             this.resetForm();
+            this.syncFaseAndStatusFromSOP();
             this.showForm = true;
             window.scrollTo({ top: 0, behavior: 'smooth' });
         },

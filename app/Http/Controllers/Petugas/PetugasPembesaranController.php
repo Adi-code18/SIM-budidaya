@@ -64,6 +64,8 @@ class PetugasPembesaranController extends Controller
             'tgl_tebar'        => 'required|date',
             'biomassa_est'     => 'required|numeric|min:0.1',
             'target_panen_kg'  => 'required|numeric|min:1',
+            'biaya_beli_bibit' => 'nullable|numeric|min:0',
+            'sumber_benih'     => 'nullable|string',
         ]);
 
         $kolam = Kolam::where('id_kolam', $request->id_kolam)
@@ -90,10 +92,18 @@ class PetugasPembesaranController extends Controller
             ], 422);
         }
 
+        $sumberBenih = $request->sumber_benih ?? 'Hatchery Internal';
+        $asalBibit = ($sumberBenih === 'Pemasok Eksternal' || $request->asal_bibit === 'beli_luar') ? 'beli_luar' : 'pembibitan_sendiri';
+        $biayaBeliBibit = $asalBibit === 'beli_luar' ? (float) ($request->biaya_beli_bibit ?? 0) : 0.0;
+        $tglTebar = Carbon::parse($request->tgl_tebar)->toDateString();
+
         $batch = BatchPembesaran::create([
             'id_kolam'         => $kolam->id_kolam,
             'id_user'          => Auth::id() ?? 1,
-            'tgl_tebar'        => Carbon::parse($request->tgl_tebar)->toDateString(),
+            'asal_bibit'       => $asalBibit,
+            'biaya_beli_bibit' => $biayaBeliBibit,
+            'tgl_tebar'        => $tglTebar,
+            'est_tgl_panen'    => Carbon::parse($tglTebar)->addDays(90)->toDateString(),
             'biomassa_est'     => (float) $request->biomassa_est,
             'fcr'              => 1.10,
             'target_panen_kg'  => (float) $request->target_panen_kg,
@@ -101,10 +111,31 @@ class PetugasPembesaranController extends Controller
             'status_siklus'    => 'berjalan',
         ]);
 
+        // Catat otomatis ke Keuangan jika beli bibit dari luar dan ada biaya
+        if ($asalBibit === 'beli_luar' && $biayaBeliBibit > 0) {
+            $pbRef = 'BELI-BIBIT-PB-' . str_pad($batch->id_pembesaran, 4, '0', STR_PAD_LEFT);
+            \App\Models\Keuangan::updateOrCreate(
+                ['ref_id' => $pbRef],
+                [
+                    'id_user'           => Auth::id() ?? 1,
+                    'id_kolam'          => $kolam->id_kolam,
+                    'tanggal_transaksi' => $tglTebar,
+                    'tipe_transaksi'    => 'pengeluaran',
+                    'kategori'          => 'Pembelian Bibit ' . $request->jenis_ikan,
+                    'nominal'           => $biayaBeliBibit,
+                    'keterangan'        => "Pembelian bibit luar {$request->jenis_ikan} (" . number_format($batch->biomassa_est, 1, ',', '.') . " kg) untuk tebar di {$kolam->nama_kolam} (#PB-" . str_pad($batch->id_pembesaran, 5, '0', STR_PAD_LEFT) . ")",
+                ]
+            );
+        }
+
         if ($request->wantsJson() || $request->ajax()) {
+            $msg = "Siklus pembesaran di {$kolam->nama_kolam} berhasil dimulai!";
+            if ($asalBibit === 'beli_luar' && $biayaBeliBibit > 0) {
+                $msg .= " Biaya bibit Rp " . number_format($biayaBeliBibit, 0, ',', '.') . " otomatis dibukukan ke Keuangan.";
+            }
             return response()->json([
                 'success' => true,
-                'message' => "Siklus pembesaran di {$kolam->nama_kolam} berhasil dimulai!",
+                'message' => $msg,
                 'batch'   => $batch
             ]);
         }
@@ -181,17 +212,18 @@ class PetugasPembesaranController extends Controller
     public function storeLogPakan(Request $request)
     {
         $request->validate([
-            'id_kolam'      => 'required|exists:kolam,id_kolam',
-            'id_stok_pakan' => 'nullable|exists:stok_pakan,id_stok_pakan',
-            'tgl_log'       => 'nullable|date',
-            'kg_pelet'      => 'nullable|numeric|min:0|max:100',
-            'kg_daun'       => 'nullable|numeric|min:0|max:100',
-            'jenis_daun'    => 'nullable|string',
-            'total_biaya'   => 'nullable|numeric|min:0',
-            'ph_air'        => 'nullable|numeric|min:0|max:14',
+            'id_kolam'          => 'required|exists:kolam,id_kolam',
+            'id_stok_pakan'     => 'nullable|exists:stok_pakan,id_stok_pakan',
+            'id_stok_suplemen'  => 'nullable|exists:stok_pakan,id_stok_pakan',
+            'tgl_log'           => 'nullable|date',
+            'kg_pelet'          => 'nullable|numeric|min:0|max:100',
+            'kg_daun'           => 'nullable|numeric|min:0|max:100',
+            'jenis_daun'        => 'nullable|string',
+            'total_biaya'       => 'nullable|numeric|min:0',
+            'ph_air'            => 'nullable|numeric|min:0|max:14',
         ], [
-            'kg_pelet.max'  => 'Pemberian pelet maksimal 100 kg per sesi.',
-            'kg_daun.max'   => 'Pemberian pakan daun maksimal 100 kg per sesi.',
+            'kg_pelet.max'      => 'Pemberian pelet maksimal 100 kg per sesi.',
+            'kg_daun.max'       => 'Pemberian pakan daun maksimal 100 kg per sesi.',
         ]);
 
         // Validasi: Kolam harus memiliki batch pembesaran yang sedang aktif
@@ -219,9 +251,26 @@ class PetugasPembesaranController extends Controller
             ], 422);
         }
 
+        // 1. Ambil pakan utama (pelet)
         $stokItem = $request->id_stok_pakan ? StokPakan::find($request->id_stok_pakan) : null;
-        $hargaPerKg = $stokItem ? (float) $stokItem->harga_per_satuan : 12500;
-        $totalBiaya = (float) ($request->total_biaya ?: ($kgPelet * $hargaPerKg));
+        $hargaPelet = $stokItem ? (float) $stokItem->harga_per_satuan : 12500;
+
+        // 2. Ambil pakan suplemen / dedaunan dari Master Stok Pakan
+        $suplemenItem = null;
+        if ($request->filled('id_stok_suplemen')) {
+            $suplemenItem = StokPakan::find($request->id_stok_suplemen);
+        } elseif ($request->filled('jenis_daun')) {
+            $suplemenItem = StokPakan::where('nama_pakan', 'like', '%' . $request->jenis_daun . '%')->first();
+        }
+        $hargaSuplemen = $suplemenItem ? (float) $suplemenItem->harga_per_satuan : 0;
+        $jenisDaun = $suplemenItem ? $suplemenItem->nama_pakan : ($request->jenis_daun ?: null);
+
+        // Kalkulasi: Total Biaya = (kg_pelet * harga_pelet) + (kg_daun * harga_suplemen)
+        $calcBiaya = ($kgPelet * $hargaPelet) + ($kgDaun * $hargaSuplemen);
+        $totalBiaya = (float) ($request->total_biaya ?? $calcBiaya);
+        if ($totalBiaya <= 0 && ($kgPelet > 0 || $kgDaun > 0)) {
+            $totalBiaya = $calcBiaya;
+        }
 
         $log = ManajemenPakan::create([
             'id_user'       => Auth::id() ?? 1,
@@ -231,12 +280,13 @@ class PetugasPembesaranController extends Controller
             'tgl_log'       => $tgl,
             'kg_pelet'      => $kgPelet,
             'kg_daun'       => $kgDaun,
-            'jenis_daun'    => $request->jenis_daun ?: ($stokItem ? $stokItem->nama_pakan : null),
+            'jenis_daun'    => $jenisDaun,
             'total_biaya'   => $totalBiaya,
             'ph_air'        => $request->ph_air ?? 7.0,
         ]);
 
         // POTONG STOK OTOMATIS
+        // 1. Potong Stok Pelet / Pakan Utama
         if ($stokItem && $kgPelet > 0) {
             $stokItem->update([
                 'stok_tersisa' => max(0, (float) $stokItem->stok_tersisa - $kgPelet)
@@ -248,6 +298,13 @@ class PetugasPembesaranController extends Controller
                     'stok_tersisa' => max(0, (float) $defaultPelet->stok_tersisa - $kgPelet)
                 ]);
             }
+        }
+
+        // 2. Potong Stok Dedaunan / Pakan Suplemen
+        if ($suplemenItem && $kgDaun > 0) {
+            $suplemenItem->update([
+                'stok_tersisa' => max(0, (float) $suplemenItem->stok_tersisa - $kgDaun)
+            ]);
         }
 
         // Update pH Air Kolam

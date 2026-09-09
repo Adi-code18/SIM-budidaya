@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Manajemen Petugas & Akses Akun - SIM-BUDIDAYA')
+@section('title', 'Manajemen Petugas & Akses Akun - AMS BUDIDAYA')
 
 @section('content')
 <div class="space-y-6" x-data="petugasComponent()">
@@ -125,6 +125,11 @@
                                                 <button @click="open = false; openEdit({{ json_encode($u) }})" class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
                                                     <i class="fa-solid fa-pen-to-square text-sky-600 w-4"></i>
                                                     <span>Edit Data Profil</span>
+                                                </button>
+
+                                                <button @click="open = false; openQrModal({{ json_encode($u) }})" class="w-full px-3.5 py-2 text-xs font-semibold text-sky-700 hover:bg-sky-50/70 flex items-center gap-2.5">
+                                                    <i class="fa-solid fa-qrcode text-sky-600 w-4"></i>
+                                                    <span>Lihat QR Code 2FA</span>
                                                 </button>
 
                                                 <button @click="open = false; openSecurity({{ json_encode($u) }})" class="w-full px-3.5 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50/70 flex items-center gap-2.5">
@@ -549,6 +554,68 @@
                     </div>
                 </div>
 
+                <!-- Card Google Authenticator 2FA Petugas -->
+                <div class="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-slate-50 to-sky-50/50 border border-sky-100/80 shadow-xs space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-sky-100">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-[#051B44] text-sky-400 flex items-center justify-center text-lg shadow-sm shrink-0">
+                                <i class="fa-solid fa-shield-halved"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-extrabold text-slate-900">Google Authenticator (2FA Petugas)</h4>
+                                <p class="text-[11px] text-slate-500 font-medium">Scan QR Code ini dengan aplikasi Google Authenticator di HP petugas untuk menghubungkan akun.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <button type="button" @click="regenerate2fa(formEdit.id_user)" :disabled="isRegenerating2fa"
+                                    class="px-3 py-1.5 rounded-xl border border-sky-200 bg-white hover:bg-sky-50 text-sky-800 text-[11px] font-bold shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50">
+                                <i class="fa-solid text-[10px]" :class="isRegenerating2fa ? 'fa-spinner fa-spin' : 'fa-arrows-rotate'"></i>
+                                <span x-text="isRegenerating2fa ? 'Membuat...' : 'Buat Ulang Kunci'"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row items-center gap-6 pt-1">
+                        <!-- QR Code Container -->
+                        <div class="bg-white p-3 rounded-2xl border border-slate-200/90 shadow-xs flex flex-col items-center justify-center shrink-0 w-44 h-44 overflow-hidden [&>svg]:w-full [&>svg]:h-full [&>img]:w-full [&>img]:h-full">
+                            <template x-if="formEdit.qr_code_svg">
+                                <div class="w-full h-full flex items-center justify-center" x-html="formEdit.qr_code_svg"></div>
+                            </template>
+                            <template x-if="!formEdit.qr_code_svg">
+                                <div class="text-center text-slate-400 text-xs py-8">
+                                    <i class="fa-solid fa-qrcode text-3xl block mb-1 text-slate-300"></i>
+                                    <span>Memuat QR...</span>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Info & Secret Key -->
+                        <div class="flex-1 space-y-3 text-left w-full">
+                            <div class="space-y-1">
+                                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">KODE KUNCI RAHASIA MANUAL (SECRET KEY)</span>
+                                <div class="flex items-center gap-2 bg-white border border-slate-200 rounded-xl p-2 max-w-md shadow-2xs">
+                                    <code class="text-xs font-mono font-extrabold text-[#051B44] tracking-widest px-2 truncate flex-1 select-all" x-text="formEdit.secret_key || '----------------'"></code>
+                                    <button type="button" @click="copyToClipboard(formEdit.secret_key)"
+                                            class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-[#051B44] hover:text-white text-slate-700 font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer shrink-0">
+                                        <i class="fa-regular" :class="copiedKey ? 'fa-circle-check text-emerald-600' : 'fa-copy'"></i>
+                                        <span x-text="copiedKey ? 'Tersalin' : 'Salin'"></span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="p-3 bg-white/80 rounded-xl border border-sky-100 text-xs text-slate-600 space-y-1">
+                                <div class="flex items-center gap-1.5 font-bold text-sky-900">
+                                    <i class="fa-solid fa-circle-info text-sky-600"></i>
+                                    <span>Cara Kerja Login Petugas:</span>
+                                </div>
+                                <p class="text-[11px] text-slate-500 leading-relaxed">
+                                    Setelah QR Code dipindai ke Google Authenticator, saat login petugas <strong>hanya perlu memasukkan 6-digit kode OTP</strong> dari aplikasi tanpa perlu scan ulang QR code.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                     <button type="button" @click="activeTab = 'daftar'" class="px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors">
                         Batal
@@ -678,6 +745,82 @@
     </div>
 
     <!-- ========================================================================= -->
+    <!-- MODAL QUICK VIEW QR CODE 2FA PETUGAS                                      -->
+    <!-- ========================================================================= -->
+    <div x-show="qrModalOpen" 
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4"
+         style="display: none;">
+        
+        <div @click.outside="qrModalOpen = false" 
+             x-show="qrModalOpen"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95 translate-y-3"
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+             x-transition:leave-end="opacity-0 scale-95 translate-y-3"
+             class="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-slate-100 p-6 sm:p-7 space-y-5 text-center">
+            
+            <!-- Header Modal -->
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div class="flex items-center gap-3 text-left">
+                    <div class="w-10 h-10 rounded-2xl bg-[#051B44] text-sky-400 flex items-center justify-center text-lg shadow-xs">
+                        <i class="fa-solid fa-qrcode"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-extrabold text-slate-900">Google Authenticator (2FA)</h3>
+                        <p class="text-xs text-slate-500 font-medium" x-text="qrUser.nama + ' (' + qrUser.email + ')'"></p>
+                    </div>
+                </div>
+                <button type="button" @click="qrModalOpen = false" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors">
+                    <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+            </div>
+
+            <!-- QR Code Box -->
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/90 flex flex-col items-center justify-center">
+                <div class="bg-white p-3 rounded-2xl shadow-xs border border-slate-200 flex items-center justify-center w-48 h-48 overflow-hidden [&>svg]:w-full [&>svg]:h-full [&>img]:w-full [&>img]:h-full mb-3">
+                    <template x-if="qrUser.qr_code_svg">
+                        <div class="w-full h-full flex items-center justify-center" x-html="qrUser.qr_code_svg"></div>
+                    </template>
+                </div>
+
+                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">KODE KUNCI RAHASIA MANUAL</span>
+                <div class="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 shadow-2xs max-w-full">
+                    <code class="text-xs font-mono font-extrabold text-[#051B44] tracking-widest px-1 truncate select-all" x-text="qrUser.secret_key || '----------------'"></code>
+                    <button type="button" @click="copyToClipboard(qrUser.secret_key)"
+                            class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-[#051B44] hover:text-white text-slate-700 font-bold text-xs transition-all flex items-center gap-1 cursor-pointer shrink-0">
+                        <i class="fa-regular" :class="copiedKey ? 'fa-circle-check text-emerald-600' : 'fa-copy'"></i>
+                        <span x-text="copiedKey ? 'Tersalin' : 'Salin'"></span>
+                    </button>
+                </div>
+            </div>
+
+            <p class="text-[11px] text-slate-500 text-left leading-relaxed bg-sky-50/60 p-3 rounded-xl border border-sky-100">
+                <i class="fa-solid fa-circle-info text-sky-600 mr-1"></i> Scan QR Code ini di aplikasi <strong>Google Authenticator</strong>. Saat login, petugas cukup memasukkan 6-digit kode OTP dari aplikasi tanpa perlu scan ulang.
+            </p>
+
+            <div class="flex items-center justify-between gap-3 pt-2 border-t border-slate-100">
+                <button type="button" @click="regenerate2fa(qrUser.id_user)" :disabled="isRegenerating2fa"
+                        class="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition-colors flex items-center gap-1.5 disabled:opacity-50">
+                    <i class="fa-solid text-xs" :class="isRegenerating2fa ? 'fa-spinner fa-spin' : 'fa-arrows-rotate'"></i>
+                    <span x-text="isRegenerating2fa ? 'Membuat...' : 'Buat Ulang Kunci'"></span>
+                </button>
+                <button type="button" @click="qrModalOpen = false"
+                        class="px-5 py-2 rounded-xl bg-[#051B44] hover:bg-navy-900 text-white font-extrabold text-xs shadow-md shadow-sky-950/20 transition-all">
+                    Selesai
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
     <!-- TOAST NOTIFICATION                                                        -->
     <!-- ========================================================================= -->
     <div x-show="showToast"
@@ -710,11 +853,15 @@ function petugasComponent() {
         activeTab: 'daftar',
         deleteModalOpen: false,
         securityModalOpen: false,
+        qrModalOpen: false,
         selectedUser: null,
         securityUser: { id_user: null, nama: '', email: '', role: '' },
+        qrUser: { id_user: null, nama: '', email: '', role: '', qr_code_svg: '', secret_key: '' },
         formPassword: { password: '', password_confirmation: '' },
         isDeleting: false,
         isUpdatingPassword: false,
+        isRegenerating2fa: false,
+        copiedKey: false,
         toastMessage: '',
         toastType: 'success',
         showToast: false,
@@ -733,7 +880,9 @@ function petugasComponent() {
             email: '',
             role: 'pembesaran',
             no_tlp: '',
-            password: ''
+            password: '',
+            qr_code_svg: '',
+            secret_key: ''
         },
 
         openEdit(user) {
@@ -743,9 +892,24 @@ function petugasComponent() {
                 email: user.email,
                 role: user.role,
                 no_tlp: user.no_tlp || '',
-                password: ''
+                password: '',
+                qr_code_svg: user.qr_code_svg || '',
+                secret_key: user.secret_key || ''
             };
             this.activeTab = 'edit';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        },
+
+        openQrModal(user) {
+            this.qrUser = {
+                id_user: user.id_user,
+                nama: user.nama,
+                email: user.email,
+                role: user.role,
+                qr_code_svg: user.qr_code_svg || '',
+                secret_key: user.secret_key || ''
+            };
+            this.qrModalOpen = true;
         },
 
         openSecurity(user) {
@@ -757,6 +921,47 @@ function petugasComponent() {
             };
             this.formPassword = { password: '', password_confirmation: '' };
             this.securityModalOpen = true;
+        },
+
+        async regenerate2fa(id) {
+            if (!id) return;
+            this.isRegenerating2fa = true;
+            try {
+                const res = await fetch('{{ url('/petugas') }}/' + id + '/regenerate-2fa', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    if (this.formEdit && this.formEdit.id_user == id) {
+                        this.formEdit.secret_key = data.secret_key;
+                        this.formEdit.qr_code_svg = data.qr_code_svg;
+                    }
+                    if (this.qrUser && this.qrUser.id_user == id) {
+                        this.qrUser.secret_key = data.secret_key;
+                        this.qrUser.qr_code_svg = data.qr_code_svg;
+                    }
+                    this.triggerToast(data.message || 'Kunci 2FA baru berhasil dibuat!', 'success');
+                } else {
+                    this.triggerToast(data.message || 'Gagal membuat ulang kunci 2FA.', 'error');
+                }
+            } catch(e) {
+                this.triggerToast('Terjadi kesalahan saat membuat ulang kunci 2FA.', 'error');
+            } finally {
+                this.isRegenerating2fa = false;
+            }
+        },
+
+        copyToClipboard(text) {
+            if (!text) return;
+            navigator.clipboard.writeText(text);
+            this.copiedKey = true;
+            this.triggerToast('Kunci rahasia 2FA berhasil disalin!', 'success');
+            setTimeout(() => this.copiedKey = false, 2500);
         },
 
         async submitPassword() {

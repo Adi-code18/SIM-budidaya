@@ -103,7 +103,7 @@ class EmailOtpController extends Controller
         $user->update(['last_session_id' => $currentSessionId]);
         session(['user_session_id' => $currentSessionId]);
 
-        return redirect()->intended(route('dashboard'))->with('status', 'Login berhasil! Selamat datang kembali di SIM-BUDIDAYA.');
+        return redirect()->intended(route('dashboard'))->with('status', 'Login berhasil! Selamat datang kembali di AMS BUDIDAYA.');
     }
 
     /**

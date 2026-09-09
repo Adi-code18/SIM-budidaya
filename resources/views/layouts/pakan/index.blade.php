@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Manajemen Stok & Log Pakan - SIM-BUDIDAYA')
+@section('title', 'Manajemen Stok & Log Pakan - AMS BUDIDAYA')
 
 @section('content')
 <div class="space-y-6" x-data="pakanHubComponent()">
@@ -273,7 +273,7 @@
 
                 </div>
 
-                <!-- Sub-baris: Pakan Tambahan / Daun / Suplemen (Hanya untuk Kolam Pembesaran, Tidak Ada pada Pembibitan) -->
+                <!-- Sub-baris: Pakan Tambahan / Daun / Suplemen (Hanya untuk Kolam Pembesaran, Terintegrasi Master Stok Pakan) -->
                 <div x-show="form.kategori_fase === 'pembesaran'" 
                      x-transition:enter="transition ease-out duration-200"
                      x-transition:enter-start="opacity-0 -translate-y-2"
@@ -283,15 +283,20 @@
                         <label class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 block">
                             JENIS PAKAN TAMBAHAN / SUPLEMEN <span class="text-[10px] text-slate-400 font-normal lowercase">(opsional - khusus pembesaran)</span>
                         </label>
-                        <select x-model="form.jenis_daun" 
+                        <select x-model="form.id_stok_suplemen" @change="onSuplemenChange()" 
                                 class="w-full px-4 py-2.5 rounded-2xl border border-slate-200 text-xs font-bold text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all cursor-pointer shadow-xs">
                             <option value="">-- Tidak Ada / Pilih Pakan Suplemen --</option>
-                            <option value="Daun Talas">Daun Talas (Organik)</option>
-                            <option value="Daun Singkong">Daun Singkong (Organik)</option>
-                            <option value="Daun Pepaya">Daun Pepaya (Antibiotik Alami)</option>
-                            <option value="Azolla / Lemna">Azolla / Lemna (Tinggi Protein)</option>
-                            <option value="Maggot BSF">Maggot BSF (Segar / Kering)</option>
+                            <template x-for="sup in suplemenList" :key="sup.id_stok_pakan">
+                                <option :value="sup.id_stok_pakan" x-text="sup.nama_pakan + ' (Sisa: ' + sup.stok_tersisa + ' ' + sup.satuan + ' - Rp ' + Number(sup.harga_per_satuan).toLocaleString('id-ID') + '/' + sup.satuan + ')'"></option>
+                            </template>
                         </select>
+
+                        <template x-if="selectedSuplemenItem">
+                            <div class="flex items-center justify-between px-3 py-1.5 bg-emerald-50/70 rounded-xl border border-emerald-200/70 text-[11px] font-medium text-emerald-800 mt-1.5">
+                                <span>Sisa Suplemen: <strong class="text-emerald-950 font-extrabold" x-text="selectedSuplemenItem.stok_tersisa + ' ' + selectedSuplemenItem.satuan"></strong></span>
+                                <span>Harga: <strong class="text-emerald-900 font-extrabold" x-text="'Rp ' + Number(selectedSuplemenItem.harga_per_satuan).toLocaleString('id-ID') + '/' + selectedSuplemenItem.satuan"></strong></span>
+                            </div>
+                        </template>
                     </div>
 
                     <div class="md:col-span-5 space-y-1.5">
@@ -301,11 +306,12 @@
                         <div class="flex items-center rounded-2xl border border-slate-200 bg-white focus-within:ring-2 focus-within:ring-sky-500 focus-within:border-sky-500 transition-all overflow-hidden shadow-xs">
                             <input type="number" x-model="form.kg_daun"
                                 onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E' || event.key === '+') event.preventDefault()"
-                                @input="if(form.kg_daun !== '' && Number(form.kg_daun) < 0) form.kg_daun = 0; if(Number(form.kg_daun) > 100) form.kg_daun = 100"
+                                @input="if(form.kg_daun !== '' && Number(form.kg_daun) < 0) form.kg_daun = 0; if(Number(form.kg_daun) > 100) form.kg_daun = 100; recalculateCost()"
                                 step="0.1" min="0" max="100" placeholder="0.0"
                                 class="w-full px-4 py-2.5 text-xs font-bold text-slate-900 bg-transparent border-0 focus:outline-none">
-                            <span class="px-4 py-2.5 text-xs font-black text-slate-500 bg-slate-100 border-l border-slate-200 shrink-0">KG</span>
+                            <span class="px-4 py-2.5 text-xs font-black text-slate-500 bg-slate-100 border-l border-slate-200 shrink-0" x-text="selectedSuplemenItem ? selectedSuplemenItem.satuan.toUpperCase() : 'KG'"></span>
                         </div>
+                        <span class="text-[10px] text-slate-400 block px-1">Biaya: Takaran suplemen × Harga acuan suplemen</span>
                     </div>
                 </div>
 
@@ -1193,6 +1199,7 @@ function pakanHubComponent() {
             kategori_fase: 'pembesaran',
             id_kolam: '',
             id_stok_pakan: '',
+            id_stok_suplemen: '',
             tgl_log: new Date().toISOString().split('T')[0],
             kg_pelet: 10,
             kg_daun: 0,
@@ -1350,6 +1357,18 @@ function pakanHubComponent() {
             return this.stokList.filter(item => item.kategori_peruntukan === this.form.kategori_fase || item.kategori_peruntukan === 'semua');
         },
 
+        get suplemenList() {
+            return this.stokList.filter(item => {
+                const name = (item.nama_pakan || '').toLowerCase();
+                return name.includes('daun') || name.includes('singkong') || name.includes('talas') || name.includes('pepaya') || name.includes('azolla') || name.includes('lemna') || name.includes('maggot') || name.includes('kangkung') || name.includes('suplemen') || name.includes('organik') || (item.kategori_peruntukan === 'pembesaran' && /daun|suplemen|organik|maggot|azolla/i.test(item.nama_pakan));
+            });
+        },
+
+        get selectedSuplemenItem() {
+            if (!this.form.id_stok_suplemen) return null;
+            return this.stokList.find(s => s.id_stok_pakan == this.form.id_stok_suplemen) || null;
+        },
+
         get isTelurPhase() {
             return this.form.kategori_fase === 'pembibitan' && this.selectedKolamInfo && this.selectedKolamInfo.fase_key === 'telur';
         },
@@ -1434,10 +1453,12 @@ function pakanHubComponent() {
             if (fase === 'pembibitan') {
                 this.form.kg_pelet = 1.5;
                 this.form.kg_daun = 0;
+                this.form.id_stok_suplemen = '';
                 this.form.jenis_daun = '';
             } else {
                 this.form.kg_pelet = 10;
                 this.form.kg_daun = 0;
+                this.form.id_stok_suplemen = '';
                 this.form.jenis_daun = '';
             }
             this.recalculateCost();
@@ -1476,6 +1497,7 @@ function pakanHubComponent() {
                 if (fKey === 'telur') {
                     this.form.kg_pelet = 0;
                     this.form.id_stok_pakan = '';
+                    this.form.id_stok_suplemen = '';
                     this.form.total_biaya = 0;
                     return;
                 }
@@ -1504,11 +1526,27 @@ function pakanHubComponent() {
             this.recalculateCost();
         },
 
+        onSuplemenChange() {
+            if (this.selectedSuplemenItem) {
+                this.form.jenis_daun = this.selectedSuplemenItem.nama_pakan;
+            } else {
+                this.form.jenis_daun = '';
+            }
+            this.recalculateCost();
+        },
+
         recalculateCost() {
             const pelet = Number(this.form.kg_pelet) || 0;
-            const item = this.selectedPakanItem;
-            const price = item ? (Number(item.harga_per_satuan) || 12500) : 12500;
-            this.form.total_biaya = Math.round(pelet * price);
+            const daun = (this.form.kategori_fase === 'pembibitan') ? 0 : (Number(this.form.kg_daun) || 0);
+
+            const itemPelet = this.selectedPakanItem;
+            const pricePelet = itemPelet ? (Number(itemPelet.harga_per_satuan) || 12500) : 12500;
+
+            const itemDaun = this.selectedSuplemenItem;
+            const priceDaun = itemDaun ? (Number(itemDaun.harga_per_satuan) || 0) : 0;
+
+            // Total Biaya = (kg_pelet * harga_pelet) + (kg_daun * harga_suplemen)
+            this.form.total_biaya = Math.round((pelet * pricePelet) + (daun * priceDaun));
         },
 
         goToPage(page) {
@@ -1522,6 +1560,7 @@ function pakanHubComponent() {
                 kategori_fase: 'pembesaran',
                 id_kolam: '',
                 id_stok_pakan: this.relevantStokList.length > 0 ? this.relevantStokList[0].id_stok_pakan : '',
+                id_stok_suplemen: '',
                 tgl_log: new Date().toISOString().split('T')[0],
                 kg_pelet: 10,
                 kg_daun: 0,
@@ -1624,11 +1663,12 @@ function pakanHubComponent() {
                     body: JSON.stringify({
                         id_kolam: this.form.id_kolam,
                         id_stok_pakan: this.form.id_stok_pakan || null,
+                        id_stok_suplemen: (this.form.kategori_fase === 'pembibitan' ? null : (this.form.id_stok_suplemen || null)),
                         kategori_fase: this.form.kategori_fase,
                         tgl_log: this.form.tgl_log,
                         kg_pelet: Math.min(100, Math.max(0, Number(this.form.kg_pelet) || 0)),
                         kg_daun: this.form.kategori_fase === 'pembibitan' ? 0 : Math.min(100, Math.max(0, Number(this.form.kg_daun) || 0)),
-                        jenis_daun: this.form.kategori_fase === 'pembibitan' ? null : (this.form.jenis_daun || null),
+                        jenis_daun: this.form.kategori_fase === 'pembibitan' ? null : (this.selectedSuplemenItem ? this.selectedSuplemenItem.nama_pakan : (this.form.jenis_daun || null)),
                         total_biaya: Math.max(0, Number(this.form.total_biaya) || 0),
                         ph_air: Math.max(0, Math.min(14, Number(this.form.ph_air) || 7.2))
                     })
@@ -1642,11 +1682,20 @@ function pakanHubComponent() {
                     }
 
                     // Potong stok lokal di browser
-                    const usedKg = (Number(this.form.kg_pelet) || 0) + (Number(this.form.kg_daun) || 0);
-                    if (this.form.id_stok_pakan) {
-                        const targetItem = this.stokList.find(s => s.id_stok_pakan == this.form.id_stok_pakan);
-                        if (targetItem) {
-                            targetItem.stok_tersisa = Math.max(0, Number(targetItem.stok_tersisa) - usedKg);
+                    const usedPelet = Number(this.form.kg_pelet) || 0;
+                    const usedDaun = (this.form.kategori_fase === 'pembibitan') ? 0 : (Number(this.form.kg_daun) || 0);
+
+                    if (this.form.id_stok_pakan && usedPelet > 0) {
+                        const targetPelet = this.stokList.find(s => s.id_stok_pakan == this.form.id_stok_pakan);
+                        if (targetPelet) {
+                            targetPelet.stok_tersisa = Math.max(0, Number(targetPelet.stok_tersisa) - usedPelet);
+                        }
+                    }
+
+                    if (this.form.id_stok_suplemen && usedDaun > 0) {
+                        const targetDaun = this.stokList.find(s => s.id_stok_pakan == this.form.id_stok_suplemen);
+                        if (targetDaun) {
+                            targetDaun.stok_tersisa = Math.max(0, Number(targetDaun.stok_tersisa) - usedDaun);
                         }
                     }
 

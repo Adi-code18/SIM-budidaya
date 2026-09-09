@@ -1,6 +1,6 @@
 @extends('mobile_web_petugas.petugas_pembesaran.layout')
 
-@section('title', 'Log Pakan Pembesaran - SIM-BUDIDAYA Mobile')
+@section('title', 'Log Pakan Pembesaran - AMS BUDIDAYA Mobile')
 
 @section('content')
 <div class="p-4 space-y-4" x-data="petugasPembesaranLogComponent()">
@@ -139,24 +139,31 @@
                         </label>
                         <input type="number" step="0.1" min="0" max="100" x-model="form.kg_daun"
                                @keydown="if(['-', 'e', '+'].includes($event.key)) $event.preventDefault()"
-                               @input="if(Number(form.kg_daun) > 100) form.kg_daun = 100"
+                               @input="if(Number(form.kg_daun) > 100) form.kg_daun = 100; recalculateCost()"
                                class="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 text-xs font-extrabold text-slate-900 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0284C7]">
                     </div>
                 </div>
             </div>
 
-            <!-- Field 5: Jenis Daun / Suplemen Tambahan -->
+            <!-- Field 5: Jenis Daun / Suplemen Tambahan (Dari Master Stok Pakan) -->
             <div class="space-y-1">
                 <label class="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider block">JENIS DAUN / SUPLEMEN</label>
-                <select x-model="form.jenis_daun" 
+                <select x-model="form.id_stok_suplemen" @change="onSuplemenChange()"
                         class="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 text-xs font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0284C7] transition-all cursor-pointer">
-                    <option value="">Tidak ada tambahan daun</option>
-                    <option value="Daun Talas">Daun Talas</option>
-                    <option value="Daun Singkong">Daun Singkong</option>
-                    <option value="Daun Pepaya">Daun Pepaya</option>
-                    <option value="Azolla / Lemna">Azolla / Lemna</option>
-                    <option value="Maggot BSF">Maggot BSF</option>
+                    <option value="">Tidak ada tambahan daun / suplemen</option>
+                    <template x-for="sup in suplemenList" :key="sup.id_stok_pakan">
+                        <option :value="sup.id_stok_pakan" 
+                                x-text="sup.nama_pakan + ' (Sisa: ' + sup.stok_tersisa + ' ' + sup.satuan + ' - Rp ' + Number(sup.harga_per_satuan).toLocaleString('id-ID') + '/' + sup.satuan + ')'">
+                        </option>
+                    </template>
                 </select>
+
+                <template x-if="selectedSuplemen">
+                    <div class="flex items-center justify-between text-[11px] text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-200/80 mt-1 font-medium">
+                        <span>Sisa: <strong class="text-emerald-950 font-extrabold" x-text="selectedSuplemen.stok_tersisa + ' ' + selectedSuplemen.satuan"></strong></span>
+                        <span>Harga: <strong class="text-emerald-900 font-extrabold" x-text="'Rp ' + Number(selectedSuplemen.harga_per_satuan).toLocaleString('id-ID') + '/' + selectedSuplemen.satuan"></strong></span>
+                    </div>
+                </template>
             </div>
 
             <!-- Field 6: Total Biaya Pakan (EST) -->
@@ -253,6 +260,7 @@ function petugasPembesaranLogComponent() {
         form: {
             id_kolam: '',
             id_stok_pakan: '',
+            id_stok_suplemen: '',
             tgl_log: new Date().toISOString().split('T')[0],
             kg_pelet: 10,
             kg_daun: 0,
@@ -282,6 +290,18 @@ function petugasPembesaranLogComponent() {
             return this.stokPakanList.find(p => p.id_stok_pakan == this.form.id_stok_pakan) || null;
         },
 
+        get suplemenList() {
+            return this.stokPakanList.filter(item => {
+                const name = (item.nama_pakan || '').toLowerCase();
+                return name.includes('daun') || name.includes('singkong') || name.includes('talas') || name.includes('pepaya') || name.includes('azolla') || name.includes('lemna') || name.includes('maggot') || name.includes('kangkung') || name.includes('suplemen') || name.includes('organik');
+            });
+        },
+
+        get selectedSuplemen() {
+            if (!this.form.id_stok_suplemen) return null;
+            return this.stokPakanList.find(p => p.id_stok_pakan == this.form.id_stok_suplemen) || null;
+        },
+
         onKolamChange() {
             if (this.selectedBatch) {
                 // Auto porsi pelet sesuai kalkulasi fase DOC
@@ -307,11 +327,27 @@ function petugasPembesaranLogComponent() {
             }
         },
 
+        onSuplemenChange() {
+            if (this.selectedSuplemen) {
+                this.form.jenis_daun = this.selectedSuplemen.nama_pakan;
+            } else {
+                this.form.jenis_daun = '';
+            }
+            this.recalculateCost();
+        },
+
         recalculateCost() {
-            const kg = Number(this.form.kg_pelet) || 0;
-            const item = this.selectedPakan;
-            const price = item ? (Number(item.harga_per_satuan) || 12500) : 12500;
-            this.form.total_biaya = Math.round(kg * price);
+            const kgPelet = Number(this.form.kg_pelet) || 0;
+            const kgDaun = Number(this.form.kg_daun) || 0;
+
+            const itemPelet = this.selectedPakan;
+            const pricePelet = itemPelet ? (Number(itemPelet.harga_per_satuan) || 12500) : 12500;
+
+            const itemDaun = this.selectedSuplemen;
+            const priceDaun = itemDaun ? (Number(itemDaun.harga_per_satuan) || 0) : 0;
+
+            // Total Biaya = (kg_pelet * harga_pelet) + (kg_daun * harga_suplemen)
+            this.form.total_biaya = Math.round((kgPelet * pricePelet) + (kgDaun * priceDaun));
         },
 
         async handleSave() {
@@ -345,10 +381,11 @@ function petugasPembesaranLogComponent() {
                     body: JSON.stringify({
                         id_kolam: this.form.id_kolam,
                         id_stok_pakan: this.form.id_stok_pakan || null,
+                        id_stok_suplemen: this.form.id_stok_suplemen || null,
                         tgl_log: this.form.tgl_log,
                         kg_pelet: Number(this.form.kg_pelet) || 0,
                         kg_daun: Number(this.form.kg_daun) || 0,
-                        jenis_daun: this.form.jenis_daun || null,
+                        jenis_daun: this.selectedSuplemen ? this.selectedSuplemen.nama_pakan : (this.form.jenis_daun || null),
                         total_biaya: Number(this.form.total_biaya) || 0,
                         ph_air: Number(this.form.ph_air) || 7.2
                     })
@@ -360,8 +397,14 @@ function petugasPembesaranLogComponent() {
                         this.logs.unshift(data.log);
                     }
                     // Kurangi stok lokal
-                    if (this.selectedPakan && Number(this.form.kg_pelet) > 0) {
-                        this.selectedPakan.stok_tersisa = Math.max(0, Number(this.selectedPakan.stok_tersisa) - Number(this.form.kg_pelet));
+                    const usedPelet = Number(this.form.kg_pelet) || 0;
+                    const usedDaun = Number(this.form.kg_daun) || 0;
+
+                    if (this.selectedPakan && usedPelet > 0) {
+                        this.selectedPakan.stok_tersisa = Math.max(0, Number(this.selectedPakan.stok_tersisa) - usedPelet);
+                    }
+                    if (this.selectedSuplemen && usedDaun > 0) {
+                        this.selectedSuplemen.stok_tersisa = Math.max(0, Number(this.selectedSuplemen.stok_tersisa) - usedDaun);
                     }
 
                     if (typeof triggerToast === 'function') {
@@ -372,6 +415,8 @@ function petugasPembesaranLogComponent() {
 
                     this.form.kg_pelet = 10;
                     this.form.kg_daun = 0;
+                    this.form.id_stok_suplemen = '';
+                    this.form.jenis_daun = '';
                     this.recalculateCost();
                 } else {
                     if (typeof triggerToast === 'function') {

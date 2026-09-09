@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>@yield('title', 'Petugas Pembesaran - SIM-BUDIDAYA Mobile')</title>
+    <title>@yield('title', 'Petugas Pembesaran - AMS BUDIDAYA Mobile')</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <!-- Google Fonts -->
@@ -279,7 +279,7 @@
 
     <div class="mobile-screen-wrapper flex flex-col justify-between">
         
-        <!-- Header (AQUA-FIELD / SIM-BUDIDAYA) -->
+        <!-- Header (AQUA-FIELD / AMS BUDIDAYA) -->
         @hasSection('hide_header')
         @else
         <header class="sticky top-0 z-40 glass-header border-b border-slate-100 px-4 py-3 flex items-center justify-between shadow-xs">
