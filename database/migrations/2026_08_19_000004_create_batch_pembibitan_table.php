@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('id_user')->constrained('users', 'id_user')->onDelete('cascade');
             $table->foreignId('id_ikan')->nullable()->constrained('ikan', 'id_ikan')->onDelete('set null');
             $table->date('tgl_pemijahan');
+            $table->date('est_prcs_pembibitaan')->nullable();
             $table->integer('jumlah_bibitAwal');
             $table->string('jenis_ikan')->nullable();
             $table->string('fase_pertumbuhan')->default('TELUR');

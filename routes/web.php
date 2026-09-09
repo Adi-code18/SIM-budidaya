@@ -146,7 +146,9 @@ Route::middleware(['auth', 'role:manajer'])->group(function () {
 
     // Halaman Pengaturan & Profil
     Route::get('/pengaturan', [PengaturanController::class, 'index'])->name('pengaturan');
+    Route::get('/pengaturan/profile', fn() => redirect()->route('pengaturan'));
     Route::put('/pengaturan/profile', [PengaturanController::class, 'updateProfile'])->name('pengaturan.update-profile');
+    Route::get('/pengaturan/preferences', fn() => redirect()->route('pengaturan'));
     Route::put('/pengaturan/preferences', [PengaturanController::class, 'updatePreferences'])->name('pengaturan.update-preferences');
 });
 

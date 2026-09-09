@@ -344,6 +344,7 @@
                 <thead>
                     <tr class="bg-slate-50/70 border-b border-slate-200/80 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
                         <th class="py-4 px-6">BATCH ID</th>
+                        <th class="py-4 px-6">JENIS IKAN</th>
                         <th class="py-4 px-6">FASE PERTUMBUHAN</th>
                         <th class="py-4 px-6">USIA (HARI)</th>
                         <th class="py-4 px-6">JUMLAH (EKOR)</th>
@@ -357,7 +358,7 @@
                     
                     <template x-if="filteredBatches.length === 0">
                         <tr>
-                            <td colspan="8" class="py-12 text-center text-slate-400 text-xs font-medium">
+                            <td colspan="9" class="py-12 text-center text-slate-400 text-xs font-medium">
                                 <i class="fa-solid fa-folder-open text-2xl text-slate-300 block mb-2"></i>
                                 Belum ada data batch pembibitan yang tercatat di database.<br>
                                 <span class="text-[11px] text-slate-400">Klik tombol <strong>Input Batch Baru</strong> di atas untuk menambahkan data.</span>
@@ -368,8 +369,19 @@
                     <template x-for="item in filteredBatches" :key="item.id">
                         <tr class="hover:bg-slate-50/70 transition-colors">
                             <td class="py-4 px-6">
-                                <span class="font-extrabold text-[#0055CC] block cursor-pointer hover:underline" @click="openDetail(item)" x-text="item.id"></span>
+                                <span class="font-extrabold text-[#0055CC] block cursor-pointer hover:underline text-xs" @click="openDetail(item)" x-text="item.id"></span>
                                 <span class="text-[10px] text-slate-400 font-normal" x-text="'Input: ' + item.inputDate"></span>
+                            </td>
+                            <td class="py-4 px-6">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-7 h-7 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center text-xs border border-sky-100/80">
+                                        <i class="fa-solid fa-fish"></i>
+                                    </span>
+                                    <div>
+                                        <span class="font-extrabold text-slate-800 text-xs block" x-text="item.jenis_ikan || 'Ikan Nila'"></span>
+                                        <span class="text-[10px] text-slate-400 font-medium" x-text="item.kolam || '-'"></span>
+                                    </div>
+                                </div>
                             </td>
                             <td class="py-4 px-6">
                                 <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase" :class="item.faseClass" x-text="item.fase"></span>
@@ -538,7 +550,13 @@
                     </div>
                     <div>
                         <span class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider block">Rincian Data Batch</span>
-                        <h3 class="text-lg font-extrabold text-slate-900" x-text="selectedBatch?.id"></h3>
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-lg font-extrabold text-slate-900" x-text="selectedBatch?.id"></h3>
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-sky-50 text-sky-700 border border-sky-200">
+                                <i class="fa-solid fa-fish text-[10px]"></i>
+                                <span x-text="selectedBatch?.jenis_ikan || 'Ikan Nila'"></span>
+                            </span>
+                        </div>
                     </div>
                 </div>
                 <button @click="detailModalOpen = false" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors">
@@ -625,18 +643,26 @@
                 </div>
 
                 <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
-                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">TANGGAL INPUT</span>
-                    <span class="font-bold text-slate-700" x-text="selectedBatch?.inputDate"></span>
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">KOMODITAS IKAN</span>
+                    <span class="font-extrabold text-slate-900 text-sm flex items-center gap-1.5">
+                        <i class="fa-solid fa-fish text-sky-500 text-xs"></i>
+                        <span x-text="selectedBatch?.jenis_ikan || 'Ikan Nila'"></span>
+                    </span>
                 </div>
 
-                <div class="col-span-2 p-3.5 bg-sky-50/60 rounded-xl border border-sky-100 flex items-center justify-between">
+                <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">TANGGAL INPUT</span>
+                    <span class="font-bold text-slate-700 text-sm" x-text="selectedBatch?.inputDate"></span>
+                </div>
+
+                <div class="p-3.5 bg-sky-50/60 rounded-xl border border-sky-100 flex items-center justify-between">
                     <div>
                         <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">LOKASI KOLAM ASAL</span>
                         <span class="font-extrabold text-[#0B2570] text-xs" x-text="selectedBatch?.kolam"></span>
                     </div>
                     <div class="text-right">
                         <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">KUALITAS AIR</span>
-                        <span class="font-extrabold text-slate-800 text-xs" x-text="'pH Air ' + selectedBatch?.phAir"></span>
+                        <span class="font-extrabold text-slate-800 text-xs" x-text="'pH ' + selectedBatch?.phAir"></span>
                     </div>
                 </div>
             </div>
@@ -695,7 +721,7 @@
                 <div>
                     <span class="text-[10px] font-extrabold uppercase text-slate-400 block">BATCH ASAL</span>
                     <span class="font-extrabold text-[#031B4E]" x-text="selectedBatchToTransfer?.id"></span>
-                    <span class="text-slate-500 block font-semibold mt-0.5" x-text="selectedBatchToTransfer?.jenisIkan"></span>
+                    <span class="text-slate-500 block font-semibold mt-0.5" x-text="selectedBatchToTransfer?.jenis_ikan || selectedBatchToTransfer?.jenisIkan || 'Ikan Nila'"></span>
                 </div>
                 <div>
                     <span class="text-[10px] font-extrabold uppercase text-slate-400 block">SISA BIBIT</span>
@@ -901,7 +927,11 @@ function pembibitanComponent() {
 
         openEdit(item) {
             this.formMode = 'edit';
-            this.selectedIkanId = '';
+            this.selectedIkanId = item.id_ikan ? String(item.id_ikan) : '';
+            if (!this.selectedIkanId && item.jenis_ikan && this.ikansList) {
+                const found = this.ikansList.find(ik => ik.nama_ikan.toLowerCase() === item.jenis_ikan.toLowerCase());
+                if (found) this.selectedIkanId = String(found.id_ikan);
+            }
             this.isEstLocked = false;
             this.selectedBatch = item;
             const itemFase = (item.fase || 'TELUR').toUpperCase();
@@ -1076,6 +1106,7 @@ function pembibitanComponent() {
                         },
                         body: JSON.stringify({
                             id_kolam: this.form.kolam,
+                            id_ikan: this.selectedIkanId ? Number(this.selectedIkanId) : null,
                             tgl_pemijahan: this.form.tglPemijahan,
                             est_prcs_pembibitaan: this.form.est_prcs_pembibitaan,
                             fase_pertumbuhan: faseVal,
@@ -1089,6 +1120,17 @@ function pembibitanComponent() {
                     if (res.ok && data.success) {
                         const targetIndex = this.batches.findIndex(b => b.id_batch === idBatch || b.id === this.form.id);
                         if (targetIndex !== -1) {
+                            let editIkName = this.batches[targetIndex].jenis_ikan || 'Ikan Nila';
+                            if (data.batch && data.batch.ikan && data.batch.ikan.nama_ikan) {
+                                editIkName = data.batch.ikan.nama_ikan;
+                            } else if (data.batch && data.batch.jenis_ikan) {
+                                editIkName = data.batch.jenis_ikan;
+                            } else if (this.selectedIkanId) {
+                                const fIk = this.ikansList.find(i => String(i.id_ikan) === String(this.selectedIkanId));
+                                if (fIk) editIkName = fIk.nama_ikan;
+                            }
+                            this.batches[targetIndex].id_ikan = this.selectedIkanId ? Number(this.selectedIkanId) : null;
+                            this.batches[targetIndex].jenis_ikan = editIkName;
                             this.batches[targetIndex].est_prcs_pembibitaan = this.form.est_prcs_pembibitaan ? new Date(this.form.est_prcs_pembibitaan).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
                             this.batches[targetIndex].est_prcs_raw = this.form.est_prcs_pembibitaan;
                             this.batches[targetIndex].fase = faseVal;
@@ -1133,6 +1175,7 @@ function pembibitanComponent() {
                     },
                     body: JSON.stringify({
                         id_kolam: this.form.kolam,
+                        id_ikan: this.selectedIkanId ? Number(this.selectedIkanId) : null,
                         tgl_pemijahan: this.form.tglPemijahan,
                         est_prcs_pembibitaan: this.form.est_prcs_pembibitaan,
                         fase_pertumbuhan: faseVal,
@@ -1148,9 +1191,20 @@ function pembibitanComponent() {
                     const newBatch = data.batch;
                     const diffDays = this.form.tglPemijahan ? Math.max(0, Math.floor((new Date() - new Date(this.form.tglPemijahan)) / (1000 * 60 * 60 * 24))) : 0;
                     const finalBobot = Number(newBatch.total_bobot_kg || bobotKgNum);
+                    let ikName = 'Ikan Nila';
+                    if (newBatch && newBatch.ikan && newBatch.ikan.nama_ikan) {
+                        ikName = newBatch.ikan.nama_ikan;
+                    } else if (newBatch && newBatch.jenis_ikan) {
+                        ikName = newBatch.jenis_ikan;
+                    } else if (this.selectedIkanId) {
+                        const foundIk = this.ikansList.find(i => String(i.id_ikan) === String(this.selectedIkanId));
+                        if (foundIk) ikName = foundIk.nama_ikan;
+                    }
                     this.batches.unshift({
                         id_batch: newBatch.id_batch,
                         id: '#BT-' + String(newBatch.id_batch).padStart(5, '0'),
+                        id_ikan: newBatch.id_ikan || (this.selectedIkanId ? Number(this.selectedIkanId) : null),
+                        jenis_ikan: ikName,
                         inputDate: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
                         tglPemijahan: this.form.tglPemijahan,
                         est_prcs_pembibitaan: this.form.est_prcs_pembibitaan ? new Date(this.form.est_prcs_pembibitaan).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-',

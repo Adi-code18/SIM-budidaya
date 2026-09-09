@@ -190,7 +190,7 @@
 
                     <div class="space-y-3">
                         <div>
-                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">ESTIMASI BIOMASSA AWAL (KG) *</label>
+                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">ESTIMASI BIOMASSA SAAT INI*</label>
                             <input type="number" step="0.1" min="0.1" x-model="form.biomassaEst" placeholder="Contoh: 1250"
                                    onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E') event.preventDefault()"
                                    @input="if(form.biomassaEst !== '' && Number(form.biomassaEst) < 0) form.biomassaEst = Math.abs(Number(form.biomassaEst)) || 0.1"

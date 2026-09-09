@@ -51,7 +51,7 @@ class UserController extends Controller
             'email'    => 'required|email|max:255|unique:users,email',
             'password' => 'required|string|min:6',
             'role'     => 'required|string|in:manajer,petugas_distribusi,pembesaran,pembibitan,pekerja',
-            'no_tlp'   => 'nullable|phone:AUTO,ID',
+            'no_tlp'   => ['nullable', 'regex:/^(\+?62|0)[\d\s\-]{8,20}$/'],
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
@@ -105,7 +105,7 @@ class UserController extends Controller
             'email'    => ['sometimes', 'required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id_user, 'id_user')],
             'password' => 'nullable|string|min:6',
             'role'     => 'sometimes|required|string|in:manajer,petugas_distribusi,pembesaran,pembibitan,pekerja',
-            'no_tlp'   => 'nullable|phone:AUTO,ID',
+            'no_tlp'   => ['nullable', 'regex:/^(\+?62|0)[\d\s\-]{8,20}$/'],
         ]);
 
         if (!empty($validated['password'])) {
@@ -133,7 +133,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'nama'     => 'sometimes|required|string|max:255',
             'email'    => ['sometimes', 'required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id_user, 'id_user')],
-            'no_tlp'   => 'nullable|phone:AUTO,ID',
+            'no_tlp'   => ['nullable', 'regex:/^(\+?62|0)[\d\s\-]{8,20}$/'],
             'password' => 'nullable|string|min:6|confirmed',
         ]);
 

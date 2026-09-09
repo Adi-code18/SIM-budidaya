@@ -33,18 +33,18 @@ class PetugasController extends Controller
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|min:6',
             'role'     => 'required|in:manajer,pembibitan,pembesaran,petugas_distribusi',
-            'no_tlp'   => 'nullable|phone:AUTO,ID',
+            'no_tlp'   => ['nullable', 'regex:/^(\+?62|0)[\d\s\-]{8,20}$/'],
         ], [
-            'no_tlp.phone' => 'Format nomor telepon/HP tidak valid (contoh: 081234567890 atau +6281234567890).',
+            'no_tlp.regex' => 'Format nomor telepon/HP tidak valid (contoh: 081234567890 atau +6281234567890).',
         ]);
 
         $noTlp = $request->no_tlp ?? '081234567890';
         if ($request->filled('no_tlp')) {
-            try {
-                $noTlp = phone($request->no_tlp, 'ID')->formatNational();
-            } catch (\Exception $e) {
-                $noTlp = $request->no_tlp;
+            $clean = preg_replace('/[^0-9]/', '', $request->no_tlp);
+            if (str_starts_with($clean, '62')) {
+                $clean = '0' . substr($clean, 2);
             }
+            $noTlp = $clean ?: $request->no_tlp;
         }
 
         $user = User::create([
@@ -81,18 +81,18 @@ class PetugasController extends Controller
             'email'    => 'required|email|unique:users,email,' . $user->id_user . ',id_user',
             'password' => 'nullable|min:6',
             'role'     => 'required|in:manajer,pembibitan,pembesaran,petugas_distribusi',
-            'no_tlp'   => 'nullable|phone:AUTO,ID',
+            'no_tlp'   => ['nullable', 'regex:/^(\+?62|0)[\d\s\-]{8,20}$/'],
         ], [
-            'no_tlp.phone' => 'Format nomor telepon/HP tidak valid (contoh: 081234567890 atau +6281234567890).',
+            'no_tlp.regex' => 'Format nomor telepon/HP tidak valid (contoh: 081234567890 atau +6281234567890).',
         ]);
 
         $noTlp = $user->no_tlp;
         if ($request->filled('no_tlp')) {
-            try {
-                $noTlp = phone($request->no_tlp, 'ID')->formatNational();
-            } catch (\Exception $e) {
-                $noTlp = $request->no_tlp;
+            $clean = preg_replace('/[^0-9]/', '', $request->no_tlp);
+            if (str_starts_with($clean, '62')) {
+                $clean = '0' . substr($clean, 2);
             }
+            $noTlp = $clean ?: $request->no_tlp;
         }
 
         $data = [

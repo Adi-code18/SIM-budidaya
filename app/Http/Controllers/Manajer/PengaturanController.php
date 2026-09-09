@@ -43,7 +43,7 @@ class PengaturanController extends Controller
         $request->validate([
             'nama' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,' . $user->id_user . ',id_user',
-            'no_tlp' => 'nullable|phone:AUTO,ID',
+            'no_tlp' => ['nullable', 'regex:/^(\+?62|0)[\d\s\-]{8,20}$/'],
             'foto_profil' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'password_saat_ini' => 'nullable|required_with:password_baru',
             'password_baru' => ['nullable', 'confirmed', Password::min(6)],
@@ -51,7 +51,7 @@ class PengaturanController extends Controller
             'nama.required' => 'Nama pengguna wajib diisi.',
             'email.required' => 'Email wajib diisi.',
             'email.unique' => 'Email sudah digunakan oleh pengguna lain.',
-            'no_tlp.phone' => 'Format nomor telepon/WhatsApp tidak valid (contoh: 081234567890 atau +6281234567890).',
+            'no_tlp.regex' => 'Format nomor telepon/WhatsApp tidak valid (contoh: 081234567890 atau +6281234567890).',
             'foto_profil.image' => 'File harus berupa gambar.',
             'foto_profil.mimes' => 'Format gambar harus jpeg, png, jpg, atau webp.',
             'foto_profil.max' => 'Ukuran gambar maksimal 2MB.',
@@ -83,11 +83,11 @@ class PengaturanController extends Controller
 
         $noTlp = $user->no_tlp;
         if ($request->filled('no_tlp')) {
-            try {
-                $noTlp = phone($request->no_tlp, 'ID')->formatNational();
-            } catch (\Exception $e) {
-                $noTlp = $request->no_tlp;
+            $clean = preg_replace('/[^0-9]/', '', $request->no_tlp);
+            if (str_starts_with($clean, '62')) {
+                $clean = '0' . substr($clean, 2);
             }
+            $noTlp = $clean ?: $request->no_tlp;
         }
 
         $user->nama = $request->nama;
@@ -95,7 +95,7 @@ class PengaturanController extends Controller
         $user->no_tlp = $noTlp;
         $user->save();
 
-        return back()->with('status', 'Profil & Keamanan berhasil diperbarui!');
+        return redirect()->route('pengaturan')->with('status', 'Profil & Keamanan berhasil diperbarui!');
     }
 
     /**
@@ -104,6 +104,6 @@ class PengaturanController extends Controller
     public function updatePreferences(Request $request)
     {
         // Dalam implementasi nyata ini bisa disimpan ke database atau file config
-        return back()->with('status', 'Preferensi & Notifikasi Budidaya berhasil disimpan!');
+        return redirect()->route('pengaturan')->with('status', 'Preferensi & Notifikasi Budidaya berhasil disimpan!');
     }
 }

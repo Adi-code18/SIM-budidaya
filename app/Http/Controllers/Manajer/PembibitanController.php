@@ -375,6 +375,7 @@ class PembibitanController extends Controller
         ]);
 
         if ($request->wantsJson() || $request->ajax()) {
+            $batch->load(['ikan', 'kolam']);
             return response()->json([
                 'success' => true,
                 'message' => "Data batch #BT-" . str_pad($batch->id_batch, 5, '0', STR_PAD_LEFT) . " (" . number_format($batch->jumlah_bibitAwal, 0, ',', '.') . " ekor, " . number_format($batch->total_bobot_kg, 2, ',', '.') . " kg) berhasil disimpan!",
@@ -415,6 +416,19 @@ class PembibitanController extends Controller
             if ($kolam) {
                 $batch->id_kolam = $kolam->id_kolam;
             }
+        }
+
+        if ($request->has('id_ikan')) {
+            $batch->id_ikan = $request->id_ikan ?: null;
+            if ($batch->id_ikan) {
+                $ik = \App\Models\Ikan::find($batch->id_ikan);
+                if ($ik) {
+                    $batch->jenis_ikan = $ik->nama_ikan;
+                }
+            }
+        }
+        if ($request->filled('jenis_ikan')) {
+            $batch->jenis_ikan = $request->jenis_ikan;
         }
 
         if ($request->filled('tgl_pemijahan')) {
@@ -478,6 +492,7 @@ class PembibitanController extends Controller
         }
 
         $batch->save();
+        $batch->load(['ikan', 'kolam']);
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([

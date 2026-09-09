@@ -204,25 +204,21 @@ class PetugasPembibitanController extends Controller
         $logs = ManajemenPakan::with(['kolam', 'user', 'stokPakan'])
             ->where('kategori_fase', 'pembibitan')
             ->latest('tgl_log')
-            ->latest('id_manajemen_pakan')
+            ->latest('id_pakan')
             ->take(20)
             ->get();
 
         // 3. Stok Pakan Starter Pembibitan
-        $stokPakanList = StokPakan::where('stok_kg', '>', 0)
-            ->where(function ($q) {
-                $q->where('jenis_pakan', 'like', '%Starter%')
-                  ->orWhere('jenis_pakan', 'like', '%PF%')
-                  ->orWhere('jenis_pakan', 'like', '%Feng%')
-                  ->orWhere('jenis_pakan', 'like', '%Cacing%')
-                  ->orWhere('jenis_pakan', 'like', '%Artemia%')
-                  ->orWhere('jenis_pakan', 'like', '%Benih%')
-                  ->orWhere('jenis_pakan', 'like', '%Pelet%');
-            })
+        $stokPakanList = StokPakan::where('stok_tersisa', '>', 0)
+            ->whereIn('kategori_peruntukan', ['pembibitan', 'semua'])
             ->get();
 
         if ($stokPakanList->isEmpty()) {
-            $stokPakanList = StokPakan::where('stok_kg', '>', 0)->get();
+            $stokPakanList = StokPakan::where('stok_tersisa', '>', 0)->get();
+        }
+
+        if ($stokPakanList->isEmpty()) {
+            $stokPakanList = StokPakan::all();
         }
 
         return view('mobile_web_petugas.petugas_pembibitan.log_pakan', compact('activeBatches', 'logs', 'stokPakanList'));

@@ -63,7 +63,7 @@
                     <div>
                         <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">ID MITRA / NAMA MITRA (DATABASE MITRA) *</label>
                         <select x-model="form.id_mitra" @change="onMitraSelected()" :disabled="formMode === 'edit'" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
-                            <option value="">Pilih Mitra Distributor dari Database...</option>
+                            <option value="">Pilih Mitra Distributor </option>
                             <template x-for="m in mitraList" :key="m.id_mitra">
                                 <option :value="m.id_mitra" x-text="m.label"></option>
                             </template>
@@ -94,7 +94,7 @@
                                 <i class="fa-solid fa-warehouse text-slate-400"></i>
                                 <span>Kolam: <strong x-text="form.kolam_asal"></strong></span>
                             </span>
-                            <span x-show="form.stok_biomassa" class="px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold">
+                            <span x-show="form.stok_biomassa !== null && form.stok_biomassa !== undefined && form.id_pembesaran" class="px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold">
                                 Stok Siap: <span x-text="Number(form.stok_biomassa).toLocaleString('id-ID') + ' kg'"></span>
                             </span>
                         </div>
@@ -161,16 +161,43 @@
                     </div>
 
                     <div x-show="form.totalBerat && Number(form.totalBerat) > 0 && form.id_pembesaran" class="pt-2">
-                        <!-- Skenario A: Stok Utama Mencukupi (Surplus Masuk Buffer) -->
+                        <!-- Skenario A: Stok Utama Mencukupi / Lebih -->
                         <template x-if="Number(form.totalBerat) <= Number(form.stok_biomassa || 0)">
-                            <div class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs space-y-1 shadow-xs">
-                                <div class="flex items-center gap-2 font-extrabold text-emerald-800">
-                                    <i class="fa-solid fa-circle-check text-emerald-600"></i>
-                                    <span>Stok Kolam Utama Mencukupi (Surplus ke Buffer Pemberokan)</span>
+                            <div class="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs space-y-2.5 shadow-xs">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2 font-extrabold text-emerald-800">
+                                        <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                                        <span>Stok Kolam Utama Mencukupi</span>
+                                    </div>
+                                    <span class="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-extrabold">
+                                        Sisa di Kolam: <span x-text="(Number(form.stok_biomassa) - Number(form.totalBerat)).toLocaleString('id-ID') + ' kg'"></span>
+                                    </span>
                                 </div>
-                                <p class="text-[11px] text-emerald-700 leading-relaxed">
-                                    Pesanan <strong x-text="Number(form.totalBerat).toLocaleString('id-ID') + ' kg'"></strong> terpenuhi penuh dari batch ini. Sisa panen <strong x-text="'+' + (Number(form.stok_biomassa) - Number(form.totalBerat)).toLocaleString('id-ID') + ' kg'"></strong> akan otomatis ditampung di <strong>Buffer Stok Kolam Pemberokan / Cold Storage</strong>.
-                                </p>
+
+                                <div class="p-3 bg-white rounded-xl border border-emerald-200/80 space-y-2.5">
+                                    <label class="flex items-center gap-2.5 cursor-pointer select-none">
+                                        <input type="checkbox" x-model="panen_kuras" class="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer">
+                                        <div class="space-y-0.5">
+                                            <span class="text-xs font-extrabold text-slate-800 block">Panen Kuras Total Kolam</span>
+                                            <span class="text-[11px] text-slate-500 font-medium block">Pindahkan sisa ikan surplus (<strong x-text="(Number(form.stok_biomassa) - Number(form.totalBerat)).toLocaleString('id-ID') + ' kg'"></strong>) ke Kolam Kosong atau Kolam Stok.</span>
+                                        </div>
+                                    </label>
+
+                                    <div x-show="panen_kuras" x-transition class="pt-2.5 border-t border-slate-100 space-y-1.5">
+                                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 block">
+                                            PILIH KOLAM PENAMPUNGAN SISA IKAN *
+                                        </label>
+                                        <select x-model="id_kolam_surplus" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer">
+                                            <option value="">-- Pilih Kolam Kosong / Kolam Stok --</option>
+                                            <template x-for="kp in emptyAndStockPonds" :key="kp.id_kolam">
+                                                <option :value="kp.id_kolam" x-text="kp.label"></option>
+                                            </template>
+                                        </select>
+                                        <p class="text-[10px] text-emerald-700 font-medium">
+                                            <i class="fa-solid fa-circle-info"></i> Kolam utama akan dikosongkan, dan sisa ikan otomatis masuk ke kolam tujuan terpilih.
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                         </template>
 
@@ -530,6 +557,9 @@ function distribusiComponent() {
         selectedInvoice: null,
         mitraList: {!! json_encode($mitraList ?? []) !!},
         batches: {!! json_encode($batches ?? []) !!},
+        emptyAndStockPonds: {!! json_encode($emptyAndStockPonds ?? []) !!},
+        panen_kuras: false,
+        id_kolam_surplus: '',
 
         alokasi: {
             buffer_kg: '',
@@ -670,6 +700,8 @@ function distribusiComponent() {
         openCreateForm() {
             this.formMode = 'create';
             this.showForm = true;
+            this.panen_kuras = false;
+            this.id_kolam_surplus = '';
             this.alokasi = {
                 buffer_kg: '',
                 id_batch_buffer: this.availableBufferBatches.length > 0 ? this.availableBufferBatches[0].id_pembesaran : '',
@@ -698,24 +730,25 @@ function distribusiComponent() {
         openEditForm(order) {
             this.formMode = 'edit';
             this.showForm = true;
-            const matchedMitra = this.mitraList.find(m => m.nama_mitra === order.customer);
+            const matchedMitra = this.mitraList.find(m => m.nama_mitra === order.customer || m.id_mitra == order.id_mitra);
+            const matchedBatch = this.batches.find(b => b.id_pembesaran == order.id_pembesaran);
             this.form = {
                 id: order.id,
                 id_transaksi: order.id_transaksi || null,
                 id_mitra: order.id_mitra || (matchedMitra ? matchedMitra.id_mitra : ''),
-                id_pembesaran: order.id_pembesaran || '',
-                jenis_ikan: order.jenis_ikan || '',
-                kolam_asal: order.kolam_asal || '',
-                stok_biomassa: null,
+                id_pembesaran: order.id_pembesaran || (matchedBatch ? matchedBatch.id_pembesaran : ''),
+                jenis_ikan: order.jenis_ikan || (matchedBatch ? matchedBatch.jenis_ikan : ''),
+                kolam_asal: order.kolam_asal || (matchedBatch ? matchedBatch.kolam : ''),
+                stok_biomassa: matchedBatch ? Number(matchedBatch.biomassa_est || 0) : (order.stok_biomassa !== undefined ? Number(order.stok_biomassa) : null),
                 tanggal: order.tanggal,
                 mitra: order.customer,
                 alamat: order.alamat,
-                jenisOrder: 'reguler',
+                jenisOrder: order.jenis_order || 'reguler',
                 status: order.status,
-                totalBerat: String(order.volume || '').replace(/[^0-9.]/g, ''),
+                totalBerat: String(order.total_kg !== undefined ? order.total_kg : (order.volume || '')).replace(/[^0-9.]/g, ''),
                 totalHarga: order.harga_format || ''
             };
-            this.jenisOrder = 'reguler';
+            this.jenisOrder = order.jenis_order || 'reguler';
         },
 
         async saveForm() {
@@ -747,7 +780,7 @@ function distribusiComponent() {
                     return;
                 }
                 if (!this.form.id_mitra) {
-                    alert('Silakan pilih Mitra Distributor dari database!');
+                    alert('Silakan pilih Mitra Distributor ');
                     return;
                 }
                 if (!this.form.id_pembesaran) {
@@ -771,6 +804,13 @@ function distribusiComponent() {
                     Jenis_order: this.form.jenis_ikan || this.form.jenisOrder,
                     status_order: this.form.status
                 };
+
+                if (this.panen_kuras && this.id_kolam_surplus) {
+                    const surplusKg = Math.max(0, Number(this.form.stok_biomassa || 0) - totalKg);
+                    payload.panen_kuras = true;
+                    payload.id_kolam_surplus = this.id_kolam_surplus;
+                    payload.surplus_kg = surplusKg;
+                }
 
                 if (totalKg > Number(this.form.stok_biomassa || 0)) {
                     const selBuf = this.batches.find(b => b.id_pembesaran == this.alokasi.id_batch_buffer);
