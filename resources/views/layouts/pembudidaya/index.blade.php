@@ -441,9 +441,16 @@ function pembudidayaComponent() {
             this.editModalOpen = false;
         },
 
-        deleteKolam(item) {
-            if (confirm("Apakah Anda yakin ingin menghapus data kolam " + item.id + "?")) {
+        async deleteKolam(item) {
+            const res = await AppSwal.confirmDelete({
+                title: 'Hapus Data Kolam?',
+                text: 'Apakah Anda yakin ingin menghapus data kolam "' + item.id + '"?',
+                confirmText: 'Ya, Hapus Kolam',
+                cancelText: 'Batal'
+            });
+            if (res.isConfirmed) {
                 this.kolams = this.kolams.filter(k => k.id !== item.id);
+                AppSwal.toast('Data kolam ' + item.id + ' berhasil dihapus!', 'success');
             }
         },
 

@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\ManajemenPakan;
 use App\Models\Kolam;
+use App\Models\StokPakan;
 use App\Models\User;
 
 class ManajemenPakanSeeder extends Seeder
@@ -12,110 +13,52 @@ class ManajemenPakanSeeder extends Seeder
     public function run(): void
     {
         $petugasPembesaran = User::where('role', 'pembesaran')->first() ?? User::first();
-        $userId = $petugasPembesaran->id_user;
+        $petugasPembibitan = User::where('role', 'pembibitan')->first() ?? User::first();
 
-        $kolamA1 = Kolam::where('nama_kolam', 'Kolam A1')->first() ?? Kolam::first();
-        $kolamB3 = Kolam::where('nama_kolam', 'Kolam B3')->first() ?? Kolam::first();
-        $kolamA4 = Kolam::where('nama_kolam', 'Kolam A4')->first() ?? Kolam::first();
+        $kolamPembesaran = Kolam::where('nama_kolam', 'like', '%Pembesaran%')->first() ?? Kolam::first();
+        $kolamPembibitan = Kolam::where('nama_kolam', 'like', '%Pendederan%')->first() ?? Kolam::first();
+
+        $pakanPelet = StokPakan::where('kategori_peruntukan', 'pembesaran')->first();
+        $pakanCacing = StokPakan::where('kategori_peruntukan', 'pembibitan')->first();
 
         $feedLogs = [
-            // 7 Hari Terakhir untuk Kolam A1
+            // 1. Kondisi Log Pakan Fase Pembesaran
             [
-                'id_user' => $userId,
-                'id_kolam' => $kolamA1->id_kolam,
-                'tgl_log' => now()->subDays(6)->toDateString(),
-                'kg_pelet' => 18.00,
-                'kg_daun' => 12.00,
-                'jenis_daun' => 'Daun Talas',
-                'total_biaya' => 216000.00,
-                'ph_air' => 7.20,
-            ],
-            [
-                'id_user' => $userId,
-                'id_kolam' => $kolamA1->id_kolam,
-                'tgl_log' => now()->subDays(5)->toDateString(),
-                'kg_pelet' => 24.00,
-                'kg_daun' => 16.00,
-                'jenis_daun' => 'Daun Pepaya',
-                'total_biaya' => 288000.00,
-                'ph_air' => 7.30,
-            ],
-            [
-                'id_user' => $userId,
-                'id_kolam' => $kolamA1->id_kolam,
-                'tgl_log' => now()->subDays(4)->toDateString(),
-                'kg_pelet' => 22.00,
-                'kg_daun' => 20.00,
-                'jenis_daun' => 'Kangkung Air',
-                'total_biaya' => 264000.00,
-                'ph_air' => 7.10,
-            ],
-            [
-                'id_user' => $userId,
-                'id_kolam' => $kolamA1->id_kolam,
-                'tgl_log' => now()->subDays(3)->toDateString(),
-                'kg_pelet' => 30.00,
-                'kg_daun' => 18.00,
-                'jenis_daun' => 'Daun Singkong',
-                'total_biaya' => 360000.00,
-                'ph_air' => 7.40,
-            ],
-            [
-                'id_user' => $userId,
-                'id_kolam' => $kolamA1->id_kolam,
-                'tgl_log' => now()->subDays(2)->toDateString(),
-                'kg_pelet' => 35.00,
-                'kg_daun' => 22.00,
-                'jenis_daun' => 'Daun Talas',
-                'total_biaya' => 420000.00,
-                'ph_air' => 7.30,
-            ],
-            [
-                'id_user' => $userId,
-                'id_kolam' => $kolamA1->id_kolam,
-                'tgl_log' => now()->subDays(1)->toDateString(),
-                'kg_pelet' => 28.00,
-                'kg_daun' => 24.00,
-                'jenis_daun' => 'Daun Pepaya',
-                'total_biaya' => 336000.00,
-                'ph_air' => 7.20,
-            ],
-            [
-                'id_user' => $userId,
-                'id_kolam' => $kolamA1->id_kolam,
-                'tgl_log' => now()->toDateString(),
-                'kg_pelet' => 32.00,
-                'kg_daun' => 21.00,
-                'jenis_daun' => 'Daun Talas',
-                'total_biaya' => 384000.00,
-                'ph_air' => 7.30,
-            ],
-
-            // Kolam B3 & A4
-            [
-                'id_user' => $userId,
-                'id_kolam' => $kolamB3->id_kolam,
+                'id_user' => $petugasPembesaran->id_user,
+                'id_kolam' => $kolamPembesaran->id_kolam,
+                'id_stok_pakan' => $pakanPelet ? $pakanPelet->id_stok_pakan : null,
+                'kategori_fase' => 'pembesaran',
                 'tgl_log' => now()->toDateString(),
                 'kg_pelet' => 25.00,
-                'kg_daun' => 15.00,
+                'kg_daun' => 10.00,
                 'jenis_daun' => 'Daun Talas',
-                'total_biaya' => 300000.00,
-                'ph_air' => 7.40,
+                'total_biaya' => 342500.00,
+                'ph_air' => 7.20,
             ],
+            // 2. Kondisi Log Pakan Fase Pembibitan
             [
-                'id_user' => $userId,
-                'id_kolam' => $kolamA4->id_kolam,
+                'id_user' => $petugasPembibitan->id_user,
+                'id_kolam' => $kolamPembibitan->id_kolam,
+                'id_stok_pakan' => $pakanCacing ? $pakanCacing->id_stok_pakan : null,
+                'kategori_fase' => 'pembibitan',
                 'tgl_log' => now()->toDateString(),
-                'kg_pelet' => 20.00,
+                'kg_pelet' => 5.00,
                 'kg_daun' => 0.00,
                 'jenis_daun' => null,
-                'total_biaya' => 240000.00,
-                'ph_air' => 6.90,
+                'total_biaya' => 100000.00,
+                'ph_air' => 6.80,
             ],
         ];
 
         foreach ($feedLogs as $log) {
-            ManajemenPakan::create($log);
+            ManajemenPakan::updateOrCreate(
+                [
+                    'id_kolam' => $log['id_kolam'],
+                    'tgl_log' => $log['tgl_log'],
+                    'kategori_fase' => $log['kategori_fase'],
+                ],
+                $log
+            );
         }
     }
 }

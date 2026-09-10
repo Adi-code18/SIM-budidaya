@@ -692,65 +692,79 @@
                 </div>
 
                 <!-- TABEL RINCIAN MASING-MASING BIBIT DARI BATCH PEMBIBITAN -->
-                <div class="bg-white rounded-2xl border border-slate-200/90 overflow-hidden shadow-xs space-y-0">
-                    <div class="p-3.5 bg-slate-50 border-b border-slate-200/80 flex items-center justify-between">
-                        <div class="flex items-center gap-2 font-bold text-slate-800 text-xs">
-                            <i class="fa-solid fa-table-list text-sky-600"></i>
-                            <span>Asal Usul Sumber Bibit</span>
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                    <div class="px-4 py-3 bg-slate-50/90 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-7 h-7 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center text-xs">
+                                <i class="fa-solid fa-layer-group"></i>
+                            </div>
+                            <div>
+                                <span class="font-bold text-slate-800 text-xs block">Asal Usul Sumber Bibit</span>
+                                <span class="text-[10px] text-slate-500 font-medium" x-text="(selectedBatch?.bibit_list ? selectedBatch.bibit_list.length : 1) + ' Sumber Bibit Tercatat'"></span>
+                            </div>
                         </div>
-                        <div class="flex items-center gap-2">
+                        <div>
                             <template x-if="selectedBatch?.asal_bibit === 'beli_luar'">
-                                <span class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-200 flex items-center gap-1">
-                                    <i class="fa-solid fa-cart-shopping text-[9px]"></i>
-                                    <span>Beli Luar <strong x-show="selectedBatch?.biaya_beli_bibit > 0" x-text="'(Rp ' + selectedBatch?.biaya_beli_bibit_format + ')'"></strong></span>
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-900 border border-amber-200">
+                                    <i class="fa-solid fa-cart-shopping text-amber-600 text-[11px]"></i>
+                                    <span>Beli Luar</span>
+                                    <span class="font-extrabold text-amber-700 font-mono" x-show="selectedBatch?.biaya_beli_bibit > 0" x-text="'(Rp ' + selectedBatch?.biaya_beli_bibit_format + ')'"></span>
                                 </span>
                             </template>
                             <template x-if="selectedBatch?.asal_bibit !== 'beli_luar'">
-                                <span class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-md bg-sky-100 text-sky-800 border border-sky-200 flex items-center gap-1">
-                                    <i class="fa-solid fa-dna text-[9px]"></i>
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-sky-50 text-sky-900 border border-sky-200">
+                                    <i class="fa-solid fa-dna text-sky-600 text-[11px]"></i>
                                     <span>Hatchery Internal</span>
                                 </span>
                             </template>
-                            <span class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700"
-                                  x-text="(selectedBatch?.bibit_list ? selectedBatch.bibit_list.length : 1) + ' Sumber Bibit'"></span>
                         </div>
                     </div>
 
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs">
-                            <thead class="bg-slate-50/80 text-[10px] uppercase font-extrabold text-slate-400 border-b border-slate-100">
+                            <thead class="bg-slate-50/60 text-[10px] uppercase font-extrabold text-slate-400 border-b border-slate-100 tracking-wider">
                                 <tr>
-                                    <th class="py-2.5 px-4">Batch Asal</th>
-                                    <th class="py-2.5 px-4">Kolam Asal</th>
-                                    <th class="py-2.5 px-4">Komoditas &amp; Fase</th>
-                                    <th class="py-2.5 px-4">Populasi Tebar</th>
-                                    <th class="py-2.5 px-4">Bobot Awal</th>
-                                    <th class="py-2.5 px-4 text-right">Status</th>
+                                    <th class="py-3 px-4">Batch Asal</th>
+                                    <th class="py-3 px-4">Kolam Asal</th>
+                                    <th class="py-3 px-4">Komoditas &amp; Fase</th>
+                                    <th class="py-3 px-4">Populasi Tebar</th>
+                                    <th class="py-3 px-4">Bobot Awal</th>
+                                    <th class="py-3 px-4 text-right">Status</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
                                 <template x-for="(bibit, bIdx) in (selectedBatch?.bibit_list || [])" :key="bIdx">
-                                    <tr class="hover:bg-slate-50/60 transition-colors">
+                                    <tr class="hover:bg-slate-50/70 transition-colors">
                                         <td class="py-3 px-4">
-                                            <span class="font-extrabold text-[#0B2570] block text-xs" x-text="bibit.id_batch"></span>
-                                            <span class="text-[10px] text-slate-400 block" x-text="bibit.tgl_pemijahan"></span>
+                                            <template x-if="bibit.is_beli_luar">
+                                                <span class="inline-flex items-center gap-1 font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded text-[11px] border border-amber-200/80">
+                                                    <i class="fa-solid fa-cart-shopping text-[9px] text-amber-600"></i> Pengadaan Luar
+                                                </span>
+                                            </template>
+                                            <template x-if="!bibit.is_beli_luar">
+                                                <span class="font-extrabold text-[#0B2570] font-mono text-xs block" x-text="bibit.id_batch"></span>
+                                            </template>
+                                            <span class="text-[10px] text-slate-400 block mt-0.5" x-text="bibit.tgl_pemijahan"></span>
                                         </td>
                                         <td class="py-3 px-4">
-                                            <span class="font-bold text-slate-800 block" x-text="bibit.kolam_asal"></span>
+                                            <span class="font-bold text-slate-800 block text-xs" x-text="bibit.kolam_asal"></span>
                                             <span class="text-[10px] text-slate-400 block" x-text="bibit.tipe_kolam_asal"></span>
                                         </td>
                                         <td class="py-3 px-4">
-                                            <span class="font-extrabold text-slate-900 block" x-text="bibit.jenis_ikan"></span>
-                                            <span class="inline-block mt-0.5 px-2 py-0.5 rounded-md text-[9px] font-extrabold bg-sky-50 text-sky-700 border border-sky-200" x-text="bibit.fase"></span>
-                                        </td>
-                                        <td class="py-3 px-4 font-bold text-slate-900">
-                                            <span x-text="bibit.jumlah_bibit"></span> <span class="text-[10px] font-normal text-slate-400">Ekor</span>
+                                            <span class="font-bold text-slate-900 block text-xs" x-text="bibit.jenis_ikan"></span>
+                                            <span class="inline-block mt-0.5 px-2 py-0.5 rounded text-[9px] font-bold bg-sky-50 text-sky-700 border border-sky-200 tracking-wide uppercase" x-text="bibit.fase"></span>
                                         </td>
                                         <td class="py-3 px-4">
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-200" x-text="bibit.total_bobot_kg + ' kg'"></span>
+                                            <div class="font-extrabold text-slate-900 text-xs">
+                                                <span class="text-sm" x-text="bibit.jumlah_bibit"></span>
+                                                <span class="text-[10px] font-normal text-slate-400">ekor</span>
+                                            </div>
+                                        </td>
+                                        <td class="py-3 px-4">
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-extrabold bg-slate-100 text-slate-800 border border-slate-200" x-text="bibit.total_bobot_kg + ' kg'"></span>
                                         </td>
                                         <td class="py-3 px-4 text-right">
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800">
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                                                 <span x-text="bibit.status"></span>
                                             </span>

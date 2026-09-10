@@ -94,38 +94,62 @@
         }
 
         /* SweetAlert2 Modern Styling */
-        .swal2-popup {
+        .swal2-container {
+            z-index: 99999 !important;
+        }
+        body.swal2-shown:not(.swal2-toast-shown) .swal2-container {
+            background: rgba(15, 23, 42, 0.45) !important;
+        }
+        body.swal2-toast-shown .swal2-container,
+        .swal2-container.swal2-top-end,
+        .swal2-container.swal2-top,
+        .swal2-container.swal2-top-start,
+        .swal2-container.swal2-bottom-end,
+        .swal2-container.swal2-bottom,
+        .swal2-container.swal2-bottom-start {
+            background: transparent !important;
+            background-color: transparent !important;
+            pointer-events: none !important;
+        }
+        .swal2-toast {
+            pointer-events: auto !important;
+        }
+        .swal2-popup:not(.swal2-toast) {
             font-family: 'Plus Jakarta Sans', sans-serif !important;
             border-radius: 1.25rem !important;
-            padding: 1.5rem !important;
-            box-shadow: 0 25px 50px -12px rgba(11, 25, 44, 0.25) !important;
-            border: 1px solid rgba(226, 232, 240, 0.8) !important;
+            padding: 1.5rem 1.25rem !important;
+            box-shadow: 0 20px 40px -10px rgba(2, 27, 78, 0.25) !important;
+            border: 1px solid rgba(226, 232, 240, 0.9) !important;
+            background: #ffffff !important;
         }
         .swal2-title {
             font-size: 1.15rem !important;
             font-weight: 800 !important;
-            color: #0F2C59 !important;
-            letter-spacing: -0.02em !important;
+            color: #051B44 !important;
+            margin-top: 0.4rem !important;
         }
         .swal2-html-container {
-            font-size: 0.875rem !important;
+            font-size: 0.8125rem !important;
             color: #475569 !important;
             font-weight: 500 !important;
             line-height: 1.5 !important;
-            margin-top: 0.5rem !important;
+        }
+        .swal2-actions {
+            gap: 0.5rem !important;
+            margin-top: 1.25rem !important;
+            width: 100% !important;
         }
         .swal2-confirm {
-            background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%) !important;
+            background: #051B44 !important;
+            color: #ffffff !important;
             border-radius: 0.75rem !important;
             font-size: 0.8125rem !important;
             font-weight: 700 !important;
-            padding: 0.65rem 1.5rem !important;
-            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35) !important;
-            transition: all 0.2s ease !important;
+            padding: 0.65rem 1.25rem !important;
+            border: none !important;
         }
-        .swal2-confirm:hover {
-            transform: translateY(-1px) !important;
-            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45) !important;
+        .swal2-confirm.swal2-danger-btn {
+            background: linear-gradient(135deg, #E11D48 0%, #BE123C 100%) !important;
         }
         .swal2-cancel {
             background-color: #f1f5f9 !important;
@@ -133,22 +157,8 @@
             border-radius: 0.75rem !important;
             font-size: 0.8125rem !important;
             font-weight: 700 !important;
-            padding: 0.65rem 1.5rem !important;
-            transition: all 0.2s ease !important;
-        }
-        .swal2-cancel:hover {
-            background-color: #e2e8f0 !important;
-            color: #334155 !important;
-        }
-        .swal2-toast {
-            border-radius: 1rem !important;
-            padding: 0.875rem 1.25rem !important;
-            box-shadow: 0 15px 30px -5px rgba(11, 25, 44, 0.2) !important;
-            font-family: 'Plus Jakarta Sans', sans-serif !important;
-        }
-        .swal2-toast .swal2-title {
-            font-size: 0.875rem !important;
-            font-weight: 700 !important;
+            padding: 0.65rem 1.25rem !important;
+            border: 1px solid #e2e8f0 !important;
         }
     </style>
     <script>
@@ -188,7 +198,9 @@
                         icon: 'success',
                         title: title || 'Berhasil!',
                         text: text,
-                        confirmButtonText: 'Selesai'
+                        confirmButtonText: 'Selesai',
+                        heightAuto: false,
+                        customClass: { confirmButton: 'swal2-confirm' }
                     });
                 }
                 alert((title ? title + '\n' : '') + text);
@@ -200,7 +212,9 @@
                         icon: 'error',
                         title: title || 'Terjadi Kesalahan',
                         text: text,
-                        confirmButtonText: 'Tutup'
+                        confirmButtonText: 'Tutup',
+                        heightAuto: false,
+                        customClass: { confirmButton: 'swal2-confirm' }
                     });
                 }
                 alert((title ? title + '\n' : '') + text);
@@ -212,26 +226,45 @@
                         icon: 'warning',
                         title: title || 'Perhatian',
                         text: text,
-                        confirmButtonText: 'Mengerti'
+                        confirmButtonText: 'Mengerti',
+                        heightAuto: false,
+                        customClass: { confirmButton: 'swal2-confirm' }
                     });
                 }
                 alert((title ? title + '\n' : '') + text);
                 return Promise.resolve({ isConfirmed: true });
             },
-            confirm({ title, text, confirmText = 'Ya, Lanjutkan', cancelText = 'Batal', icon = 'question', confirmColor }) {
+            confirm({ title, text, confirmText = 'Ya, Lanjutkan', cancelText = 'Batal', icon = 'question', isDanger = false }) {
                 if (window.Swal) {
                     return Swal.fire({
-                        title: title || 'Konfirmasi',
+                        title: title || 'Konfirmasi Tindakan',
                         text: text,
                         icon: icon,
                         showCancelButton: true,
                         confirmButtonText: confirmText,
                         cancelButtonText: cancelText,
-                        reverseButtons: true
+                        reverseButtons: true,
+                        heightAuto: false,
+                        allowOutsideClick: true,
+                        allowEscapeKey: true,
+                        customClass: {
+                            confirmButton: isDanger ? 'swal2-confirm swal2-danger-btn' : 'swal2-confirm',
+                            cancelButton: 'swal2-cancel'
+                        }
                     });
                 }
                 const res = confirm((title ? title + '\n' : '') + text);
                 return Promise.resolve({ isConfirmed: res });
+            },
+            confirmDelete({ title = 'Hapus Data?', text = 'Apakah Anda yakin ingin menghapus data ini?', confirmText = 'Ya, Hapus', cancelText = 'Batal' }) {
+                return this.confirm({
+                    title: title,
+                    text: text,
+                    icon: 'warning',
+                    confirmText: confirmText,
+                    cancelText: cancelText,
+                    isDanger: true
+                });
             }
         };
 

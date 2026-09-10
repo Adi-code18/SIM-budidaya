@@ -1030,9 +1030,15 @@ function pembibitanComponent() {
             }
         },
 
-        handleStatusGagalClick() {
+        async handleStatusGagalClick() {
             this.form.statusBatch = 'gagal';
-            if (confirm('Menyatakan batch ini GAGAL akan langsung MENGHAPUS data batch dari sistem. Apakah Anda yakin?')) {
+            const res = await AppSwal.confirmDelete({
+                title: 'Set Batch Gagal & Hapus?',
+                text: 'Menyatakan batch ini GAGAL akan langsung MENGHAPUS data batch dari sistem. Apakah Anda yakin?',
+                confirmText: 'Ya, Tandai Gagal & Hapus',
+                cancelText: 'Batal'
+            });
+            if (res.isConfirmed) {
                 this.confirmDeleteGagalBatch();
             }
         },
@@ -1044,7 +1050,7 @@ function pembibitanComponent() {
                 this.showForm = false;
                 this.resetForm();
             } else {
-                alert('Data batch dengan status Gagal dibatalkan dan tidak disimpan.');
+                AppSwal.toast('Data batch dengan status Gagal dibatalkan dan tidak disimpan.', 'info');
                 this.showForm = false;
                 this.resetForm();
             }
@@ -1074,7 +1080,13 @@ function pembibitanComponent() {
 
         async submitBatch() {
             if (this.form.statusBatch === 'gagal') {
-                if (confirm('Status batch diset GAGAL! Batch ini akan dihapus dari sistem. Lanjutkan?')) {
+                const res = await AppSwal.confirmDelete({
+                    title: 'Status Batch Gagal',
+                    text: 'Status batch diset GAGAL! Batch ini akan dihapus dari sistem. Lanjutkan?',
+                    confirmText: 'Ya, Hapus',
+                    cancelText: 'Batal'
+                });
+                if (res.isConfirmed) {
                     await this.confirmDeleteGagalBatch();
                 }
                 return;
@@ -1298,7 +1310,14 @@ function pembibitanComponent() {
 
         async markBatchFinished(item) {
             const rawId = item.id_batch || item.id.replace(/[^0-9]/g, '');
-            if (!confirm('Apakah Anda yakin ingin menyelesaikan masa pembibitan untuk batch ' + item.id + ' agar siap dipindahkan ke pembesaran?')) {
+            const res = await AppSwal.confirm({
+                title: 'Selesaikan Masa Pembibitan?',
+                text: 'Apakah Anda yakin ingin menyelesaikan masa pembibitan untuk batch "' + item.id + '" agar siap dipindahkan ke kolam pembesaran?',
+                confirmText: 'Ya, Selesaikan',
+                cancelText: 'Batal',
+                icon: 'question'
+            });
+            if (!res.isConfirmed) {
                 return;
             }
             

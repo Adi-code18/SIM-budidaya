@@ -602,22 +602,13 @@ function ikanComponent() {
         },
 
         async confirmDelete(item) {
-            let confirmed = false;
-            if (window.AppSwal) {
-                const resConfirm = await AppSwal.confirm({
-                    title: 'Hapus Jenis Ikan?',
-                    text: `Apakah Anda yakin ingin menghapus data spesies "${item.nama_ikan}"? Data ini akan dihapus dari sistem.`,
-                    confirmText: 'Ya, Hapus!',
-                    cancelText: 'Batal',
-                    icon: 'warning',
-                    confirmColor: '#e11d48'
-                });
-                confirmed = resConfirm.isConfirmed;
-            } else {
-                confirmed = confirm(`Apakah Anda yakin ingin menghapus data spesies '${item.nama_ikan}'?`);
-            }
-
-            if (!confirmed) return;
+            const resConfirm = await AppSwal.confirmDelete({
+                title: 'Hapus Jenis Ikan?',
+                text: `Apakah Anda yakin ingin menghapus data spesies "${item.nama_ikan}"? Data ini akan dihapus dari database.`,
+                confirmText: 'Ya, Hapus Spesies',
+                cancelText: 'Batal'
+            });
+            if (!resConfirm.isConfirmed) return;
 
             try {
                 const res = await fetch('/ikan/' + item.id_ikan, {

@@ -1153,7 +1153,13 @@
             },
 
             async deleteMitra(mitra) {
-                if (!confirm('Apakah Anda yakin ingin menghapus data mitra "' + mitra.nama + '" dari database?')) {
+                const res = await AppSwal.confirmDelete({
+                    title: 'Hapus Data Mitra?',
+                    text: 'Apakah Anda yakin ingin menghapus data mitra "' + mitra.nama + '" dari database? Tindakan ini tidak dapat dibatalkan.',
+                    confirmText: 'Ya, Hapus Mitra',
+                    cancelText: 'Batal'
+                });
+                if (!res.isConfirmed) {
                     return;
                 }
 

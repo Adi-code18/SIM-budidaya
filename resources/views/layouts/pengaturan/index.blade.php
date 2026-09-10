@@ -290,6 +290,14 @@
                     </div>
                 </div>
 
+                <!-- Input Alamat Pengguna -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Alamat Lengkap / Domisili</label>
+                    <textarea name="alamat" rows="2" placeholder="Contoh: Jl. Raya Minapolitan Perikanan No. 88, Blok Agribisnis, Jawa Barat 40123"
+                              class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 focus:bg-white focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/10 transition-all">{{ old('alamat', $user->alamat ?? '') }}</textarea>
+                    <p class="text-[11px] text-slate-400 mt-1">Alamat ini digunakan sebagai identitas resmi akun dan referensi pengirim/pengelola.</p>
+                </div>
+
                 <div class="pt-4 border-t border-slate-100">
                     <h4 class="text-xs font-extrabold text-[#051B44] uppercase tracking-wider mb-3">Ubah Password (Opsional)</h4>
                     
@@ -339,6 +347,13 @@
                         <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-sky-100 text-sky-800 border border-sky-200">
                             {{ $user->role ?? 'Manajer' }}
                         </span>
+                    </div>
+
+                    <div class="p-3 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+                        <span class="font-bold text-slate-500 block text-[11px]">Alamat Terdaftar</span>
+                        <p class="font-semibold text-slate-700 text-xs leading-relaxed">
+                            {{ $user->alamat ?: 'Belum diatur' }}
+                        </p>
                     </div>
 
                     <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-100">

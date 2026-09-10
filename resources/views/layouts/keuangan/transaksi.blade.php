@@ -586,32 +586,39 @@ function transaksiKeuanganComponent() {
             });
         },
 
-        deleteTransaction(item) {
-            if (confirm("Apakah Anda yakin ingin menghapus transaksi \"" + (item.ref || item.id) + "\"?")) {
-                this.isLoading = true;
-                fetch("/keuangan/" + item.raw_id, {
-                    method: "DELETE",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": "{{ csrf_token() }}",
-                        "Accept": "application/json"
-                    }
-                })
-                .then(res => res.json())
-                .then(data => {
-                    this.isLoading = false;
-                    if (data.success) {
-                        window.location.reload();
-                    } else {
-                        alert(data.message || "Gagal menghapus transaksi.");
-                    }
-                })
-                .catch(err => {
-                    this.isLoading = false;
-                    console.error(err);
-                    alert("Terjadi kesalahan koneksi server saat menghapus.");
-                });
-            }
+        async deleteTransaction(item) {
+            const res = await AppSwal.confirmDelete({
+                title: 'Hapus Transaksi Keuangan?',
+                text: 'Apakah Anda yakin ingin menghapus catatan transaksi "' + (item.ref || item.id) + '"? Data yang dihapus tidak dapat dipulihkan.',
+                confirmText: 'Ya, Hapus Transaksi',
+                cancelText: 'Batal'
+            });
+            if (!res.isConfirmed) return;
+
+            this.isLoading = true;
+            fetch("/keuangan/" + item.raw_id, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                    "Accept": "application/json"
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                this.isLoading = false;
+                if (data.success) {
+                    AppSwal.toast('Transaksi berhasil dihapus!', 'success');
+                    setTimeout(() => window.location.reload(), 600);
+                } else {
+                    AppSwal.error('Gagal Menghapus', data.message || "Gagal menghapus transaksi.");
+                }
+            })
+            .catch(err => {
+                this.isLoading = false;
+                console.error(err);
+                AppSwal.error('Kesalahan Jaringan', "Terjadi kesalahan koneksi server saat menghapus.");
+            });
         }
     };
 }

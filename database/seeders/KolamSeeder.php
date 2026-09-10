@@ -14,89 +14,29 @@ class KolamSeeder extends Seeder
         $userId = $manajer ? $manajer->id_user : 1;
 
         $kolamList = [
+            // 1. Kolam untuk Fase Pembesaran
             [
-                'nama_kolam' => 'Kolam A1',
+                'nama_kolam' => 'Kolam A1 (Pembesaran)',
                 'tipe_kolam' => 'Beton / Pembesaran',
-                'kapasitas' => 500,
-                'status' => 'aktif',
-                'kesehatan_ph_air' => 7.30,
-            ],
-            [
-                'nama_kolam' => 'Kolam A2',
-                'tipe_kolam' => 'Terpal / Pembesaran',
-                'kapasitas' => 400,
-                'status' => 'aktif',
-                'kesehatan_ph_air' => 7.10,
-            ],
-            [
-                'nama_kolam' => 'Kolam A3',
-                'tipe_kolam' => 'Tanah / Pembesaran',
-                'kapasitas' => 600,
-                'status' => 'aktif',
-                'kesehatan_ph_air' => 7.50,
-            ],
-            [
-                'nama_kolam' => 'Kolam A4',
-                'tipe_kolam' => 'Beton / Pembesaran',
-                'kapasitas' => 350,
-                'status' => 'aktif',
-                'kesehatan_ph_air' => 6.90,
-            ],
-            [
-                'nama_kolam' => 'Kolam B1',
-                'tipe_kolam' => 'Beton / Pembesaran',
-                'kapasitas' => 500,
-                'status' => 'aktif',
-                'kesehatan_ph_air' => 7.40,
-            ],
-            [
-                'nama_kolam' => 'Kolam B2',
-                'tipe_kolam' => 'Terpal / Pembesaran',
-                'kapasitas' => 450,
-                'status' => 'aktif',
-                'kesehatan_ph_air' => 7.20,
-            ],
-            [
-                'nama_kolam' => 'Kolam B3',
-                'tipe_kolam' => 'Beton / Pembesaran',
-                'kapasitas' => 550,
-                'status' => 'aktif',
-                'kesehatan_ph_air' => 7.40,
-            ],
-            [
-                'nama_kolam' => 'Kolam C1',
-                'tipe_kolam' => 'Bioflok / Pembesaran',
-                'kapasitas' => 300,
-                'status' => 'aktif',
-                'kesehatan_ph_air' => 7.00,
-            ],
-            [
-                'nama_kolam' => 'Kolam C2',
-                'tipe_kolam' => 'Bioflok / Pembesaran',
-                'kapasitas' => 400,
-                'status' => 'aktif',
-                'kesehatan_ph_air' => 7.20,
-            ],
-            [
-                'nama_kolam' => 'Kolam Pemijahan A-01',
-                'tipe_kolam' => 'Hatchery / Pemijahan',
                 'kapasitas' => 1000,
                 'status' => 'aktif',
                 'kesehatan_ph_air' => 7.20,
             ],
+            // 2. Kolam untuk Fase Pemijahan (Hatchery)
             [
-                'nama_kolam' => 'Kolam Penetasan B-02',
-                'tipe_kolam' => 'Hatchery / Penetasan',
-                'kapasitas' => 15000,
+                'nama_kolam' => 'Kolam Pemijahan B1',
+                'tipe_kolam' => 'Hatchery / Pemijahan',
+                'kapasitas' => 500,
                 'status' => 'aktif',
                 'kesehatan_ph_air' => 7.00,
             ],
+            // 3. Kolam untuk Fase Pendederan / Penetasan Benih
             [
-                'nama_kolam' => 'Kolam Pembibitan L-03',
+                'nama_kolam' => 'Kolam Pendederan C1',
                 'tipe_kolam' => 'Hatchery / Pendederan',
-                'kapasitas' => 20000,
+                'kapasitas' => 10000,
                 'status' => 'aktif',
-                'kesehatan_ph_air' => 6.40,
+                'kesehatan_ph_air' => 6.80,
             ],
         ];
 

@@ -134,6 +134,7 @@ class UserController extends Controller
             'nama'     => 'sometimes|required|string|max:255',
             'email'    => ['sometimes', 'required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id_user, 'id_user')],
             'no_tlp'   => ['nullable', 'regex:/^(\+?62|0)[\d\s\-]{8,20}$/'],
+            'alamat'   => 'nullable|string|max:500',
             'password' => 'nullable|string|min:6|confirmed',
         ]);
 

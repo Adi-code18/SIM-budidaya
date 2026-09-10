@@ -110,20 +110,23 @@ class PembesaranController extends Controller
                 $sisaBibit = max(0, $bp->jumlah_bibitAwal - $bp->jumlah_kematian);
                 $bibitList[] = [
                     'id_batch'         => '#BT-' . str_pad($bp->id_batch, 5, '0', STR_PAD_LEFT),
+                    'is_beli_luar'     => false,
                     'kolam_asal'       => $bp->kolam ? $bp->kolam->nama_kolam : 'Kolam Hatchery',
-                    'tipe_kolam_asal'  => $bp->kolam ? $bp->kolam->tipe_kolam : 'Hatchery',
+                    'tipe_kolam_asal'  => 'Hatchery Internal',
                     'jenis_ikan'       => $bp->jenis_ikan,
                     'fase'             => $bp->fase_pertumbuhan ?? 'FINGERLING',
                     'tgl_pemijahan'    => $bp->tgl_pemijahan ? Carbon::parse($bp->tgl_pemijahan)->translatedFormat('d M Y') : '-',
                     'jumlah_bibit'     => number_format($sisaBibit, 0, ',', '.'),
                     'total_bobot_kg'   => number_format($bp->total_bobot_kg > 0 ? $bp->total_bobot_kg : $b->biomassa_est, 1, ',', '.'),
-                    'status'           => 'Dipindahkan ke Pembesaran',
+                    'status'           => 'Dipindahkan',
                 ];
             } else {
+                $isBeliLuar = ($b->asal_bibit === 'beli_luar');
                 $bibitList[] = [
-                    'id_batch'         => 'Tebar Mandiri',
-                    'kolam_asal'       => $b->kolam ? $b->kolam->nama_kolam : 'Kolam Pembesaran',
-                    'tipe_kolam_asal'  => 'Input Langsung',
+                    'id_batch'         => $isBeliLuar ? 'Pengadaan Eksternal' : 'Tebar Mandiri',
+                    'is_beli_luar'     => $isBeliLuar,
+                    'kolam_asal'       => $isBeliLuar ? 'Supplier Bibit Luar' : ($b->kolam ? $b->kolam->nama_kolam : 'Kolam Pembesaran'),
+                    'tipe_kolam_asal'  => $isBeliLuar ? ('Tebar ke ' . ($b->kolam ? $b->kolam->nama_kolam : 'Kolam')) : 'Input Mandiri',
                     'jenis_ikan'       => $b->jenis_ikan,
                     'fase'             => 'FINGERLING',
                     'tgl_pemijahan'    => $b->tgl_tebar ? Carbon::parse($b->tgl_tebar)->translatedFormat('d M Y') : '-',

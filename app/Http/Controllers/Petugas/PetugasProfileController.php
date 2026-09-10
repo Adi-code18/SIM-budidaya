@@ -19,6 +19,7 @@ class PetugasProfileController extends Controller
         $request->validate([
             'nama'        => 'required|string|max:255',
             'no_tlp'      => 'nullable|string|max:30',
+            'alamat'      => 'nullable|string|max:500',
             'foto_profil' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ], [
             'nama.required'     => 'Nama lengkap wajib diisi.',
@@ -43,6 +44,9 @@ class PetugasProfileController extends Controller
         if ($request->filled('no_tlp')) {
             $user->no_tlp = $request->no_tlp;
         }
+        if ($request->has('alamat')) {
+            $user->alamat = $request->alamat;
+        }
         $user->save();
 
         if ($request->wantsJson() || $request->ajax()) {
@@ -52,6 +56,7 @@ class PetugasProfileController extends Controller
                 'user' => [
                     'nama' => $user->nama,
                     'no_tlp' => $user->no_tlp,
+                    'alamat' => $user->alamat,
                     'foto_profil_url' => $user->foto_profil_url,
                 ]
             ]);

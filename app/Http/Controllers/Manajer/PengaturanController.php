@@ -44,6 +44,7 @@ class PengaturanController extends Controller
             'nama' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,' . $user->id_user . ',id_user',
             'no_tlp' => ['nullable', 'regex:/^(\+?62|0)[\d\s\-]{8,20}$/'],
+            'alamat' => 'nullable|string|max:500',
             'foto_profil' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'password_saat_ini' => 'nullable|required_with:password_baru',
             'password_baru' => ['nullable', 'confirmed', Password::min(6)],
@@ -52,6 +53,7 @@ class PengaturanController extends Controller
             'email.required' => 'Email wajib diisi.',
             'email.unique' => 'Email sudah digunakan oleh pengguna lain.',
             'no_tlp.regex' => 'Format nomor telepon/WhatsApp tidak valid (contoh: 081234567890 atau +6281234567890).',
+            'alamat.max' => 'Alamat maksimal 500 karakter.',
             'foto_profil.image' => 'File harus berupa gambar.',
             'foto_profil.mimes' => 'Format gambar harus jpeg, png, jpg, atau webp.',
             'foto_profil.max' => 'Ukuran gambar maksimal 2MB.',
@@ -93,6 +95,7 @@ class PengaturanController extends Controller
         $user->nama = $request->nama;
         $user->email = $request->email;
         $user->no_tlp = $noTlp;
+        $user->alamat = $request->alamat;
         $user->save();
 
         return redirect()->route('pengaturan')->with('status', 'Profil & Keamanan berhasil diperbarui!');
