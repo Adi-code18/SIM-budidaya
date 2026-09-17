@@ -318,7 +318,7 @@
 
                     <!-- Satuan -->
                     <div>
-                        <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">SATUAN TAKARAN *</label>
+                        <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">SATUAN *</label>
                         <input type="text" x-model="masterForm.satuan" required placeholder="kg / tray / sak"
                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
                     </div>
@@ -327,7 +327,7 @@
                 <div class="grid grid-cols-3 gap-3">
                     <!-- Stok Awal / Tersisa -->
                     <div>
-                        <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">STOK GUDANG *</label>
+                        <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">TOTAL STOK JENIS INI*</label>
                         <input type="number" step="0.1" min="0" x-model="masterForm.stok_tersisa" required
                                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
                     </div>

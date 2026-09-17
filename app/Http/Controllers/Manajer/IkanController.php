@@ -34,10 +34,16 @@ class IkanController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama_ikan'          => 'required|string|max:255',
-            'durasi_penetasan'   => 'required|integer|min:1',
-            'durasi_pembibitan'  => 'required|integer|min:1',
-            'id_batch'           => 'nullable|exists:batch_pembibitan,id_batch',
+            'nama_ikan'            => 'required|string|max:255',
+            'durasi_penetasan'     => 'required|integer|min:1',
+            'durasi_pembibitan'    => 'required|integer|min:1',
+            'fcr_min'              => 'nullable|numeric|min:0.1',
+            'fcr_max'              => 'nullable|numeric|min:0.1',
+            'bulan_panen_min'      => 'nullable|numeric|min:0.1',
+            'bulan_panen_max'      => 'nullable|numeric|min:0.1',
+            'target_konsumsi'      => 'nullable|string|max:50',
+            'jenis_pakan_didukung' => 'nullable|string|max:100',
+            'id_batch'             => 'nullable|exists:batch_pembibitan,id_batch',
         ], [
             'nama_ikan.required'         => 'Nama jenis ikan wajib diisi.',
             'durasi_penetasan.required'  => 'Durasi masa penetasan wajib diisi.',
@@ -45,10 +51,16 @@ class IkanController extends Controller
         ]);
 
         $ikan = Ikan::create([
-            'nama_ikan'          => $request->nama_ikan,
-            'durasi_penetasan'   => $request->durasi_penetasan,
-            'durasi_pembibitan'  => $request->durasi_pembibitan,
-            'id_batch'           => $request->id_batch ?: null,
+            'nama_ikan'            => $request->nama_ikan,
+            'durasi_penetasan'     => $request->durasi_penetasan,
+            'durasi_pembibitan'    => $request->durasi_pembibitan,
+            'fcr_min'              => $request->fcr_min ?? 1.00,
+            'fcr_max'              => $request->fcr_max ?? 1.40,
+            'bulan_panen_min'      => $request->bulan_panen_min,
+            'bulan_panen_max'      => $request->bulan_panen_max,
+            'target_konsumsi'      => $request->target_konsumsi,
+            'jenis_pakan_didukung' => $request->jenis_pakan_didukung,
+            'id_batch'             => $request->id_batch ?: null,
         ]);
 
         if ($request->wantsJson() || $request->ajax()) {
@@ -69,17 +81,29 @@ class IkanController extends Controller
         $ikan = Ikan::findOrFail($id);
 
         $request->validate([
-            'nama_ikan'          => 'required|string|max:255',
-            'durasi_penetasan'   => 'required|integer|min:1',
-            'durasi_pembibitan'  => 'required|integer|min:1',
-            'id_batch'           => 'nullable|exists:batch_pembibitan,id_batch',
+            'nama_ikan'            => 'required|string|max:255',
+            'durasi_penetasan'     => 'required|integer|min:1',
+            'durasi_pembibitan'    => 'required|integer|min:1',
+            'fcr_min'              => 'nullable|numeric|min:0.1',
+            'fcr_max'              => 'nullable|numeric|min:0.1',
+            'bulan_panen_min'      => 'nullable|numeric|min:0.1',
+            'bulan_panen_max'      => 'nullable|numeric|min:0.1',
+            'target_konsumsi'      => 'nullable|string|max:50',
+            'jenis_pakan_didukung' => 'nullable|string|max:100',
+            'id_batch'             => 'nullable|exists:batch_pembibitan,id_batch',
         ]);
 
         $ikan->update([
-            'nama_ikan'          => $request->nama_ikan,
-            'durasi_penetasan'   => $request->durasi_penetasan,
-            'durasi_pembibitan'  => $request->durasi_pembibitan,
-            'id_batch'           => $request->id_batch ?: null,
+            'nama_ikan'            => $request->nama_ikan,
+            'durasi_penetasan'     => $request->durasi_penetasan,
+            'durasi_pembibitan'    => $request->durasi_pembibitan,
+            'fcr_min'              => $request->fcr_min ?? $ikan->fcr_min ?? 1.00,
+            'fcr_max'              => $request->fcr_max ?? $ikan->fcr_max ?? 1.40,
+            'bulan_panen_min'      => $request->bulan_panen_min,
+            'bulan_panen_max'      => $request->bulan_panen_max,
+            'target_konsumsi'      => $request->target_konsumsi,
+            'jenis_pakan_didukung' => $request->jenis_pakan_didukung,
+            'id_batch'             => $request->id_batch ?: null,
         ]);
 
         if ($request->wantsJson() || $request->ajax()) {

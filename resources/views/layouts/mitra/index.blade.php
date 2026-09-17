@@ -32,14 +32,14 @@
     </div>
 
     <!-- 1. Page Header (Judul Halaman & Tombol Aksi Tambah / Kembali) -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
         <div>
-            <h1 class="text-2xl font-extrabold text-[#0B2570] tracking-tight">Manajemen Mitra</h1>
-            <p class="text-xs text-slate-500 font-medium mt-0.5">Kelola hubungan dan distribusi hasil budidaya ke mitra strategis &amp; supplier pakan.</p>
+            <h1 class="text-xl sm:text-2xl font-extrabold text-[#0B2570] tracking-tight">Manajemen Mitra</h1>
+            <p class="text-xs text-slate-500 font-medium mt-0.5">Kelola hubungan dan distribusi hasil budidaya ke mitra strategis &amp; supplier pakan/bibit.</p>
         </div>
-        <div>
+        <div class="flex items-center gap-2">
             <button @click="if (showForm) { showForm = false; } else { openCreateForm(); }" 
-                    class="px-4 py-2 rounded-xl bg-[#051B44] hover:bg-navy-900 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-2 cursor-pointer active:scale-98">
+                    class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#051B44] hover:bg-navy-900 text-white font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98">
                 <i class="fa-solid" :class="showForm ? 'fa-list' : 'fa-plus'"></i>
                 <span x-text="showForm ? 'Lihat Daftar Mitra' : 'Tambah Mitra Baru'"></span>
             </button>
@@ -53,76 +53,81 @@
          x-transition:enter-end="opacity-100 translate-y-0"
          class="space-y-4">
         
-        <div class="flex items-center justify-between">
-            <h2 class="text-lg font-extrabold text-slate-900 tracking-tight"
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <h2 class="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight truncate"
                 x-text="formMode === 'create' ? 'Input Manajemen Mitra Baru' : (formMode === 'edit' ? 'Edit Data Mitra — ' + form.id : 'View Lengkap Data Mitra — ' + form.id)"></h2>
             
-            <span x-show="formMode === 'view'" class="px-3 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1.5">
-                <i class="fa-solid fa-lock"></i> Mode View Lengkap (Disabled)
-            </span>
-            <span x-show="formMode === 'edit'" class="px-3 py-1 rounded-full text-xs font-extrabold bg-sky-100 text-sky-800 border border-sky-300 flex items-center gap-1.5">
-                <i class="fa-solid fa-pen"></i> Mode Edit Data
-            </span>
+            <div class="flex items-center gap-2">
+                <span x-show="formMode === 'view'" class="px-3 py-1 rounded-full text-[11px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1.5">
+                    <i class="fa-solid fa-lock"></i> Mode View Lengkap
+                </span>
+                <span x-show="formMode === 'edit'" class="px-3 py-1 rounded-full text-[11px] font-extrabold bg-sky-100 text-sky-800 border border-sky-300 flex items-center gap-1.5">
+                    <i class="fa-solid fa-pen"></i> Mode Edit Data
+                </span>
+                <span x-show="formMode === 'create'" class="px-3 py-1 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1.5">
+                    <i class="fa-solid fa-plus"></i> Data Baru
+                </span>
+            </div>
         </div>
 
         <!-- Mode View Info Banner -->
-        <div x-show="formMode === 'view'" class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between gap-3">
+        <div x-show="formMode === 'view'" class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div class="flex items-center gap-2.5">
                 <i class="fa-solid fa-shield-halved text-amber-600 text-base shrink-0"></i>
-                <span>Data mitra ditampilkan dalam <strong>mode lihat (read-only)</strong>. Semua bidang formulir dinonaktifkan agar data tidak sengaja diubah.</span>
+                <span>Data mitra ditampilkan dalam <strong>mode lihat (read-only)</strong>. Semua kolom dinonaktifkan agar tidak sengaja terubah.</span>
             </div>
-            <button @click="formMode = 'edit'; initMitraMap(form.lat, form.lng, false)" class="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] shrink-0 transition-colors flex items-center gap-1.5">
+            <button @click="formMode = 'edit'; initMitraMap(form.lat, form.lng, false)" class="w-full sm:w-auto px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] shrink-0 transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
                 <i class="fa-solid fa-pen-to-square"></i> Ubah Ke Mode Edit
             </button>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
-            <!-- Left 5 Cols: Interactive Leaflet Map & Card -->
-            <div class="lg:col-span-5 relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 min-h-[480px] flex flex-col shadow-xs">
+            <!-- Left 5 Cols: Interactive Leaflet Map & Card (Responsive Height on Mobile & Desktop) -->
+            <div class="lg:col-span-5 relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 h-72 sm:h-80 lg:min-h-[540px] lg:h-auto flex flex-col shadow-xs">
                 
                 <!-- Interactive Leaflet Map (Full clickable & draggable container) -->
                 <div id="mitraMapPicker" class="absolute inset-0 z-0 h-full w-full"></div>
                 
                 <!-- Floating Top Bar (Controls & Status - non-blocking pointer events) -->
-                <div class="relative z-10 p-3.5 flex items-center justify-between gap-2 pointer-events-none">
-                    <span x-show="formMode !== 'view'" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-extrabold bg-white/95 text-[#051B44] shadow-md border border-slate-200/80 pointer-events-auto backdrop-blur-xs">
+                <div class="relative z-10 p-2.5 sm:p-3.5 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+                    <span x-show="formMode !== 'view'" class="inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl text-[10px] sm:text-[11px] font-extrabold bg-white/95 text-[#051B44] shadow-md border border-slate-200/80 pointer-events-auto backdrop-blur-xs">
                         <i class="fa-solid fa-hand-pointer text-sky-600"></i> Seret Pin / Klik Peta
                     </span>
-                    <span x-show="formMode === 'view'" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-extrabold bg-amber-500/90 text-white shadow-md pointer-events-auto backdrop-blur-xs">
-                        <i class="fa-solid fa-lock"></i> Mode Terkunci (View Only)
+                    <span x-show="formMode === 'view'" class="inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl text-[10px] sm:text-[11px] font-extrabold bg-amber-500/90 text-white shadow-md pointer-events-auto backdrop-blur-xs">
+                        <i class="fa-solid fa-lock"></i> Mode Terkunci
                     </span>
 
                     <div class="flex items-center gap-1.5 pointer-events-auto">
                         <!-- Toggle Satelit / Peta Jalan -->
                         <button type="button" 
                                 @click="toggleMapLayer()"
-                                class="px-3 py-1.5 rounded-xl bg-white/95 text-slate-800 hover:bg-slate-100 text-xs font-bold shadow-md border border-slate-200/80 backdrop-blur-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                                class="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-white/95 text-slate-800 hover:bg-slate-100 text-[11px] font-bold shadow-md border border-slate-200/80 backdrop-blur-xs transition-all flex items-center gap-1.5 cursor-pointer"
                                 title="Ganti mode peta satelit / jalan">
                             <i class="fa-solid" :class="mapLayerMode === 'satellite' ? 'fa-satellite text-sky-600' : 'fa-map text-emerald-600'"></i>
-                            <span x-text="mapLayerMode === 'satellite' ? 'Satelit HD' : 'Peta Jalan'"></span>
+                            <span class="hidden sm:inline" x-text="mapLayerMode === 'satellite' ? 'Satelit HD' : 'Peta Jalan'"></span>
                         </button>
 
                         <!-- Fokus Pin -->
                         <button type="button" 
                                 onclick="if(window.recenterMitraMap) window.recenterMitraMap()"
-                                class="px-3 py-1.5 rounded-xl bg-[#051B44] hover:bg-navy-900 text-white text-xs font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+                                class="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-[#051B44] hover:bg-navy-900 text-white text-[11px] font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
                                 title="Fokuskan tampilan ke pin marker">
                             <i class="fa-solid fa-crosshairs"></i>
-                            <span>Fokus Pin</span>
+                            <span class="hidden sm:inline">Fokus Pin</span>
                         </button>
 
                         <!-- Custom Zoom Controls -->
                         <div class="flex items-center bg-white/95 rounded-xl shadow-md border border-slate-200/80 backdrop-blur-xs overflow-hidden">
                             <button type="button" 
                                     onclick="if(window.mitraMapZoomIn) window.mitraMapZoomIn()"
-                                    class="w-7 h-7 flex items-center justify-center text-slate-700 hover:bg-slate-100 text-xs font-extrabold transition-colors cursor-pointer border-r border-slate-200"
+                                    class="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center text-slate-700 hover:bg-slate-100 text-xs font-extrabold transition-colors cursor-pointer border-r border-slate-200"
                                     title="Perbesar Peta (+)">
                                 <i class="fa-solid fa-plus text-[10px]"></i>
                             </button>
                             <button type="button" 
                                     onclick="if(window.mitraMapZoomOut) window.mitraMapZoomOut()"
-                                    class="w-7 h-7 flex items-center justify-center text-slate-700 hover:bg-slate-100 text-xs font-extrabold transition-colors cursor-pointer"
+                                    class="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center text-slate-700 hover:bg-slate-100 text-xs font-extrabold transition-colors cursor-pointer"
                                     title="Perkecil Peta (-)">
                                 <i class="fa-solid fa-minus text-[10px]"></i>
                             </button>
@@ -131,21 +136,21 @@
                 </div>
 
                 <!-- Floating Bottom Help & Coordinates Bar (non-blocking pointer events) -->
-                <div class="mt-auto relative z-10 p-3 pointer-events-none">
-                    <div class="p-2.5 rounded-xl bg-white/95 text-slate-800 shadow-lg border border-slate-200/80 backdrop-blur-xs pointer-events-auto text-[11px] font-medium flex items-center justify-between gap-2">
+                <div class="mt-auto relative z-10 p-2.5 sm:p-3 pointer-events-none">
+                    <div class="p-2 sm:p-2.5 rounded-xl bg-white/95 text-slate-800 shadow-lg border border-slate-200/80 backdrop-blur-xs pointer-events-auto text-[10px] sm:text-[11px] font-medium flex items-center justify-between gap-2">
                         <div class="flex items-center gap-2 truncate">
-                            <div class="w-6 h-6 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center shrink-0">
+                            <div class="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center shrink-0">
                                 <i class="fa-solid fa-map-pin text-xs"></i>
                             </div>
                             <span class="truncate">Titik Pin: <strong class="text-[#0B2570] font-mono" x-text="form.lat + ', ' + form.lng"></strong></span>
                         </div>
-                        <span class="text-[10px] text-slate-400 font-semibold shrink-0">Geser bebas di peta</span>
+                        <span class="text-[9px] sm:text-[10px] text-slate-400 font-semibold shrink-0 hidden sm:inline">Geser pin di peta</span>
                     </div>
                 </div>
             </div>
 
             <!-- Right 7 Cols: Mitra Input Fields Form -->
-            <div class="lg:col-span-7 bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-5">
+            <div class="lg:col-span-7 bg-white p-4 sm:p-7 rounded-2xl border border-slate-200/80 shadow-xs space-y-5">
                 
                 <form action="#" method="POST" @submit.prevent="saveForm()" class="space-y-5">
                     
@@ -156,13 +161,15 @@
                             <span>Identitas Mitra</span>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                             <div class="sm:col-span-2">
-                                <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">NAMA MITRA</label>
+                                <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">
+                                    NAMA MITRA <span class="text-rose-500">*</span>
+                                </label>
                                 <input type="text" 
                                        x-model="form.nama"
                                        :disabled="formMode === 'view'"
-                                       placeholder="PT. Global Akuakultur..." 
+                                       placeholder="PT. Mina Akuakultur / RM Saung..." 
                                        :class="formMode === 'view' ? 'bg-slate-100 text-slate-500 cursor-not-allowed border-slate-200 font-bold' : 'bg-slate-50/70 focus:bg-white text-slate-700 font-semibold focus:ring-sky-500'"
                                        class="w-full px-3.5 py-2.5 rounded-xl border text-xs focus:outline-none focus:ring-2 transition-all">
                             </div>
@@ -176,7 +183,7 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                             <div>
                                 <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">NO. TELEPON / WHATSAPP</label>
                                 <div x-data="{
@@ -222,20 +229,22 @@
                                         for (let c of this.countries) {
                                             if (val.startsWith(c.dial)) {
                                                 this.selectedCountry = c;
-                                                this.phoneNum = val.slice(c.dial.length).trim();
+                                                this.phoneNum = val.slice(c.dial.length).replace(/[^0-9]/g, '');
                                                 return;
                                             }
                                         }
-                                        if (val.startsWith('0')) {
+                                        let cleanDigits = val.replace(/[^0-9]/g, '');
+                                        if (cleanDigits.startsWith('0')) {
                                             this.selectedCountry = this.countries[0];
-                                            this.phoneNum = val.slice(1).trim();
+                                            this.phoneNum = cleanDigits.slice(1);
                                         } else {
-                                            this.phoneNum = val;
+                                            this.phoneNum = cleanDigits;
                                         }
                                     },
                                     updatePhone() {
-                                        let num = (this.phoneNum || '').trim();
-                                        if (num.startsWith('0')) num = num.substring(1).trim();
+                                        let num = (this.phoneNum || '').replace(/[^0-9]/g, '');
+                                        if (num.startsWith('0')) num = num.substring(1);
+                                        this.phoneNum = num;
                                         form.kontak = num ? `${this.selectedCountry.dial} ${num}` : '';
                                     },
                                     selectCountry(c) {
@@ -268,13 +277,16 @@
                                                x-ref="phoneInputRef"
                                                x-model="phoneNum"
                                                @input="updatePhone()"
+                                               @keydown="if (!/[0-9]/.test($event.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'].includes($event.key) && !$event.ctrlKey && !$event.metaKey) $event.preventDefault()"
+                                               inputmode="numeric"
+                                               pattern="[0-9]*"
                                                :disabled="formMode === 'view'"
                                                :placeholder="selectedCountry.placeholder" 
                                                :class="formMode === 'view' ? 'text-slate-500 cursor-not-allowed font-bold' : 'text-slate-800 font-semibold'"
                                                class="w-full px-3.5 py-2.5 text-xs bg-transparent border-0 focus:outline-none rounded-r-xl">
                                     </div>
 
-                                    <!-- Dropdown Popover (Matching Screenshot) -->
+                                    <!-- Dropdown Popover -->
                                     <div x-show="countryMenuOpen"
                                          x-transition:enter="transition ease-out duration-150"
                                          x-transition:enter-start="opacity-0 translate-y-1 scale-98"
@@ -282,7 +294,7 @@
                                          x-transition:leave="transition ease-in duration-100"
                                          x-transition:leave-start="opacity-100 translate-y-0 scale-100"
                                          x-transition:leave-end="opacity-0 translate-y-1 scale-98"
-                                         class="absolute z-50 top-full left-0 mt-1.5 w-72 sm:w-80 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden"
+                                         class="absolute z-50 top-full left-0 mt-1.5 w-full max-w-[calc(100vw-2.5rem)] sm:w-80 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden"
                                          style="display: none;">
                                         
                                         <!-- Search Field -->
@@ -334,50 +346,112 @@
                         </div>
                     </div>
 
-                    <!-- Section 2: Peran Operasional -->
-                    <div class="space-y-3">
+                    <!-- Section 2: Peran Operasional & Kategori -->
+                    <div class="space-y-4">
                         <div class="flex items-center gap-2 text-xs font-bold text-slate-800 pb-2 border-b border-slate-100">
                             <i class="fa-solid fa-briefcase text-sky-600"></i>
-                            <span>Peran Operasional</span>
+                            <span>Kategori &amp; Peran Operasional</span>
                         </div>
 
+                        <!-- 1. Kategori Utama: Supplier vs Client -->
                         <div>
-                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1.5">TIPE MITRA</label>
-                            <div class="flex flex-wrap items-center gap-2 p-1.5 bg-slate-100 rounded-xl text-xs font-bold" :class="formMode === 'view' ? 'opacity-80 pointer-events-none' : ''">
+                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1.5">
+                                KATEGORI MITRA <span class="text-rose-500">*</span>
+                            </label>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" :class="formMode === 'view' ? 'opacity-80 pointer-events-none' : ''">
+                                <!-- Option Supplier -->
+                                <button type="button" 
+                                        @click="if(formMode !== 'view') { form.kategori = 'supplier'; if(form.tipeKey !== 'supplier_bibit' && form.tipeKey !== 'supplier_pakan') form.tipeKey = 'supplier_pakan'; }"
+                                        :disabled="formMode === 'view'"
+                                        :class="form.kategori === 'supplier' ? 'bg-[#051B44] text-white ring-2 ring-[#051B44] ring-offset-1 shadow-sm' : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200'"
+                                        class="p-3 rounded-xl flex items-center gap-3 text-left transition-all cursor-pointer">
+                                    <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                                         :class="form.kategori === 'supplier' ? 'bg-amber-400 text-slate-900' : 'bg-amber-100 text-amber-800'">
+                                        <i class="fa-solid fa-truck-ramp-box text-sm"></i>
+                                    </div>
+                                    <div>
+                                        <span class="text-xs font-black block leading-tight">SUPPLIER</span>
+                                        <span class="text-[10px] opacity-80 font-medium block">Pemasok Bibit &amp; Pakan</span>
+                                    </div>
+                                </button>
+
+                                <!-- Option Client -->
+                                <button type="button" 
+                                        @click="if(formMode !== 'view') { form.kategori = 'client'; if(form.tipeKey === 'supplier_bibit' || form.tipeKey === 'supplier_pakan') form.tipeKey = 'rumah_makan'; }"
+                                        :disabled="formMode === 'view'"
+                                        :class="form.kategori === 'client' ? 'bg-[#051B44] text-white ring-2 ring-[#051B44] ring-offset-1 shadow-sm' : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200'"
+                                        class="p-3 rounded-xl flex items-center gap-3 text-left transition-all cursor-pointer">
+                                    <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                                         :class="form.kategori === 'client' ? 'bg-sky-400 text-slate-900' : 'bg-sky-100 text-sky-800'">
+                                        <i class="fa-solid fa-cart-shopping text-sm"></i>
+                                    </div>
+                                    <div>
+                                        <span class="text-xs font-black block leading-tight">CLIENT / DISTRIBUTOR</span>
+                                        <span class="text-[10px] opacity-80 font-medium block">Pembeli Hasil Panen</span>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 2. Sub-tipe Mitra Dinamis Berdasarkan Kategori -->
+                        <div>
+                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1.5">
+                                TIPE SPESIFIK MITRA <span class="text-slate-400 font-normal">(<span x-text="form.kategori === 'supplier' ? 'Jenis pasokan ke tambak' : 'Channel distribusi / penjualan'"></span>)</span>
+                            </label>
+
+                            <!-- Sub-tipe untuk SUPPLIER: Supplier Pakan & Supplier Bibit -->
+                            <div x-show="form.kategori === 'supplier'" class="grid grid-cols-1 sm:grid-cols-2 gap-2 p-1.5 bg-amber-50/70 border border-amber-200/60 rounded-xl text-xs font-bold" :class="formMode === 'view' ? 'opacity-80 pointer-events-none' : ''">
+                                <button type="button" 
+                                        @click="if(formMode !== 'view') form.tipeKey = 'supplier_pakan'" 
+                                        :disabled="formMode === 'view'"
+                                        :class="form.tipeKey === 'supplier_pakan' ? 'bg-[#051B44] text-white shadow-xs' : 'bg-white text-slate-700 hover:text-slate-900 border border-amber-200/50'" 
+                                        class="px-3.5 py-2.5 rounded-lg transition-all text-center flex items-center justify-center gap-2 cursor-pointer">
+                                    <i class="fa-solid fa-boxes-stacked text-xs"></i>
+                                    <span>Supplier Pakan</span>
+                                </button>
+                                <button type="button" 
+                                        @click="if(formMode !== 'view') form.tipeKey = 'supplier_bibit'" 
+                                        :disabled="formMode === 'view'"
+                                        :class="form.tipeKey === 'supplier_bibit' ? 'bg-[#051B44] text-white shadow-xs' : 'bg-white text-slate-700 hover:text-slate-900 border border-amber-200/50'" 
+                                        class="px-3.5 py-2.5 rounded-lg transition-all text-center flex items-center justify-center gap-2 cursor-pointer">
+                                    <i class="fa-solid fa-seedling text-xs"></i>
+                                    <span>Supplier Bibit</span>
+                                </button>
+                            </div>
+
+                            <!-- Sub-tipe untuk CLIENT: Rumah Makan, Restoran, Pasar, Eksportir -->
+                            <div x-show="form.kategori === 'client'" class="grid grid-cols-2 sm:grid-cols-4 gap-2 p-1.5 bg-sky-50/60 border border-sky-200/60 rounded-xl text-xs font-bold" :class="formMode === 'view' ? 'opacity-80 pointer-events-none' : ''">
                                 <button type="button" 
                                         @click="if(formMode !== 'view') form.tipeKey = 'rumah_makan'" 
                                         :disabled="formMode === 'view'"
-                                        :class="(form.tipeKey === 'rumah_makan' || form.tipeKey === 'Rumah_makan') ? 'bg-[#051B44] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" 
-                                        class="px-3 py-2 rounded-lg transition-all text-center flex-1 min-w-[100px]">
-                                    Rumah Makan
-                                </button>
-                                <button type="button" 
-                                        @click="if(formMode !== 'view') form.tipeKey = 'supplier'" 
-                                        :disabled="formMode === 'view'"
-                                        :class="form.tipeKey === 'supplier' ? 'bg-[#051B44] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" 
-                                        class="px-3 py-2 rounded-lg transition-all text-center flex-1 min-w-[100px]">
-                                    Supplier Pakan
+                                        :class="form.tipeKey === 'rumah_makan' ? 'bg-[#051B44] text-white shadow-xs' : 'bg-white text-slate-700 hover:text-slate-900 border border-sky-200/50'" 
+                                        class="px-2.5 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <i class="fa-solid fa-utensils text-xs"></i>
+                                    <span class="truncate">Rumah Makan</span>
                                 </button>
                                 <button type="button" 
                                         @click="if(formMode !== 'view') form.tipeKey = 'restoran'" 
                                         :disabled="formMode === 'view'"
-                                        :class="form.tipeKey === 'restoran' ? 'bg-[#051B44] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" 
-                                        class="px-3 py-2 rounded-lg transition-all text-center flex-1 min-w-[100px]">
-                                    Restoran
+                                        :class="form.tipeKey === 'restoran' ? 'bg-[#051B44] text-white shadow-xs' : 'bg-white text-slate-700 hover:text-slate-900 border border-sky-200/50'" 
+                                        class="px-2.5 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <i class="fa-solid fa-hotel text-xs"></i>
+                                    <span class="truncate">Restoran</span>
                                 </button>
                                 <button type="button" 
                                         @click="if(formMode !== 'view') form.tipeKey = 'pasar'" 
                                         :disabled="formMode === 'view'"
-                                        :class="form.tipeKey === 'pasar' ? 'bg-[#051B44] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" 
-                                        class="px-3 py-2 rounded-lg transition-all text-center flex-1 min-w-[100px]">
-                                    Pasar
+                                        :class="form.tipeKey === 'pasar' ? 'bg-[#051B44] text-white shadow-xs' : 'bg-white text-slate-700 hover:text-slate-900 border border-sky-200/50'" 
+                                        class="px-2.5 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <i class="fa-solid fa-shop text-xs"></i>
+                                    <span class="truncate">Pasar</span>
                                 </button>
                                 <button type="button" 
                                         @click="if(formMode !== 'view') form.tipeKey = 'eksportir'" 
                                         :disabled="formMode === 'view'"
-                                        :class="form.tipeKey === 'eksportir' ? 'bg-[#051B44] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" 
-                                        class="px-3 py-2 rounded-lg transition-all text-center flex-1 min-w-[100px]">
-                                    Eksportir
+                                        :class="form.tipeKey === 'eksportir' ? 'bg-[#051B44] text-white shadow-xs' : 'bg-white text-slate-700 hover:text-slate-900 border border-sky-200/50'" 
+                                        class="px-2.5 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <i class="fa-solid fa-plane-departure text-xs"></i>
+                                    <span class="truncate">Eksportir</span>
                                 </button>
                             </div>
                         </div>
@@ -387,7 +461,7 @@
                     <div class="space-y-3">
                         <div class="flex items-center gap-2 text-xs font-bold text-slate-800 pb-2 border-b border-slate-100">
                             <i class="fa-solid fa-location-crosshairs text-sky-600"></i>
-                            <span>Data Geospatial</span>
+                            <span>Data Geospatial &amp; Alamat</span>
                         </div>
 
                         <!-- Live Address Search Box with Autocomplete Dropdown -->
@@ -480,7 +554,7 @@
                         <!-- Textarea Alamat Lengkap Final -->
                         <div>
                             <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">
-                                ALAMAT LENGKAP
+                                ALAMAT LENGKAP <span class="text-rose-500">*</span>
                             </label>
                             <textarea rows="2" 
                                       x-model="form.alamat"
@@ -491,7 +565,7 @@
                         </div>
 
                         <!-- Latitude & Longitude Inputs -->
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                             <div>
                                 <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">LATITUDE</label>
                                 <input type="text" 
@@ -517,24 +591,24 @@
                         </div>
                     </div>
 
-                    <!-- Actions -->
-                    <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                    <!-- Actions Buttons (Responsive Stack on Mobile, Inline on Desktop) -->
+                    <div class="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 sm:gap-3 pt-4 border-t border-slate-100">
                         <button type="button" 
                                 @click="showForm = false" 
-                                class="px-5 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+                                class="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors text-center cursor-pointer">
                             <span x-text="formMode === 'view' ? 'Tutup' : 'Batal'"></span>
                         </button>
                         <button x-show="formMode !== 'view'"
                                 type="submit" 
                                 :disabled="isSaving"
-                                class="px-5 py-2 rounded-xl bg-[#051B44] hover:bg-navy-900 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
+                                class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#051B44] hover:bg-navy-900 text-white font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
                             <span x-text="isSaving ? 'Menyimpan ke Database...' : (formMode === 'create' ? 'Simpan Data Baru' : 'Simpan Perubahan')"></span>
                             <i class="fa-solid" :class="isSaving ? 'fa-circle-notch fa-spin text-xs text-sky-400' : 'fa-circle-check text-xs'"></i>
                         </button>
                         <button x-show="formMode === 'view'"
                                 type="button"
                                 @click="formMode = 'edit'; initMitraMap(form.lat, form.lng, false)"
-                                class="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-2">
+                                class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer">
                             <span>Edit Data Ini</span>
                             <i class="fa-solid fa-pen-to-square text-xs"></i>
                         </button>
@@ -548,125 +622,150 @@
 
     </div>
 
-    <!-- Filters & Metric Header Row (Directory Mode) -->
-    <div x-show="!showForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <!-- 3. Directory Navigation & Filter Bar (Directory Mode) -->
+    <div x-show="!showForm" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
         
         <!-- Search Box -->
-        <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3">
+        <div class="sm:col-span-1 lg:col-span-7 bg-white p-3 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3">
             <div class="w-8 h-8 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
                 <i class="fa-solid fa-magnifying-glass text-xs"></i>
             </div>
-            <div class="flex-1">
+            <div class="flex-1 min-w-0">
                 <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block">CARI MITRA</span>
-                <input type="text" x-model="searchQuery" placeholder="Nama, ID, atau alamat..." class="w-full bg-transparent text-xs font-bold text-slate-800 focus:outline-none mt-0.5 placeholder:font-medium placeholder:text-slate-400">
+                <input type="text" 
+                       x-model="searchQuery" 
+                       placeholder="Cari nama mitra, ID, atau alamat lengkap..." 
+                       class="w-full bg-transparent text-xs font-bold text-slate-800 focus:outline-none mt-0.5 placeholder:font-normal placeholder:text-slate-400 truncate">
             </div>
+            <button type="button" 
+                    x-show="searchQuery" 
+                    @click="searchQuery = ''" 
+                    class="w-6 h-6 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center text-xs transition-colors shrink-0 cursor-pointer">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
 
-        <!-- Filter 1: Tipe Mitra -->
-        <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3">
+        <!-- Tipe Spesifik Filter Selector -->
+        <div class="sm:col-span-1 lg:col-span-5 bg-white p-3 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3">
             <div class="w-8 h-8 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
                 <i class="fa-solid fa-sliders text-xs"></i>
             </div>
-            <div class="flex-1">
+            <div class="flex-1 min-w-0">
                 <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block">TIPE MITRA</span>
-                <select x-model="filterTipe" class="w-full bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer mt-0.5">
-                    <option value="">Semua Tipe</option>
-                    <option value="restoran">Restoran</option>
-                    <option value="supplier">Supplier Pakan</option>
-                    <option value="pasar">Pasar Tradisional</option>
-                    <option value="eksportir">Eksportir</option>
-                    <option value="rumah_makan">Rumah Makan</option>
+                <select x-model="filterTipe" class="w-full bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer mt-0.5 truncate">
+                    <option value="">Semua Tipe Mitra</option>
+                    <optgroup label="── SUPPLIER ──">
+                        <option value="supplier_pakan">Supplier Pakan</option>
+                        <option value="supplier_bibit">Supplier Bibit</option>
+                    </optgroup>
+                    <optgroup label="── CLIENT / DISTRIBUSI ──">
+                        <option value="rumah_makan">Rumah Makan</option>
+                        <option value="restoran">Restoran</option>
+                        <option value="pasar">Pasar</option>
+                        <option value="eksportir">Eksportir</option>
+                    </optgroup>
                 </select>
             </div>
-        </div>
-
-        <!-- Filter 2: Wilayah -->
-        <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3">
-            <div class="w-8 h-8 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
-                <i class="fa-solid fa-location-dot text-xs"></i>
-            </div>
-            <div class="flex-1">
-                <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block">WILAYAH</span>
-                <select x-model="filterWilayah" class="w-full bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer mt-0.5">
-                    <option value="">Seluruh Indonesia</option>
-                    <option value="jakarta">DKI Jakarta</option>
-                    <option value="jabar">Jawa Barat</option>
-                    <option value="jateng">Jawa Tengah</option>
-                </select>
-            </div>
-        </div>
-
-        <!-- Metric Card: Total Mitra Aktif -->
-        <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-[#BEE3F8]/60 text-[#006699] flex items-center justify-center shrink-0">
-                    <i class="fa-solid fa-users text-sm"></i>
-                </div>
-                <div>
-                    <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block">TOTAL MITRA AKTIF</span>
-                    <div class="flex items-baseline gap-2 mt-0.5">
-                        <h3 class="text-lg font-extrabold text-slate-900" x-text="mitras.length"></h3>
-                        <span class="text-[10px] font-extrabold text-emerald-600">+5 bln ini</span>
-                    </div>
-                </div>
-            </div>
+            <!-- Clear Filter Button -->
+            <button type="button" 
+                    x-show="filterTipe" 
+                    @click="filterTipe = ''" 
+                    class="w-6 h-6 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center text-xs transition-colors shrink-0 cursor-pointer"
+                    title="Hapus filter tipe">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
 
     </div>
 
-    <!-- Mitra Directory Table Card (Directory Mode) -->
+    <!-- 4. Mitra Directory (Desktop Table + Mobile/Tablet Cards) -->
     <div x-show="!showForm" class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-        <div class="overflow-x-auto">
+        
+        <!-- A. Desktop View: Elegant Responsive Table (hidden on mobile < md) -->
+        <div class="hidden md:block overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-slate-50/60 border-b border-slate-100 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
-                        <th class="py-3.5 px-6">INFO MITRA</th>
-                        <th class="py-3.5 px-6">TIPE</th>
-                        <th class="py-3.5 px-6">LOKASI &amp; ALAMAT</th>
-                        <th class="py-3.5 px-6 text-right">AKSI</th>
+                    <tr class="bg-slate-50/70 border-b border-slate-100 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                        <th class="py-3.5 px-6 w-4/12">INFO MITRA</th>
+                        <th class="py-3.5 px-6 w-3/12">KATEGORI &amp; TIPE</th>
+                        <th class="py-3.5 px-6 w-4/12">LOKASI &amp; ALAMAT</th>
+                        <th class="py-3.5 px-6 w-1/12 text-right">AKSI</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
                     
                     <template x-for="(mitra, index) in filteredMitras" :key="mitra.id">
-                        <tr class="hover:bg-slate-50/50 transition-colors">
+                        <tr class="hover:bg-slate-50/60 transition-colors">
                             <td class="py-4 px-6">
                                 <div class="flex items-center gap-3">
                                     <template x-if="mitra.image">
                                         <img :src="mitra.image" 
                                              :alt="mitra.nama" 
-                                             class="w-10 h-10 rounded-xl object-cover border border-slate-200">
+                                             class="w-10 h-10 rounded-xl object-cover border border-slate-200 shrink-0">
                                     </template>
                                     <template x-if="!mitra.image">
                                         <div class="w-10 h-10 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center shrink-0 border border-sky-200 font-bold text-sm">
                                             <i class="fa-solid fa-store"></i>
                                         </div>
                                     </template>
-                                    <div>
-                                        <h4 class="font-extrabold text-[#0055CC] text-sm cursor-pointer hover:underline" @click="openViewForm(mitra)" x-text="mitra.nama"></h4>
-                                        <span class="text-[10px] text-slate-400 block font-normal" x-text="'ID: ' + mitra.id"></span>
+                                    <div class="min-w-0">
+                                        <h4 class="font-extrabold text-[#0055CC] text-sm cursor-pointer hover:underline truncate" @click="openViewForm(mitra)" x-text="mitra.nama"></h4>
+                                        <div class="flex items-center gap-2 mt-0.5">
+                                            <span class="text-[10px] font-mono font-bold text-slate-400" x-text="mitra.id"></span>
+                                            <template x-if="mitra.kontak">
+                                                <span class="text-[10px] text-slate-400 flex items-center gap-1">
+                                                    <span>•</span>
+                                                    <i class="fa-brands fa-whatsapp text-emerald-600"></i>
+                                                    <span x-text="mitra.kontak"></span>
+                                                </span>
+                                            </template>
+                                        </div>
                                     </div>
                                 </div>
                             </td>
                             <td class="py-4 px-6">
-                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase"
-                                      :class="{
-                                          'bg-[#E0F2FE] text-[#0284C7]': (mitra.tipeKey === 'restoran') || (mitra.tipe && mitra.tipe.toLowerCase().includes('restoran')),
-                                          'bg-[#C6F6D5] text-[#22543D]': (mitra.tipeKey === 'supplier') || (mitra.tipe && mitra.tipe.toLowerCase().includes('supplier')),
-                                          'bg-[#E2E8F0] text-[#475569]': (mitra.tipeKey === 'pasar') || (mitra.tipe && mitra.tipe.toLowerCase().includes('pasar')),
-                                          'bg-[#051B44] text-white': (mitra.tipeKey === 'eksportir') || (mitra.tipe && (mitra.tipe.toLowerCase().includes('eksportir') || mitra.tipe.toLowerCase().includes('ekspor'))),
-                                          'bg-rose-100 text-rose-800': (mitra.tipeKey && (mitra.tipeKey.toLowerCase().includes('rumah') || mitra.tipeKey.toLowerCase().includes('makan'))) || (mitra.tipe && (mitra.tipe.toLowerCase().includes('rumah') || mitra.tipe.toLowerCase().includes('makan') || mitra.tipe.toLowerCase().includes('warung') || mitra.tipe.toLowerCase().startsWith('rm'))),
-                                          'bg-amber-100 text-amber-800': (mitra.tipeKey === 'distributor') || (mitra.tipe && mitra.tipe.toLowerCase().includes('distributor'))
-                                      }"
-                                      x-text="mitra.tipe">
-                                </span>
+                                <div class="flex flex-wrap items-center gap-1.5">
+                                    <!-- Category Pill -->
+                                    <template x-if="mitra.kategori === 'supplier' || (mitra.tipeKey && mitra.tipeKey.includes('supplier')) || (mitra.tipe && mitra.tipe.toLowerCase().includes('supplier'))">
+                                        <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-amber-100 text-amber-800 border border-amber-200 shrink-0">
+                                            SUPPLIER
+                                        </span>
+                                    </template>
+                                    <template x-if="mitra.kategori === 'client' || (!mitra.kategori && !mitra.tipeKey?.includes('supplier') && !mitra.tipe?.toLowerCase().includes('supplier'))">
+                                        <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-sky-100 text-sky-800 border border-sky-200 shrink-0">
+                                            CLIENT
+                                        </span>
+                                    </template>
+                                    
+                                    <!-- Specific Type Badge -->
+                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold flex items-center gap-1 shrink-0"
+                                          :class="{
+                                              'bg-teal-50 text-teal-700 border border-teal-200': (mitra.tipeKey === 'supplier_bibit') || (mitra.tipe && (mitra.tipe.toLowerCase().includes('bibit') || mitra.tipe.toLowerCase().includes('benih'))),
+                                              'bg-amber-50 text-amber-700 border border-amber-200': (mitra.tipeKey === 'supplier_pakan' || mitra.tipeKey === 'supplier') || (mitra.tipe && mitra.tipe.toLowerCase().includes('pakan')),
+                                              'bg-rose-50 text-rose-700 border border-rose-200': (mitra.tipeKey === 'rumah_makan') || (mitra.tipe && (mitra.tipe.toLowerCase().includes('rumah') || mitra.tipe.toLowerCase().includes('makan') || mitra.tipe.toLowerCase().startsWith('rm'))),
+                                              'bg-blue-50 text-blue-700 border border-blue-200': (mitra.tipeKey === 'restoran') || (mitra.tipe && mitra.tipe.toLowerCase().includes('resto')),
+                                              'bg-emerald-50 text-emerald-700 border border-emerald-200': (mitra.tipeKey === 'pasar') || (mitra.tipe && mitra.tipe.toLowerCase().includes('pasar')),
+                                              'bg-purple-50 text-purple-700 border border-purple-200': (mitra.tipeKey === 'eksportir') || (mitra.tipe && (mitra.tipe.toLowerCase().includes('ekspor') || mitra.tipe.toLowerCase().includes('eksportir'))),
+                                          }">
+                                        <i class="fa-solid"
+                                           :class="{
+                                               'fa-seedling': (mitra.tipeKey === 'supplier_bibit') || (mitra.tipe && (mitra.tipe.toLowerCase().includes('bibit') || mitra.tipe.toLowerCase().includes('benih'))),
+                                               'fa-boxes-stacked': (mitra.tipeKey === 'supplier_pakan' || mitra.tipeKey === 'supplier') || (mitra.tipe && mitra.tipe.toLowerCase().includes('pakan')),
+                                               'fa-utensils': (mitra.tipeKey === 'rumah_makan') || (mitra.tipe && (mitra.tipe.toLowerCase().includes('rumah') || mitra.tipe.toLowerCase().includes('makan') || mitra.tipe.toLowerCase().startsWith('rm'))),
+                                               'fa-hotel': (mitra.tipeKey === 'restoran') || (mitra.tipe && mitra.tipe.toLowerCase().includes('resto')),
+                                               'fa-shop': (mitra.tipeKey === 'pasar') || (mitra.tipe && mitra.tipe.toLowerCase().includes('pasar')),
+                                               'fa-plane-departure': (mitra.tipeKey === 'eksportir') || (mitra.tipe && (mitra.tipe.toLowerCase().includes('ekspor') || mitra.tipe.toLowerCase().includes('eksportir'))),
+                                           }"></i>
+                                        <span x-text="mitra.tipe"></span>
+                                    </span>
+                                </div>
                             </td>
                             <td class="py-4 px-6">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 text-slate-400">
+                                <div class="flex items-start gap-2.5 max-w-md">
+                                    <div class="w-7 h-7 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 text-slate-400 mt-0.5">
                                         <i class="fa-solid fa-map-location-dot text-xs"></i>
                                     </div>
-                                    <span class="text-xs text-slate-700 font-medium" x-text="mitra.alamat"></span>
+                                    <span class="text-xs text-slate-700 font-medium line-clamp-2" :title="mitra.alamat" x-text="mitra.alamat"></span>
                                 </div>
                             </td>
                             <td class="py-4 px-6 text-right">
@@ -709,14 +808,14 @@
                                         
                                         <!-- View Lengkap -->
                                         <button @click="open = false; openViewForm(mitra)" 
-                                                class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
+                                                class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 cursor-pointer">
                                             <i class="fa-solid fa-eye text-sky-600 w-4"></i>
                                             <span>View Lengkap</span>
                                         </button>
 
                                         <!-- Edit Data -->
                                         <button @click="open = false; openEditForm(mitra)" 
-                                                class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
+                                                class="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 cursor-pointer">
                                             <i class="fa-solid fa-pen-to-square text-amber-600 w-4"></i>
                                             <span>Edit Data</span>
                                         </button>
@@ -725,7 +824,7 @@
 
                                         <!-- Hapus Data -->
                                         <button @click="open = false; deleteMitra(mitra)" 
-                                                class="w-full px-3.5 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2.5">
+                                                class="w-full px-3.5 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2.5 cursor-pointer">
                                             <i class="fa-solid fa-trash-can text-red-500 w-4"></i>
                                             <span>Hapus Data</span>
                                         </button>
@@ -748,9 +847,108 @@
             </table>
         </div>
 
+        <!-- B. Mobile / Tablet View: Adaptive Card Stack (< md) -->
+        <div class="block md:hidden divide-y divide-slate-100 p-3 sm:p-4 space-y-3">
+            <template x-for="(mitra, index) in filteredMitras" :key="mitra.id">
+                <div class="bg-white rounded-xl border border-slate-200/80 p-3.5 shadow-xs space-y-3">
+                    
+                    <!-- Card Top: Info & Category -->
+                    <div class="flex items-start justify-between gap-2.5">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <template x-if="mitra.image">
+                                <img :src="mitra.image" 
+                                     :alt="mitra.nama" 
+                                     class="w-11 h-11 rounded-xl object-cover border border-slate-200 shrink-0">
+                            </template>
+                            <template x-if="!mitra.image">
+                                <div class="w-11 h-11 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center shrink-0 border border-sky-200 font-bold text-sm">
+                                    <i class="fa-solid fa-store"></i>
+                                </div>
+                            </template>
+                            <div class="min-w-0">
+                                <h4 class="font-extrabold text-[#0055CC] text-sm hover:underline truncate" @click="openViewForm(mitra)" x-text="mitra.nama"></h4>
+                                <span class="text-[10px] font-mono font-bold text-slate-400 block" x-text="mitra.id"></span>
+                            </div>
+                        </div>
+
+                        <!-- Category Badge -->
+                        <template x-if="mitra.kategori === 'supplier' || (mitra.tipeKey && mitra.tipeKey.includes('supplier')) || (mitra.tipe && mitra.tipe.toLowerCase().includes('supplier'))">
+                            <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-amber-100 text-amber-800 border border-amber-200 shrink-0">
+                                SUPPLIER
+                            </span>
+                        </template>
+                        <template x-if="mitra.kategori === 'client' || (!mitra.kategori && !mitra.tipeKey?.includes('supplier') && !mitra.tipe?.toLowerCase().includes('supplier'))">
+                            <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-sky-100 text-sky-800 border border-sky-200 shrink-0">
+                                CLIENT
+                            </span>
+                        </template>
+                    </div>
+
+                    <!-- Card Middle: Type & Address -->
+                    <div class="space-y-1.5 pt-1 border-t border-slate-100 text-xs">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-[10px] font-extrabold text-slate-400 uppercase">Tipe:</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold inline-flex items-center gap-1"
+                                  :class="{
+                                      'bg-teal-50 text-teal-700 border border-teal-200': (mitra.tipeKey === 'supplier_bibit') || (mitra.tipe && (mitra.tipe.toLowerCase().includes('bibit') || mitra.tipe.toLowerCase().includes('benih'))),
+                                      'bg-amber-50 text-amber-700 border border-amber-200': (mitra.tipeKey === 'supplier_pakan' || mitra.tipeKey === 'supplier') || (mitra.tipe && mitra.tipe.toLowerCase().includes('pakan')),
+                                      'bg-rose-50 text-rose-700 border border-rose-200': (mitra.tipeKey === 'rumah_makan') || (mitra.tipe && (mitra.tipe.toLowerCase().includes('rumah') || mitra.tipe.toLowerCase().includes('makan') || mitra.tipe.toLowerCase().startsWith('rm'))),
+                                      'bg-blue-50 text-blue-700 border border-blue-200': (mitra.tipeKey === 'restoran') || (mitra.tipe && mitra.tipe.toLowerCase().includes('resto')),
+                                      'bg-emerald-50 text-emerald-700 border border-emerald-200': (mitra.tipeKey === 'pasar') || (mitra.tipe && mitra.tipe.toLowerCase().includes('pasar')),
+                                      'bg-purple-50 text-purple-700 border border-purple-200': (mitra.tipeKey === 'eksportir') || (mitra.tipe && (mitra.tipe.toLowerCase().includes('ekspor') || mitra.tipe.toLowerCase().includes('eksportir'))),
+                                  }">
+                                <span x-text="mitra.tipe"></span>
+                            </span>
+                        </div>
+
+                        <div class="flex items-start gap-2 text-slate-600 text-xs">
+                            <i class="fa-solid fa-location-dot text-slate-400 text-xs mt-0.5 shrink-0"></i>
+                            <span class="line-clamp-2 font-medium" x-text="mitra.alamat"></span>
+                        </div>
+
+                        <template x-if="mitra.kontak">
+                            <div class="flex items-center gap-2 text-slate-600 text-xs pt-0.5">
+                                <i class="fa-brands fa-whatsapp text-emerald-600 text-xs shrink-0"></i>
+                                <span class="font-semibold" x-text="mitra.kontak"></span>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Card Actions -->
+                    <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100">
+                        <button type="button" 
+                                @click="openViewForm(mitra)"
+                                class="py-1.5 px-2 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
+                            <i class="fa-solid fa-eye text-[11px]"></i>
+                            <span>Detail</span>
+                        </button>
+                        <button type="button" 
+                                @click="openEditForm(mitra)"
+                                class="py-1.5 px-2 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
+                            <i class="fa-solid fa-pen text-[11px]"></i>
+                            <span>Edit</span>
+                        </button>
+                        <button type="button" 
+                                @click="deleteMitra(mitra)"
+                                class="py-1.5 px-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
+                            <i class="fa-solid fa-trash-can text-[11px]"></i>
+                            <span>Hapus</span>
+                        </button>
+                    </div>
+
+                </div>
+            </template>
+
+            <!-- Empty State Mobile -->
+            <div x-show="filteredMitras.length === 0" class="py-10 text-center text-slate-400">
+                <i class="fa-solid fa-folder-open text-3xl mb-2 block"></i>
+                <span class="text-xs font-medium">Tidak ada data mitra yang sesuai.</span>
+            </div>
+        </div>
+
         <!-- Table Footer Pagination -->
-        <div class="p-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-slate-500">
-            <span x-text="'Menampilkan 1-' + filteredMitras.length + ' dari ' + mitras.length + ' Mitra'"></span>
+        <div class="p-3.5 sm:p-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-medium text-slate-500">
+            <span x-text="'Menampilkan 1-' + filteredMitras.length + ' dari ' + mitras.length + ' Mitra Terdaftar'"></span>
             <div class="flex items-center gap-1">
                 <button class="w-7 h-7 rounded border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-50">&lt;</button>
                 <button class="w-7 h-7 rounded bg-[#051B44] text-white font-bold flex items-center justify-center">1</button>
@@ -782,6 +980,7 @@
             },
             showForm: false,
             formMode: "create",
+            filterKategori: "",
             filterTipe: "",
             filterWilayah: "",
             searchQuery: "",
@@ -795,8 +994,9 @@
                 id_mitra: null,
                 id: "",
                 nama: "",
-                tipeKey: "distributor",
-                tipe: "Distributor",
+                kategori: "client",
+                tipeKey: "rumah_makan",
+                tipe: "Rumah Makan",
                 alamat: "",
                 lat: "-6.200000",
                 lng: "106.816666",
@@ -1023,6 +1223,7 @@
                     id_mitra: null,
                     id: nextIdStr,
                     nama: "",
+                    kategori: "client",
                     tipeKey: "rumah_makan",
                     tipe: "Rumah Makan",
                     alamat: "",
@@ -1036,6 +1237,28 @@
                 this.$nextTick(() => initMitraMap(this.form.lat, this.form.lng, false));
             },
 
+            resolveKategoriAndKey(mitra) {
+                let key = mitra.tipeKey || '';
+                let kat = mitra.kategori || '';
+                const t = (mitra.tipe || '').toLowerCase();
+
+                if (!key) {
+                    if (t.includes('bibit') || t.includes('benih')) key = 'supplier_bibit';
+                    else if (t.includes('pakan') || t.includes('supplier')) key = 'supplier_pakan';
+                    else if (t.includes('rumah') || t.includes('makan') || t.startsWith('rm')) key = 'rumah_makan';
+                    else if (t.includes('resto')) key = 'restoran';
+                    else if (t.includes('pasar')) key = 'pasar';
+                    else if (t.includes('ekspor')) key = 'eksportir';
+                    else key = 'rumah_makan';
+                }
+
+                if (!kat) {
+                    kat = (key === 'supplier_pakan' || key === 'supplier_bibit' || key === 'supplier') ? 'supplier' : 'client';
+                }
+
+                return { kategori: kat, tipeKey: key };
+            },
+
             openEditForm(mitra) {
                 this.formMode = "edit";
                 this.form = JSON.parse(JSON.stringify(mitra));
@@ -1045,6 +1268,10 @@
                 if (!this.form.id) {
                     this.form.id = 'MTR-2026-' + String(mitra.id_mitra || 1).padStart(3, '0');
                 }
+                const resolved = this.resolveKategoriAndKey(mitra);
+                this.form.kategori = resolved.kategori;
+                this.form.tipeKey = resolved.tipeKey;
+
                 this.searchAddressQuery = mitra.alamat || "";
                 this.addressSuggestions = [];
                 this.showAddressDropdown = false;
@@ -1058,6 +1285,10 @@
                 if (!this.form.id) {
                     this.form.id = 'MTR-2026-' + String(mitra.id_mitra || 1).padStart(3, '0');
                 }
+                const resolved = this.resolveKategoriAndKey(mitra);
+                this.form.kategori = resolved.kategori;
+                this.form.tipeKey = resolved.tipeKey;
+
                 this.searchAddressQuery = mitra.alamat || "";
                 this.addressSuggestions = [];
                 this.showAddressDropdown = false;
@@ -1078,15 +1309,15 @@
                 }
 
                 const tipeMap = {
-                    rumah_makan: "Rumah Makan",
-                    Rumah_makan: "Rumah Makan",
+                    supplier_pakan: "Supplier Pakan",
+                    supplier_bibit: "Supplier Bibit",
                     supplier: "Supplier Pakan",
+                    rumah_makan: "Rumah Makan",
                     restoran: "Restoran",
-                    pasar: "Pasar Tradisional",
-                    eksportir: "Eksportir",
-                    distributor: "Distributor"
+                    pasar: "Pasar",
+                    eksportir: "Eksportir"
                 };
-                this.form.tipe = tipeMap[this.form.tipeKey] || "Rumah Makan";
+                this.form.tipe = tipeMap[this.form.tipeKey] || (this.form.kategori === 'supplier' ? "Supplier Pakan" : "Rumah Makan");
 
                 this.isSaving = true;
 
@@ -1200,32 +1431,81 @@
                 setTimeout(() => { this.showToast = false; }, 3500);
             },
 
+            setCategoryFilter(kat) {
+                this.filterKategori = kat;
+                // If sub-type is currently chosen and incompatible with new category, reset sub-type
+                if (kat === 'supplier' && ['rumah_makan', 'restoran', 'pasar', 'eksportir'].includes(this.filterTipe)) {
+                    this.filterTipe = '';
+                } else if (kat === 'client' && ['supplier_pakan', 'supplier_bibit'].includes(this.filterTipe)) {
+                    this.filterTipe = '';
+                }
+            },
+
+            resetAllFilters() {
+                this.filterKategori = '';
+                this.filterTipe = '';
+                this.searchQuery = '';
+                this.filterWilayah = '';
+            },
+
+            get countSuppliers() {
+                return this.mitras.filter(m => {
+                    const mKat = m.kategori || ((m.tipeKey && m.tipeKey.includes('supplier')) || (m.tipe && m.tipe.toLowerCase().includes('supplier')) ? 'supplier' : 'client');
+                    return mKat === 'supplier';
+                }).length;
+            },
+
+            get countClients() {
+                return this.mitras.filter(m => {
+                    const mKat = m.kategori || ((m.tipeKey && m.tipeKey.includes('supplier')) || (m.tipe && m.tipe.toLowerCase().includes('supplier')) ? 'supplier' : 'client');
+                    return mKat === 'client';
+                }).length;
+            },
+
             get filteredMitras() {
                 return this.mitras.filter(m => {
+                    // Filter Kategori
+                    const matchKategori = !this.filterKategori || (() => {
+                        const mKat = m.kategori || ((m.tipeKey && m.tipeKey.includes('supplier')) || (m.tipe && m.tipe.toLowerCase().includes('supplier')) ? 'supplier' : 'client');
+                        return mKat === this.filterKategori;
+                    })();
+
+                    // Filter Tipe Spesifik
                     const matchTipe = !this.filterTipe || (() => {
                         const filterVal = this.filterTipe.toLowerCase().trim();
                         const keyVal = (m.tipeKey || '').toLowerCase().trim();
                         const tipeVal = (m.tipe || '').toLowerCase().trim();
                         
-                        if (filterVal === 'rumah_makan' || filterVal === 'rumah makan' || filterVal === 'rumah') {
-                            return keyVal.includes('rumah') || keyVal.includes('makan') || tipeVal.includes('rumah') || tipeVal.includes('makan') || tipeVal.includes('warung') || tipeVal.startsWith('rm') || tipeVal.includes(' rm ');
+                        if (filterVal === 'supplier_pakan') {
+                            return keyVal === 'supplier_pakan' || keyVal === 'supplier' || (tipeVal.includes('pakan') && tipeVal.includes('supplier'));
+                        }
+                        if (filterVal === 'supplier_bibit') {
+                            return keyVal === 'supplier_bibit' || (tipeVal.includes('bibit') || tipeVal.includes('benih'));
+                        }
+                        if (filterVal === 'rumah_makan') {
+                            return keyVal === 'rumah_makan' || tipeVal.includes('rumah') || tipeVal.includes('makan') || tipeVal.startsWith('rm');
+                        }
+                        if (filterVal === 'restoran') {
+                            return keyVal === 'restoran' || tipeVal.includes('resto');
+                        }
+                        if (filterVal === 'pasar') {
+                            return keyVal === 'pasar' || tipeVal.includes('pasar');
+                        }
+                        if (filterVal === 'eksportir') {
+                            return keyVal === 'eksportir' || tipeVal.includes('ekspor');
                         }
                         
-                        const filterNorm = filterVal.replace(/[^a-z0-9]/g, '');
-                        const keyNorm = keyVal.replace(/[^a-z0-9]/g, '');
-                        const tipeNorm = tipeVal.replace(/[^a-z0-9]/g, '');
-                        
-                        return (keyNorm.length > 0 && keyNorm === filterNorm) || 
-                               (tipeNorm.length > 0 && tipeNorm.includes(filterNorm)) || 
-                               (keyNorm.length > 0 && filterNorm.includes(keyNorm));
+                        return keyVal === filterVal || tipeVal.includes(filterVal);
                     })();
+
                     const matchWilayah = !this.filterWilayah || (m.wilayah && m.wilayah === this.filterWilayah) || (m.alamat && m.alamat.toLowerCase().includes(this.filterWilayah.toLowerCase()));
                     const matchSearch = !this.searchQuery || 
                         (m.nama && m.nama.toLowerCase().includes(this.searchQuery.toLowerCase())) || 
                         (m.id && m.id.toLowerCase().includes(this.searchQuery.toLowerCase())) || 
                         (m.alamat && m.alamat.toLowerCase().includes(this.searchQuery.toLowerCase())) ||
                         (m.tipe && m.tipe.toLowerCase().includes(this.searchQuery.toLowerCase()));
-                    return matchTipe && matchWilayah && matchSearch;
+                    
+                    return matchKategori && matchTipe && matchWilayah && matchSearch;
                 });
             }
         };

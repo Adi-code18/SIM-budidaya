@@ -19,18 +19,40 @@ class DashboardController extends Controller
     public function index()
     {
         // 1. KPI Calculations from database
-        $activeBatches = BatchPembesaran::where('status_siklus', '!=', 'gagal')->get();
+        $activeBatches = BatchPembesaran::with(['kolam', 'batchPembibitan.ikan'])->where('status_siklus', '!=', 'gagal')->get();
         $totalStok = $activeBatches->where('status_siklus', '!=', 'selesai')->sum('biomassa_est');
         if ($totalStok == 0) {
             $totalStok = $activeBatches->sum('biomassa_est');
         }
 
-        $avgFcrVal = BatchPembesaran::whereNotNull('fcr')->where('fcr', '>', 0)->avg('fcr');
-        if (!$avgFcrVal || $avgFcrVal <= 0) {
-            $totalPakanSemua = ManajemenPakan::sum('kg_pelet') + ManajemenPakan::sum('kg_daun');
-            $avgFcrVal = $totalStok > 0 ? round($totalPakanSemua / $totalStok, 2) : 0;
+        $fcrList = [];
+        $optimalCount = 0;
+        $totalEvaluated = 0;
+
+        foreach ($activeBatches as $b) {
+            $fcrVal = $b->fcr > 0 ? (float)$b->fcr : $b->calculateActualFcr();
+            if ($fcrVal > 0) {
+                $fcrList[] = $fcrVal;
+                $ikan = $b->ikan_ref;
+                $fcrMax = $ikan ? (float)$ikan->fcr_max : 1.35;
+                if ($fcrVal <= $fcrMax) {
+                    $optimalCount++;
+                }
+                $totalEvaluated++;
+            }
         }
-        $avgFcr = round((float)$avgFcrVal, 2);
+
+        $avgFcr = count($fcrList) > 0 ? round(array_sum($fcrList) / count($fcrList), 2) : 0.0;
+        if ($avgFcr <= 0) {
+            $totalPakanSemua = ManajemenPakan::sum('kg_pelet') + ManajemenPakan::sum('kg_daun');
+            $avgFcr = $totalStok > 0 ? round($totalPakanSemua / $totalStok, 2) : 0.0;
+        }
+
+        if ($totalEvaluated > 0) {
+            $fcrStatus = ($optimalCount / $totalEvaluated >= 0.7) ? 'Efisiensi Pakan Optimal' : 'Perlu Evaluasi Pakan';
+        } else {
+            $fcrStatus = $avgFcr > 0 ? ($avgFcr <= 1.35 ? 'Efisiensi Pakan Optimal' : 'Perlu Evaluasi Pakan') : 'Belum Ada Data Pakan';
+        }
 
         $targetPanen = BatchPembesaran::where('status_siklus', '!=', 'selesai')->sum('target_panen_kg');
         if ($targetPanen == 0) {
@@ -58,7 +80,7 @@ class DashboardController extends Controller
             'totalStok'       => number_format($totalStok, 0, ',', '.'),
             'totalStokTrend'  => $totalStokTrend,
             'fcr'             => $avgFcr > 0 ? number_format($avgFcr, 2, '.', '') : '0.00',
-            'fcrStatus'       => $avgFcr > 0 ? ($avgFcr <= 1.25 ? 'Efisiensi Pakan Optimal' : 'Perlu Evaluasi Pakan') : 'Belum Ada Data Pakan',
+            'fcrStatus'       => $fcrStatus,
             'targetPanen'     => number_format($targetPanen, 0, ',', '.'),
             'targetPanenNote' => $targetNote,
             'targetPanenTag'  => $targetTag,

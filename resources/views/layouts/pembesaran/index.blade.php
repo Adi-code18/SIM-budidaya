@@ -315,9 +315,9 @@
                     <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight">{{ number_format($avgFcr ?? 0, 2) }} <span class="text-xs font-semibold text-slate-500">Ratio</span></h3>
                 </div>
             </div>
-            <div class="mt-4 flex items-center gap-1.5 text-xs font-semibold {{ ($avgFcr ?? 0) > 0 && ($avgFcr ?? 0) <= 1.25 ? 'text-emerald-600' : 'text-slate-500' }}">
-                <i class="fa-regular {{ ($avgFcr ?? 0) > 0 && ($avgFcr ?? 0) <= 1.25 ? 'fa-circle-check text-emerald-600' : 'fa-circle-info text-slate-400' }}"></i>
-                <span>{{ ($avgFcr ?? 0) > 0 ? (($avgFcr ?? 0) <= 1.25 ? 'Dalam target optimal (≤ 1.25)' : 'Perlu evaluasi pakan') : 'Belum ada data pakan' }}</span>
+            <div class="mt-4 flex items-center gap-1.5 text-xs font-semibold {{ ($avgFcr ?? 0) > 0 ? 'text-emerald-600' : 'text-slate-500' }}">
+                <i class="fa-regular {{ ($avgFcr ?? 0) > 0 ? 'fa-circle-check text-emerald-600' : 'fa-circle-info text-slate-400' }}"></i>
+                <span>{{ ($avgFcr ?? 0) > 0 ? 'Efisiensi terpantau per target ideal spesies ikan' : 'Belum ada data pakan' }}</span>
             </div>
         </div>
 
@@ -444,7 +444,14 @@
 
                             <div class="mt-3">
                                 <div class="flex items-center justify-between text-xs font-semibold">
-                                    <span :class="item.is_optimal ? 'text-slate-600' : 'text-rose-600'" x-text="'FCR: ' + item.fcr"></span>
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-extrabold"
+                                              :class="item.is_optimal ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' : 'bg-rose-50 text-rose-700 border border-rose-200/60'">
+                                            <i class="fa-solid" :class="item.is_optimal ? 'fa-circle-check text-[9px]' : 'fa-triangle-exclamation text-[9px]'"></i>
+                                            <span x-text="'FCR ' + item.fcr"></span>
+                                            <span class="text-[9px] font-medium opacity-80" x-show="item.fcr_target" x-text="'(Ideal: ' + item.fcr_target + ')'"></span>
+                                        </span>
+                                    </div>
                                     <span class="text-[10px] font-bold text-slate-500" x-text="'Target: ' + item.target_format + ' kg (' + item.target_percent + '%)'"></span>
                                 </div>
                                 <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-1.5">
@@ -673,8 +680,8 @@
                             <span class="text-base font-extrabold text-sky-300 mt-0.5 block" x-text="selectedBatch?.target_format + ' kg'"></span>
                         </div>
                         <div class="p-2 bg-white/10 rounded-xl">
-                            <span class="text-[9px] uppercase tracking-wider text-slate-300 font-bold block">TARGET FCR</span>
-                            <span class="text-base font-extrabold text-amber-300 mt-0.5 block" x-text="selectedBatch?.fcr"></span>
+                            <span class="text-[9px] uppercase tracking-wider text-slate-300 font-bold block">FCR AKTUAL (IDEAL)</span>
+                            <span class="text-base font-extrabold text-amber-300 mt-0.5 block" x-text="selectedBatch?.fcr + (selectedBatch?.fcr_target ? ' (' + selectedBatch?.fcr_target + ')' : '')"></span>
                         </div>
                     </div>
 

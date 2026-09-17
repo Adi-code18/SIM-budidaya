@@ -18,19 +18,25 @@ class PetugasPembesaranController extends Controller
      */
     public function index()
     {
-        $batches = BatchPembesaran::with('kolam')->latest('id_pembesaran')->get();
+        $batches = BatchPembesaran::with(['kolam', 'batchPembibitan.ikan'])->latest('id_pembesaran')->get();
         $totalBiomassaKg = $batches->where('status_siklus', '!=', 'selesai')->sum('biomassa_est');
         if ($totalBiomassaKg == 0) {
             $totalBiomassaKg = $batches->sum('biomassa_est');
         }
         $totalBiomassa = $totalBiomassaKg / 1000;
 
-        $avgFcrVal = BatchPembesaran::whereNotNull('fcr')->where('fcr', '>', 0)->avg('fcr');
-        if (!$avgFcrVal || $avgFcrVal <= 0) {
-            $totalPakan = ManajemenPakan::sum('kg_pelet') + ManajemenPakan::sum('kg_daun');
-            $avgFcrVal = $totalBiomassaKg > 0 ? round($totalPakan / $totalBiomassaKg, 2) : 0.0;
+        $fcrList = [];
+        foreach ($batches as $b) {
+            $fcrVal = $b->fcr > 0 ? (float)$b->fcr : $b->calculateActualFcr();
+            if ($fcrVal > 0) {
+                $fcrList[] = $fcrVal;
+            }
         }
-        $avgFcr = round((float)$avgFcrVal, 2);
+        $avgFcr = count($fcrList) > 0 ? round(array_sum($fcrList) / count($fcrList), 2) : 0.0;
+        if ($avgFcr <= 0) {
+            $totalPakan = ManajemenPakan::sum('kg_pelet') + ManajemenPakan::sum('kg_daun');
+            $avgFcr = $totalBiomassaKg > 0 ? round($totalPakan / $totalBiomassaKg, 2) : 0.0;
+        }
 
         $pakanPh = ManajemenPakan::whereNotNull('ph_air')->where('ph_air', '>', 0)->avg('ph_air');
         $avgPh = $pakanPh ? round((float)$pakanPh, 1) : 0.0;
@@ -59,43 +65,24 @@ class PetugasPembesaranController extends Controller
     public function storeBatch(Request $request)
     {
         $request->validate([
-            'jenis_ikan'       => 'required|string',
-            'id_kolam'         => 'required',
-            'tgl_tebar'        => 'required|date',
-            'biomassa_est'     => 'required|numeric|min:0.1',
-            'target_panen_kg'  => 'required|numeric|min:1',
-            'biaya_beli_bibit' => 'nullable|numeric|min:0',
-            'sumber_benih'     => 'nullable|string',
+            'id_kolam'        => 'required|exists:kolam,id_kolam',
+            'jenis_ikan'      => 'required|string|max:255',
+            'biomassa_est'    => 'required|numeric|min:1',
+            'target_panen_kg' => 'required|numeric|min:1',
+            'tgl_tebar'       => 'required|date',
         ]);
 
-        $kolam = Kolam::where('id_kolam', $request->id_kolam)
-            ->orWhere('nama_kolam', $request->id_kolam)
-            ->first();
-
-        if (!$kolam) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Kolam tebar tidak ditemukan!'
-            ], 422);
-        }
-
-        // Cek apakah kolam sudah terisi siklus aktif lain
-        $isOccupied = BatchPembesaran::where('id_kolam', $kolam->id_kolam)
-            ->where('status_siklus', '!=', 'selesai')
-            ->where('status_siklus', '!=', 'gagal')
-            ->exists();
-
-        if ($isOccupied) {
-            return response()->json([
-                'success' => false,
-                'message' => "Kolam '{$kolam->nama_kolam}' saat ini masih terisi batch aktif. Silakan pilih kolam lain yang kosong!"
-            ], 422);
-        }
+        $kolam = Kolam::findOrFail($request->id_kolam);
 
         $sumberBenih = $request->sumber_benih ?? 'Hatchery Internal';
         $asalBibit = ($sumberBenih === 'Pemasok Eksternal' || $request->asal_bibit === 'beli_luar') ? 'beli_luar' : 'pembibitan_sendiri';
         $biayaBeliBibit = $asalBibit === 'beli_luar' ? (float) ($request->biaya_beli_bibit ?? 0) : 0.0;
         $tglTebar = Carbon::parse($request->tgl_tebar)->toDateString();
+
+        $cleanName = trim(preg_replace('/^(ikan\s+)/i', '', $request->jenis_ikan));
+        $ikanRef = \App\Models\Ikan::where('nama_ikan', 'LIKE', '%' . $cleanName . '%')->first();
+        $defaultFcr = $ikanRef ? (float)$ikanRef->fcr_min : 1.10;
+        $estBulan = $ikanRef && $ikanRef->bulan_panen_max ? (float)$ikanRef->bulan_panen_max : 3.0;
 
         $batch = BatchPembesaran::create([
             'id_kolam'         => $kolam->id_kolam,
@@ -103,9 +90,9 @@ class PetugasPembesaranController extends Controller
             'asal_bibit'       => $asalBibit,
             'biaya_beli_bibit' => $biayaBeliBibit,
             'tgl_tebar'        => $tglTebar,
-            'est_tgl_panen'    => Carbon::parse($tglTebar)->addDays(90)->toDateString(),
+            'est_tgl_panen'    => Carbon::parse($tglTebar)->addDays(round($estBulan * 30))->toDateString(),
             'biomassa_est'     => (float) $request->biomassa_est,
-            'fcr'              => 1.10,
+            'fcr'              => $defaultFcr,
             'target_panen_kg'  => (float) $request->target_panen_kg,
             'jenis_ikan'       => $request->jenis_ikan,
             'status_siklus'    => 'berjalan',

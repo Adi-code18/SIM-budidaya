@@ -16,6 +16,19 @@ class Ikan extends Model
         'nama_ikan',
         'durasi_penetasan',
         'durasi_pembibitan',
+        'fcr_min',
+        'fcr_max',
+        'bulan_panen_min',
+        'bulan_panen_max',
+        'target_konsumsi',
+        'jenis_pakan_didukung',
+    ];
+
+    protected $casts = [
+        'fcr_min'         => 'float',
+        'fcr_max'         => 'float',
+        'bulan_panen_min' => 'float',
+        'bulan_panen_max' => 'float',
     ];
 
     public function batchPembibitan()

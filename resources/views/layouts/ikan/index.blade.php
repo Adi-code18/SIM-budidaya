@@ -10,10 +10,10 @@
         <div>
             <div class="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-[#0284C7] mb-1">
                 <i class="fa-solid fa-fish text-sm"></i>
-                <span>Master Data &amp; Konfigurasi SOP</span>
+                <span>Master Data &amp; Konfigurasi Standar SOP</span>
             </div>
-            <h1 class="text-xl font-extrabold text-slate-900 tracking-tight">Manajemen Jenis Ikan &amp; Pemetaan Pembibitan</h1>
-            <p class="text-xs text-slate-500 font-medium mt-0.5">Kelola data spesifikasi ikan dan pemetaan durasi siklus penetasan telur hingga benih matang.</p>
+            <h1 class="text-xl font-extrabold text-slate-900 tracking-tight">Manajemen Jenis Ikan &amp; Parameter Budidaya</h1>
+            <p class="text-xs text-slate-500 font-medium mt-0.5">Kelola spesifikasi ikan, benchmark FCR ideal, target panen, dan alur siklus pembibitan.</p>
         </div>
 
         <div class="flex items-center gap-3">
@@ -70,9 +70,9 @@
                 <i class="fa-solid fa-timeline text-xl"></i>
             </div>
             <div>
-                <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">TOTAL SIKLUS HATCHERY</span>
-                <span class="text-xl font-black text-slate-900 block" x-text="avgTotalSiklus">{{ $kpis['totalSiklus'] ?? '24 Hari' }}</span>
-                <span class="text-[11px] font-bold text-indigo-600 mt-0.5 block">Standar SOP Lengkap</span>
+                <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">STANDAR FCR IDEAL</span>
+                <span class="text-xl font-black text-slate-900 block">1,0 – 1,8</span>
+                <span class="text-[11px] font-bold text-indigo-600 mt-0.5 block">Tergantung Spesies Ikan</span>
             </div>
         </div>
     </div>
@@ -94,8 +94,8 @@
                     <i class="fa-solid fa-sliders text-base"></i>
                 </div>
                 <div>
-                    <h2 class="text-base font-extrabold text-slate-900" x-text="formMode === 'create' ? 'Tambah Jenis Ikan & Pemetaan Siklus' : 'Edit Data Spesies Ikan'"></h2>
-                    <p class="text-xs text-slate-500 font-medium">Tentukan parameter nama varietas serta pemetaan waktu tiap fase pembibitan.</p>
+                    <h2 class="text-base font-extrabold text-slate-900" x-text="formMode === 'create' ? 'Tambah Jenis Ikan & Parameter Budidaya' : 'Edit Data Spesies Ikan'"></h2>
+                    <p class="text-xs text-slate-500 font-medium">Tentukan parameter nama varietas, patokan FCR ideal, target panen, dan SOP pembibitan.</p>
                 </div>
             </div>
             <button type="button" :disabled="isSubmitting" @click="showForm = false; resetForm();" class="text-slate-400 hover:text-slate-600 text-lg p-1 disabled:opacity-50 cursor-pointer">
@@ -114,10 +114,10 @@
                     <input type="text" 
                            x-model="form.nama_ikan" 
                            :disabled="isSubmitting"
-                           placeholder="Contoh: Ikan Nila Hitam Super" 
+                           placeholder="Contoh: Ikan Lele / Ikan Nila" 
                            required
                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:opacity-60 disabled:cursor-not-allowed transition-all">
-                    <p class="text-[10px] text-slate-400 font-medium">Varietas atau komoditas budidaya.</p>
+                    <p class="text-[10px] text-slate-400 font-medium">Varietas komoditas budidaya.</p>
                 </div>
 
                 <!-- Field 2: Durasi Penetasan -->
@@ -133,8 +133,6 @@
                                min="1" 
                                max="90"
                                required
-                               onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E') event.preventDefault()"
-                               @input="if(form.durasi_penetasan !== '' && Number(form.durasi_penetasan) < 1) form.durasi_penetasan = 1"
                                class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-extrabold text-center text-amber-700 bg-amber-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-60 disabled:cursor-not-allowed transition-all">
                         <button type="button" :disabled="isSubmitting" @click="form.durasi_penetasan = Number(form.durasi_penetasan) + 1" class="w-9 h-9 rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 flex items-center justify-center font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed">+</button>
                     </div>
@@ -154,63 +152,79 @@
                                min="1" 
                                max="180"
                                required
-                               onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E') event.preventDefault()"
-                               @input="if(form.durasi_pembibitan !== '' && Number(form.durasi_pembibitan) < 1) form.durasi_pembibitan = 1"
                                class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-extrabold text-center text-emerald-700 bg-emerald-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed transition-all">
                         <button type="button" :disabled="isSubmitting" @click="form.durasi_pembibitan = Number(form.durasi_pembibitan) + 1" class="w-9 h-9 rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 flex items-center justify-center font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed">+</button>
                     </div>
-                    <p class="text-[10px] text-slate-400 font-medium">Masa pemeliharaan larva hingga ukuran siap tebar.</p>
+                    <p class="text-[10px] text-slate-400 font-medium">Masa pemeliharaan larva hingga siap tebar.</p>
                 </div>
             </div>
 
-            <!-- Visual Pemetaan Tahapan Pembibitan Realtime -->
-            <div class="bg-slate-50/90 rounded-2xl p-5 border border-slate-200/80 space-y-4">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                        <i class="fa-solid fa-route text-sky-600"></i>
-                        <span>Pemetaan Alur Siklus Pembibitan (<span x-text="form.nama_ikan || 'Spesies Baru'"></span>)</span>
-                    </span>
-                    <span class="px-3 py-1 rounded-full bg-[#051B44] text-white text-[11px] font-extrabold">
-                        Total Siklus: <span x-text="(Number(form.durasi_penetasan || 0) + Number(form.durasi_pembibitan || 0)) + ' Hari'"></span>
-                    </span>
+            <!-- Row 2: FCR Benchmark & Spesifikasi Panen -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-sky-50/40 rounded-2xl border border-sky-100">
+                <!-- Field 4: FCR Ideal (Min - Max) -->
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 block">
+                        PATOKAN FCR IDEAL (MIN - MAX)
+                    </label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" step="0.01" min="0.1" max="5.0"
+                               x-model="form.fcr_min" 
+                               :disabled="isSubmitting"
+                               placeholder="Min (1.00)" 
+                               class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold text-center text-sky-800 bg-white focus:ring-2 focus:ring-sky-500 transition-all">
+                        <input type="number" step="0.01" min="0.1" max="5.0"
+                               x-model="form.fcr_max" 
+                               :disabled="isSubmitting"
+                               placeholder="Max (1.20)" 
+                               class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold text-center text-sky-800 bg-white focus:ring-2 focus:ring-sky-500 transition-all">
+                    </div>
+                    <p class="text-[10px] text-slate-400 font-medium">Standar efisiensi pakan ikan.</p>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <!-- Tahap 1: Telur & Penetasan -->
-                    <div class="bg-white p-4 rounded-xl border-2 border-amber-200 shadow-xs space-y-2 relative overflow-hidden">
-                        <div class="flex items-center justify-between">
-                            <span class="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 text-[10px] font-black uppercase">FASE 1: TELUR</span>
-                            <span class="text-xs font-extrabold text-amber-700" x-text="'0 - ' + (form.durasi_penetasan || 3) + ' Hari'"></span>
-                        </div>
-                        <h4 class="text-xs font-extrabold text-slate-900">Masa Inkubasi &amp; Penetasan</h4>
-                        <p class="text-[11px] text-slate-500 font-medium leading-relaxed">
-                            Telur berada di kolam penetasan hingga menetas menjadi larva aktif.
-                        </p>
+                <!-- Field 5: Bulan Panen (Min - Max) -->
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 block">
+                        SIKLUS PANEN (BULAN)
+                    </label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" step="0.1" min="0.5" max="36"
+                               x-model="form.bulan_panen_min" 
+                               :disabled="isSubmitting"
+                               placeholder="Min (2.5)" 
+                               class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold text-center text-indigo-800 bg-white focus:ring-2 focus:ring-indigo-500 transition-all">
+                        <input type="number" step="0.1" min="0.5" max="36"
+                               x-model="form.bulan_panen_max" 
+                               :disabled="isSubmitting"
+                               placeholder="Max (3.0)" 
+                               class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold text-center text-indigo-800 bg-white focus:ring-2 focus:ring-indigo-500 transition-all">
                     </div>
+                    <p class="text-[10px] text-slate-400 font-medium">Estimasi lama tebar s.d panen.</p>
+                </div>
 
-                    <!-- Tahap 2: Larva & Pendederan Awal -->
-                    <div class="bg-white p-4 rounded-xl border-2 border-sky-200 shadow-xs space-y-2 relative overflow-hidden">
-                        <div class="flex items-center justify-between">
-                            <span class="px-2 py-0.5 rounded-md bg-sky-100 text-sky-800 text-[10px] font-black uppercase">FASE 2: LARVA</span>
-                            <span class="text-xs font-extrabold text-sky-700" x-text="'Hari ke-' + (Number(form.durasi_penetasan || 3) + 1)"></span>
-                        </div>
-                        <h4 class="text-xs font-extrabold text-slate-900">Pemberian Pakan Awal</h4>
-                        <p class="text-[11px] text-slate-500 font-medium leading-relaxed">
-                            Penyerapan kuning telur, pemberian pakan alami, dan pembentukan organ tubuh.
-                        </p>
-                    </div>
+                <!-- Field 6: Target Konsumsi -->
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 block">
+                        TARGET KONSUMSI
+                    </label>
+                    <input type="text" 
+                           x-model="form.target_konsumsi" 
+                           :disabled="isSubmitting"
+                           placeholder="Contoh: 8–10 ekor / kg" 
+                           class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 bg-white focus:ring-2 focus:ring-sky-500 transition-all">
+                    <p class="text-[10px] text-slate-400 font-medium">Ukuran standar panen siap jual.</p>
+                </div>
 
-                    <!-- Tahap 3: Benih Matang / Siap Pindah -->
-                    <div class="bg-white p-4 rounded-xl border-2 border-emerald-200 shadow-xs space-y-2 relative overflow-hidden">
-                        <div class="flex items-center justify-between">
-                            <span class="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase">FASE 3: BENIH MATANG</span>
-                            <span class="text-xs font-extrabold text-emerald-700" x-text="'Hari ke-' + (Number(form.durasi_penetasan || 3) + Number(form.durasi_pembibitan || 21))"></span>
-                        </div>
-                        <h4 class="text-xs font-extrabold text-slate-900">Fingerling Siap Pembesaran</h4>
-                        <p class="text-[11px] text-slate-500 font-medium leading-relaxed">
-                            Benih mencapai bobot standar dan siap dipindahkan ke siklus kolam pembesaran.
-                        </p>
-                    </div>
+                <!-- Field 7: Rekomendasi Pakan -->
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 block">
+                        REKOMENDASI PAKAN
+                    </label>
+                    <input type="text" 
+                           x-model="form.jenis_pakan_didukung" 
+                           :disabled="isSubmitting"
+                           placeholder="Pelet + Vitamin + Daun" 
+                           class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 bg-white focus:ring-2 focus:ring-sky-500 transition-all">
+                    <p class="text-[10px] text-slate-400 font-medium">Nutrisi pakan pendukung.</p>
                 </div>
             </div>
 
@@ -240,8 +254,8 @@
         <!-- Table Toolbar -->
         <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-                <h3 class="text-sm font-extrabold text-slate-900">Daftar Varietas &amp; Durasi SOP Ikan</h3>
-                <p class="text-xs text-slate-500 font-medium">Data acuan standar yang digunakan dalam kalkulasi estimasi proses pembibitan.</p>
+                <h3 class="text-sm font-extrabold text-slate-900">Daftar Varietas, Standar FCR &amp; Siklus Panen</h3>
+                <p class="text-xs text-slate-500 font-medium">Standar acuan budidaya yang digunakan untuk evaluasi efisiensi pakan dan estimasi panen.</p>
             </div>
             
             <div class="flex items-center gap-3">
@@ -260,10 +274,11 @@
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-slate-50/70 border-b border-slate-200/80 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
-                        <th class="py-4 px-6">KODE &amp; SPESIES IKAN</th>
-                        <th class="py-4 px-6">DURASI PENETASAN</th>
-                        <th class="py-4 px-6">DURASI PEMBIBITAN</th>
-                        <th class="py-4 px-6">TOTAL ESTIMASI HATCHERY</th>
+                        <th class="py-4 px-6">SPESIES IKAN</th>
+                        <th class="py-4 px-6">FCR IDEAL (TARGET)</th>
+                        <th class="py-4 px-6">SIKLUS PANEN</th>
+                        <th class="py-4 px-6">TARGET KONSUMSI &amp; PAKAN</th>
+                        <th class="py-4 px-6">DURASI HATCHERY</th>
                         <th class="py-4 px-6 text-right">AKSI</th>
                     </tr>
                 </thead>
@@ -271,7 +286,7 @@
                     
                     <template x-if="filteredIkans.length === 0">
                         <tr>
-                            <td colspan="5" class="py-12 text-center text-slate-400 text-xs font-medium">
+                            <td colspan="6" class="py-12 text-center text-slate-400 text-xs font-medium">
                                 <i class="fa-solid fa-fish text-3xl text-slate-300 block mb-2"></i>
                                 Belum ada data jenis ikan yang terdaftar.<br>
                                 <span class="text-[11px] text-slate-400">Klik tombol <strong>Tambah Jenis Ikan</strong> untuk menambahkan data baru.</span>
@@ -293,22 +308,28 @@
                                 </div>
                             </td>
                             <td class="py-4 px-6">
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200/60">
-                                    <i class="fa-solid fa-egg text-[10px]"></i>
-                                    <span x-text="item.durasi_penetasan + ' Hari'"></span>
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black bg-emerald-50 text-emerald-800 border border-emerald-200/60 shadow-xs">
+                                    <i class="fa-solid fa-scale-balanced text-[10px] text-emerald-600"></i>
+                                    <span x-text="(item.fcr_min ? Number(item.fcr_min).toFixed(1) : '1.0') + ' – ' + (item.fcr_max ? Number(item.fcr_max).toFixed(1) : '1.2')"></span>
                                 </span>
                             </td>
                             <td class="py-4 px-6">
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
-                                    <i class="fa-solid fa-seedling text-[10px]"></i>
-                                    <span x-text="item.durasi_pembibitan + ' Hari'"></span>
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200/60">
+                                    <i class="fa-regular fa-calendar-check text-[10px]"></i>
+                                    <span x-text="item.bulan_panen_min ? (item.bulan_panen_min + ' – ' + item.bulan_panen_max + ' Bulan') : '3 – 4 Bulan'"></span>
                                 </span>
                             </td>
                             <td class="py-4 px-6">
-                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black bg-indigo-50 text-indigo-700 border border-indigo-200/60">
-                                    <i class="fa-solid fa-clock text-[10px]"></i>
-                                    <span x-text="(Number(item.durasi_penetasan) + Number(item.durasi_pembibitan)) + ' Hari'"></span>
-                                </span>
+                                <div>
+                                    <span class="font-bold text-slate-800 block text-[11px]" x-text="item.target_konsumsi || '3–5 ekor / kg'"></span>
+                                    <span class="text-[10px] text-slate-500 font-medium block" x-text="item.jenis_pakan_didukung || 'Pelet + Vitamin'"></span>
+                                </div>
+                            </td>
+                            <td class="py-4 px-6">
+                                <div class="space-y-0.5">
+                                    <span class="text-[10px] text-amber-700 font-bold block" x-text="'Penetasan: ' + item.durasi_penetasan + 'h'"></span>
+                                    <span class="text-[10px] text-emerald-700 font-bold block" x-text="'Pembibitan: ' + item.durasi_pembibitan + 'h'"></span>
+                                </div>
                             </td>
                             <td class="py-4 px-6 text-right">
                                 <div class="relative inline-block text-left" 
@@ -368,33 +389,26 @@
     <!-- Notification Toast -->
     <div x-show="showToast"
          x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0 -translate-y-4 scale-95"
-         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+         x-transition:enter-start="opacity-0 translate-y-2"
+         x-transition:enter-end="opacity-100 translate-y-0"
          x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
-         x-transition:leave-end="opacity-0 -translate-y-4 scale-95"
-         class="fixed top-6 right-6 z-50 max-w-sm rounded-2xl shadow-xl border p-4 flex items-center gap-3 backdrop-blur-md bg-[#051B44] text-white border-sky-500/50 shadow-sky-950/20"
+         x-transition:leave-start="opacity-100 translate-y-0"
+         x-transition:leave-end="opacity-0 translate-y-2"
+         class="fixed bottom-5 right-5 z-50 bg-[#051B44] text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-sky-400/30 flex items-center gap-3 text-xs font-bold"
          style="display: none;">
-        <div class="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0">
-            <i class="fa-solid fa-check text-sm"></i>
-        </div>
-        <div class="flex-1 text-xs font-bold leading-snug" x-text="toastMessage"></div>
-        <button @click="showToast = false" class="text-white/70 hover:text-white transition-colors">
-            <i class="fa-solid fa-xmark text-xs"></i>
-        </button>
+        <i class="fa-solid fa-circle-check text-sky-400 text-sm"></i>
+        <span x-text="toastMessage"></span>
     </div>
 
 </div>
-@endsection
 
-@push('scripts')
 <script>
 function ikanComponent() {
     return {
         showForm: false,
         formMode: 'create',
-        isSubmitting: false,
         searchQuery: '',
+        isSubmitting: false,
         showToast: false,
         toastMessage: '',
 
@@ -403,6 +417,12 @@ function ikanComponent() {
             nama_ikan: '',
             durasi_penetasan: 3,
             durasi_pembibitan: 21,
+            fcr_min: 1.00,
+            fcr_max: 1.20,
+            bulan_panen_min: 2.5,
+            bulan_panen_max: 3.0,
+            target_konsumsi: '8–10 ekor / kg',
+            jenis_pakan_didukung: 'Pelet + Vitamin',
             id_batch: ''
         },
 
@@ -451,6 +471,12 @@ function ikanComponent() {
                 nama_ikan: item.nama_ikan,
                 durasi_penetasan: item.durasi_penetasan,
                 durasi_pembibitan: item.durasi_pembibitan,
+                fcr_min: item.fcr_min ?? 1.00,
+                fcr_max: item.fcr_max ?? 1.20,
+                bulan_panen_min: item.bulan_panen_min ?? 2.5,
+                bulan_panen_max: item.bulan_panen_max ?? 3.0,
+                target_konsumsi: item.target_konsumsi ?? '',
+                jenis_pakan_didukung: item.jenis_pakan_didukung ?? '',
                 id_batch: item.id_batch || ''
             };
             this.showForm = true;
@@ -463,6 +489,12 @@ function ikanComponent() {
                 nama_ikan: '',
                 durasi_penetasan: 3,
                 durasi_pembibitan: 21,
+                fcr_min: 1.00,
+                fcr_max: 1.20,
+                bulan_panen_min: 2.5,
+                bulan_panen_max: 3.0,
+                target_konsumsi: '',
+                jenis_pakan_didukung: '',
                 id_batch: ''
             };
         },
@@ -502,7 +534,6 @@ function ikanComponent() {
             const isEdit = (this.formMode === 'edit');
             const actionLabel = isEdit ? 'memperbarui data spesies' : 'menambahkan jenis ikan baru';
 
-            // Notifikasi Konfirmasi di Tengah Layar Sebelum Simpan
             if (window.AppSwal) {
                 const resConfirm = await AppSwal.confirm({
                     title: isEdit ? 'Konfirmasi Perubahan' : 'Konfirmasi Simpan Data',
@@ -519,11 +550,11 @@ function ikanComponent() {
 
             this.isSubmitting = true;
 
-            const targetUrl = isEdit ? ('/ikan/' + this.form.id_ikan) : '{{ route('ikan.store') }}';
-            const method = isEdit ? 'PUT' : 'POST';
-
             try {
-                const res = await fetch(targetUrl, {
+                const url = isEdit ? `/ikan/${this.form.id_ikan}` : '/ikan';
+                const method = isEdit ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
                     method: method,
                     headers: {
                         'Content-Type': 'application/json',
@@ -534,15 +565,21 @@ function ikanComponent() {
                         nama_ikan: this.form.nama_ikan.trim(),
                         durasi_penetasan: Number(this.form.durasi_penetasan),
                         durasi_pembibitan: Number(this.form.durasi_pembibitan),
+                        fcr_min: this.form.fcr_min ? Number(this.form.fcr_min) : 1.00,
+                        fcr_max: this.form.fcr_max ? Number(this.form.fcr_max) : 1.20,
+                        bulan_panen_min: this.form.bulan_panen_min ? Number(this.form.bulan_panen_min) : null,
+                        bulan_panen_max: this.form.bulan_panen_max ? Number(this.form.bulan_panen_max) : null,
+                        target_konsumsi: this.form.target_konsumsi ? this.form.target_konsumsi.trim() : null,
+                        jenis_pakan_didukung: this.form.jenis_pakan_didukung ? this.form.jenis_pakan_didukung.trim() : null,
                         id_batch: this.form.id_batch || null
                     })
                 });
 
-                const data = await res.json();
-                const isSuccess = res.ok && (data.success || data.status === 'success');
-                const resultIkan = data.ikan || data.data;
+                const data = await response.json();
 
-                if (isSuccess) {
+                if (response.ok && data.status === 'success') {
+                    const resultIkan = data.ikan || data.data;
+
                     if (isEdit) {
                         const idx = this.ikans.findIndex(i => i.id_ikan === this.form.id_ikan);
                         if (idx !== -1) {
@@ -552,7 +589,12 @@ function ikanComponent() {
                                 this.ikans[idx].nama_ikan = this.form.nama_ikan.trim();
                                 this.ikans[idx].durasi_penetasan = Number(this.form.durasi_penetasan);
                                 this.ikans[idx].durasi_pembibitan = Number(this.form.durasi_pembibitan);
-                                this.ikans[idx].id_batch = this.form.id_batch || null;
+                                this.ikans[idx].fcr_min = this.form.fcr_min;
+                                this.ikans[idx].fcr_max = this.form.fcr_max;
+                                this.ikans[idx].bulan_panen_min = this.form.bulan_panen_min;
+                                this.ikans[idx].bulan_panen_max = this.form.bulan_panen_max;
+                                this.ikans[idx].target_konsumsi = this.form.target_konsumsi;
+                                this.ikans[idx].jenis_pakan_didukung = this.form.jenis_pakan_didukung;
                             }
                         }
                     } else {
@@ -564,37 +606,38 @@ function ikanComponent() {
                                 nama_ikan: this.form.nama_ikan.trim(),
                                 durasi_penetasan: Number(this.form.durasi_penetasan),
                                 durasi_pembibitan: Number(this.form.durasi_pembibitan),
-                                id_batch: this.form.id_batch || null
+                                fcr_min: this.form.fcr_min,
+                                fcr_max: this.form.fcr_max,
+                                bulan_panen_min: this.form.bulan_panen_min,
+                                bulan_panen_max: this.form.bulan_panen_max,
+                                target_konsumsi: this.form.target_konsumsi,
+                                jenis_pakan_didukung: this.form.jenis_pakan_didukung,
                             });
                         }
                     }
 
-                    // TUTUP FORM & RESET FORM INPUT SEHINGGA TIDAK TETAP MUNCUL SEOLAH BISA DIUBAH
                     this.showForm = false;
                     this.resetForm();
 
-                    const successMsg = data.message || (isEdit ? 'Data jenis ikan berhasil diperbarui!' : 'Data jenis ikan baru berhasil disimpan!');
-
-                    // Notifikasi Hasil Sukses di Tengah Layar
                     if (window.AppSwal) {
-                        AppSwal.success('Berhasil!', successMsg);
+                        AppSwal.success('Berhasil!', data.message || (isEdit ? 'Data jenis ikan berhasil diperbarui!' : 'Jenis ikan baru berhasil disimpan!'));
                     } else {
-                        this.triggerToast(successMsg);
+                        this.triggerToast(data.message || (isEdit ? 'Data diperbarui!' : 'Jenis ikan tersimpan!'));
                     }
                 } else {
-                    const errMsg = data.message || (data.errors ? Object.values(data.errors).flat().join('\n') : 'Gagal menyimpan data jenis ikan.');
+                    const errorMsg = data.message || 'Gagal menyimpan data jenis ikan.';
                     if (window.AppSwal) {
-                        AppSwal.error('Gagal', errMsg);
+                        AppSwal.error('Penyimpanan Gagal', errorMsg);
                     } else {
-                        alert(errMsg);
+                        alert(errorMsg);
                     }
                 }
-            } catch (e) {
-                console.error(e);
+            } catch (err) {
+                console.error(err);
                 if (window.AppSwal) {
-                    AppSwal.error('Kesalahan Jaringan', 'Terjadi kesalahan sistem saat menghubungi server.');
+                    AppSwal.error('Error Server', 'Terjadi kesalahan sistem saat menghubungi server.');
                 } else {
-                    alert('Terjadi kesalahan sistem saat menyimpan data.');
+                    alert('Terjadi kesalahan jaringan.');
                 }
             } finally {
                 this.isSubmitting = false;
@@ -602,50 +645,59 @@ function ikanComponent() {
         },
 
         async confirmDelete(item) {
-            const resConfirm = await AppSwal.confirmDelete({
-                title: 'Hapus Jenis Ikan?',
-                text: `Apakah Anda yakin ingin menghapus data spesies "${item.nama_ikan}"? Data ini akan dihapus dari database.`,
-                confirmText: 'Ya, Hapus Spesies',
-                cancelText: 'Batal'
-            });
-            if (!resConfirm.isConfirmed) return;
+            if (window.AppSwal) {
+                const res = await AppSwal.confirm({
+                    title: 'Hapus Jenis Ikan?',
+                    text: `Apakah Anda yakin ingin menghapus data spesies "${item.nama_ikan}"? Tindakan ini tidak dapat dibatalkan.`,
+                    confirmText: 'Ya, Hapus Data',
+                    cancelText: 'Batalkan',
+                    icon: 'warning',
+                    confirmColor: '#E11D48'
+                });
+                if (!res.isConfirmed) {
+                    return;
+                }
+            } else {
+                if (!confirm(`Hapus spesies ${item.nama_ikan}?`)) {
+                    return;
+                }
+            }
 
             try {
-                const res = await fetch('/ikan/' + item.id_ikan, {
+                const response = await fetch(`/ikan/${item.id_ikan}`, {
                     method: 'DELETE',
                     headers: {
                         'Accept': 'application/json',
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     }
                 });
-                const data = await res.json();
-                const isSuccess = res.ok && (data.success || data.status === 'success');
-                if (isSuccess) {
+
+                const data = await response.json();
+                if (response.ok && data.status === 'success') {
                     this.ikans = this.ikans.filter(i => i.id_ikan !== item.id_ikan);
-                    const msg = data.message || 'Data jenis ikan berhasil dihapus.';
                     if (window.AppSwal) {
-                        AppSwal.success('Terhapus!', msg);
+                        AppSwal.success('Terhapus!', data.message || 'Spesies ikan berhasil dihapus.');
                     } else {
-                        this.triggerToast(msg);
+                        this.triggerToast(data.message || 'Spesies ikan dihapus.');
                     }
                 } else {
-                    const errMsg = data.message || 'Gagal menghapus data jenis ikan.';
+                    const err = data.message || 'Gagal menghapus jenis ikan.';
                     if (window.AppSwal) {
-                        AppSwal.error('Gagal', errMsg);
+                        AppSwal.error('Gagal', err);
                     } else {
-                        alert(errMsg);
+                        alert(err);
                     }
                 }
-            } catch (e) {
-                console.error(e);
+            } catch (err) {
+                console.error(err);
                 if (window.AppSwal) {
-                    AppSwal.error('Kesalahan Jaringan', 'Terjadi kesalahan saat menghapus data.');
+                    AppSwal.error('Error', 'Terjadi kesalahan koneksi server.');
                 } else {
-                    alert('Terjadi kesalahan saat menghapus data.');
+                    alert('Gagal menghapus data.');
                 }
             }
         }
     };
 }
 </script>
-@endpush
+@endsection

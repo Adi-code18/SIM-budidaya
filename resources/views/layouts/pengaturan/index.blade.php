@@ -194,21 +194,23 @@
                                     for (let c of this.countries) {
                                         if (val.startsWith(c.dial)) {
                                             this.selectedCountry = c;
-                                            this.phoneNum = val.slice(c.dial.length).trim();
+                                            this.phoneNum = val.slice(c.dial.length).replace(/[^0-9]/g, '');
                                             return;
                                         }
                                     }
-                                    if (val.startsWith('0')) {
+                                    let cleanDigits = val.replace(/[^0-9]/g, '');
+                                    if (cleanDigits.startsWith('0')) {
                                         this.selectedCountry = this.countries[0];
-                                        this.phoneNum = val.slice(1).trim();
+                                        this.phoneNum = cleanDigits.slice(1);
                                     } else {
-                                        this.phoneNum = val;
+                                        this.phoneNum = cleanDigits;
                                     }
                                 }
                             },
                             updatePhone() {
-                                let num = (this.phoneNum || '').trim();
-                                if (num.startsWith('0')) num = num.substring(1).trim();
+                                let num = (this.phoneNum || '').replace(/[^0-9]/g, '');
+                                if (num.startsWith('0')) num = num.substring(1);
+                                this.phoneNum = num;
                                 this.fullValue = num ? `${this.selectedCountry.dial} ${num}` : '';
                             },
                             selectCountry(c) {
@@ -239,6 +241,9 @@
                                        x-ref="phoneInput"
                                        x-model="phoneNum"
                                        @input="updatePhone()"
+                                       @keydown="if (!/[0-9]/.test($event.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'].includes($event.key) && !$event.ctrlKey && !$event.metaKey) $event.preventDefault()"
+                                       inputmode="numeric"
+                                       pattern="[0-9]*"
                                        :placeholder="selectedCountry.placeholder"
                                        class="w-full px-3.5 py-2.5 text-xs font-bold text-slate-800 bg-transparent border-0 focus:outline-none rounded-r-xl">
                             </div>

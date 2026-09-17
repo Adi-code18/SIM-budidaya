@@ -104,10 +104,10 @@
     },
 
     getFullNumber() {
-        let num = (this.phoneNumber || "").trim();
+        let num = (this.phoneNumber || "").replace(/[^0-9]/g, '');
         if (!num) return "";
         if (num.startsWith("0")) {
-            num = num.substring(1).trim();
+            num = num.substring(1);
         }
         return `${this.selectedCountry.dial} ${num}`;
     },
@@ -146,7 +146,10 @@ class="relative w-full"
         <input type="tel"
                x-ref="phoneField"
                x-model="phoneNumber"
-               @input="syncValue()"
+               @input="phoneNumber = (phoneNumber || '').replace(/[^0-9]/g, ''); syncValue()"
+               @keydown="if (!/[0-9]/.test($event.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'].includes($event.key) && !$event.ctrlKey && !$event.metaKey) $event.preventDefault()"
+               inputmode="numeric"
+               pattern="[0-9]*"
                :disabled="{{ $disabled }}"
                :placeholder="selectedCountry.placeholder"
                :class="({{ $disabled }}) ? 'text-slate-500 cursor-not-allowed font-bold' : 'text-slate-800 font-semibold'"

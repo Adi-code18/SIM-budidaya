@@ -73,17 +73,24 @@ class PembesaranController extends Controller
             ->sum('biomassa_est');
         $totalBiomassa = $totalBiomassaKg / 1000; // in Ton
 
-        $avgFcrVal = BatchPembesaran::whereNotNull('fcr')->where('fcr', '>', 0)->avg('fcr');
-        $avgFcr = $avgFcrVal ? round((float)$avgFcrVal, 2) : 0;
-
         $today = Carbon::today()->toDateString();
         $fedTodayKolamIds = \App\Models\ManajemenPakan::whereDate('tgl_log', $today)->pluck('id_kolam')->toArray();
 
         $batches = [];
+        $fcrAccum = [];
         foreach ($batchRecords as $b) {
             $doc = $b->tgl_tebar ? (int) abs(Carbon::parse($b->tgl_tebar)->startOfDay()->diffInDays(now()->startOfDay())) : 0;
             $targetPercent = $b->target_panen_kg > 0 ? min(100, round(($b->biomassa_est / $b->target_panen_kg) * 100)) : 0;
-            $isOptimal = ($b->fcr ?? 1.10) <= 1.25;
+
+            $ikanRef = $b->ikan_ref;
+            $fcrMin = $ikanRef ? (float)$ikanRef->fcr_min : 1.00;
+            $fcrMax = $ikanRef ? (float)$ikanRef->fcr_max : 1.30;
+            $targetKonsumsi = $ikanRef ? $ikanRef->target_konsumsi : '-';
+            $jenisPakan = $ikanRef ? $ikanRef->jenis_pakan_didukung : 'Pelet';
+
+            $fcrAktual = (float) ($b->fcr > 0 ? $b->fcr : $b->calculateActualFcr());
+            $fcrAccum[] = $fcrAktual;
+            $isOptimal = ($fcrAktual <= $fcrMax);
 
             $statusSiklus = strtolower($b->status_siklus ?? 'berjalan');
             $statusLabel = 'Berjalan (Aktif)';
@@ -178,8 +185,14 @@ class PembesaranController extends Controller
                 'target_percent'      => $targetPercent,
                 'jumlah_panen_kg'     => (float) $b->jumlah_panen_kg,
                 'jumlah_panen_format' => number_format($b->jumlah_panen_kg, 1, ',', '.'),
-                'fcr'                 => number_format($b->fcr ?? 1.10, 2),
+                'fcr'                 => number_format($fcrAktual, 2),
+                'fcr_target'          => number_format($fcrMin, 1) . ' - ' . number_format($fcrMax, 1),
+                'fcr_min'             => $fcrMin,
+                'fcr_max'             => $fcrMax,
+                'fcr_status_text'     => $isOptimal ? 'Optimal' : 'Perlu Evaluasi',
                 'is_optimal'          => $isOptimal,
+                'target_konsumsi'     => $targetKonsumsi,
+                'jenis_pakan'         => $jenisPakan,
                 'status_siklus'       => $statusSiklus,
                 'status_label'        => $statusLabel,
                 'status_class'        => $statusClass,
@@ -189,6 +202,9 @@ class PembesaranController extends Controller
                 'ph_air'              => ($logPh = ManajemenPakan::where('id_kolam', $b->id_kolam)->whereNotNull('ph_air')->where('ph_air', '>', 0)->latest('tgl_log')->value('ph_air')) ? number_format($logPh, 1) : '-',
             ];
         }
+
+        $avgFcrVal = count($fcrAccum) > 0 ? (array_sum($fcrAccum) / count($fcrAccum)) : BatchPembesaran::whereNotNull('fcr')->where('fcr', '>', 0)->avg('fcr');
+        $avgFcr = $avgFcrVal ? round((float)$avgFcrVal, 2) : 0;
 
         $availablePembibitan = \App\Models\BatchPembibitan::with(['kolam', 'batchPembesaran', 'ikan'])
             ->where('status', '!=', 'gagal')
@@ -281,8 +297,13 @@ class PembesaranController extends Controller
             $jenis = 'Ikan ' . $jenis;
         }
 
+        $ikanRef = \App\Models\Ikan::where('nama_ikan', 'LIKE', '%' . trim(preg_replace('/^(ikan\s+)/i', '', $jenis)) . '%')->first();
+        $defaultFcr = $ikanRef ? (float)$ikanRef->fcr_min : 1.15;
+        $estBulan = $ikanRef && $ikanRef->bulan_panen_max ? (float)$ikanRef->bulan_panen_max : 3.0;
+
         $tglTebar = $request->tgl_tebar ?? now();
-        $estTglPanen = $request->est_tgl_panen ?? ($request->tgl_tebar ? Carbon::parse($request->tgl_tebar)->addDays(90)->toDateString() : now()->addDays(90)->toDateString());
+        $estDays = round($estBulan * 30);
+        $estTglPanen = $request->est_tgl_panen ?? ($request->tgl_tebar ? Carbon::parse($request->tgl_tebar)->addDays($estDays)->toDateString() : now()->addDays($estDays)->toDateString());
 
         $asalBibit = $request->filled('id_batch_pembibitan') ? 'pembibitan_sendiri' : 'beli_luar';
         $biayaBeliBibit = $asalBibit === 'beli_luar' ? (float) ($request->biaya_beli_bibit ?? 0) : 0.0;
@@ -296,7 +317,7 @@ class PembesaranController extends Controller
             'tgl_tebar'           => $tglTebar,
             'est_tgl_panen'       => $estTglPanen,
             'biomassa_est'        => $request->biomassa_est,
-            'fcr'                 => $request->fcr ?? 1.15,
+            'fcr'                 => $request->fcr ?? $defaultFcr,
             'target_panen_kg'     => $request->target_panen_kg,
             'jumlah_panen_kg'     => 0.00,
             'jenis_ikan'          => $jenis,

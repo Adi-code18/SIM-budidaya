@@ -25,6 +25,7 @@ class MitraController extends Controller
 
         foreach ($mitraRecords as $idx => $m) {
             $tipeKey = $this->getTipeKey($m->tipe_mitra);
+            $kategori = $this->getKategori($tipeKey);
 
             $mitras[] = [
                 'id_mitra'  => $m->id_mitra,
@@ -32,6 +33,7 @@ class MitraController extends Controller
                 'nama'      => $m->nama_mitra,
                 'tipe'      => $m->tipe_mitra,
                 'tipeKey'   => $tipeKey,
+                'kategori'  => $kategori,
                 'alamat'    => $m->alamat,
                 'wilayah'   => 'indonesia',
                 'lat'       => (string) ($m->latitude ?? -6.208800),
@@ -48,11 +50,14 @@ class MitraController extends Controller
     private function getTipeKey(?string $tipe): string
     {
         $raw = strtolower(trim($tipe ?? ''));
+        if (str_contains($raw, 'bibit') || str_contains($raw, 'benih') || str_contains($raw, 'hatchery')) {
+            return 'supplier_bibit';
+        }
+        if (str_contains($raw, 'pakan') || str_contains($raw, 'pelet') || str_contains($raw, 'supplier')) {
+            return 'supplier_pakan';
+        }
         if (str_contains($raw, 'rumah') || str_contains($raw, 'makan') || str_contains($raw, 'warung') || str_starts_with($raw, 'rm ') || str_starts_with($raw, 'rm.')) {
             return 'rumah_makan';
-        }
-        if (str_contains($raw, 'supplier')) {
-            return 'supplier';
         }
         if (str_contains($raw, 'pasar')) {
             return 'pasar';
@@ -63,7 +68,15 @@ class MitraController extends Controller
         if (str_contains($raw, 'resto') || str_contains($raw, 'cafe') || str_contains($raw, 'kafe')) {
             return 'restoran';
         }
-        return 'distributor';
+        return 'restoran';
+    }
+
+    private function getKategori(?string $tipeKey): string
+    {
+        if (in_array($tipeKey, ['supplier_pakan', 'supplier_bibit', 'supplier'])) {
+            return 'supplier';
+        }
+        return 'client';
     }
 
     public function store(Request $request)
@@ -91,6 +104,7 @@ class MitraController extends Controller
         ]);
 
         $tipeKey = $this->getTipeKey($mitra->tipe_mitra);
+        $kategori = $this->getKategori($tipeKey);
 
         $formatted = [
             'id_mitra'  => $mitra->id_mitra,
@@ -98,6 +112,7 @@ class MitraController extends Controller
             'nama'      => $mitra->nama_mitra,
             'tipe'      => $mitra->tipe_mitra,
             'tipeKey'   => $tipeKey,
+            'kategori'  => $kategori,
             'alamat'    => $mitra->alamat,
             'wilayah'   => 'indonesia',
             'lat'       => (string) ($mitra->latitude ?? -6.208800),
@@ -138,6 +153,7 @@ class MitraController extends Controller
         ]);
 
         $tipeKey = $this->getTipeKey($mitra->tipe_mitra);
+        $kategori = $this->getKategori($tipeKey);
 
         $formatted = [
             'id_mitra'  => $mitra->id_mitra,
@@ -145,6 +161,7 @@ class MitraController extends Controller
             'nama'      => $mitra->nama_mitra,
             'tipe'      => $mitra->tipe_mitra,
             'tipeKey'   => $tipeKey,
+            'kategori'  => $kategori,
             'alamat'    => $mitra->alamat,
             'wilayah'   => 'indonesia',
             'lat'       => (string) ($mitra->latitude ?? -6.208800),
