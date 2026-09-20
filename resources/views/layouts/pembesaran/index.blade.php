@@ -158,6 +158,38 @@
                                 </template>
                             </div>
                         </div>
+
+                        <!-- Baris Input Jumlah Bibit Tebar (Ekor) -->
+                        <div class="pt-2 border-t border-slate-200/60 grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                            <div>
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-1">
+                                        <i class="fa-solid fa-fish-fins text-sky-600"></i>
+                                        <span>JUMLAH BIBIT TEBAR (EKOR) *</span>
+                                    </label>
+                                    <span class="text-[9px] font-bold text-sky-700 bg-sky-100 px-1.5 py-0.5 rounded"
+                                          x-text="form.id_batch_pembibitan ? 'Otomatis dari Batch' : 'Input Tebar'">
+                                    </span>
+                                </div>
+                                <input type="number" step="100" min="1" x-model="form.jumlahBibit" 
+                                       @input="recalculateTargetPanen(true)"
+                                       placeholder="Contoh: 10000"
+                                       class="w-full px-3.5 py-2.5 rounded-xl border border-sky-300 text-xs font-black text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-2xs">
+                            </div>
+                            <div class="space-y-1">
+                                <span class="text-[10px] font-bold text-slate-500 block">Pilihan Cepat Jumlah Bibit:</span>
+                                <div class="flex flex-wrap gap-1.5">
+                                    <template x-for="chip in [2500, 5000, 10000, 20000]" :key="chip">
+                                        <button type="button" 
+                                                @click="form.jumlahBibit = chip; recalculateTargetPanen(true)"
+                                                :class="form.jumlahBibit == chip ? 'bg-[#0B2570] text-white' : 'bg-slate-200/80 text-slate-700 hover:bg-slate-300'"
+                                                class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-all">
+                                            <span x-text="Number(chip).toLocaleString('id-ID') + ' Ekor'"></span>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -192,31 +224,58 @@
                     </div>
                 </div>
 
-                <!-- Section 2: Detail Komoditas Ikan -->
+                <!-- Section 2: Detail Komoditas Ikan & Survival Rate -->
                 <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
                     <div class="flex items-center gap-2.5 text-sm font-bold text-slate-900">
                         <div class="w-8 h-8 rounded-xl bg-[#0284C7] text-white flex items-center justify-center">
                             <i class="fa-solid fa-fish text-xs"></i>
                         </div>
-                        <span>Komoditas Ikan &amp; Status Siklus</span>
+                        <span>Komoditas Ikan &amp; Parameter SOP</span>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
                             <div class="flex items-center justify-between mb-1">
                                 <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block">JENIS IKAN *</label>
                                 <a href="{{ route('ikan') }}" class="text-[10px] font-extrabold text-sky-600 hover:text-sky-800 flex items-center gap-1 transition-colors" title="Kelola di Master Data Ikan">
                                     <i class="fa-solid fa-circle-plus"></i>
-                                    <span>+ Master Ikan</span>
+                                    <span>+ Master</span>
                                 </a>
                             </div>
-                            <select x-model="form.jenisIkan" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all cursor-pointer">
+                            <select x-model="form.jenisIkan" @change="onJenisIkanChange()" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all cursor-pointer">
                                 <option value="">Pilih jenis ikan</option>
                                 <template x-for="ik in ikanOptions" :key="ik.value">
                                     <option :value="ik.value" x-text="ik.label"></option>
                                 </template>
                             </select>
                         </div>
+
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 block">
+                                    SURVIVAL RATE (SR %) *
+                                </label>
+                                <span class="text-[9px] font-black text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded"
+                                      x-text="form.survivalRate + '% SOP'">
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="number" min="50" max="100" step="1" x-model="form.survivalRate" 
+                                       @input="recalculateTargetPanen(true)"
+                                       class="w-full px-3.5 py-2.5 rounded-xl border border-emerald-300 text-xs font-black text-emerald-950 bg-emerald-50/40 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all">
+                            </div>
+                            <div class="flex gap-1 mt-1.5">
+                                <template x-for="srChip in [80, 85, 90, 95]" :key="srChip">
+                                    <button type="button" 
+                                            @click="form.survivalRate = srChip; recalculateTargetPanen(true)"
+                                            :class="form.survivalRate == srChip ? 'bg-emerald-700 text-white' : 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100'"
+                                            class="px-2 py-0.5 rounded text-[9px] font-extrabold transition-all flex-1 text-center">
+                                        <span x-text="srChip + '%'"></span>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+
                         <div>
                             <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">STATUS SIKLUS</label>
                             <select x-model="form.statusSiklus" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
@@ -230,35 +289,113 @@
 
             </div>
 
-            <!-- Right 1 Col: Target Produksi Pembesaran -->
+            <!-- Right 1 Col: Target Produksi Pembesaran (Unit Economics Otomatis) -->
             <div class="space-y-5">
                 <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
-                    <div class="flex items-center gap-2.5 text-sm font-bold text-slate-900">
-                        <i class="fa-solid fa-bullseye text-sky-600"></i>
-                        <span>Target Biomassa &amp; Pakan (KG)</span>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2.5 text-sm font-bold text-slate-900">
+                            <i class="fa-solid fa-calculator text-sky-600"></i>
+                            <span>Otomatisasi Target Panen (Kg)</span>
+                        </div>
+                        <button type="button" @click="recalculateTargetPanen(true)" 
+                                title="Hitung ulang otomatis berdasarkan Jumlah Bibit & SOP Ikan"
+                                class="text-[10px] font-extrabold text-sky-700 bg-sky-50 hover:bg-sky-100 px-2 py-1 rounded-lg border border-sky-200 flex items-center gap-1 transition-all">
+                            <i class="fa-solid fa-rotate text-[10px]"></i>
+                            <span>Sync SOP</span>
+                        </button>
+                    </div>
+
+                    <!-- Interactive SOP Unit Economics Calculation Box -->
+                    <div class="p-3.5 bg-gradient-to-br from-[#0B2570]/5 via-sky-50 to-emerald-50/40 rounded-2xl border border-sky-200/80 space-y-2.5">
+                        <div class="flex items-center justify-between text-[11px] font-extrabold text-[#0B2570]">
+                            <span class="flex items-center gap-1.5">
+                                <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i>
+                                <span>Kalkulator Unit Economics</span>
+                            </span>
+                            <span class="text-[9px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md font-black border border-emerald-200">
+                                Real-Time SOP
+                            </span>
+                        </div>
+
+                        <!-- Formula Card -->
+                        <div class="bg-white/90 p-3 rounded-xl border border-sky-100 text-[11px] space-y-2 shadow-2xs">
+                            <div class="flex justify-between items-center text-slate-600">
+                                <span>Bibit Tebar:</span>
+                                <span class="font-extrabold text-slate-900" x-text="Number(form.jumlahBibit || 0).toLocaleString('id-ID') + ' Ekor'"></span>
+                            </div>
+                            <div class="flex justify-between items-center text-slate-600">
+                                <span>Estimasi Ikan Hidup (<span x-text="(form.survivalRate || 85) + '% SR'"></span>):</span>
+                                <span class="font-extrabold text-emerald-700" x-text="Number(calculatedTargetLive.ekorHidup || 0).toLocaleString('id-ID') + ' Ekor'"></span>
+                            </div>
+                            <div class="flex justify-between items-center text-slate-600">
+                                <span>Standar Pasar Konsumsi:</span>
+                                <span class="font-bold text-sky-800" x-text="(currentIkanSop?.target_konsumsi || (calculatedTargetLive.ekorPerKg + ' ekor/kg')) + ' (~' + calculatedTargetLive.ekorPerKg + ' ekor/kg)'"></span>
+                            </div>
+                            <div class="pt-2 border-t border-slate-200/70 flex justify-between items-center">
+                                <span class="font-extrabold text-slate-800">Target Panen SOP:</span>
+                                <span class="text-sm font-black text-[#0B2570]" x-text="Number(calculatedTargetLive.targetKg || 0).toLocaleString('id-ID') + ' Kg'"></span>
+                            </div>
+                            <div class="flex justify-between items-center text-[10px] text-slate-500">
+                                <span>Est. Kebutuhan Pakan (FCR <span x-text="calculatedTargetLive.fcrMin"></span>):</span>
+                                <span class="font-bold text-slate-700" x-text="Number(calculatedTargetLive.estPakanKg || 0).toLocaleString('id-ID') + ' Kg'"></span>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="space-y-3">
                         <div>
-                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">ESTIMASI BIOMASSA SAAT INI*</label>
-                            <input type="number" step="0.1" min="0.1" x-model="form.biomassaEst" placeholder="Contoh: 1250"
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block">ESTIMASI BIOMASSA AWAL (KG) *</label>
+                                <span class="text-[9px] text-slate-400 italic">Berat awal tebar</span>
+                            </div>
+                            <input type="number" step="0.1" min="0.1" x-model="form.biomassaEst" placeholder="Contoh: 150"
                                    onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E') event.preventDefault()"
                                    @input="if(form.biomassaEst !== '' && Number(form.biomassaEst) < 0) form.biomassaEst = Math.abs(Number(form.biomassaEst)) || 0.1"
                                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
                         </div>
                         <div>
-                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">TARGET PANEN (KG) *</label>
-                            <input type="number" step="0.1" min="0.1" x-model="form.targetPanenKg" placeholder="Contoh: 1500"
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="text-[10px] font-extrabold uppercase tracking-wider text-[#0B2570] block">TARGET PANEN (KG) *</label>
+                                <span class="text-[9px] font-extrabold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                                    Otomatis / Manual
+                                </span>
+                            </div>
+                            <input type="number" step="0.1" min="0.1" x-model="form.targetPanenKg" placeholder="Contoh: 950"
                                    onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E') event.preventDefault()"
                                    @input="if(form.targetPanenKg !== '' && Number(form.targetPanenKg) < 0) form.targetPanenKg = Math.abs(Number(form.targetPanenKg)) || 0.1"
-                                   class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                                   class="w-full px-3.5 py-2.5 rounded-xl border border-sky-300 text-xs font-black text-slate-900 bg-sky-50/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
                         </div>
-                        <div>
-                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">TARGET FCR</label>
-                            <input type="number" step="0.01" min="0.01" x-model="form.fcr" placeholder="1.15"
-                                   onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E') event.preventDefault()"
-                                   @input="if(form.fcr !== '' && Number(form.fcr) < 0) form.fcr = Math.abs(Number(form.fcr)) || 1.15"
-                                   class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-extrabold text-[#0B2570] bg-sky-50/60 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                        
+                        <!-- TARGET FCR (Otomatis dari SOP Master Ikan & Pembibitan) -->
+                        <div class="p-3.5 bg-sky-50/80 rounded-2xl border border-sky-200/80 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <label class="text-[10px] font-extrabold uppercase tracking-wider text-[#0B2570] flex items-center gap-1.5">
+                                    <i class="fa-solid fa-clipboard-check text-sky-600"></i>
+                                    <span>STANDAR FCR (SOP MASTER IKAN)</span>
+                                </label>
+                                <span class="text-[9px] px-2 py-0.5 rounded-md font-extrabold"
+                                      :class="currentIkanSop ? 'bg-sky-200/70 text-sky-900' : 'bg-slate-200/70 text-slate-600'"
+                                      x-text="currentIkanSop ? ('SOP: ' + currentIkanSop.fcr_min + ' – ' + currentIkanSop.fcr_max) : 'Menunggu Jenis Ikan'">
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between bg-white px-3.5 py-2.5 rounded-xl border border-sky-200 shadow-2xs">
+                                <template x-if="currentIkanSop">
+                                    <div class="flex items-baseline gap-1.5">
+                                        <span class="text-base font-black text-[#0B2570]" x-text="currentIkanSop.fcr_min + ' – ' + currentIkanSop.fcr_max"></span>
+                                        <span class="text-[10px] text-slate-500 font-semibold">Ratio Acuan</span>
+                                    </div>
+                                </template>
+                                <template x-if="!currentIkanSop">
+                                    <span class="text-xs text-slate-400 italic">Pilih jenis ikan terlebih dahulu</span>
+                                </template>
+                                <span class="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 flex items-center gap-1">
+                                    <i class="fa-solid fa-circle-check text-[9px] text-emerald-600"></i>
+                                    <span>SOP Master Ikan</span>
+                                </span>
+                            </div>
+                            <p class="text-[10px] text-slate-500 italic leading-tight">
+                                Target efisiensi pakan otomatis mengacu pada standar SOP komoditas ikan terpilih.
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -280,25 +417,25 @@
 
     <!-- ========= DIRECTORY / LIST MODE ========= -->
 
-    <!-- 3 Metric KPI Cards Grid -->
-    <div x-show="!showForm" class="grid grid-cols-1 md:grid-cols-3 gap-5">
+    <!-- 4 Metric KPI Cards Grid (Biomassa, FCR, Modal Kolam, Proyeksi Laba) -->
+    <div x-show="!showForm" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
         <!-- Card 1: Total Biomassa -->
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
             <div>
                 <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">TOTAL BIOMASSA AKTIF</span>
-                    <div class="w-9 h-9 rounded-xl bg-[#BEE3F8]/60 text-[#006699] flex items-center justify-center">
-                        <i class="fa-solid fa-weight-hanging text-base"></i>
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">TOTAL BIOMASSA AKTIF</span>
+                    <div class="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center border border-sky-100">
+                        <i class="fa-solid fa-weight-hanging text-sm"></i>
                     </div>
                 </div>
-                <div class="mt-3">
-                    <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight">{{ number_format($totalBiomassa ?? 4.5, 2) }} <span class="text-xs font-semibold text-slate-500">Ton</span></h3>
+                <div class="mt-2.5">
+                    <h3 class="text-2xl font-extrabold text-slate-900 tracking-tight">{{ number_format($totalBiomassa ?? 4.5, 2) }} <span class="text-xs font-semibold text-slate-500">Ton</span></h3>
                 </div>
             </div>
-            <div class="mt-4 flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
+            <div class="mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600">
                 <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>Data tersinkron dari Batch Pembesaran</span>
+                <span>{{ count($batches ?? []) }} Kolam Pembesaran Aktif</span>
             </div>
         </div>
 
@@ -306,42 +443,65 @@
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
             <div>
                 <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">RATA-RATA FCR</span>
-                    <div class="w-9 h-9 rounded-xl bg-[#BEE3F8]/60 text-[#006699] flex items-center justify-center">
-                        <i class="fa-regular fa-clipboard text-base"></i>
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">RATA-RATA FCR</span>
+                    <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100">
+                        <i class="fa-solid fa-calculator text-sm"></i>
                     </div>
                 </div>
-                <div class="mt-3">
-                    <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight">{{ number_format($avgFcr ?? 0, 2) }} <span class="text-xs font-semibold text-slate-500">Ratio</span></h3>
+                <div class="mt-2.5">
+                    <h3 class="text-2xl font-extrabold text-slate-900 tracking-tight">{{ number_format($financialSummary['avg_fcr_kumulatif'] ?? $avgFcr ?? 0, 2) }} <span class="text-xs font-semibold text-slate-500">Ratio</span></h3>
                 </div>
             </div>
-            <div class="mt-4 flex items-center gap-1.5 text-xs font-semibold {{ ($avgFcr ?? 0) > 0 ? 'text-emerald-600' : 'text-slate-500' }}">
+            <div class="mt-3 flex items-center gap-1.5 text-[11px] font-semibold {{ ($avgFcr ?? 0) > 0 ? 'text-emerald-600' : 'text-slate-500' }}">
                 <i class="fa-regular {{ ($avgFcr ?? 0) > 0 ? 'fa-circle-check text-emerald-600' : 'fa-circle-info text-slate-400' }}"></i>
-                <span>{{ ($avgFcr ?? 0) > 0 ? 'Efisiensi terpantau per target ideal spesies ikan' : 'Belum ada data pakan' }}</span>
+                <span>{{ ($avgFcr ?? 0) > 0 ? 'Efisiensi Kumulatif Terpantau' : 'Belum Ada Data Pakan' }}</span>
             </div>
         </div>
 
-        <!-- Card 3: Kolam Pembesaran Terpakai -->
+        <!-- Card 3: Total Modal / Biaya Kolam -->
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
             <div>
                 <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">KOLAM PEMBESARAN TERPAKAI</span>
-                    <div class="w-9 h-9 rounded-xl bg-[#BEE3F8]/60 text-[#006699] flex items-center justify-center">
-                        <i class="fa-solid fa-grip text-base"></i>
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">TOTAL MODAL KOLAM</span>
+                    <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100">
+                        <i class="fa-solid fa-wallet text-sm"></i>
                     </div>
                 </div>
-                <div class="mt-3">
-                    <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight">
-                        <span x-text="batches.filter(b => b.status_siklus === 'berjalan').length"></span>
-                        <span class="text-xs font-semibold text-slate-500">/ <span x-text="kolamList.length"></span> Kolam</span>
+                <div class="mt-2.5">
+                    <h3 class="text-2xl font-extrabold text-slate-900 tracking-tight">Rp {{ number_format($financialSummary['total_modal_kolam'] ?? 0, 0, ',', '.') }}</h3>
+                </div>
+            </div>
+            <div class="mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-slate-500">
+                <i class="fa-solid fa-receipt text-slate-400"></i>
+                <span>Pakan + Bibit + Operasional</span>
+            </div>
+        </div>
+
+        <!-- Card 4: Proyeksi Laba Bersih -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">PROYEKSI LABA BERSIH</span>
+                    <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
+                        <i class="fa-solid fa-coins text-sm"></i>
+                    </div>
+                </div>
+                <div class="mt-2.5">
+                    <h3 class="text-2xl font-extrabold {{ ($financialSummary['total_laba'] ?? 0) >= 0 ? 'text-emerald-600' : 'text-rose-600' }} tracking-tight">
+                        {{ ($financialSummary['total_laba'] ?? 0) >= 0 ? '+' : '-' }}Rp {{ number_format(abs($financialSummary['total_laba'] ?? 0), 0, ',', '.') }}
                     </h3>
                 </div>
             </div>
-            <div class="mt-4">
-                <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                    <div class="bg-[#0284C7] h-full rounded-full transition-all"
-                         :style="'width: ' + (kolamList.length > 0 ? (batches.filter(b => b.status_siklus === 'berjalan').length / kolamList.length) * 100 : 50) + '%'"></div>
-                </div>
+            <div class="mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-slate-600">
+                <span class="inline-flex items-center gap-1 text-emerald-700 font-bold">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span>{{ $financialSummary['kolam_untung_count'] ?? 0 }} Untung</span>
+                </span>
+                <span class="text-slate-300">•</span>
+                <span class="inline-flex items-center gap-1 text-rose-700 font-bold">
+                    <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                    <span>{{ $financialSummary['kolam_rugi_count'] ?? 0 }} Defisit</span>
+                </span>
             </div>
         </div>
 
@@ -358,7 +518,7 @@
                         <i class="fa-solid fa-grip text-sky-600"></i>
                         <span>Daftar Kolam &amp; Batch Pembesaran Aktif</span>
                     </h3>
-                    <p class="text-xs text-slate-500 font-medium">Hanya menampilkan kolam dengan siklus pembesaran aktif.</p>
+                    <p class="text-xs text-slate-500 font-medium">Pantau efisiensi pakan, estimasi panen, dan analisis keuntungan per kolam.</p>
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="px-3 py-1.5 rounded-xl bg-sky-50 border border-sky-200 text-sky-900 font-extrabold text-xs flex items-center gap-1.5 shadow-2xs">
@@ -442,19 +602,36 @@
                                 </div>
                             </div>
 
+                            <!-- Metrik FCR & Profitabilitas Kolam Strip -->
+                            <div class="mt-2.5 grid grid-cols-2 gap-2">
+                                <div class="p-2 rounded-xl bg-slate-50 border border-slate-100 flex flex-col justify-between">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[9px] font-bold text-slate-400 uppercase">FCR Kumulatif</span>
+                                        <span class="text-[9px] font-extrabold px-1.5 py-0.2 rounded"
+                                              :class="item.is_optimal ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'"
+                                              x-text="item.is_optimal ? 'Optimal (SOP)' : 'Tinggi'"></span>
+                                    </div>
+                                    <div class="flex items-baseline gap-1 mt-1">
+                                        <span class="text-xs font-black" :class="item.is_optimal ? 'text-emerald-700' : 'text-amber-700'" x-text="item.fcr_kumulatif || item.fcr"></span>
+                                        <span class="text-[9px] text-slate-400" x-show="item.fcr_target" x-text="'(SOP: ' + item.fcr_target + ')'"></span>
+                                    </div>
+                                </div>
+                                <div class="p-2 rounded-xl border flex flex-col justify-between"
+                                     :class="(item.laba_rugi || 0) >= 0 ? 'bg-emerald-50/70 border-emerald-200/80 text-emerald-900' : 'bg-rose-50/70 border-rose-200/80 text-rose-900'">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[9px] font-bold uppercase" :class="(item.laba_rugi || 0) >= 0 ? 'text-emerald-700' : 'text-rose-700'">Est. Laba / Rugi</span>
+                                        <span class="text-[8px] font-extrabold px-1 rounded" :class="(item.laba_rugi || 0) >= 0 ? 'bg-emerald-200/60 text-emerald-900' : 'bg-rose-200/60 text-rose-900'" x-text="(item.margin_percent || 0) + '%'"></span>
+                                    </div>
+                                    <div class="font-extrabold text-xs mt-1 truncate" x-text="item.laba_rugi_format || 'Rp 0'"></div>
+                                </div>
+                            </div>
+
                             <div class="mt-3">
                                 <div class="flex items-center justify-between text-xs font-semibold">
-                                    <div class="flex items-center gap-1.5">
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-extrabold"
-                                              :class="item.is_optimal ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' : 'bg-rose-50 text-rose-700 border border-rose-200/60'">
-                                            <i class="fa-solid" :class="item.is_optimal ? 'fa-circle-check text-[9px]' : 'fa-triangle-exclamation text-[9px]'"></i>
-                                            <span x-text="'FCR ' + item.fcr"></span>
-                                            <span class="text-[9px] font-medium opacity-80" x-show="item.fcr_target" x-text="'(Ideal: ' + item.fcr_target + ')'"></span>
-                                        </span>
-                                    </div>
-                                    <span class="text-[10px] font-bold text-slate-500" x-text="'Target: ' + item.target_format + ' kg (' + item.target_percent + '%)'"></span>
+                                    <span class="text-[10px] text-slate-500 font-bold" x-text="'Target Panen: ' + item.target_format + ' kg'"></span>
+                                    <span class="text-[10px] font-bold text-sky-700" x-text="item.target_percent + '%'"></span>
                                 </div>
-                                <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-1.5">
+                                <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-1">
                                     <div class="bg-[#0055CC] h-full rounded-full transition-all" :style="'width: ' + item.target_percent + '%'"></div>
                                 </div>
                             </div>
@@ -603,7 +780,7 @@
 
     </div>
 
-    <!-- Modal Detail Batch Pembesaran (Dengan Tabel Bibit Hatchery Asal) -->
+    <!-- Modal Detail Batch Pembesaran (Dengan 4 FCR & Analisis Finansial) -->
     <div x-show="detailModalOpen" 
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0 scale-95"
@@ -615,7 +792,7 @@
          style="display: none;">
         
         <div @click.outside="detailModalOpen = false" 
-             class="bg-white w-full max-w-3xl rounded-3xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[90vh]">
+             class="bg-white w-full max-w-4xl rounded-3xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[90vh]">
             
             <!-- Modal Header Solid Navy -->
             <div class="p-6 bg-[#051B44] text-white flex items-center justify-between">
@@ -668,32 +845,112 @@
                     </div>
                 </div>
 
-                <!-- Metrik Biomassa, Target & FCR Banner -->
+                <!-- SECTION 1: 4 FORMULA FCR BUDIDAYA STANDAR -->
                 <div class="p-4 bg-slate-900 text-white rounded-2xl space-y-3">
-                    <div class="grid grid-cols-3 gap-2 text-center">
-                        <div class="p-2 bg-white/10 rounded-xl">
-                            <span class="text-[9px] uppercase tracking-wider text-slate-300 font-bold block">BIOMASSA SAAT INI</span>
-                            <span class="text-base font-extrabold text-emerald-400 mt-0.5 block" x-text="selectedBatch?.biomassa_format + ' kg'"></span>
+                    <div class="flex items-center justify-between border-b border-white/10 pb-2.5">
+                        <div class="flex items-center gap-2">
+                            <div class="w-7 h-7 rounded-xl bg-sky-500/30 text-sky-300 flex items-center justify-center text-xs">
+                                <i class="fa-solid fa-calculator"></i>
+                            </div>
+                            <div>
+                                <span class="font-extrabold text-xs text-white block">Analisis Efisiensi Pakan (4 Tipe FCR)</span>
+                                <span class="text-[10px] text-slate-400">Metrik standar akuakultur terintegrasi pakan &amp; pertumbuhan</span>
+                            </div>
                         </div>
-                        <div class="p-2 bg-white/10 rounded-xl">
-                            <span class="text-[9px] uppercase tracking-wider text-slate-300 font-bold block">TARGET PANEN</span>
-                            <span class="text-base font-extrabold text-sky-300 mt-0.5 block" x-text="selectedBatch?.target_format + ' kg'"></span>
+                        <span class="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold"
+                              :class="selectedBatch?.is_optimal ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'"
+                              x-text="selectedBatch?.fcr_status_text || (selectedBatch?.is_optimal ? 'Optimal (Sesuai SOP)' : 'Tinggi (Di Luar SOP)')">
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-left">
+                        <!-- FCR Kumulatif / Running -->
+                        <div class="p-2.5 bg-white/10 rounded-xl border border-white/5 space-y-1">
+                            <span class="text-[9px] uppercase tracking-wider text-sky-300 font-extrabold block">1. FCR KUMULATIF</span>
+                            <span class="text-base font-extrabold text-white block" x-text="selectedBatch?.fcr_kumulatif || '-'"></span>
+                            <span class="text-[9px] text-slate-300 block leading-tight">Akumulasi pakan s.d. hari ini / pertambahan biomassa</span>
                         </div>
-                        <div class="p-2 bg-white/10 rounded-xl">
-                            <span class="text-[9px] uppercase tracking-wider text-slate-300 font-bold block">FCR AKTUAL (IDEAL)</span>
-                            <span class="text-base font-extrabold text-amber-300 mt-0.5 block" x-text="selectedBatch?.fcr + (selectedBatch?.fcr_target ? ' (' + selectedBatch?.fcr_target + ')' : '')"></span>
+
+                        <!-- FCR Komersial -->
+                        <div class="p-2.5 bg-white/10 rounded-xl border border-white/5 space-y-1">
+                            <span class="text-[9px] uppercase tracking-wider text-emerald-300 font-extrabold block">2. FCR KOMERSIAL</span>
+                            <span class="text-base font-extrabold text-white block" x-text="selectedBatch?.fcr_komersial || '-'"></span>
+                            <span class="text-[9px] text-slate-300 block leading-tight">Saat panen: Total Pakan / Net Panen</span>
+                        </div>
+
+                        <!-- FCR Biologis -->
+                        <div class="p-2.5 bg-white/10 rounded-xl border border-white/5 space-y-1">
+                            <span class="text-[9px] uppercase tracking-wider text-indigo-300 font-extrabold block">3. FCR BIOLOGIS</span>
+                            <span class="text-base font-extrabold text-white block" x-text="selectedBatch?.fcr_biologis || '-'"></span>
+                            <span class="text-[9px] text-slate-300 block leading-tight">Memperhitungkan bobot ikan mortalitas</span>
+                        </div>
+
+                        <!-- Target Ideal Spesies -->
+                        <div class="p-2.5 bg-white/10 rounded-xl border border-white/5 space-y-1">
+                            <span class="text-[9px] uppercase tracking-wider text-amber-300 font-extrabold block">4. STANDAR SOP</span>
+                            <span class="text-base font-extrabold text-white block" x-text="selectedBatch?.fcr_target || '-'"></span>
+                            <span class="text-[9px] text-slate-300 block leading-tight">Standar FCR ideal master data ikan</span>
                         </div>
                     </div>
 
                     <!-- Progress Capaian Target -->
-                    <div>
+                    <div class="pt-1 border-t border-white/10">
                         <div class="flex items-center justify-between text-[11px] font-bold mb-1">
-                            <span class="text-slate-300">Capaian Target Panen</span>
+                            <span class="text-slate-300">Biomassa Saat Ini: <strong class="text-white" x-text="selectedBatch?.biomassa_format + ' kg'"></strong> / Target Panen: <strong class="text-sky-300" x-text="selectedBatch?.target_format + ' kg'"></strong></span>
                             <span class="text-emerald-400" x-text="selectedBatch?.target_percent + '%'"></span>
                         </div>
                         <div class="w-full bg-white/20 h-2 rounded-full overflow-hidden">
                             <div class="bg-gradient-to-r from-sky-400 to-emerald-400 h-full rounded-full transition-all"
                                  :style="'width: ' + selectedBatch?.target_percent + '%'"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 2: ANALISIS FINANSIAL & PROFITABILITAS KOLAM -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-4 space-y-3">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                        <div class="flex items-center gap-2">
+                            <div class="w-7 h-7 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs">
+                                <i class="fa-solid fa-coins"></i>
+                            </div>
+                            <div>
+                                <span class="font-extrabold text-xs text-slate-900 block">Analisis Finansial &amp; Profitabilitas Kolam</span>
+                                <span class="text-[10px] text-slate-400">Biaya pakan, bibit, operasional vs estimasi omset panen</span>
+                            </div>
+                        </div>
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold"
+                              :class="(selectedBatch?.laba_rugi || 0) >= 0 ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-rose-100 text-rose-800 border border-rose-200'"
+                              x-text="(selectedBatch?.laba_rugi || 0) >= 0 ? 'PROYEKSI LABA' : 'PROYEKSI RUGI'">
+                        </span>
+                    </div>
+
+                    <!-- 4-Kolom Rincian Biaya & Laba -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
+                        <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-100">
+                            <span class="text-[9px] uppercase tracking-wider text-slate-400 font-bold block">BIAYA PAKAN</span>
+                            <span class="font-extrabold text-slate-900 text-xs block mt-0.5" x-text="selectedBatch?.biaya_pakan_format || 'Rp 0'"></span>
+                            <span class="text-[9px] text-slate-500" x-text="(selectedBatch?.total_pakan_kg || '0') + ' kg pakan'"></span>
+                        </div>
+
+                        <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-100">
+                            <span class="text-[9px] uppercase tracking-wider text-slate-400 font-bold block">BIAYA BIBIT</span>
+                            <span class="font-extrabold text-slate-900 text-xs block mt-0.5" x-text="selectedBatch?.biaya_bibit_format || 'Rp 0'"></span>
+                            <span class="text-[9px] text-slate-500" x-text="selectedBatch?.asal_bibit === 'beli_luar' ? 'Beli Luar' : 'Hatchery Internal'"></span>
+                        </div>
+
+                        <div class="p-2.5 bg-sky-50/60 rounded-xl border border-sky-100">
+                            <span class="text-[9px] uppercase tracking-wider text-sky-800 font-bold block">ESTIMASI OMSET</span>
+                            <span class="font-extrabold text-[#0B2570] text-xs block mt-0.5" x-text="selectedBatch?.pendapatan_format || 'Rp 0'"></span>
+                            <span class="text-[9px] text-sky-700" x-text="(selectedBatch?.harga_jual_format || 'Rp 0') + '/kg'"></span>
+                        </div>
+
+                        <div class="p-2.5 rounded-xl border"
+                             :class="(selectedBatch?.laba_rugi || 0) >= 0 ? 'bg-emerald-50/80 border-emerald-200 text-emerald-900' : 'bg-rose-50/80 border-rose-200 text-rose-900'">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[9px] uppercase tracking-wider font-bold block" :class="(selectedBatch?.laba_rugi || 0) >= 0 ? 'text-emerald-700' : 'text-rose-700'">LABA / RUGI</span>
+                                <span class="text-[9px] font-extrabold" x-text="(selectedBatch?.margin_percent || 0) + '% Margin'"></span>
+                            </div>
+                            <span class="font-black text-xs block mt-0.5" x-text="selectedBatch?.laba_rugi_format || 'Rp 0'"></span>
                         </div>
                     </div>
                 </div>
@@ -828,7 +1085,7 @@
          x-transition:leave="transition ease-in duration-150"
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0"
-         class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4"
+         class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto"
          style="display: none;">
         
         <div @click.outside="harvestConfirmModalOpen = false" 
@@ -839,138 +1096,148 @@
              x-transition:leave="transition ease-in duration-150"
              x-transition:leave-start="opacity-100 scale-100 translate-y-0"
              x-transition:leave-end="opacity-0 scale-95 translate-y-3"
-             class="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-slate-100 p-6 space-y-4 text-center">
+             class="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-slate-100 flex flex-col max-h-[92vh] my-auto overflow-hidden">
             
-            <div class="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 mx-auto flex items-center justify-center text-2xl shadow-xs">
-                <i class="fa-solid fa-boxes-packing"></i>
-            </div>
-
-            <div class="space-y-1 text-center">
-                <span class="px-3 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-100 text-emerald-800 inline-block">
-                    Input Hasil Panen &amp; Alokasi Surplus
-                </span>
-                <h3 class="text-lg font-extrabold text-slate-900">Selesaikan Panen &amp; Pindahkan Surplus</h3>
-                <p class="text-xs text-slate-600 font-medium">
-                    Batch <strong class="text-slate-900" x-text="selectedBatchToHarvest?.id"></strong> di <strong class="text-slate-900" x-text="selectedBatchToHarvest?.nama_kolam"></strong> (<span x-text="selectedBatchToHarvest?.jenis_ikan"></span>)
-                </p>
-            </div>
-
-            <!-- Card 1: Kebutuhan Order / Biomassa Kolam -->
-            <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 text-left space-y-2 text-xs">
-                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block">Kebutuhan Target / Pesanan</span>
-                <div class="grid grid-cols-2 gap-2">
-                    <div class="p-2.5 bg-white rounded-xl border border-slate-200">
-                        <span class="text-[9px] font-extrabold uppercase text-slate-400 block">STOK BIOMASSA KOLAM</span>
-                        <span class="font-extrabold text-slate-800 text-xs" x-text="(selectedBatchToHarvest?.biomassa_format || '0') + ' kg'"></span>
-                    </div>
-                    <div class="p-2.5 bg-white rounded-xl border" :class="selectedBatchToHarvest?.order_target_kg > 0 ? 'border-sky-300 bg-sky-50/50' : 'border-slate-200'">
-                        <span class="text-[9px] font-extrabold uppercase block" :class="selectedBatchToHarvest?.order_target_kg > 0 ? 'text-sky-700' : 'text-slate-400'">
-                            <span x-text="selectedBatchToHarvest?.order_target_kg > 0 ? 'PESANAN MITRA AKTIF' : 'TARGET PANEN SIKLUS'"></span>
-                        </span>
-                        <span class="font-black text-xs" :class="selectedBatchToHarvest?.order_target_kg > 0 ? 'text-sky-900' : 'text-slate-800'"
-                              x-text="selectedBatchToHarvest?.order_target_kg > 0 ? (selectedBatchToHarvest.order_target_kg + ' kg (' + selectedBatchToHarvest.order_mitra + ')') : ((selectedBatchToHarvest?.target_format || selectedBatchToHarvest?.biomassa_format || '0') + ' kg')"></span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Card 2: Input Realisasi Total Berat Panen yang Diangkat -->
-            <div class="text-left bg-emerald-50/70 p-4 rounded-2xl border border-emerald-200 space-y-2.5">
-                <div class="flex items-center justify-between">
-                    <label class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-950 block">
-                        TOTAL HASIL PANEN TIMBANG RIIL (KG) *
-                    </label>
-                    <span class="text-[9px] font-bold text-emerald-700 bg-white px-2 py-0.5 rounded-md border border-emerald-200">Wajib Diisi</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <input type="number" step="0.1" min="0.1" x-model="harvestForm.jumlah_panen_kg"
-                           @input="onHarvestKgInput()"
-                           placeholder="Ketik total kg panen (misal: 150)"
-                           class="flex-1 px-4 py-2.5 rounded-xl border border-emerald-300 text-sm font-extrabold text-emerald-900 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-2xs">
-                    <span class="px-3.5 py-2.5 bg-white border border-emerald-200 rounded-xl text-xs font-black text-emerald-800">Kg</span>
-                </div>
-                
-                <!-- Quick buttons -->
-                <div class="flex items-center gap-1.5 pt-0.5 text-[10px]">
-                    <span class="text-slate-400 font-bold">Pintasan:</span>
-                    <button type="button" @click="harvestForm.jumlah_panen_kg = (selectedBatchToHarvest?.order_target_kg > 0 ? selectedBatchToHarvest.order_target_kg : (selectedBatchToHarvest?.target_panen_kg || 100)); onHarvestKgInput()"
-                            class="px-2 py-0.5 rounded-md bg-white border border-emerald-200 text-emerald-800 font-bold hover:bg-emerald-100 transition-colors">
-                        Sesuai Target (<span x-text="(selectedBatchToHarvest?.order_target_kg > 0 ? selectedBatchToHarvest.order_target_kg : (selectedBatchToHarvest?.target_panen_kg || 100)) + ' kg'"></span>)
-                    </button>
-                    <button type="button" @click="harvestForm.jumlah_panen_kg = (selectedBatchToHarvest?.biomassa_est || 150); onHarvestKgInput()"
-                            class="px-2 py-0.5 rounded-md bg-white border border-emerald-200 text-emerald-800 font-bold hover:bg-emerald-100 transition-colors">
-                        Sesuai Biomassa (<span x-text="(selectedBatchToHarvest?.biomassa_est || 150) + ' kg'"></span>)
-                    </button>
-                </div>
-            </div>
-
-            <!-- Card 3: Status Surplus & Pilihan Kolam Stok Tujuan -->
-            <div class="text-left bg-white p-4 rounded-2xl border border-slate-200 space-y-3 shadow-xs">
-                <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 block">ALOKASI &amp; TUJUAN PEMINDAHAN SURPLUS</span>
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black"
-                          :class="Number(harvestForm.surplus_kg || 0) > 0 ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-100 text-slate-600'"
-                          x-text="Number(harvestForm.surplus_kg || 0) > 0 ? ('Surplus: +' + harvestForm.surplus_kg + ' kg') : 'Tanpa Surplus'"></span>
-                </div>
-
-                <!-- JIKA ADA SURPLUS > 0 -->
-                <template x-if="Number(harvestForm.surplus_kg || 0) > 0">
-                    <div class="space-y-3">
-                        <div class="p-2.5 bg-emerald-50 rounded-xl border border-emerald-200 text-[11px] text-emerald-900 font-medium">
-                            <div class="font-extrabold text-emerald-800 flex items-center gap-1.5 mb-0.5">
-                                <i class="fa-solid fa-circle-check text-emerald-600"></i>
-                                <span>Terdapat Kelebihan (Surplus) Panen Sebesar +<span x-text="harvestForm.surplus_kg"></span> Kg!</span>
-                            </div>
-                            <span>Hasil panen (<span x-text="harvestForm.jumlah_panen_kg"></span> kg) melebihi kebutuhan (<span x-text="getTargetRefKg()"></span> kg). Sisa kelebihan wajib dipindahkan ke kolam penampungan / kolam stok.</span>
-                        </div>
-
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 block">
-                                PILIH KOLAM PENAMPUNGAN / KOLAM STOK TUJUAN *
-                            </label>
-                            <select x-model="harvestForm.id_kolam_stok" 
-                                    class="w-full px-3 py-2.5 rounded-xl border border-sky-300 text-xs font-bold text-slate-800 bg-sky-50/40 focus:outline-none focus:ring-2 focus:ring-sky-500">
-                                <option value="">-- Pilih Kolam Penampungan / Kolam Stok --</option>
-                                <template x-for="k in kolamStokList" :key="k.id_kolam">
-                                    <option :value="k.id_kolam" x-text="k.label"></option>
-                                </template>
-                            </select>
-                        </div>
-
-                        <div class="flex items-center gap-2">
-                            <div class="flex-1">
-                                <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 block mb-1">
-                                    JUMLAH KG SURPLUS DITAMPUNG
-                                </label>
-                                <input type="number" step="0.1" min="0" x-model="harvestForm.surplus_kg"
-                                       placeholder="0.0"
-                                       class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-extrabold text-emerald-700 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
-                            </div>
-                        </div>
-
-                        <p class="text-[10px] text-slate-500 leading-relaxed">
-                            <i class="fa-solid fa-circle-info text-sky-600 mr-1"></i>
-                            Ikan surplus sebanyak <strong class="text-emerald-700" x-text="harvestForm.surplus_kg + ' kg'"></strong> akan otomatis ditampung di kolam stok terpilih, dan kolam <strong x-text="selectedBatchToHarvest?.nama_kolam"></strong> akan <strong>dikosongkan</strong>.
-                        </p>
-                    </div>
-                </template>
-
-                <!-- JIKA TANPA SURPLUS (PAS / KURANG) -->
-                <template x-if="Number(harvestForm.surplus_kg || 0) <= 0">
-                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-[11px] text-slate-600 space-y-1">
-                        <div class="flex items-center gap-1.5 font-bold text-slate-800">
-                            <i class="fa-solid fa-circle-info text-sky-600"></i>
-                            <span x-text="Number(harvestForm.jumlah_panen_kg || 0) > 0 ? 'Hasil Panen Pas / Tanpa Surplus Ke Kolam Stok' : 'Silakan Masukkan Total Kg Hasil Panen Terlebih Dahulu'"></span>
-                        </div>
-                        <p class="text-[10px] text-slate-400">
-                            Seluruh hasil panen dialokasikan untuk pesanan. Kolam <strong class="text-slate-700" x-text="selectedBatchToHarvest?.nama_kolam"></strong> akan otomatis dikosongkan setelah panen diselesaikan.
-                        </p>
-                    </div>
-                </template>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3 pt-1">
+            <!-- Modal Header (Sticky / Fixed) -->
+            <div class="p-4 sm:p-5 border-b border-slate-100 text-center relative shrink-0 bg-slate-50/50">
                 <button type="button" @click="harvestConfirmModalOpen = false" 
-                        class="w-full py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition-colors">
+                        class="absolute top-3.5 right-3.5 w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center transition-colors">
+                    <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+                <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 mx-auto flex items-center justify-center text-xl shadow-xs mb-2">
+                    <i class="fa-solid fa-boxes-packing"></i>
+                </div>
+                <div class="space-y-0.5 text-center">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-100 text-emerald-800 inline-block mb-1">
+                        Input Hasil Panen &amp; Alokasi Surplus
+                    </span>
+                    <h3 class="text-base sm:text-lg font-extrabold text-slate-900">Selesaikan Panen &amp; Pindahkan Surplus</h3>
+                    <p class="text-xs text-slate-500 font-medium">
+                        Batch <strong class="text-slate-900" x-text="selectedBatchToHarvest?.id"></strong> di <strong class="text-slate-900" x-text="selectedBatchToHarvest?.nama_kolam"></strong> (<span x-text="selectedBatchToHarvest?.jenis_ikan"></span>)
+                    </p>
+                </div>
+            </div>
+
+            <!-- Modal Body (Scrollable) -->
+            <div class="p-4 sm:p-5 overflow-y-auto space-y-3.5 text-center">
+                <!-- Card 1: Kebutuhan Order / Biomassa Kolam -->
+                <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 text-left space-y-2 text-xs">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block">Kebutuhan Target / Pesanan</span>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="p-2.5 bg-white rounded-xl border border-slate-200">
+                            <span class="text-[9px] font-extrabold uppercase text-slate-400 block">STOK BIOMASSA KOLAM</span>
+                            <span class="font-extrabold text-slate-800 text-xs" x-text="(selectedBatchToHarvest?.biomassa_format || '0') + ' kg'"></span>
+                        </div>
+                        <div class="p-2.5 bg-white rounded-xl border" :class="selectedBatchToHarvest?.order_target_kg > 0 ? 'border-sky-300 bg-sky-50/50' : 'border-slate-200'">
+                            <span class="text-[9px] font-extrabold uppercase block" :class="selectedBatchToHarvest?.order_target_kg > 0 ? 'text-sky-700' : 'text-slate-400'">
+                                <span x-text="selectedBatchToHarvest?.order_target_kg > 0 ? 'PESANAN MITRA AKTIF' : 'TARGET PANEN SIKLUS'"></span>
+                            </span>
+                            <span class="font-black text-xs" :class="selectedBatchToHarvest?.order_target_kg > 0 ? 'text-sky-900' : 'text-slate-800'"
+                                  x-text="selectedBatchToHarvest?.order_target_kg > 0 ? (selectedBatchToHarvest.order_target_kg + ' kg (' + selectedBatchToHarvest.order_mitra + ')') : ((selectedBatchToHarvest?.target_format || selectedBatchToHarvest?.biomassa_format || '0') + ' kg')"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Input Realisasi Total Berat Panen yang Diangkat -->
+                <div class="text-left bg-emerald-50/70 p-4 rounded-2xl border border-emerald-200 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-950 block">
+                            TOTAL HASIL PANEN TIMBANG RIIL (KG) *
+                        </label>
+                        <span class="text-[9px] font-bold text-emerald-700 bg-white px-2 py-0.5 rounded-md border border-emerald-200">Wajib Diisi</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="number" step="0.1" min="0.1" x-model="harvestForm.jumlah_panen_kg"
+                               @input="onHarvestKgInput()"
+                               placeholder="Ketik total kg panen (misal: 150)"
+                               class="flex-1 px-4 py-2.5 rounded-xl border border-emerald-300 text-sm font-extrabold text-emerald-900 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-2xs">
+                        <span class="px-3.5 py-2.5 bg-white border border-emerald-200 rounded-xl text-xs font-black text-emerald-800">Kg</span>
+                    </div>
+                    
+                    <!-- Quick buttons -->
+                    <div class="flex items-center gap-1.5 pt-0.5 text-[10px] flex-wrap">
+                        <span class="text-slate-400 font-bold">Pintasan:</span>
+                        <button type="button" @click="harvestForm.jumlah_panen_kg = (selectedBatchToHarvest?.order_target_kg > 0 ? selectedBatchToHarvest.order_target_kg : (selectedBatchToHarvest?.target_panen_kg || 100)); onHarvestKgInput()"
+                                class="px-2 py-0.5 rounded-md bg-white border border-emerald-200 text-emerald-800 font-bold hover:bg-emerald-100 transition-colors">
+                            Sesuai Target (<span x-text="(selectedBatchToHarvest?.order_target_kg > 0 ? selectedBatchToHarvest.order_target_kg : (selectedBatchToHarvest?.target_panen_kg || 100)) + ' kg'"></span>)
+                        </button>
+                        <button type="button" @click="harvestForm.jumlah_panen_kg = (selectedBatchToHarvest?.biomassa_est || 150); onHarvestKgInput()"
+                                class="px-2 py-0.5 rounded-md bg-white border border-emerald-200 text-emerald-800 font-bold hover:bg-emerald-100 transition-colors">
+                            Sesuai Biomassa (<span x-text="(selectedBatchToHarvest?.biomassa_est || 150) + ' kg'"></span>)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Card 3: Status Surplus & Pilihan Kolam Stok Tujuan -->
+                <div class="text-left bg-white p-4 rounded-2xl border border-slate-200 space-y-3 shadow-xs">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 block">ALOKASI &amp; TUJUAN PEMINDAHAN SURPLUS</span>
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black"
+                              :class="Number(harvestForm.surplus_kg || 0) > 0 ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-100 text-slate-600'"
+                              x-text="Number(harvestForm.surplus_kg || 0) > 0 ? ('Surplus: +' + harvestForm.surplus_kg + ' kg') : 'Tanpa Surplus'"></span>
+                    </div>
+
+                    <!-- JIKA ADA SURPLUS > 0 -->
+                    <template x-if="Number(harvestForm.surplus_kg || 0) > 0">
+                        <div class="space-y-3">
+                            <div class="p-2.5 bg-emerald-50 rounded-xl border border-emerald-200 text-[11px] text-emerald-900 font-medium">
+                                <div class="font-extrabold text-emerald-800 flex items-center gap-1.5 mb-0.5">
+                                    <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                                    <span>Terdapat Kelebihan (Surplus) Panen Sebesar +<span x-text="harvestForm.surplus_kg"></span> Kg!</span>
+                                </div>
+                                <span>Hasil panen (<span x-text="harvestForm.jumlah_panen_kg"></span> kg) melebihi kebutuhan (<span x-text="getTargetRefKg()"></span> kg). Sisa kelebihan wajib dipindahkan ke kolam penampungan / kolam stok.</span>
+                            </div>
+
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 block">
+                                    PILIH KOLAM PENAMPUNGAN / KOLAM STOK TUJUAN *
+                                </label>
+                                <select x-model="harvestForm.id_kolam_stok" 
+                                        class="w-full px-3 py-2.5 rounded-xl border border-sky-300 text-xs font-bold text-slate-800 bg-sky-50/40 focus:outline-none focus:ring-2 focus:ring-sky-500">
+                                    <option value="">-- Pilih Kolam Penampungan / Kolam Stok --</option>
+                                    <template x-for="k in kolamStokList" :key="k.id_kolam">
+                                        <option :value="k.id_kolam" x-text="k.label"></option>
+                                    </template>
+                                </select>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <div class="flex-1">
+                                    <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 block mb-1">
+                                        JUMLAH KG SURPLUS DITAMPUNG
+                                    </label>
+                                    <input type="number" step="0.1" min="0" x-model="harvestForm.surplus_kg"
+                                           placeholder="0.0"
+                                           class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-extrabold text-emerald-700 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
+                                </div>
+                            </div>
+
+                            <p class="text-[10px] text-slate-500 leading-relaxed">
+                                <i class="fa-solid fa-circle-info text-sky-600 mr-1"></i>
+                                Ikan surplus sebanyak <strong class="text-emerald-700" x-text="harvestForm.surplus_kg + ' kg'"></strong> akan otomatis ditampung di kolam stok terpilih, dan kolam <strong x-text="selectedBatchToHarvest?.nama_kolam"></strong> akan <strong>dikosongkan</strong>.
+                            </p>
+                        </div>
+                    </template>
+
+                    <!-- JIKA TANPA SURPLUS (PAS / KURANG) -->
+                    <template x-if="Number(harvestForm.surplus_kg || 0) <= 0">
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-[11px] text-slate-600 space-y-1">
+                            <div class="flex items-center gap-1.5 font-bold text-slate-800">
+                                <i class="fa-solid fa-circle-info text-sky-600"></i>
+                                <span x-text="Number(harvestForm.jumlah_panen_kg || 0) > 0 ? 'Hasil Panen Pas / Tanpa Surplus Ke Kolam Stok' : 'Silakan Masukkan Total Kg Hasil Panen Terlebih Dahulu'"></span>
+                            </div>
+                            <p class="text-[10px] text-slate-400">
+                                Seluruh hasil panen dialokasikan untuk pesanan. Kolam <strong class="text-slate-700" x-text="selectedBatchToHarvest?.nama_kolam"></strong> akan otomatis dikosongkan setelah panen diselesaikan.
+                            </p>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Modal Footer (Fixed at Bottom) -->
+            <div class="p-4 sm:px-5 bg-slate-50 border-t border-slate-100 rounded-b-3xl grid grid-cols-2 gap-3 shrink-0">
+                <button type="button" @click="harvestConfirmModalOpen = false" 
+                        class="w-full py-2.5 rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-slate-100 font-bold text-xs transition-colors">
                     Batalkan
                 </button>
                 <button type="button" @click="executeFinishHarvest()" :disabled="isSubmitting || !harvestForm.jumlah_panen_kg || Number(harvestForm.jumlah_panen_kg) <= 0 || (Number(harvestForm.surplus_kg || 0) > 0 && !harvestForm.id_kolam_stok)"
@@ -1036,10 +1303,10 @@
          x-transition:leave="transition ease-in duration-200"
          x-transition:leave-start="opacity-100 scale-100"
          x-transition:leave-end="opacity-0 scale-95"
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto"
          style="display: none;">
         
-        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 border border-slate-200" @click.outside="kolamModalOpen = false">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 border border-slate-200 my-auto" @click.outside="kolamModalOpen = false">
             <!-- Modal Header -->
             <div class="flex items-center justify-between border-b border-slate-100 pb-4">
                 <div class="flex items-center gap-3">
@@ -1139,13 +1406,15 @@ function pembesaranComponent() {
             id_pembesaran: null,
             id_batch_pembibitan: '',
             biayaBeliBibit: '',
+            jumlahBibit: 10000,
+            survivalRate: 85,
             kolam: '',
             tglTebar: new Date().toISOString().split('T')[0],
             estTglPanen: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
             jenisIkan: '',
-            biomassaEst: 1200,
-            targetPanenKg: 1500,
-            fcr: 1.15,
+            biomassaEst: '',
+            targetPanenKg: '',
+            fcr: '',
             statusSiklus: 'berjalan'
         },
 
@@ -1163,6 +1432,64 @@ function pembesaranComponent() {
         get selectedPembibitan() {
             if (!this.form.id_batch_pembibitan) return null;
             return this.availablePembibitan.find(b => b.id_batch == this.form.id_batch_pembibitan) || null;
+        },
+
+        get targetKonsumsiEkorKg() {
+            const sop = this.currentIkanSop;
+            if (sop && sop.avg_ekor_per_kg) return Number(sop.avg_ekor_per_kg);
+            if (sop && sop.target_konsumsi) {
+                const matches = sop.target_konsumsi.match(/\d+(?:[\.,]\d+)?/g);
+                if (matches && matches.length > 0) {
+                    const nums = matches.map(v => parseFloat(v.replace(',', '.')));
+                    return Math.round((nums.reduce((a, b) => a + b, 0) / nums.length) * 10) / 10;
+                }
+            }
+            if (this.form.jenisIkan) {
+                const j = this.form.jenisIkan.toLowerCase();
+                if (j.includes('lele')) return 9.0;
+                if (j.includes('nila')) return 4.0;
+                if (j.includes('bawal')) return 4.0;
+                if (j.includes('mas')) return 3.5;
+                if (j.includes('patin')) return 2.5;
+                if (j.includes('gurame') || j.includes('gurami')) return 2.5;
+                if (j.includes('tawes')) return 5.0;
+                if (j.includes('nilem')) return 10.0;
+            }
+            return 4.0;
+        },
+
+        get calculatedTargetLive() {
+            const bibit = Number(this.form.jumlahBibit) || 0;
+            const sr = Number(this.form.survivalRate) || 85;
+            const ekorPerKg = this.targetKonsumsiEkorKg;
+            const ekorHidup = Math.round(bibit * (sr / 100));
+            const targetKg = ekorPerKg > 0 ? (Math.round((ekorHidup / ekorPerKg) * 10) / 10) : 0;
+            const fcrMin = this.currentIkanSop ? Number(this.currentIkanSop.fcr_min || 1.1) : 1.1;
+            const estPakanKg = Math.round(targetKg * fcrMin * 10) / 10;
+            const estBiomassaAwal = Math.round(bibit * 0.015 * 10) / 10;
+            
+            return {
+                bibit: bibit,
+                sr: sr,
+                ekorPerKg: ekorPerKg,
+                ekorHidup: ekorHidup,
+                targetKg: targetKg,
+                fcrMin: fcrMin,
+                estPakanKg: estPakanKg,
+                estBiomassaAwal: estBiomassaAwal
+            };
+        },
+
+        recalculateTargetPanen(forceOverwrite = true) {
+            const calc = this.calculatedTargetLive;
+            if (calc.targetKg > 0 && (forceOverwrite || !this.form.targetPanenKg)) {
+                this.form.targetPanenKg = calc.targetKg;
+            }
+            if (calc.estBiomassaAwal > 0 && (forceOverwrite || !this.form.biomassaEst)) {
+                if (!this.form.id_batch_pembibitan) {
+                    this.form.biomassaEst = calc.estBiomassaAwal;
+                }
+            }
         },
 
         get ikanOptions() {
@@ -1291,6 +1618,24 @@ function pembesaranComponent() {
             this.detailModalOpen = true;
         },
 
+        get currentIkanSop() {
+            if (!this.form.jenisIkan) return null;
+            const clean = this.form.jenisIkan.replace(/^Ikan\s+/i, '').trim().toLowerCase();
+            return (this.ikans || []).find(ik => {
+                const ikClean = (ik.nama_ikan || '').replace(/^Ikan\s+/i, '').trim().toLowerCase();
+                return ikClean === clean || ikClean.includes(clean) || clean.includes(ikClean);
+            }) || null;
+        },
+
+        onJenisIkanChange() {
+            const sop = this.currentIkanSop;
+            if (sop && sop.fcr_min) {
+                this.form.fcr = Number(sop.fcr_min);
+            }
+            this.calculateEstPanen();
+            this.recalculateTargetPanen(true);
+        },
+
         onPembibitanChange() {
             if (!this.form.id_batch_pembibitan) return;
             const sel = this.availablePembibitan.find(b => b.id_batch == this.form.id_batch_pembibitan);
@@ -1301,19 +1646,38 @@ function pembesaranComponent() {
                 const matchedOption = this.ikanOptions.find(o => o.value.toLowerCase() === clean.toLowerCase());
                 this.form.jenisIkan = matchedOption ? matchedOption.value : clean;
 
+                if (sel.sisa_ekor && Number(sel.sisa_ekor) > 0) {
+                    this.form.jumlahBibit = Number(sel.sisa_ekor);
+                }
                 if (sel.est_biomassa && Number(sel.est_biomassa) > 0) {
                     this.form.biomassaEst = Number(sel.est_biomassa);
                 } else if (sel.sisa_ekor && Number(sel.sisa_ekor) > 0) {
                     this.form.biomassaEst = Math.max(1, Math.round(Number(sel.sisa_ekor) * 0.02 * 10) / 10);
                 }
-                this.form.targetPanenKg = Math.round((Number(this.form.biomassaEst) || 100) * 1.5);
+                
+                this.onJenisIkanChange();
+                this.recalculateTargetPanen(true);
             }
         },
 
         calculateEstPanen() {
             if (!this.form.tglTebar) return;
             const tgl = new Date(this.form.tglTebar);
-            tgl.setDate(tgl.getDate() + 90);
+            const sop = this.currentIkanSop;
+            let months = 3;
+            if (sop && sop.bulan_panen_min) {
+                months = Number(sop.bulan_panen_min);
+            } else if (this.form.jenisIkan) {
+                const j = this.form.jenisIkan.toLowerCase();
+                if (j.includes('lele')) months = 2.5;
+                else if (j.includes('nila')) months = 3.5;
+                else if (j.includes('patin')) months = 5;
+                else if (j.includes('gurame') || j.includes('gurami')) months = 8;
+                else if (j.includes('mas')) months = 4;
+                else if (j.includes('bawal')) months = 4;
+            }
+            const days = Math.round(months * 30);
+            tgl.setDate(tgl.getDate() + days);
             this.form.estTglPanen = tgl.toISOString().split('T')[0];
         },
 
@@ -1327,11 +1691,14 @@ function pembesaranComponent() {
         openEdit(item) {
             this.formMode = 'edit';
             this.selectedBatch = item;
+            const bibitCount = item.jumlah_bibit || (item.target_panen_kg > 0 ? Math.round(item.target_panen_kg * 4 / 0.85) : 10000);
             this.form = {
                 id: item.id,
                 id_pembesaran: item.id_pembesaran,
                 id_batch_pembibitan: item.id_batch_pembibitan || '',
                 biayaBeliBibit: item.biaya_beli_bibit || 0,
+                jumlahBibit: bibitCount,
+                survivalRate: 85,
                 kolam: item.nama_kolam,
                 tglTebar: item.tgl_tebar || new Date().toISOString().split('T')[0],
                 estTglPanen: item.est_tgl_panen || (item.tgl_tebar ? new Date(new Date(item.tgl_tebar).getTime() + 90*86400000).toISOString().split('T')[0] : new Date(Date.now() + 90*86400000).toISOString().split('T')[0]),
@@ -1353,13 +1720,15 @@ function pembesaranComponent() {
                 id_pembesaran: null,
                 id_batch_pembibitan: '',
                 biayaBeliBibit: '',
+                jumlahBibit: 10000,
+                survivalRate: 85,
                 kolam: '',
                 tglTebar: today,
                 estTglPanen: defaultEst,
                 jenisIkan: '',
-                biomassaEst: 1200,
-                targetPanenKg: 1500,
-                fcr: 1.15,
+                biomassaEst: '',
+                targetPanenKg: '',
+                fcr: '',
                 statusSiklus: 'berjalan'
             };
         },
@@ -1498,7 +1867,7 @@ function pembesaranComponent() {
 
             const biomassaNum = Math.abs(Number(this.form.biomassaEst));
             const targetNum = Math.abs(Number(this.form.targetPanenKg));
-            const fcrNum = Math.abs(Number(this.form.fcr || 1.15));
+            const fcrNum = Number(this.form.fcr || (this.currentIkanSop ? this.currentIkanSop.fcr_min : 1.0));
             const statusSiklus = this.form.statusSiklus;
             const targetPercent = Math.min(100, Math.round((biomassaNum / targetNum) * 100));
 
@@ -1596,6 +1965,8 @@ function pembesaranComponent() {
                         id_kolam: this.form.kolam,
                         id_batch_pembibitan: this.form.id_batch_pembibitan || null,
                         biaya_beli_bibit: biayaBeliVal,
+                        jumlah_bibit: Number(this.form.jumlahBibit) || 0,
+                        survival_rate: Number(this.form.survivalRate) || 85,
                         jenis_ikan: this.form.jenisIkan,
                         tgl_tebar: this.form.tglTebar,
                         est_tgl_panen: this.form.estTglPanen,
@@ -1631,9 +2002,20 @@ function pembesaranComponent() {
                         biomassa_format: biomassaNum.toLocaleString('id-ID'),
                         target_panen_kg: targetNum,
                         target_format: targetNum.toLocaleString('id-ID'),
-                        target_percent: targetPercent,
                         fcr: fcrNum.toFixed(2),
+                        fcr_kumulatif: fcrNum.toFixed(2),
+                        fcr_komersial: fcrNum.toFixed(2),
+                        fcr_biologis: fcrNum.toFixed(2),
+                        fcr_target: '1.0 - 1.3',
                         is_optimal: fcrNum <= 1.25,
+                        total_pakan_kg: '0',
+                        biaya_pakan_format: 'Rp 0',
+                        biaya_bibit_format: 'Rp ' + Number(biayaBeliVal).toLocaleString('id-ID'),
+                        harga_jual_format: 'Rp 24.000',
+                        pendapatan_format: 'Rp ' + Math.round(biomassaNum * 24000).toLocaleString('id-ID'),
+                        laba_rugi: Math.round(biomassaNum * 24000) - biayaBeliVal,
+                        laba_rugi_format: ((Math.round(biomassaNum * 24000) - biayaBeliVal) >= 0 ? '+Rp ' : '-Rp ') + Math.abs(Math.round(biomassaNum * 24000) - biayaBeliVal).toLocaleString('id-ID'),
+                        margin_percent: Math.round(biomassaNum * 24000) > 0 ? Math.round(((Math.round(biomassaNum * 24000) - biayaBeliVal) / (biomassaNum * 24000)) * 100) : 0,
                         status_siklus: statusSiklus,
                         status_label: statusLabel,
                         status_class: statusClass,

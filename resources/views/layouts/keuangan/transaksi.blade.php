@@ -20,8 +20,34 @@
     </div>
     @endif
 
+    <!-- =========================================================================
+         KOP SURAT RESMI (HANYA MUNCUL SAAT CETAK / PRINT)
+         ========================================================================= -->
+    <div class="hidden print:block mb-6 pb-4 border-b-2 border-slate-900">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <img src="{{ asset('images/Logo aquafarm.png') }}" alt="Logo AMS" class="h-16 w-auto object-contain shrink-0">
+                <div>
+                    <h1 class="text-xl font-extrabold uppercase tracking-wide text-slate-900 leading-tight">AMS BUDIDAYA INDONESIA</h1>
+                    <p class="text-xs font-bold text-slate-700">Unit Bisnis Perikanan Terpadu & Akuakultur Modern Minapolitan</p>
+                    <p class="text-[10px] text-slate-500 leading-tight mt-0.5">Jl. Raya Minapolitan Perikanan No. 88, Jawa Barat | Telp: +62 812-8899-0011 | Email: finance@amsbudidaya.id</p>
+                </div>
+            </div>
+            <div class="text-right text-[10px] text-slate-600">
+                <div class="font-extrabold text-xs text-slate-900 uppercase">BUKU JURNAL KAS</div>
+                <div class="font-mono text-slate-700">No: JRN-KAS/{{ date('Ym') }}</div>
+                <div>Tgl Cetak: {{ \Carbon\Carbon::now()->translatedFormat('d F Y, H:i') }} WIB</div>
+                <div>Oleh: {{ Auth::user()->nama ?? 'Manajer AMS Budidaya' }}</div>
+            </div>
+        </div>
+        <div class="border-t border-slate-400 mt-3 pt-2 text-center">
+            <h2 class="text-base font-extrabold uppercase tracking-wider text-slate-900">BUKU MUTASI KAS OPERASIONAL BUDIDAYA</h2>
+            <p class="text-[11px] font-semibold text-slate-600">Rekapitulasi Arus Transaksi Masuk & Keluar Kas Operasional</p>
+        </div>
+    </div>
+
     <!-- Header Section -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="no-print flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
             <div class="flex items-center gap-2">
                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-sky-100 text-sky-700">Buku Kas & Jurnal</span>
@@ -30,6 +56,11 @@
             <p class="text-xs text-slate-500 font-medium mt-0.5">Catat transaksi pemasukan/pengeluaran kas operasional dan kelola riwayat mutasi kas.</p>
         </div>
         <div class="flex items-center gap-3">
+            <button onclick="window.print()"
+                    class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-bold text-xs shadow-2xs transition-all flex items-center gap-2 cursor-pointer">
+                <i class="fa-solid fa-print text-slate-400"></i>
+                <span>Cetak Jurnal Kas</span>
+            </button>
             <button @click="showForm ? (showForm = false) : openCreateForm()"
                     class="px-4 py-2 rounded-xl bg-[#051B44] hover:bg-navy-900 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-2 cursor-pointer">
                 <i class="fa-solid" :class="showForm ? 'fa-table-list' : 'fa-plus'"></i>
@@ -274,7 +305,7 @@
     <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden space-y-0">
         
         <!-- Filter and Search Bar -->
-        <div class="p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="no-print p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
                 <h3 class="text-base font-bold text-slate-900">Riwayat Mutasi Transaksi</h3>
                 <p class="text-xs text-slate-400 font-medium">Daftar lengkap seluruh arus transaksi kas operasional budidaya.</p>
@@ -282,10 +313,11 @@
 
             <div class="flex flex-wrap items-center gap-3">
                 <!-- Search Input -->
-                <div class="relative">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                <div class="relative flex items-center">
+                    <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs absolute left-3.5 pointer-events-none"></i>
                     <input type="text" x-model="searchQuery" placeholder="Cari keterangan / ref..." 
-                           class="pl-9 pr-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all w-52 sm:w-64">
+                           style="padding-left: 2.25rem !important;"
+                           class="pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all w-52 sm:w-64">
                 </div>
 
                 <!-- Type Filter -->
@@ -304,18 +336,18 @@
         </div>
 
         <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
+            <table class="w-full text-left border-collapse print:text-[10px]">
                 <thead>
-                    <tr class="bg-slate-50/70 border-b border-slate-100 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
-                        <th class="py-3.5 px-6">TANGGAL</th>
-                        <th class="py-3.5 px-6">DESKRIPSI &amp; REF</th>
-                        <th class="py-3.5 px-6">KATEGORI</th>
-                        <th class="py-3.5 px-6">ALOKASI KOLAM</th>
-                        <th class="py-3.5 px-6">NOMINAL</th>
-                        <th class="py-3.5 px-6 text-right">AKSI</th>
+                    <tr class="bg-slate-50/70 border-b border-slate-100 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider print:bg-slate-100 print:border-slate-300 print:text-slate-700">
+                        <th class="py-3.5 px-6 print:py-2 print:px-3">TANGGAL</th>
+                        <th class="py-3.5 px-6 print:py-2 print:px-3">DESKRIPSI &amp; REF</th>
+                        <th class="py-3.5 px-6 print:py-2 print:px-3">KATEGORI</th>
+                        <th class="py-3.5 px-6 print:py-2 print:px-3">ALOKASI KOLAM</th>
+                        <th class="py-3.5 px-6 print:py-2 print:px-3">NOMINAL</th>
+                        <th class="no-print py-3.5 px-6 text-right">AKSI</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
+                <tbody class="divide-y divide-slate-100 text-xs font-medium text-slate-700 print:divide-slate-200 print:text-[10px]">
 
                     <template x-if="filteredTransactions.length === 0">
                         <tr>
@@ -327,34 +359,38 @@
                     </template>
 
                     <template x-for="transaction in filteredTransactions" :key="transaction.raw_id || transaction.id">
-                        <tr class="hover:bg-slate-50/70 transition-colors">
-                            <td class="py-4 px-6 text-slate-500 font-semibold" x-text="transaction.tanggal"></td>
-                            <td class="py-4 px-6">
+                        <tr class="hover:bg-slate-50/70 transition-colors print:hover:bg-transparent">
+                            <td class="py-4 px-6 text-slate-500 font-semibold print:py-2 print:px-3" x-text="transaction.tanggal"></td>
+                            <td class="py-4 px-6 print:py-2 print:px-3">
                                 <div class="font-bold text-slate-900" x-text="transaction.keterangan || '-'"></div>
-                                <div class="text-[10px] text-slate-400 font-mono font-semibold mt-0.5" x-text="transaction.ref"></div>
+                                <div class="text-[10px] text-slate-400 font-mono font-semibold mt-0.5 print:text-slate-600" x-text="transaction.ref"></div>
                             </td>
-                            <td class="py-4 px-6">
-                                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold"
+                            <td class="py-4 px-6 print:py-2 print:px-3">
+                                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold print:border"
                                       :class="transaction.tipe === 'income' ? 'bg-[#C6F6D5] text-[#22543D]' : 'bg-[#E0F2FE] text-[#0284C7]'"
                                       x-text="transaction.kategori"></span>
                             </td>
-                            <td class="py-4 px-6 text-slate-500 font-medium" x-text="transaction.kolam"></td>
-                            <td class="py-4 px-6 font-extrabold" :class="transaction.tipe === 'income' ? 'text-emerald-600' : 'text-rose-600'"
+                            <td class="py-4 px-6 text-slate-600 font-semibold print:py-2 print:px-3" x-text="transaction.kolam || 'Tidak dialokasikan'"></td>
+                            <td class="py-4 px-6 font-extrabold print:py-2 print:px-3" :class="transaction.tipe === 'income' ? 'text-emerald-600' : 'text-rose-600'"
                                 x-text="(transaction.tipe === 'income' ? '+ ' : '- ') + formatCurrency(transaction.nominal)"></td>
-                            <td class="py-4 px-6 text-right">
-                                <div class="relative inline-block text-left" 
+                            <td class="no-print py-4 px-6 text-right">
+                                <div class="inline-block text-left" 
                                      x-data="{ 
-                                         open: false,
+                                         open: false, 
                                          menuStyle: '',
-                                         toggle(e) {
+                                         toggle(event) {
                                              this.open = !this.open;
                                              if (this.open) {
                                                  const rect = this.$refs.btn.getBoundingClientRect();
+                                                 const menuHeight = 140;
                                                  const spaceBelow = window.innerHeight - rect.bottom;
-                                                 const menuH = 145;
-                                                 const openUp = spaceBelow < menuH && rect.top > menuH;
-                                                 const topPos = openUp ? (rect.top - menuH - 4) : (rect.bottom + 4);
-                                                 const rightPos = window.innerWidth - rect.right;
+                                                 let topPos;
+                                                 if (spaceBelow < menuHeight) {
+                                                     topPos = Math.max(10, rect.top - menuHeight + 5);
+                                                 } else {
+                                                     topPos = rect.bottom + 5;
+                                                 }
+                                                 const rightPos = Math.max(10, window.innerWidth - rect.right);
                                                  this.menuStyle = `position: fixed; z-index: 99999; top: ${topPos}px; right: ${rightPos}px;`;
                                              }
                                          }
@@ -408,11 +444,46 @@
         </div>
 
         <!-- Table Footer Pagination -->
-        <div class="p-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-slate-500">
+        <div class="no-print p-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-slate-500">
             <span>Menampilkan <strong class="text-slate-800" x-text="filteredTransactions.length"></strong> dari <strong class="text-slate-800" x-text="transactions.length"></strong> total transaksi</span>
             <div class="flex items-center gap-1">
                 <span class="text-[11px] text-slate-400">Pencatatan real-time tersinkronisasi</span>
             </div>
+        </div>
+    </div>
+
+    <!-- =========================================================================
+         LEMBAR TANDA TANGAN & PENGESAHAN RESMI JURNAL KAS (MUNCUL SAAT CETAK)
+         ========================================================================= -->
+    <div class="hidden print:block mt-8 pt-4 page-break-inside-avoid">
+        <div class="flex justify-between items-start text-xs text-slate-800">
+            <div class="text-center w-64">
+                <p class="font-medium text-slate-600">Dibuat &amp; Dibukukan Oleh,</p>
+                <p class="font-bold text-slate-800 mt-0.5">Staff Administrasi &amp; Kasir Farm</p>
+                <div class="h-20 flex items-center justify-center">
+                    <span class="text-[10px] text-slate-400 italic">( Tanda Tangan &amp; Stempel )</span>
+                </div>
+                <div class="border-t border-slate-900 pt-1 font-bold text-slate-900">
+                    Petugas Kasir Budidaya
+                </div>
+                <p class="text-[10px] text-slate-500">NIP / ID: KAS-{{ date('Y') }}-012</p>
+            </div>
+
+            <div class="text-center w-64">
+                <p class="font-medium text-slate-600">Tasikmalaya, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
+                <p class="font-bold text-slate-800 mt-0.5">Mengetahui &amp; Menyetujui,</p>
+                <div class="h-20 flex items-center justify-center">
+                    <span class="text-[10px] text-slate-400 italic">( Tanda Tangan &amp; Stempel )</span>
+                </div>
+                <div class="border-t border-slate-900 pt-1 font-bold text-slate-900">
+                    {{ Auth::user()->nama ?? 'Manajer AMS Budidaya' }}
+                </div>
+                <p class="text-[10px] text-slate-500">Manajer Operasional &amp; Agribisnis</p>
+            </div>
+        </div>
+
+        <div class="mt-8 border-t border-slate-300 pt-2 text-center text-[9px] text-slate-400">
+            Dokumen ini merupakan Buku Kas Resmi dari Sistem Informasi Manajemen Budidaya Ikan Terpadu (AMS BUDIDAYA).
         </div>
     </div>
 

@@ -33,13 +33,14 @@ class PembesaranController extends Controller
         // List dedicated for stock / buffer / holding destination
         $kolamStokList = $kolams->map(function ($k) {
             $isStok = stripos($k->nama_kolam, 'Stok') !== false || stripos($k->tipe_kolam, 'Pemberokan') !== false || stripos($k->tipe_kolam, 'Penampungan') !== false;
+            $tipeShort = str_ireplace(['Kolam Pembesaran ', 'Kolam '], '', $k->tipe_kolam);
             return [
                 'id_kolam'   => $k->id_kolam,
                 'nama_kolam' => $k->nama_kolam,
                 'tipe_kolam' => $k->tipe_kolam,
                 'kapasitas'  => $k->kapasitas,
                 'is_stok'    => $isStok,
-                'label'      => $k->nama_kolam . ' (' . $k->tipe_kolam . ' - Kap: ' . number_format($k->kapasitas, 0, ',', '.') . ' kg)' . ($isStok ? ' [Kolam Stok / Buffer]' : ''),
+                'label'      => $k->nama_kolam . ' (' . $tipeShort . ' • Kap: ' . number_format($k->kapasitas, 0, ',', '.') . ' Ekor)' . ($isStok ? ' ★' : ''),
             ];
         })->sortByDesc('is_stok')->values();
         
@@ -88,9 +89,23 @@ class PembesaranController extends Controller
             $targetKonsumsi = $ikanRef ? $ikanRef->target_konsumsi : '-';
             $jenisPakan = $ikanRef ? $ikanRef->jenis_pakan_didukung : 'Pelet';
 
-            $fcrAktual = (float) ($b->fcr > 0 ? $b->fcr : $b->calculateActualFcr());
-            $fcrAccum[] = $fcrAktual;
-            $isOptimal = ($fcrAktual <= $fcrMax);
+            $fcrKumulatif = $b->calculateCumulativeFcr();
+            $fcrKomersial = $b->calculateCommercialFcr();
+            $fcrBiologis = $b->calculateBiologicalFcr();
+
+            if ($fcrKumulatif !== null) {
+                $fcrAccum[] = $fcrKumulatif;
+                $isOptimal = ($fcrKumulatif <= $fcrMax);
+                $fcrStatusText = $isOptimal ? 'Optimal (Sesuai SOP)' : 'Tinggi (Di Luar SOP)';
+                $fcrDisplay = number_format($fcrKumulatif, 2);
+            } else {
+                $isOptimal = true;
+                $fcrStatusText = 'Belum Ada Log Pakan';
+                $fcrDisplay = '0.00';
+            }
+
+            // Analisis Finansial Laba / Rugi Kolam
+            $fin = $b->calculateFinancials();
 
             $statusSiklus = strtolower($b->status_siklus ?? 'berjalan');
             $statusLabel = 'Berjalan (Aktif)';
@@ -143,8 +158,14 @@ class PembesaranController extends Controller
                 ];
             }
 
-            $estTglPanen = $b->est_tgl_panen ?? ($b->tgl_tebar ? Carbon::parse($b->tgl_tebar)->addDays(90)->toDateString() : null);
-            $isHarvestDue = ($statusSiklus !== 'selesai') && ($estTglPanen ? Carbon::today()->gte(Carbon::parse($estTglPanen)) : ($doc >= 90));
+            // Hitung estimasi panen berdasarkan SOP Master Ikan (bulan_panen_min s/d bulan_panen_max)
+            $estBulanMin = $ikanRef && $ikanRef->bulan_panen_min ? (float)$ikanRef->bulan_panen_min : 2.5;
+            $estBulanMax = $ikanRef && $ikanRef->bulan_panen_max ? (float)$ikanRef->bulan_panen_max : 3.0;
+            $estDays = round($estBulanMax * 30);
+            $estDaysMin = round($estBulanMin * 30);
+
+            $estTglPanen = $b->est_tgl_panen ?? ($b->tgl_tebar ? Carbon::parse($b->tgl_tebar)->addDays($estDays)->toDateString() : null);
+            $isHarvestDue = ($statusSiklus !== 'selesai') && ($estTglPanen ? Carbon::today()->gte(Carbon::parse($estTglPanen)) : ($doc >= $estDaysMin));
 
             // Active order linked to this batch
             $activeOrder = \App\Models\TransaksiDistribusi::with('mitra')
@@ -172,6 +193,7 @@ class PembesaranController extends Controller
                 'tgl_tebar_format'    => $b->tgl_tebar ? Carbon::parse($b->tgl_tebar)->translatedFormat('d M Y') : '-',
                 'est_tgl_panen'       => $estTglPanen,
                 'est_panen_format'    => $estTglPanen ? Carbon::parse($estTglPanen)->translatedFormat('d M Y') : '-',
+                'est_siklus_panen'    => "{$estBulanMin} – {$estBulanMax} Bulan",
                 'is_harvest_due'      => $isHarvestDue,
                 'order_target_kg'     => $orderTargetKg,
                 'order_mitra'         => $orderMitraNama,
@@ -185,11 +207,16 @@ class PembesaranController extends Controller
                 'target_percent'      => $targetPercent,
                 'jumlah_panen_kg'     => (float) $b->jumlah_panen_kg,
                 'jumlah_panen_format' => number_format($b->jumlah_panen_kg, 1, ',', '.'),
-                'fcr'                 => number_format($fcrAktual, 2),
-                'fcr_target'          => number_format($fcrMin, 1) . ' - ' . number_format($fcrMax, 1),
+                
+                // 4 Jenis Nilai FCR Sesuai SOP
+                'fcr'                 => $fcrDisplay,
+                'fcr_kumulatif'       => $fcrKumulatif !== null ? number_format($fcrKumulatif, 2) : '-',
+                'fcr_komersial'       => $fcrKomersial !== null ? number_format($fcrKomersial, 2) : '-',
+                'fcr_biologis'        => $fcrBiologis !== null ? number_format($fcrBiologis, 2) : '-',
+                'fcr_target'          => number_format($fcrMin, 1) . ' – ' . number_format($fcrMax, 1),
                 'fcr_min'             => $fcrMin,
                 'fcr_max'             => $fcrMax,
-                'fcr_status_text'     => $isOptimal ? 'Optimal' : 'Perlu Evaluasi',
+                'fcr_status_text'     => $fcrStatusText,
                 'is_optimal'          => $isOptimal,
                 'target_konsumsi'     => $targetKonsumsi,
                 'jenis_pakan'         => $jenisPakan,
@@ -197,14 +224,51 @@ class PembesaranController extends Controller
                 'status_label'        => $statusLabel,
                 'status_class'        => $statusClass,
                 'asal_bibit'          => $b->asal_bibit ?? ($b->id_batch_pembibitan ? 'pembibitan_sendiri' : 'beli_luar'),
-                'biaya_beli_bibit'    => (float) ($b->biaya_beli_bibit ?? 0),
-                'biaya_beli_bibit_format' => number_format($b->biaya_beli_bibit ?? 0, 0, ',', '.'),
                 'ph_air'              => ($logPh = ManajemenPakan::where('id_kolam', $b->id_kolam)->whereNotNull('ph_air')->where('ph_air', '>', 0)->latest('tgl_log')->value('ph_air')) ? number_format($logPh, 1) : '-',
+
+                // Data Finansial Laba / Rugi Kolam
+                'total_pakan_kg'      => number_format($fin['total_pakan_kg'], 1, ',', '.'),
+                'biaya_pakan'         => (float) $fin['biaya_pakan'],
+                'biaya_pakan_format'  => 'Rp ' . number_format($fin['biaya_pakan'], 0, ',', '.'),
+                'biaya_bibit'         => (float) $fin['biaya_bibit'],
+                'biaya_bibit_format'  => 'Rp ' . number_format($fin['biaya_bibit'], 0, ',', '.'),
+                'biaya_operasional'   => (float) $fin['biaya_operasional'],
+                'biaya_op_format'     => 'Rp ' . number_format($fin['biaya_operasional'], 0, ',', '.'),
+                'total_biaya_kolam'   => (float) $fin['total_biaya_kolam'],
+                'total_biaya_format'  => 'Rp ' . number_format($fin['total_biaya_kolam'], 0, ',', '.'),
+                'harga_jual_per_kg'   => (float) $fin['harga_jual_per_kg'],
+                'harga_jual_format'   => 'Rp ' . number_format($fin['harga_jual_per_kg'], 0, ',', '.'),
+                'pendapatan_estimasi' => (float) $fin['pendapatan_estimasi'],
+                'pendapatan_format'   => 'Rp ' . number_format($fin['pendapatan_estimasi'], 0, ',', '.'),
+                'laba_rugi'           => (float) $fin['laba_rugi'],
+                'laba_rugi_format'    => ($fin['laba_rugi'] >= 0 ? '+Rp ' : '-Rp ') . number_format(abs($fin['laba_rugi']), 0, ',', '.'),
+                'margin_percent'      => $fin['margin_percent'],
+                'status_finansial'    => $fin['status_finansial'],
+                'status_fin_label'    => $fin['status_label'],
+                'status_fin_badge'    => $fin['status_badge'],
             ];
         }
 
         $avgFcrVal = count($fcrAccum) > 0 ? (array_sum($fcrAccum) / count($fcrAccum)) : BatchPembesaran::whereNotNull('fcr')->where('fcr', '>', 0)->avg('fcr');
         $avgFcr = $avgFcrVal ? round((float)$avgFcrVal, 2) : 0;
+
+        // Ringkasan Finansial Keseluruhan Pembesaran
+        $totalModalSemuaKolam = array_sum(array_column($batches, 'total_biaya_kolam'));
+        $totalProyeksiOmset   = array_sum(array_column($batches, 'pendapatan_estimasi'));
+        $totalProyeksiLaba    = $totalProyeksiOmset - $totalModalSemuaKolam;
+        $totalKolamUntung     = count(array_filter($batches, fn($x) => $x['laba_rugi'] > 0));
+        $totalKolamRugi       = count(array_filter($batches, fn($x) => $x['laba_rugi'] < 0));
+
+        $financialSummary = [
+            'total_modal_kolam'   => $totalModalSemuaKolam,
+            'total_modal_format'  => 'Rp ' . number_format($totalModalSemuaKolam, 0, ',', '.'),
+            'total_omset'         => $totalProyeksiOmset,
+            'total_omset_format'  => 'Rp ' . number_format($totalProyeksiOmset, 0, ',', '.'),
+            'total_laba'          => $totalProyeksiLaba,
+            'total_laba_format'   => ($totalProyeksiLaba >= 0 ? '+Rp ' : '-Rp ') . number_format(abs($totalProyeksiLaba), 0, ',', '.'),
+            'kolam_untung_count'  => $totalKolamUntung,
+            'kolam_rugi_count'    => $totalKolamRugi,
+        ];
 
         $availablePembibitan = \App\Models\BatchPembibitan::with(['kolam', 'batchPembesaran', 'ikan'])
             ->where('status', '!=', 'gagal')
@@ -239,7 +303,7 @@ class PembesaranController extends Controller
 
         $ikans = \App\Models\Ikan::orderBy('nama_ikan', 'asc')->get();
 
-        return view('layouts.pembesaran.index', compact('batches', 'kolamList', 'kolams', 'kolamStokList', 'totalBiomassa', 'avgFcr', 'availablePembibitan', 'ikans'));
+        return view('layouts.pembesaran.index', compact('batches', 'kolamList', 'kolams', 'kolamStokList', 'totalBiomassa', 'avgFcr', 'financialSummary', 'availablePembibitan', 'ikans'));
     }
 
     public function store(Request $request)
@@ -249,10 +313,12 @@ class PembesaranController extends Controller
             'jenis_ikan'           => 'required|string',
             'id_batch_pembibitan'  => 'nullable|numeric',
             'biaya_beli_bibit'     => 'nullable|numeric|min:0',
+            'jumlah_bibit'         => 'nullable|numeric|min:1',
+            'survival_rate'        => 'nullable|numeric|min:10|max:100',
             'tgl_tebar'            => 'nullable|date',
             'est_tgl_panen'        => 'nullable|date',
-            'biomassa_est'         => 'required|numeric|min:0.1',
-            'target_panen_kg'      => 'required|numeric|min:0.1',
+            'biomassa_est'         => 'nullable|numeric|min:0.1',
+            'target_panen_kg'      => 'nullable|numeric|min:0.1',
             'fcr'                  => 'nullable|numeric|min:0.5',
             'status_siklus'        => 'nullable|string',
         ]);
@@ -279,6 +345,7 @@ class PembesaranController extends Controller
         }
 
         // Validasi: Jika mengambil dari pembibitan, pastikan batch pembibitan sudah fase Fingerling / Benih
+        $jumlahBibitAwal = (float) ($request->jumlah_bibit ?? 0);
         if ($request->filled('id_batch_pembibitan')) {
             $sourceBatch = \App\Models\BatchPembibitan::find($request->id_batch_pembibitan);
             if ($sourceBatch) {
@@ -288,6 +355,9 @@ class PembesaranController extends Controller
                         'success' => false,
                         'message' => "Batch pembibitan #BB-" . str_pad($sourceBatch->id_batch, 5, '0', STR_PAD_LEFT) . " masih dalam fase {$fase}! Bibit belum dapat dipindahkan ke kolam pembesaran sebelum memasuki fase FINGERLING / BENIH."
                     ], 422);
+                }
+                if ($jumlahBibitAwal <= 0) {
+                    $jumlahBibitAwal = max(0, (float)($sourceBatch->jumlah_bibitAwal - $sourceBatch->jumlah_kematian));
                 }
             }
         }
@@ -300,6 +370,7 @@ class PembesaranController extends Controller
         $ikanRef = \App\Models\Ikan::where('nama_ikan', 'LIKE', '%' . trim(preg_replace('/^(ikan\s+)/i', '', $jenis)) . '%')->first();
         $defaultFcr = $ikanRef ? (float)$ikanRef->fcr_min : 1.15;
         $estBulan = $ikanRef && $ikanRef->bulan_panen_max ? (float)$ikanRef->bulan_panen_max : 3.0;
+        $ekorPerKg = $ikanRef ? $ikanRef->avg_ekor_per_kg : 4.0;
 
         $tglTebar = $request->tgl_tebar ?? now();
         $estDays = round($estBulan * 30);
@@ -307,6 +378,27 @@ class PembesaranController extends Controller
 
         $asalBibit = $request->filled('id_batch_pembibitan') ? 'pembibitan_sendiri' : 'beli_luar';
         $biayaBeliBibit = $asalBibit === 'beli_luar' ? (float) ($request->biaya_beli_bibit ?? 0) : 0.0;
+
+        $srPercent = (float) ($request->survival_rate ?? 85.0);
+        if ($srPercent <= 0) $srPercent = 85.0;
+
+        // Otomatisasi Target Panen (Kg) jika tidak diisi atau 0
+        if ($request->filled('target_panen_kg') && (float)$request->target_panen_kg > 0) {
+            $targetPanenKg = (float) $request->target_panen_kg;
+        } elseif ($jumlahBibitAwal > 0) {
+            $targetPanenKg = \App\Models\Ikan::calculateTargetPanen($jumlahBibitAwal, $srPercent, $ekorPerKg);
+        } else {
+            $targetPanenKg = 500.0;
+        }
+
+        // Otomatisasi Biomassa Awal (Kg) jika tidak diisi atau 0
+        if ($request->filled('biomassa_est') && (float)$request->biomassa_est > 0) {
+            $biomassaEst = (float) $request->biomassa_est;
+        } elseif ($jumlahBibitAwal > 0) {
+            $biomassaEst = round($jumlahBibitAwal * 0.015, 1);
+        } else {
+            $biomassaEst = round($targetPanenKg * 0.1, 1);
+        }
 
         $batch = BatchPembesaran::create([
             'id_kolam'            => $kolam->id_kolam,
@@ -316,9 +408,9 @@ class PembesaranController extends Controller
             'biaya_beli_bibit'    => $biayaBeliBibit,
             'tgl_tebar'           => $tglTebar,
             'est_tgl_panen'       => $estTglPanen,
-            'biomassa_est'        => $request->biomassa_est,
+            'biomassa_est'        => $biomassaEst,
             'fcr'                 => $request->fcr ?? $defaultFcr,
-            'target_panen_kg'     => $request->target_panen_kg,
+            'target_panen_kg'     => $targetPanenKg,
             'jumlah_panen_kg'     => 0.00,
             'jenis_ikan'          => $jenis,
             'status_siklus'       => $statusSiklus,

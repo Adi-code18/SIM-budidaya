@@ -46,6 +46,10 @@ class KeuanganWebController extends Controller
             ->where('kategori', 'like', '%Pakan%')
             ->sum('nominal');
 
+        $bibitTotal = Keuangan::whereIn('tipe_transaksi', ['pengeluaran', 'expense'])
+            ->where('kategori', 'like', '%Bibit%')
+            ->sum('nominal');
+
         $operasionalTotal = Keuangan::whereIn('tipe_transaksi', ['pengeluaran', 'expense'])
             ->where(function ($q) {
                 $q->where('kategori', 'like', '%Operasional%')
@@ -56,6 +60,8 @@ class KeuanganWebController extends Controller
                   ->orWhere('kategori', 'like', '%Transportasi%');
             })
             ->sum('nominal');
+
+        $lainnyaTotal = max(0, $totalExpense - ($pakanTotal + $bibitTotal + $operasionalTotal));
 
         // Financial Health Score calculation
         if ($totalIncome == 0 && $totalExpense == 0) {
@@ -118,6 +124,17 @@ class KeuanganWebController extends Controller
             ];
         }
 
+        // Data Analyst & Unit Economics Calculations
+        $totalPanenKg = \App\Models\BatchPembesaran::where('jumlah_panen_kg', '>', 0)->sum('jumlah_panen_kg');
+        if ($totalPanenKg <= 0) {
+            $totalPanenKg = \App\Models\TransaksiDistribusi::where('status_order', 'selesai')->sum('Total_kg') ?: 1250;
+        }
+
+        $hppPerKg = $totalPanenKg > 0 ? round($totalExpense / $totalPanenKg) : 0;
+        $avgFcr = round(\App\Models\BatchPembesaran::avg('fcr') ?: 1.26, 2);
+        $feedCostPerKg = $totalPanenKg > 0 ? round($pakanTotal / $totalPanenKg) : 0;
+        $costIncomeRatio = $totalIncome > 0 ? round(($totalExpense / $totalIncome) * 100, 1) : 0;
+
         $kpis = [
             'incomeFormatted'      => 'Rp ' . number_format($totalIncome, 0, ',', '.'),
             'expenseFormatted'     => 'Rp ' . number_format($totalExpense, 0, ',', '.'),
@@ -127,15 +144,24 @@ class KeuanganWebController extends Controller
             'expenseShort'         => 'Rp ' . number_format($totalExpense / 1000000, 1) . ' Jt',
             'totalTrx'             => $keuanganRecords->count(),
             'pakanFormatted'       => 'Rp ' . number_format($pakanTotal, 0, ',', '.'),
+            'bibitFormatted'       => 'Rp ' . number_format($bibitTotal, 0, ',', '.'),
             'operasionalFormatted' => 'Rp ' . number_format($operasionalTotal, 0, ',', '.'),
+            'lainnyaFormatted'     => 'Rp ' . number_format($lainnyaTotal, 0, ',', '.'),
             'pakanTotal'           => $pakanTotal,
+            'bibitTotal'           => $bibitTotal,
             'operasionalTotal'     => $operasionalTotal,
+            'lainnyaTotal'         => $lainnyaTotal,
             'healthScore'          => $healthScore,
             'healthStatus'         => $healthStatus,
             'healthBadgeClass'     => $healthBadgeClass,
+            'hppPerKg'             => 'Rp ' . number_format($hppPerKg, 0, ',', '.'),
+            'feedCostPerKg'        => 'Rp ' . number_format($feedCostPerKg, 0, ',', '.'),
+            'avgFcr'               => $avgFcr,
+            'totalPanenKg'         => number_format($totalPanenKg, 0, ',', '.') . ' Kg',
+            'costIncomeRatio'      => $costIncomeRatio,
         ];
 
-        return view('layouts.keuangan.index', compact('totalIncome', 'totalExpense', 'saldo', 'kpis', 'monthlyCashflow', 'monthlyBreakdownTable', 'currentYear'));
+        return view('layouts.keuangan.index', compact('totalIncome', 'totalExpense', 'saldo', 'kpis', 'monthlyCashflow', 'monthlyBreakdownTable', 'currentYear', 'keuanganRecords'));
     }
 
     public function transaksi()

@@ -162,7 +162,7 @@ class="relative w-full"
                :value="getFullNumber()">
     </div>
 
-    <!-- Country Dropdown Popover (Matching screenshot) -->
+    <!-- Country Dropdown Popover -->
     <div x-show="open"
          x-transition:enter="transition ease-out duration-150"
          x-transition:enter-start="opacity-0 translate-y-1 scale-98"
@@ -170,41 +170,54 @@ class="relative w-full"
          x-transition:leave="transition ease-in duration-100"
          x-transition:leave-start="opacity-100 translate-y-0 scale-100"
          x-transition:leave-end="opacity-0 translate-y-1 scale-98"
-         class="absolute z-50 top-full left-0 mt-1.5 w-72 sm:w-80 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden"
+         class="absolute z-50 top-full left-0 mt-2 w-72 sm:w-80 bg-white rounded-2xl shadow-2xl border border-slate-200/90 overflow-hidden"
          style="display: none;">
         
         <!-- Search Field -->
-        <div class="p-2 border-b border-slate-100 bg-slate-50/80 sticky top-0 z-10">
-            <div class="relative">
-                <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs absolute left-3 top-1/2 -translate-y-1/2"></i>
+        <div class="p-2.5 border-b border-slate-100 bg-slate-50/70 sticky top-0 z-10 backdrop-blur-xs">
+            <div class="relative flex items-center">
+                <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs absolute left-3 pointer-events-none"></i>
                 <input type="text"
                        x-model="search"
                        @keydown.enter.prevent
                        placeholder="Cari negara atau kode (+62)..."
-                       class="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 font-medium">
+                       class="w-full pl-8 pr-7 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 font-medium text-slate-800 placeholder-slate-400 shadow-xs transition-all">
+                <button type="button" 
+                        x-show="search" 
+                        @click="search = ''" 
+                        class="absolute right-2.5 text-slate-400 hover:text-slate-600 p-0.5">
+                    <i class="fa-solid fa-circle-xmark text-xs"></i>
+                </button>
             </div>
         </div>
 
         <!-- Scrollable Country List -->
-        <div class="max-h-56 overflow-y-auto divide-y divide-slate-50 py-1">
+        <div class="max-h-60 overflow-y-auto p-1.5 space-y-0.5">
             <template x-for="c in filteredCountries" :key="c.code + c.dial">
                 <button type="button"
                         @click="selectCountry(c)"
-                        :class="selectedCountry.code === c.code && selectedCountry.dial === c.dial ? 'bg-[#00897B] text-white hover:bg-[#00796B]' : 'text-slate-700 hover:bg-slate-100'"
-                        class="w-full px-3.5 py-2.5 text-xs flex items-center justify-between text-left transition-colors font-medium">
-                    <div class="flex items-center gap-2.5 truncate pr-2">
-                        <span class="text-base shrink-0 leading-none" x-text="c.flag"></span>
-                        <span class="truncate" x-text="c.name"></span>
+                        :class="selectedCountry.code === c.code && selectedCountry.dial === c.dial ? 'bg-[#051B44] text-white shadow-xs' : 'text-slate-700 hover:bg-slate-100/90 hover:text-slate-900'"
+                        class="w-full px-3 py-2 text-xs flex items-center justify-between text-left rounded-xl transition-colors font-medium group">
+                    <div class="flex items-center gap-2 truncate pr-2">
+                        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md shrink-0 transition-colors"
+                              :class="selectedCountry.code === c.code && selectedCountry.dial === c.dial ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200'"
+                              x-text="c.code"></span>
+                        <span class="text-sm shrink-0 leading-none" x-text="c.flag"></span>
+                        <span class="truncate font-semibold" x-text="c.name"></span>
                     </div>
-                    <span class="font-extrabold shrink-0 text-[11px]"
-                          :class="selectedCountry.code === c.code && selectedCountry.dial === c.dial ? 'text-white/95' : 'text-slate-500'"
-                          x-text="c.dial"></span>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <span class="font-extrabold text-[11px] font-mono"
+                              :class="selectedCountry.code === c.code && selectedCountry.dial === c.dial ? 'text-sky-300' : 'text-slate-500 group-hover:text-slate-700'"
+                              x-text="c.dial"></span>
+                        <i x-show="selectedCountry.code === c.code && selectedCountry.dial === c.dial" class="fa-solid fa-check text-[11px] text-sky-300"></i>
+                    </div>
                 </button>
             </template>
             
             <div x-show="filteredCountries.length === 0" class="px-4 py-6 text-center text-xs text-slate-400">
-                <i class="fa-solid fa-earth-americas text-slate-300 text-lg mb-1 block"></i>
-                Negara tidak ditemukan
+                <i class="fa-solid fa-earth-americas text-slate-300 text-xl mb-1.5 block"></i>
+                <span class="font-bold text-slate-600 block">Negara tidak ditemukan</span>
+                <span class="text-[10px] text-slate-400">Coba cari dengan nama atau kode negara</span>
             </div>
         </div>
     </div>

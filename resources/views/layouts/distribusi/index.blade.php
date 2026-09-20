@@ -125,9 +125,16 @@
                             <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">STATUS ORDER</label>
                             <select x-model="form.status" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
                                 <template x-for="option in statusOptions" :key="option.value">
-                                    <option :value="option.value" x-text="option.label"></option>
+                                    <option :value="option.value"
+                                            :disabled="option.value === 'dibatalkan' && formMode === 'edit' && form.initialStatus !== 'pending'"
+                                            x-text="(option.value === 'dibatalkan' && formMode === 'edit' && form.initialStatus !== 'pending') ? (option.label + ' (Hanya saat Pending)') : option.label">
+                                    </option>
                                 </template>
                             </select>
+                            <p x-show="formMode === 'edit' && form.initialStatus !== 'pending'" class="text-[10px] text-amber-600 mt-1 font-medium flex items-center gap-1">
+                                <i class="fa-solid fa-circle-exclamation text-amber-500"></i>
+                                <span>Pesanan yang sudah diproses tidak dapat dibatalkan (hanya saat status <strong>Pending</strong>).</span>
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -417,6 +424,11 @@
                     class="px-4 py-2 rounded-xl text-xs transition-all">
                 Selesai (<span x-text="kpiSelesai"></span>)
             </button>
+            <button @click="activeTab = 'dibatalkan'" 
+                    :class="activeTab === 'dibatalkan' ? 'bg-[#051B44] text-white font-bold' : 'text-slate-600 hover:bg-slate-100 font-semibold'" 
+                    class="px-4 py-2 rounded-xl text-xs transition-all">
+                Dibatalkan (<span x-text="kpiDibatalkan"></span>)
+            </button>
         </div>
 
         <button @click="openCreateForm()" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#006699] hover:bg-[#005580] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-all">
@@ -473,7 +485,7 @@
                     </div>
                 </div>
 
-                <div x-show="order.status !== 'selesai'" class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
+                <div x-show="order.status !== 'selesai' && order.status !== 'dibatalkan'" class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
                     <button type="button" @click="printLabel(order)" class="px-3 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors">
                         <i class="fa-solid fa-print text-xs"></i>
                         <span>Cetak Label</span>
@@ -488,6 +500,17 @@
                     <button type="button" @click="openInvoice(order)" class="w-full py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 font-bold text-xs flex items-center justify-center gap-2 transition-colors">
                         <i class="fa-regular fa-file-lines text-xs"></i>
                         <span>Lihat Invoice</span>
+                    </button>
+                </div>
+
+                <div x-show="order.status === 'dibatalkan'" class="pt-2 border-t border-slate-100 flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-600 flex items-center gap-1.5 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">
+                        <i class="fa-solid fa-ban text-rose-500"></i>
+                        <span>Pesanan Dibatalkan</span>
+                    </span>
+                    <button type="button" @click="printLabel(order)" class="px-3 py-1.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-xs flex items-center gap-1.5 transition-colors">
+                        <i class="fa-solid fa-print text-xs"></i>
+                        <span>Label</span>
                     </button>
                 </div>
             </div>
@@ -707,6 +730,9 @@ function distribusiComponent() {
         get kpiPending() {
             return this.orders.filter(o => o.status === 'pending').length;
         },
+        get kpiDibatalkan() {
+            return this.orders.filter(o => o.status === 'dibatalkan').length;
+        },
 
         get filteredOrders() {
             if (this.activeTab === 'semua') {
@@ -719,7 +745,8 @@ function distribusiComponent() {
             { value: 'pending', label: 'Pending / Menunggu Konfirmasi' },
             { value: 'pemberokian', label: 'Dalam Pemberokian' },
             { value: 'siap_kirim', label: 'Siap Kirim / Dikirim' },
-            { value: 'selesai', label: 'Selesai' }
+            { value: 'selesai', label: 'Selesai' },
+            { value: 'dibatalkan', label: 'Dibatalkan' }
         ],
 
         statusLabel(status) {
@@ -727,7 +754,10 @@ function distribusiComponent() {
                 pending: 'Pending',
                 pemberokian: 'Pemberokian',
                 siap_kirim: 'Siap Kirim',
-                selesai: 'Selesai'
+                dalam_pengiriman: 'Dalam Pengiriman',
+                dikirim: 'Dalam Pengiriman',
+                selesai: 'Selesai',
+                dibatalkan: 'Dibatalkan'
             };
             return map[status] || status;
         },
@@ -737,7 +767,10 @@ function distribusiComponent() {
                 pending: 'bg-[#FEE2E2] text-[#991B1B]',
                 pemberokian: 'bg-[#E0F2FE] text-[#0284C7]',
                 siap_kirim: 'bg-[#C6F6D5] text-[#22543D]',
-                selesai: 'bg-[#E2E8F0] text-[#475569]'
+                dalam_pengiriman: 'bg-amber-100 text-amber-800',
+                dikirim: 'bg-amber-100 text-amber-800',
+                selesai: 'bg-[#E2E8F0] text-[#475569]',
+                dibatalkan: 'bg-slate-200 text-slate-700 font-extrabold border border-slate-300'
             };
             return map[status] || 'bg-[#E2E8F0] text-[#475569]';
         },
@@ -801,6 +834,7 @@ function distribusiComponent() {
                 alamat: '',
                 jenisOrder: 'reguler',
                 status: 'pending',
+                initialStatus: 'pending',
                 totalBerat: '',
                 totalHarga: ''
             };
@@ -825,6 +859,7 @@ function distribusiComponent() {
                 alamat: order.alamat,
                 jenisOrder: order.jenis_order || 'reguler',
                 status: order.status,
+                initialStatus: order.status,
                 totalBerat: String(order.total_kg !== undefined ? order.total_kg : (order.volume || '')).replace(/[^0-9.]/g, ''),
                 totalHarga: order.harga_format || ''
             };
@@ -833,6 +868,10 @@ function distribusiComponent() {
 
         async saveForm() {
             if (this.formMode === 'edit') {
+                if (this.form.status === 'dibatalkan' && this.form.initialStatus && this.form.initialStatus !== 'pending') {
+                    alert('Pesanan tidak dapat dibatalkan karena sudah diproses (' + this.statusLabel(this.form.initialStatus) + '). Pembatalan hanya diperbolehkan saat status masih Pending!');
+                    return;
+                }
                 const rawId = this.form.id_transaksi || String(this.form.id).replace(/[^0-9]/g, '');
                 const totalKg = Number(this.form.totalBerat) || 0;
                 const hargaTotal = this.form.totalHarga ? Number(String(this.form.totalHarga).replace(/[^0-9]/g, '')) : (totalKg * 35000);

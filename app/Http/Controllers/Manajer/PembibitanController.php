@@ -237,6 +237,10 @@ class PembibitanController extends Controller
                 'tglPemijahan'         => $b->tgl_pemijahan,
                 'jenis_ikan'           => $b->ikan ? $b->ikan->nama_ikan : ($b->jenis_ikan ?? 'Ikan Nila'),
                 'id_ikan'              => $b->id_ikan,
+                'avg_ekor_per_kg'      => $ikanObj ? $ikanObj->avg_ekor_per_kg : 4.0,
+                'target_konsumsi'      => $ikanObj ? $ikanObj->target_konsumsi : '3–5 ekor / kg',
+                'bulan_panen_min'      => $ikanObj ? (float)$ikanObj->bulan_panen_min : 3.0,
+                'bulan_panen_max'      => $ikanObj ? (float)$ikanObj->bulan_panen_max : 5.0,
                 'est_prcs_pembibitaan' => $estDateCarbon->translatedFormat('d M Y'),
                 'est_prcs_raw'         => $estDateCarbon->format('Y-m-d'),
                 'fase'                 => $fase,
@@ -268,9 +272,19 @@ class PembibitanController extends Controller
             $kolamPembesaran = Kolam::all();
         }
 
+        $kolamPembesaranList = $kolamPembesaran->map(function ($k) {
+            return [
+                'id_kolam'   => $k->id_kolam,
+                'nama_kolam' => $k->nama_kolam,
+                'tipe_kolam' => $k->tipe_kolam,
+                'kapasitas'  => (float) $k->kapasitas,
+                'label'      => $k->nama_kolam . ' (' . ($k->tipe_kolam ?? 'Pembesaran') . ' - Kapasitas: ' . number_format($k->kapasitas, 0, ',', '.') . ' Ekor)',
+            ];
+        });
+
         $ikans = \App\Models\Ikan::orderBy('nama_ikan', 'asc')->get();
 
-        return view('layouts.pembibitan.index', compact('batches', 'kolams', 'kolamPembesaran', 'kpis', 'ikans'));
+        return view('layouts.pembibitan.index', compact('batches', 'kolams', 'kolamPembesaran', 'kolamPembesaranList', 'kpis', 'ikans'));
     }
 
     public function transferKePembesaran(Request $request, $id)
@@ -285,56 +299,144 @@ class PembibitanController extends Controller
             return redirect()->route('pembibitan')->with('error', 'Data batch pembibitan tidak ditemukan.');
         }
 
-        $request->validate([
-            'id_kolam_pembesaran' => 'required',
-            'target_panen_kg'     => 'required|numeric|min:1',
-            'biomassa_est'        => 'nullable|numeric|min:0.1',
-        ]);
+        $sisaBibitAwal = max(0, (int)$batchPembibitan->jumlah_bibitAwal - (int)$batchPembibitan->jumlah_kematian);
+        $transferLoss = (int) $request->input('jumlah_mati_transfer', 0);
+        $ikanObj = $batchPembibitan->ikan;
+        $ekorPerKg = $ikanObj ? $ikanObj->avg_ekor_per_kg : 4.0;
+        $estBulan = $ikanObj && $ikanObj->bulan_panen_max ? (float) $ikanObj->bulan_panen_max : 3.0;
+        $estDays = round($estBulan * 30);
+        $defaultFcr = $ikanObj && $ikanObj->fcr_min ? (float) $ikanObj->fcr_min : 1.15;
+        $namaIkan = $batchPembibitan->ikan ? $batchPembibitan->ikan->nama_ikan : ($batchPembibitan->jenis_ikan ?? 'Ikan Air Tawar');
 
-        $kolamBesar = Kolam::where('nama_kolam', $request->id_kolam_pembesaran)
-            ->orWhere('id_kolam', $request->id_kolam_pembesaran)
-            ->first();
+        $mode = $request->input('mode', 'single');
+        $createdBatches = [];
+        $totalTransferBibit = 0;
 
-        if (!$kolamBesar) {
-            $kolamBesar = Kolam::where('tipe_kolam', 'like', '%Pembesaran%')->first() ?? Kolam::first();
+        if ($mode === 'multi' && is_array($request->input('allocations'))) {
+            $allocations = $request->input('allocations');
+            foreach ($allocations as $alloc) {
+                $bibitTransfer = (int) ($alloc['bibit_ekor'] ?? 0);
+                if ($bibitTransfer <= 0) continue;
+
+                $totalTransferBibit += $bibitTransfer;
+                $targetPanen = (float) ($alloc['target_panen_kg'] ?? 0);
+                if ($targetPanen <= 0) {
+                    $targetPanen = \App\Models\Ikan::calculateTargetPanen($bibitTransfer, 85.0, $ekorPerKg);
+                }
+
+                $biomassa = (float) ($alloc['biomassa_kg'] ?? 0);
+                if ($biomassa <= 0 && $sisaBibitAwal > 0) {
+                    $totalBobot = (float) ($batchPembibitan->total_bobot_kg ?: 50.0);
+                    $biomassa = round(($bibitTransfer / $sisaBibitAwal) * $totalBobot, 2);
+                }
+
+                $estTglPanen = !empty($alloc['est_tgl_panen']) ? $alloc['est_tgl_panen'] : now()->addDays($estDays)->toDateString();
+
+                $kolamBesar = Kolam::where('id_kolam', $alloc['id_kolam'] ?? 0)
+                    ->orWhere('nama_kolam', $alloc['id_kolam'] ?? '')
+                    ->first() ?? Kolam::first();
+
+                $pembesaran = BatchPembesaran::create([
+                    'id_kolam'             => $kolamBesar ? $kolamBesar->id_kolam : 1,
+                    'id_user'              => Auth::id() ?? 1,
+                    'id_batch_pembibitan'  => $batchPembibitan->id_batch,
+                    'tgl_tebar'            => now()->toDateString(),
+                    'est_tgl_panen'        => $estTglPanen,
+                    'biomassa_est'         => $biomassa,
+                    'fcr'                  => $defaultFcr,
+                    'target_panen_kg'      => $targetPanen,
+                    'jumlah_panen_kg'      => 0,
+                    'jenis_ikan'           => $namaIkan,
+                    'status_siklus'        => 'berjalan',
+                ]);
+                $createdBatches[] = $pembesaran;
+            }
+        } else {
+            // Mode Single
+            $request->validate([
+                'id_kolam_pembesaran' => 'required',
+            ]);
+
+            $bibitTransfer = (int) $request->input('jumlah_bibit_transfer', $sisaBibitAwal);
+            if ($bibitTransfer <= 0) {
+                $bibitTransfer = $sisaBibitAwal;
+            }
+            $totalTransferBibit = $bibitTransfer;
+
+            $kolamBesar = Kolam::where('nama_kolam', $request->id_kolam_pembesaran)
+                ->orWhere('id_kolam', $request->id_kolam_pembesaran)
+                ->first() ?? Kolam::first();
+
+            $biomassa = $request->biomassa_est ? (float) $request->biomassa_est : 0;
+            if ($biomassa <= 0 && $sisaBibitAwal > 0) {
+                $totalBobot = (float) ($batchPembibitan->total_bobot_kg ?: 50.0);
+                $biomassa = round(($bibitTransfer / $sisaBibitAwal) * $totalBobot, 2);
+            }
+
+            $targetPanen = (float) ($request->target_panen_kg ?? 0);
+            if ($targetPanen <= 0) {
+                $targetPanen = \App\Models\Ikan::calculateTargetPanen($bibitTransfer, 85.0, $ekorPerKg);
+            }
+
+            $estTglPanen = $request->est_tgl_panen ?? now()->addDays($estDays)->toDateString();
+
+            $pembesaran = BatchPembesaran::create([
+                'id_kolam'             => $kolamBesar ? $kolamBesar->id_kolam : 1,
+                'id_user'              => Auth::id() ?? 1,
+                'id_batch_pembibitan'  => $batchPembibitan->id_batch,
+                'tgl_tebar'            => now()->toDateString(),
+                'est_tgl_panen'        => $estTglPanen,
+                'biomassa_est'         => $biomassa,
+                'fcr'                  => $defaultFcr,
+                'target_panen_kg'      => $targetPanen,
+                'jumlah_panen_kg'      => 0,
+                'jenis_ikan'           => $namaIkan,
+                'status_siklus'        => 'berjalan',
+            ]);
+            $createdBatches[] = $pembesaran;
         }
 
-        $biomassa = $request->biomassa_est ? (float) $request->biomassa_est : ((float) $batchPembibitan->total_bobot_kg > 0 ? (float) $batchPembibitan->total_bobot_kg : 50.0);
+        // Update Batch Pembibitan
+        $totalPengurangan = $totalTransferBibit + $transferLoss;
+        $sisaBibitAkhir = max(0, $sisaBibitAwal - $totalPengurangan);
 
-        $estTglPanen = $request->est_tgl_panen ?? now()->addDays(90)->toDateString();
+        // Tambahkan transfer loss ke kematian
+        if ($transferLoss > 0) {
+            $batchPembibitan->jumlah_kematian = (int)$batchPembibitan->jumlah_kematian + $transferLoss;
+        }
 
-        $pembesaran = BatchPembesaran::create([
-            'id_kolam'             => $kolamBesar ? $kolamBesar->id_kolam : 1,
-            'id_user'              => Auth::id() ?? 1,
-            'id_batch_pembibitan'  => $batchPembibitan->id_batch,
-            'tgl_tebar'            => now()->toDateString(),
-            'est_tgl_panen'        => $estTglPanen,
-            'biomassa_est'         => $biomassa,
-            'fcr'                  => 1.15,
-            'target_panen_kg'      => $request->target_panen_kg,
-            'jumlah_panen_kg'      => 0,
-            'jenis_ikan'           => $batchPembibitan->ikan ? $batchPembibitan->ikan->nama_ikan : ($batchPembibitan->jenis_ikan ?? 'Ikan Air Tawar'),
-            'status_siklus'        => 'berjalan',
-        ]);
+        if ($sisaBibitAkhir <= 0) {
+            // Semua bibit telah dimutasi
+            $batchPembibitan->status = 'selesai';
+            $batchPembibitan->fase_pertumbuhan = 'FINGERLING';
+            $batchPembibitan->total_bobot_kg = 0;
+        } else {
+            // Masih ada sisa bibit di pembibitan (partial split)
+            $proporsiSisa = $sisaBibitAwal > 0 ? ($sisaBibitAkhir / $sisaBibitAwal) : 0;
+            $batchPembibitan->total_bobot_kg = round((float)$batchPembibitan->total_bobot_kg * $proporsiSisa, 2);
+            $batchPembibitan->status = 'siap_pindah';
+            $batchPembibitan->fase_pertumbuhan = 'FINGERLING';
+        }
+        $batchPembibitan->save();
 
-        $batchPembibitan->update([
-            'status'           => 'selesai',
-            'fase_pertumbuhan' => 'FINGERLING'
-        ]);
-
-        $kodePB = '#PB-' . str_pad($pembesaran->id_pembesaran, 5, '0', STR_PAD_LEFT);
-        $namaKolam = $kolamBesar ? $kolamBesar->nama_kolam : 'Kolam Pembesaran';
+        $firstPb = $createdBatches[0] ?? null;
+        $kodePB = $firstPb ? ('#PB-' . str_pad($firstPb->id_pembesaran, 5, '0', STR_PAD_LEFT)) : '';
+        $msg = count($createdBatches) > 1
+            ? "Berhasil mendistribusikan " . number_format($totalTransferBibit, 0, ',', '.') . " ekor benih ke " . count($createdBatches) . " kolam pembesaran!"
+            : "Batch berhasil dipindahkan ke Pembesaran ({$kodePB})!";
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success'          => true,
-                'message'          => "Batch berhasil dipindahkan ke Pembesaran ({$kodePB}) di {$namaKolam}!",
-                'batch_pembesaran' => $pembesaran,
-                'data'             => $pembesaran
+                'message'          => $msg,
+                'batch_pembesaran' => $firstPb,
+                'created_batches'  => $createdBatches,
+                'sisa_bibit_akhir' => $sisaBibitAkhir,
+                'is_completed'     => $sisaBibitAkhir <= 0,
             ]);
         }
 
-        return redirect()->route('pembibitan')->with('success', "Batch berhasil dipindahkan ke Pembesaran ({$kodePB}) di {$namaKolam}!");
+        return redirect()->route('pembibitan')->with('success', $msg);
     }
 
     public function store(Request $request)

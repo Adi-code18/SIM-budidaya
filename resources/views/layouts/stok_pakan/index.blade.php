@@ -36,10 +36,11 @@
         <div class="p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/50 rounded-t-2xl">
             
             <!-- Search Input -->
-            <div class="relative flex-1 max-w-md">
-                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
+            <div class="relative flex items-center flex-1 max-w-md">
+                <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs absolute left-3.5 pointer-events-none"></i>
                 <input type="text" x-model="searchQuery"
                        placeholder="Cari nama pakan, kode pakan, atau satuan..."
+                       style="padding-left: 2.25rem !important;"
                        class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all shadow-xs">
             </div>
 
@@ -66,14 +67,116 @@
                     </button>
                 </div>
 
-                <!-- Filter Status Stok -->
-                <select x-model="filterStatus"
-                        class="px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all cursor-pointer shadow-xs">
-                    <option value="semua">Semua Status Stok</option>
-                    <option value="aman">🟢 Stok Aman</option>
-                    <option value="waspada">🟡 Perlu Pesan</option>
-                    <option value="kritis">🔴 Kritis (Segera Restock)</option>
-                </select>
+                <!-- Custom Modern Dropdown Filter Status Stok -->
+                <div class="relative" @click.outside="openStatusFilterDropdown = false">
+                    <button type="button" @click="openStatusFilterDropdown = !openStatusFilterDropdown"
+                            class="px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-bold bg-white hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all cursor-pointer shadow-xs flex items-center justify-between gap-2.5 min-w-[170px]">
+                        <div class="flex items-center gap-2">
+                            <template x-if="filterStatus === 'semua'">
+                                <div class="flex items-center gap-1.5 text-slate-700">
+                                    <i class="fa-solid fa-layer-group text-slate-400 text-xs"></i>
+                                    <span>Semua Status</span>
+                                </div>
+                            </template>
+                            <template x-if="filterStatus === 'aman'">
+                                <div class="flex items-center gap-1.5 text-emerald-800">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                                    <span>Stok Aman</span>
+                                </div>
+                            </template>
+                            <template x-if="filterStatus === 'waspada'">
+                                <div class="flex items-center gap-1.5 text-amber-800">
+                                    <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span>
+                                    <span>Perlu Pesan</span>
+                                </div>
+                            </template>
+                            <template x-if="filterStatus === 'kritis'">
+                                <div class="flex items-center gap-1.5 text-rose-800">
+                                    <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse shrink-0"></span>
+                                    <span>Kritis (Restock)</span>
+                                </div>
+                            </template>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200" :class="openStatusFilterDropdown ? 'rotate-180 text-sky-600' : ''"></i>
+                    </button>
+
+                    <!-- Popover Dropdown Card -->
+                    <div x-show="openStatusFilterDropdown"
+                         x-transition:enter="transition ease-out duration-150"
+                         x-transition:enter-start="opacity-0 translate-y-1 scale-95"
+                         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                         x-transition:leave="transition ease-in duration-100"
+                         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                         x-transition:leave-end="opacity-0 translate-y-1 scale-95"
+                         class="absolute right-0 top-full mt-1.5 w-56 bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-1.5 z-50 text-xs space-y-1"
+                         style="display: none;">
+                        
+                        <!-- Option: Semua -->
+                        <button type="button" @click="filterStatus = 'semua'; openStatusFilterDropdown = false; currentPage = 1"
+                                :class="filterStatus === 'semua' ? 'bg-slate-100 text-slate-900 font-black' : 'text-slate-600 hover:bg-slate-50 font-bold'"
+                                class="w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition-colors cursor-pointer">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center text-xs">
+                                    <i class="fa-solid fa-layer-group"></i>
+                                </div>
+                                <span>Semua Status</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 text-slate-700 font-bold" x-text="stokList.length"></span>
+                                <i x-show="filterStatus === 'semua'" class="fa-solid fa-check text-sky-600 text-xs"></i>
+                            </div>
+                        </button>
+
+                        <!-- Option: Aman -->
+                        <button type="button" @click="filterStatus = 'aman'; openStatusFilterDropdown = false; currentPage = 1"
+                                :class="filterStatus === 'aman' ? 'bg-emerald-50 text-emerald-900 font-black' : 'text-slate-600 hover:bg-emerald-50/50 font-bold'"
+                                class="w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition-colors cursor-pointer">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                </div>
+                                <span>Stok Aman</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold" x-text="stokList.filter(s => s.status === 'aman').length"></span>
+                                <i x-show="filterStatus === 'aman'" class="fa-solid fa-check text-emerald-600 text-xs"></i>
+                            </div>
+                        </button>
+
+                        <!-- Option: Waspada -->
+                        <button type="button" @click="filterStatus = 'waspada'; openStatusFilterDropdown = false; currentPage = 1"
+                                :class="filterStatus === 'waspada' ? 'bg-amber-50 text-amber-900 font-black' : 'text-slate-600 hover:bg-amber-50/50 font-bold'"
+                                class="w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition-colors cursor-pointer">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center text-xs">
+                                    <i class="fa-solid fa-triangle-exclamation"></i>
+                                </div>
+                                <span>Perlu Pesan</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-bold" x-text="stokList.filter(s => s.status === 'waspada').length"></span>
+                                <i x-show="filterStatus === 'waspada'" class="fa-solid fa-check text-amber-600 text-xs"></i>
+                            </div>
+                        </button>
+
+                        <!-- Option: Kritis -->
+                        <button type="button" @click="filterStatus = 'kritis'; openStatusFilterDropdown = false; currentPage = 1"
+                                :class="filterStatus === 'kritis' ? 'bg-rose-50 text-rose-900 font-black' : 'text-slate-600 hover:bg-rose-50/50 font-bold'"
+                                class="w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition-colors cursor-pointer">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center text-xs">
+                                    <i class="fa-solid fa-circle-exclamation"></i>
+                                </div>
+                                <span>Kritis (Restock)</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-[10px] px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 font-bold" x-text="stokList.filter(s => s.status === 'kritis').length"></span>
+                                <i x-show="filterStatus === 'kritis'" class="fa-solid fa-check text-rose-600 text-xs"></i>
+                            </div>
+                        </button>
+
+                    </div>
+                </div>
             </div>
 
         </div>
@@ -299,28 +402,202 @@
                 
                 <!-- Nama Pakan -->
                 <div>
-                    <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">NAMA JENIS PAKAN *</label>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="text-[10px] font-extrabold uppercase text-slate-500 block">NAMA JENIS PAKAN *</label>
+                        <span x-show="existingDuplicatePakan" class="text-[10px] font-extrabold text-amber-600 flex items-center gap-1">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <span>Sudah Ada di Gudang</span>
+                        </span>
+                    </div>
                     <input type="text" x-model="masterForm.nama_pakan" required placeholder="Contoh: Pelet PF-500 Starter"
-                           class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                           :class="existingDuplicatePakan ? 'border-amber-400 bg-amber-50/40 text-amber-950 focus:ring-amber-500 ring-2 ring-amber-400/20' : 'border-slate-200 bg-slate-50 focus:bg-white focus:ring-sky-500'"
+                           class="w-full px-4 py-2.5 rounded-xl border text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 transition-all">
+                    
+                    <!-- Alert Peringatan Nama Pakan Duplikat & Tombol Beralih ke Restock -->
+                    <div x-show="existingDuplicatePakan" 
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 -translate-y-1"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         class="mt-2.5 p-3.5 rounded-2xl bg-gradient-to-br from-amber-50 via-orange-50/50 to-amber-100/40 border border-amber-200/90 text-xs shadow-xs space-y-2.5">
+                        <div class="flex items-start gap-2.5">
+                            <div class="w-7 h-7 rounded-xl bg-amber-200/80 text-amber-800 flex items-center justify-center shrink-0 mt-0.5">
+                                <i class="fa-solid fa-triangle-exclamation text-xs"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h5 class="font-extrabold text-amber-950 text-xs">Nama Jenis Pakan Sudah Ada di Gudang!</h5>
+                                <p class="text-[11px] text-amber-800 mt-0.5 leading-relaxed">
+                                    Jenis pakan <strong class="font-black text-amber-950" x-text="'\'' + existingDuplicatePakan?.nama_pakan + '\''"></strong> sudah terdaftar dalam master stok (Stok saat ini: <span class="font-black text-amber-950" x-text="Number(existingDuplicatePakan?.stok_tersisa || 0).toFixed(1) + ' ' + (existingDuplicatePakan?.satuan || 'kg')"></span>). Anda tidak dapat membuat master pakan dengan nama yang sama.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between pt-2 border-t border-amber-200/70">
+                            <span class="text-[10px] font-bold text-amber-800">Apakah ingin menambah stok?</span>
+                            <button type="button" 
+                                    @click="showMasterModal = false; quickBeli(existingDuplicatePakan)"
+                                    class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[11px] flex items-center gap-1.5 shadow-sm transition-all cursor-pointer">
+                                <i class="fa-solid fa-cart-shopping text-[10px]"></i>
+                                <span>Beralih ke Catat Pembelian (Restock)</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
-                    <!-- Kategori Peruntukan -->
-                    <div>
+                <!-- Mitra / Supplier Pakan (Custom Dropdown) -->
+                <div class="relative" x-data="{ openSupplierDropdown: false }">
+                    <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">PILIH MITRA / SUPPLIER PAKAN (OPSIONAL)</label>
+                    <button type="button" @click="openSupplierDropdown = !openSupplierDropdown"
+                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-white text-xs font-bold text-slate-800 flex items-center justify-between transition-all focus:ring-2 focus:ring-sky-500 focus:outline-none cursor-pointer">
+                        <div class="flex items-center gap-2.5 truncate pr-2">
+                            <div class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
+                                 :class="masterForm.id_mitra ? 'bg-sky-100 text-sky-600' : 'bg-slate-100 text-slate-500'">
+                                <i :class="masterForm.id_mitra ? 'fa-solid fa-boxes-stacked' : 'fa-solid fa-warehouse'" class="text-[11px]"></i>
+                            </div>
+                            <span class="truncate" x-text="masterForm.id_mitra ? ((suppliers.find(m => m.id_mitra == masterForm.id_mitra)?.nama_mitra || 'Mitra Terpilih') + ' (Supplier Pakan)') : '-- Tanpa Mitra / Pengadaan Mandiri --'"></span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 shrink-0 transition-transform" :class="openSupplierDropdown ? 'rotate-180 text-sky-600' : ''"></i>
+                    </button>
+                    <div x-show="openSupplierDropdown" @click.outside="openSupplierDropdown = false"
+                         x-transition:enter="transition ease-out duration-150"
+                         x-transition:enter-start="opacity-0 translate-y-1 scale-98"
+                         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                         x-transition:leave="transition ease-in duration-100"
+                         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                         x-transition:leave-end="opacity-0 translate-y-1 scale-98"
+                         class="absolute z-50 top-full left-0 right-0 mt-1.5 max-h-56 overflow-y-auto bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-1.5 text-xs space-y-1"
+                         style="display: none;">
+                        <button type="button" @click="masterForm.id_mitra = ''; openSupplierDropdown = false"
+                                :class="!masterForm.id_mitra ? 'bg-sky-50 text-sky-700 font-extrabold' : 'text-slate-700 hover:bg-slate-50 font-semibold'"
+                                class="w-full px-2.5 py-2 rounded-xl flex items-center justify-between text-left transition-all cursor-pointer">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
+                                    <i class="fa-solid fa-warehouse text-[10px]"></i>
+                                </div>
+                                <span>-- Tanpa Mitra / Pengadaan Mandiri --</span>
+                            </div>
+                            <i x-show="!masterForm.id_mitra" class="fa-solid fa-check text-sky-600 text-xs"></i>
+                        </button>
+                        <template x-for="m in suppliers" :key="m.id_mitra">
+                            <button type="button" @click="masterForm.id_mitra = m.id_mitra; openSupplierDropdown = false"
+                                    :class="masterForm.id_mitra == m.id_mitra ? 'bg-sky-50 text-sky-700 font-extrabold' : 'text-slate-700 hover:bg-slate-50 font-semibold'"
+                                    class="w-full px-2.5 py-2 rounded-xl flex items-center justify-between text-left transition-all cursor-pointer">
+                                <div class="flex items-center gap-2 truncate pr-2">
+                                    <div class="w-6 h-6 rounded-lg bg-sky-100 text-sky-600 flex items-center justify-center shrink-0">
+                                        <i class="fa-solid fa-boxes-stacked text-[10px]"></i>
+                                    </div>
+                                    <span class="truncate" x-text="m.nama_mitra + ' (' + m.tipe_mitra + ')'"></span>
+                                </div>
+                                <i x-show="masterForm.id_mitra == m.id_mitra" class="fa-solid fa-check text-sky-600 text-xs shrink-0"></i>
+                            </button>
+                        </template>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <!-- Kategori Peruntukan (Custom Dropdown) -->
+                    <div class="relative" x-data="{ openPhaseDropdown: false }">
                         <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">PERUNTUKAN FASE *</label>
-                        <select x-model="masterForm.kategori_peruntukan" required
-                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all cursor-pointer">
-                            <option value="pembibitan">🌱 Pembibitan (Hatchery)</option>
-                            <option value="pembesaran">🐟 Pembesaran</option>
-                            <option value="semua">📦 Semua Fase</option>
-                        </select>
+                        <button type="button" @click="openPhaseDropdown = !openPhaseDropdown"
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-white text-xs font-bold text-slate-800 flex items-center justify-between transition-all focus:ring-2 focus:ring-sky-500 focus:outline-none cursor-pointer">
+                            <div class="flex items-center gap-2.5 truncate">
+                                <div class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
+                                     :class="masterForm.kategori_peruntukan === 'pembesaran' ? 'bg-blue-100 text-blue-600' : (masterForm.kategori_peruntukan === 'pembibitan' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-700')">
+                                    <i :class="masterForm.kategori_peruntukan === 'pembesaran' ? 'fa-solid fa-fish' : (masterForm.kategori_peruntukan === 'pembibitan' ? 'fa-solid fa-seedling' : 'fa-solid fa-layer-group')" class="text-[11px]"></i>
+                                </div>
+                                <span x-text="masterForm.kategori_peruntukan === 'pembesaran' ? 'Pembesaran' : (masterForm.kategori_peruntukan === 'pembibitan' ? 'Pembibitan' : 'Semua Fase')"></span>
+                            </div>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform" :class="openPhaseDropdown ? 'rotate-180 text-sky-600' : ''"></i>
+                        </button>
+                        <div x-show="openPhaseDropdown" @click.outside="openPhaseDropdown = false"
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 translate-y-1 scale-98"
+                             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave="transition ease-in duration-100"
+                             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave-end="opacity-0 translate-y-1 scale-98"
+                             class="absolute z-50 top-full left-0 right-0 mt-1.5 bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-1.5 overflow-hidden text-xs space-y-1"
+                             style="display: none;">
+                            <button type="button" @click="masterForm.kategori_peruntukan = 'pembesaran'; openPhaseDropdown = false"
+                                    :class="masterForm.kategori_peruntukan === 'pembesaran' ? 'bg-blue-50 text-blue-700 font-extrabold' : 'text-slate-700 hover:bg-slate-50 font-semibold'"
+                                    class="w-full px-2.5 py-2 rounded-xl flex items-center justify-between text-left transition-all cursor-pointer">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-6 h-6 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                                        <i class="fa-solid fa-fish text-[10px]"></i>
+                                    </div>
+                                    <span>Pembesaran</span>
+                                </div>
+                                <i x-show="masterForm.kategori_peruntukan === 'pembesaran'" class="fa-solid fa-check text-blue-600 text-xs"></i>
+                            </button>
+                            <button type="button" @click="masterForm.kategori_peruntukan = 'pembibitan'; openPhaseDropdown = false"
+                                    :class="masterForm.kategori_peruntukan === 'pembibitan' ? 'bg-emerald-50 text-emerald-700 font-extrabold' : 'text-slate-700 hover:bg-slate-50 font-semibold'"
+                                    class="w-full px-2.5 py-2 rounded-xl flex items-center justify-between text-left transition-all cursor-pointer">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                                        <i class="fa-solid fa-seedling text-[10px]"></i>
+                                    </div>
+                                    <span>Pembibitan</span>
+                                </div>
+                                <i x-show="masterForm.kategori_peruntukan === 'pembibitan'" class="fa-solid fa-check text-emerald-600 text-xs"></i>
+                            </button>
+                            <button type="button" @click="masterForm.kategori_peruntukan = 'semua'; openPhaseDropdown = false"
+                                    :class="masterForm.kategori_peruntukan === 'semua' ? 'bg-slate-100 text-slate-900 font-extrabold' : 'text-slate-700 hover:bg-slate-50 font-semibold'"
+                                    class="w-full px-2.5 py-2 rounded-xl flex items-center justify-between text-left transition-all cursor-pointer">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-6 h-6 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+                                        <i class="fa-solid fa-layer-group text-[10px]"></i>
+                                    </div>
+                                    <span>Semua Fase</span>
+                                </div>
+                                <i x-show="masterForm.kategori_peruntukan === 'semua'" class="fa-solid fa-check text-slate-900 text-xs"></i>
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- Satuan -->
-                    <div>
+                    <!-- Satuan (Custom Dropdown) -->
+                    <div class="relative" x-data="{ openSatuanDropdown: false }">
                         <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">SATUAN *</label>
-                        <input type="text" x-model="masterForm.satuan" required placeholder="kg / tray / sak"
-                               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                        <button type="button" @click="openSatuanDropdown = !openSatuanDropdown"
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-white text-xs font-bold text-slate-800 flex items-center justify-between transition-all focus:ring-2 focus:ring-sky-500 focus:outline-none cursor-pointer">
+                            <div class="flex items-center gap-2.5 truncate">
+                                <div class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
+                                     :class="masterForm.satuan === 'kg' ? 'bg-sky-100 text-sky-600' : 'bg-teal-100 text-teal-600'">
+                                    <i :class="masterForm.satuan === 'kg' ? 'fa-solid fa-scale-balanced' : 'fa-solid fa-flask'" class="text-[11px]"></i>
+                                </div>
+                                <span x-text="masterForm.satuan === 'kg' ? 'kg (Kilogram)' : 'liter (Liter)'"></span>
+                            </div>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform" :class="openSatuanDropdown ? 'rotate-180 text-sky-600' : ''"></i>
+                        </button>
+                        <div x-show="openSatuanDropdown" @click.outside="openSatuanDropdown = false"
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 translate-y-1 scale-98"
+                             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave="transition ease-in duration-100"
+                             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave-end="opacity-0 translate-y-1 scale-98"
+                             class="absolute z-50 top-full left-0 right-0 mt-1.5 bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-1.5 overflow-hidden text-xs space-y-1"
+                             style="display: none;">
+                            <button type="button" @click="masterForm.satuan = 'kg'; openSatuanDropdown = false"
+                                    :class="masterForm.satuan === 'kg' ? 'bg-sky-50 text-sky-700 font-extrabold' : 'text-slate-700 hover:bg-slate-50 font-semibold'"
+                                    class="w-full px-2.5 py-2 rounded-xl flex items-center justify-between text-left transition-all cursor-pointer">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-6 h-6 rounded-lg bg-sky-100 text-sky-600 flex items-center justify-center shrink-0">
+                                        <i class="fa-solid fa-scale-balanced text-[10px]"></i>
+                                    </div>
+                                    <span>kg (Kilogram)</span>
+                                </div>
+                                <i x-show="masterForm.satuan === 'kg'" class="fa-solid fa-check text-sky-600 text-xs"></i>
+                            </button>
+                            <button type="button" @click="masterForm.satuan = 'liter'; openSatuanDropdown = false"
+                                    :class="masterForm.satuan === 'liter' ? 'bg-teal-50 text-teal-700 font-extrabold' : 'text-slate-700 hover:bg-slate-50 font-semibold'"
+                                    class="w-full px-2.5 py-2 rounded-xl flex items-center justify-between text-left transition-all cursor-pointer">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-6 h-6 rounded-lg bg-teal-100 text-teal-600 flex items-center justify-center shrink-0">
+                                        <i class="fa-solid fa-flask text-[10px]"></i>
+                                    </div>
+                                    <span>liter (Liter)</span>
+                                </div>
+                                <i x-show="masterForm.satuan === 'liter'" class="fa-solid fa-check text-teal-600 text-xs"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -347,6 +624,17 @@
                     </div>
                 </div>
 
+                <!-- Otomatis Masuk Keuangan Info Box -->
+                <div x-show="masterMode === 'create' && (Number(masterForm.stok_tersisa) * Number(masterForm.harga_per_satuan)) > 0"
+                     class="p-3 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-between text-xs">
+                    <div class="flex items-center gap-2 text-sky-900 font-bold">
+                        <i class="fa-solid fa-file-invoice-dollar text-sky-600"></i>
+                        <span>Otomatis Masuk Buku Kas (Pengeluaran):</span>
+                    </div>
+                    <span class="font-extrabold text-sky-950 font-mono text-xs" 
+                          x-text="'Rp ' + Number(Number(masterForm.stok_tersisa) * Number(masterForm.harga_per_satuan)).toLocaleString('id-ID')"></span>
+                </div>
+
                 <!-- Keterangan / Deskripsi -->
                 <div>
                     <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">KETERANGAN / SPESIFIKASI (OPSIONAL)</label>
@@ -360,9 +648,10 @@
                             class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 cursor-pointer">
                         Batal
                     </button>
-                    <button type="submit" :disabled="isSubmitting"
-                            class="px-5 py-2 rounded-xl bg-[#031B4E] hover:bg-sky-950 text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-sky-950/20 cursor-pointer">
-                        <i class="fa-solid" :class="isSubmitting ? 'fa-spinner fa-spin' : 'fa-check'"></i>
+                    <button type="submit" :disabled="isSubmitting || !!existingDuplicatePakan"
+                            :class="existingDuplicatePakan ? 'opacity-50 cursor-not-allowed bg-slate-400' : 'bg-[#031B4E] hover:bg-sky-950 cursor-pointer shadow-md shadow-sky-950/20'"
+                            class="px-5 py-2 rounded-xl text-white font-bold text-xs flex items-center gap-2 transition-all">
+                        <i class="fa-solid" :class="isSubmitting ? 'fa-spinner fa-spin' : (existingDuplicatePakan ? 'fa-ban' : 'fa-check')"></i>
                         <span x-text="masterMode === 'create' ? 'Simpan Master Pakan' : 'Perbarui Data'"></span>
                     </button>
                 </div>
@@ -404,37 +693,94 @@
 
             <form @submit.prevent="handleSaveBeli()" class="space-y-4">
                 
-                <!-- Pilih Jenis Pakan -->
-                <div>
+                <!-- Pilih Jenis Pakan (Custom Dropdown) -->
+                <div class="relative" x-data="{ openPakanBeliDropdown: false }">
                     <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">PILIH ITEM PAKAN *</label>
-                    <select x-model="beliForm.id_stok_pakan" @change="onBeliPakanChange()" required
-                            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600 transition-all cursor-pointer">
-                        <option value="">-- Pilih Jenis Pakan Gudang --</option>
+                    <button type="button" @click="openPakanBeliDropdown = !openPakanBeliDropdown"
+                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-white text-xs font-bold text-slate-800 flex items-center justify-between transition-all focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer">
+                        <div class="flex items-center gap-2.5 truncate pr-2">
+                            <div class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
+                                 :class="beliForm.id_stok_pakan ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-500'">
+                                <i :class="beliForm.id_stok_pakan ? 'fa-solid fa-box-archive' : 'fa-solid fa-boxes-stacked'" class="text-[11px]"></i>
+                            </div>
+                            <span class="truncate" x-text="selectedBeliPakan ? (selectedBeliPakan.nama_pakan + ' (Saat ini: ' + Number(selectedBeliPakan.stok_tersisa).toFixed(1) + ' ' + selectedBeliPakan.satuan + ')') : '-- Pilih Jenis Pakan Gudang --'"></span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 shrink-0 transition-transform" :class="openPakanBeliDropdown ? 'rotate-180 text-emerald-600' : ''"></i>
+                    </button>
+                    <div x-show="openPakanBeliDropdown" @click.outside="openPakanBeliDropdown = false"
+                         x-transition:enter="transition ease-out duration-150"
+                         x-transition:enter-start="opacity-0 translate-y-1 scale-98"
+                         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                         x-transition:leave="transition ease-in duration-100"
+                         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                         x-transition:leave-end="opacity-0 translate-y-1 scale-98"
+                         class="absolute z-50 top-full left-0 right-0 mt-1.5 max-h-56 overflow-y-auto bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-1.5 text-xs space-y-1"
+                         style="display: none;">
                         <template x-for="sp in stokList" :key="sp.id_stok_pakan">
-                            <option :value="sp.id_stok_pakan" x-text="sp.nama_pakan + ' (Saat ini: ' + Number(sp.stok_tersisa).toFixed(1) + ' ' + sp.satuan + ')'"></option>
-                        </template>
-                    </select>
-                </div>
-
-                <!-- Pilih Supplier & Tombol WA -->
-                <div>
-                    <div class="flex items-center justify-between mb-1.5">
-                        <label class="text-[10px] font-extrabold uppercase text-slate-500 block">MITRA SUPPLIER / DISTRIBUTOR</label>
-                        <template x-if="selectedSupplier">
-                            <a :href="selectedSupplier.wa_link" target="_blank"
-                               class="text-[10px] font-extrabold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 transition-colors">
-                                <i class="fa-brands fa-whatsapp text-emerald-500"></i>
-                                <span>Hubungi WA Supplier</span>
-                            </a>
+                            <button type="button" @click="beliForm.id_stok_pakan = sp.id_stok_pakan; onBeliPakanChange(); openPakanBeliDropdown = false"
+                                    :class="beliForm.id_stok_pakan == sp.id_stok_pakan ? 'bg-emerald-50 text-emerald-800 font-extrabold' : 'text-slate-700 hover:bg-slate-50 font-semibold'"
+                                    class="w-full px-2.5 py-2 rounded-xl flex items-center justify-between text-left transition-all cursor-pointer">
+                                <div class="flex items-center gap-2 truncate pr-2">
+                                    <div class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                                        <i class="fa-solid fa-box-archive text-[10px]"></i>
+                                    </div>
+                                    <span class="truncate" x-text="sp.nama_pakan"></span>
+                                    <span class="text-[10px] px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 font-medium shrink-0" x-text="'Stok: ' + Number(sp.stok_tersisa).toFixed(1) + ' ' + sp.satuan"></span>
+                                </div>
+                                <i x-show="beliForm.id_stok_pakan == sp.id_stok_pakan" class="fa-solid fa-check text-emerald-600 text-xs shrink-0"></i>
+                            </button>
                         </template>
                     </div>
-                    <select x-model="beliForm.id_mitra"
-                            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600 transition-all cursor-pointer">
-                        <option value="">-- Beli Langsung / Toko Lokal --</option>
+                </div>
+
+                <!-- Pilih Supplier (Custom Dropdown) -->
+                <div class="relative" x-data="{ openSupplierBeliDropdown: false }">
+                    <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">MITRA SUPPLIER / DISTRIBUTOR (OPSIONAL)</label>
+                    <button type="button" @click="openSupplierBeliDropdown = !openSupplierBeliDropdown"
+                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-white text-xs font-bold text-slate-800 flex items-center justify-between transition-all focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer">
+                        <div class="flex items-center gap-2.5 truncate pr-2">
+                            <div class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
+                                 :class="beliForm.id_mitra ? 'bg-sky-100 text-sky-600' : 'bg-slate-100 text-slate-500'">
+                                <i :class="beliForm.id_mitra ? 'fa-solid fa-boxes-stacked' : 'fa-solid fa-warehouse'" class="text-[11px]"></i>
+                            </div>
+                            <span class="truncate" x-text="beliForm.id_mitra ? ((suppliers.find(m => m.id_mitra == beliForm.id_mitra)?.nama_mitra || 'Mitra Terpilih') + ' (Supplier Pakan)') : '-- Beli Langsung / Toko Lokal --'"></span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 shrink-0 transition-transform" :class="openSupplierBeliDropdown ? 'rotate-180 text-emerald-600' : ''"></i>
+                    </button>
+                    <div x-show="openSupplierBeliDropdown" @click.outside="openSupplierBeliDropdown = false"
+                         x-transition:enter="transition ease-out duration-150"
+                         x-transition:enter-start="opacity-0 translate-y-1 scale-98"
+                         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                         x-transition:leave="transition ease-in duration-100"
+                         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                         x-transition:leave-end="opacity-0 translate-y-1 scale-98"
+                         class="absolute z-50 top-full left-0 right-0 mt-1.5 max-h-56 overflow-y-auto bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-1.5 text-xs space-y-1"
+                         style="display: none;">
+                        <button type="button" @click="beliForm.id_mitra = ''; openSupplierBeliDropdown = false"
+                                :class="!beliForm.id_mitra ? 'bg-emerald-50 text-emerald-800 font-extrabold' : 'text-slate-700 hover:bg-slate-50 font-semibold'"
+                                class="w-full px-2.5 py-2 rounded-xl flex items-center justify-between text-left transition-all cursor-pointer">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
+                                    <i class="fa-solid fa-warehouse text-[10px]"></i>
+                                </div>
+                                <span>-- Beli Langsung / Toko Lokal --</span>
+                            </div>
+                            <i x-show="!beliForm.id_mitra" class="fa-solid fa-check text-emerald-600 text-xs"></i>
+                        </button>
                         <template x-for="m in suppliers" :key="m.id_mitra">
-                            <option :value="m.id_mitra" x-text="m.nama_mitra + ' (' + m.tipe_mitra + ')'"></option>
+                            <button type="button" @click="beliForm.id_mitra = m.id_mitra; openSupplierBeliDropdown = false"
+                                    :class="beliForm.id_mitra == m.id_mitra ? 'bg-emerald-50 text-emerald-800 font-extrabold' : 'text-slate-700 hover:bg-slate-50 font-semibold'"
+                                    class="w-full px-2.5 py-2 rounded-xl flex items-center justify-between text-left transition-all cursor-pointer">
+                                <div class="flex items-center gap-2 truncate pr-2">
+                                    <div class="w-6 h-6 rounded-lg bg-sky-100 text-sky-600 flex items-center justify-center shrink-0">
+                                        <i class="fa-solid fa-boxes-stacked text-[10px]"></i>
+                                    </div>
+                                    <span class="truncate" x-text="m.nama_mitra + ' (' + m.tipe_mitra + ')'"></span>
+                                </div>
+                                <i x-show="beliForm.id_mitra == m.id_mitra" class="fa-solid fa-check text-emerald-600 text-xs shrink-0"></i>
+                            </button>
                         </template>
-                    </select>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
@@ -568,6 +914,7 @@ function stokPakanComponent() {
         searchQuery: '',
         filterKategori: 'semua',
         filterStatus: 'semua',
+        openStatusFilterDropdown: false,
         
         currentPage: 1,
         perPage: 10,
@@ -582,6 +929,7 @@ function stokPakanComponent() {
         editItemId: null,
         masterForm: {
             nama_pakan: '',
+            id_mitra: '',
             kategori_peruntukan: 'pembesaran',
             satuan: 'kg',
             stok_tersisa: 50,
@@ -645,11 +993,23 @@ function stokPakanComponent() {
             return this.suppliers.find(m => m.id_mitra == this.beliForm.id_mitra) || null;
         },
 
+        get existingDuplicatePakan() {
+            if (!this.masterForm.nama_pakan || !this.masterForm.nama_pakan.trim()) return null;
+            const cleanName = this.masterForm.nama_pakan.trim().toLowerCase();
+            return this.stokList.find(item => {
+                if (this.masterMode === 'edit' && item.id_stok_pakan == this.editItemId) {
+                    return false;
+                }
+                return item.nama_pakan.trim().toLowerCase() === cleanName;
+            }) || null;
+        },
+
         openCreateModal() {
             this.masterMode = 'create';
             this.editItemId = null;
             this.masterForm = {
                 nama_pakan: '',
+                id_mitra: this.suppliers.length > 0 ? this.suppliers[0].id_mitra : '',
                 kategori_peruntukan: 'pembesaran',
                 satuan: 'kg',
                 stok_tersisa: 50,
@@ -665,6 +1025,7 @@ function stokPakanComponent() {
             this.editItemId = item.id_stok_pakan;
             this.masterForm = {
                 nama_pakan: item.nama_pakan,
+                id_mitra: item.id_mitra || '',
                 kategori_peruntukan: item.kategori_peruntukan,
                 satuan: item.satuan,
                 stok_tersisa: item.stok_tersisa,
@@ -681,13 +1042,14 @@ function stokPakanComponent() {
         },
 
         openBeliModal() {
+            const first = this.stokList.length > 0 ? this.stokList[0] : null;
             this.beliForm = {
-                id_stok_pakan: this.stokList.length > 0 ? this.stokList[0].id_stok_pakan : '',
-                id_mitra: this.suppliers.length > 0 ? this.suppliers[0].id_mitra : '',
+                id_stok_pakan: first ? first.id_stok_pakan : '',
+                id_mitra: first && first.id_mitra ? first.id_mitra : (this.suppliers.length > 0 ? this.suppliers[0].id_mitra : ''),
                 tgl_beli: new Date().toISOString().split('T')[0],
                 jumlah: 50,
-                harga_satuan: this.stokList.length > 0 ? this.stokList[0].harga_per_satuan : 12500,
-                total_biaya: (this.stokList.length > 0 ? this.stokList[0].harga_per_satuan : 12500) * 50,
+                harga_satuan: first ? first.harga_per_satuan : 12500,
+                total_biaya: (first ? first.harga_per_satuan : 12500) * 50,
                 keterangan: ''
             };
             this.showBeliModal = true;
@@ -696,7 +1058,7 @@ function stokPakanComponent() {
         quickBeli(item) {
             this.beliForm = {
                 id_stok_pakan: item.id_stok_pakan,
-                id_mitra: this.suppliers.length > 0 ? this.suppliers[0].id_mitra : '',
+                id_mitra: item.id_mitra || (this.suppliers.length > 0 ? this.suppliers[0].id_mitra : ''),
                 tgl_beli: new Date().toISOString().split('T')[0],
                 jumlah: item.batas_minimum ? item.batas_minimum * 2 : 50,
                 harga_satuan: item.harga_per_satuan || 12500,
@@ -709,6 +1071,9 @@ function stokPakanComponent() {
         onBeliPakanChange() {
             const item = this.selectedBeliPakan;
             if (item) {
+                if (item.id_mitra) {
+                    this.beliForm.id_mitra = item.id_mitra;
+                }
                 this.beliForm.harga_satuan = item.harga_per_satuan || 12500;
                 this.recalculateBeliTotal();
             }
@@ -721,6 +1086,11 @@ function stokPakanComponent() {
         },
 
         async handleSaveMaster() {
+            if (this.existingDuplicatePakan) {
+                alert(`Nama jenis pakan "${this.masterForm.nama_pakan}" sudah ada di gudang. Silakan gunakan nama lain atau gunakan menu Restock Pakan.`);
+                return;
+            }
+
             if (this.isSubmitting) return;
             this.isSubmitting = true;
 

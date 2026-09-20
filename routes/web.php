@@ -131,7 +131,7 @@ Route::middleware(['auth', 'role:manajer'])->group(function () {
     Route::get('/mitra', [MitraController::class, 'index'])->name('mitra');
     Route::get('/mitra-distributor', [MitraController::class, 'index'])->name('mitra-distributor');
     Route::post('/mitra', [MitraController::class, 'store'])->name('mitra.store');
-    Route::put('/mitra/{id}', [MitraController::class, 'update'])->name('mitra.update');
+    Route::match(['put', 'post'], '/mitra/{id}', [MitraController::class, 'update'])->name('mitra.update');
     Route::delete('/mitra/{id}', [MitraController::class, 'destroy'])->name('mitra.destroy');
 
     // Manajemen Akun Petugas & Keamanan Akses

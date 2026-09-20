@@ -352,6 +352,52 @@
         [x-cloak] {
             display: none !important;
         }
+
+        /* =========================================================================
+           PRINT MEDIA STYLESHEET (Laporan & Dokumen Resmi)
+           ========================================================================= */
+        @media print {
+            aside,
+            header,
+            .no-print,
+            button:not(.print-include),
+            .swal2-container,
+            [x-cloak] {
+                display: none !important;
+            }
+
+            body,
+            html,
+            .flex,
+            .h-screen,
+            .overflow-hidden,
+            .flex-1,
+            main {
+                overflow: visible !important;
+                height: auto !important;
+                min-height: 0 !important;
+                background: #ffffff !important;
+                color: #0f172a !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                box-shadow: none !important;
+            }
+
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            @page {
+                size: A4 portrait;
+                margin: 6mm 8mm;
+            }
+
+            .page-break-inside-avoid {
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+            }
+        }
     </style>
 </head>
 <body class="antialiased text-slate-800 bg-slate-50 min-h-screen" x-data="{ sidebarOpen: false }">

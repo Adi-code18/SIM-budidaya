@@ -701,9 +701,9 @@
          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs"
          style="display: none;">
         
-        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 border border-slate-200" @click.outside="transferModalOpen = false">
+        <div class="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-4 border border-slate-200 overflow-y-auto max-h-[90vh]" @click.outside="transferModalOpen = false">
             <!-- Modal Header -->
-            <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm">
                         <i class="fa-solid fa-right-left"></i>
@@ -718,67 +718,281 @@
                 </button>
             </div>
 
-            <!-- Batch Summary Banner with Kg weight -->
-            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 grid grid-cols-3 gap-2 text-xs">
+            <!-- Batch Summary Banner with Remaining Calculation -->
+            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                 <div>
                     <span class="text-[10px] font-extrabold uppercase text-slate-400 block">BATCH ASAL</span>
                     <span class="font-extrabold text-[#031B4E]" x-text="selectedBatchToTransfer?.id"></span>
-                    <span class="text-slate-500 block font-semibold mt-0.5" x-text="selectedBatchToTransfer?.jenis_ikan || selectedBatchToTransfer?.jenisIkan || 'Ikan Nila'"></span>
+                    <span class="text-slate-500 block font-semibold text-[11px]" x-text="selectedBatchToTransfer?.jenis_ikan || selectedBatchToTransfer?.jenisIkan || 'Ikan Nila'"></span>
                 </div>
                 <div>
-                    <span class="text-[10px] font-extrabold uppercase text-slate-400 block">SISA BIBIT</span>
-                    <span class="font-extrabold text-slate-800 text-sm" x-text="(selectedBatchToTransfer?.jumlah || 0) + ' Ekor'"></span>
+                    <span class="text-[10px] font-extrabold uppercase text-slate-400 block">SISA BIBIT AWAL</span>
+                    <span class="font-extrabold text-slate-800 text-xs sm:text-sm" x-text="sisaBibitTersedia.toLocaleString('id-ID') + ' Ekor'"></span>
                 </div>
-                <div class="text-right">
-                    <span class="text-[10px] font-extrabold uppercase text-slate-400 block">BOBOT AWAL SAAT INI</span>
-                    <span class="font-extrabold text-emerald-600 text-sm" x-text="selectedBatchToTransfer?.totalBobotFormat || (selectedBatchToTransfer?.totalBobotKg + ' kg')"></span>
+                <div>
+                    <span class="text-[10px] font-extrabold uppercase text-slate-400 block">BOBOT BENIH TOTAL</span>
+                    <span class="font-extrabold text-emerald-600 text-xs sm:text-sm" x-text="selectedBatchToTransfer?.totalBobotFormat || (selectedBatchToTransfer?.totalBobotKg + ' kg')"></span>
+                </div>
+                <div class="text-left sm:text-right">
+                    <span class="text-[10px] font-extrabold uppercase text-slate-400 block">SISA SETELAH PINDAH</span>
+                    <span class="font-extrabold text-xs sm:text-sm" :class="sisaBibitSetelahTransfer <= 0 ? 'text-slate-400' : 'text-sky-700'" x-text="sisaBibitSetelahTransfer.toLocaleString('id-ID') + ' Ekor'"></span>
                 </div>
             </div>
 
+            <!-- Formula SOP Info Pill -->
+            <div class="px-3 py-2 rounded-xl bg-sky-50/90 border border-sky-200 text-sky-950 text-xs flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-calculator text-sky-600"></i>
+                    <span>
+                        <strong>Standar SOP Panen (<span x-text="selectedBatchToTransfer?.jenis_ikan || 'Nila'"></span>):</strong>
+                        Target Ukuran <strong><span x-text="selectedBatchToTransfer?.avg_ekor_per_kg || 4"></span> Ekor/kg</strong> (~250 gr/ekor) • Survival Rate (SR) <strong>85%</strong>
+                    </span>
+                </div>
+                <span class="text-[10px] font-bold text-sky-700 bg-white px-2 py-0.5 rounded border border-sky-200 shadow-2xs">
+                    Target Panen (kg) = (Bibit × 85%) ÷ <span x-text="selectedBatchToTransfer?.avg_ekor_per_kg || 4"></span>
+                </span>
+            </div>
+
+            <!-- Mode Selector Switch: 1 Kolam vs Auto-Distribusi Multi-Kolam -->
+            <div class="flex items-center p-1 bg-slate-100 rounded-xl text-xs font-bold gap-1">
+                <button type="button" @click="transferMode = 'single'"
+                        :class="transferMode === 'single' ? 'bg-[#031B4E] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'"
+                        class="flex-1 py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-water"></i>
+                    <span>Transfer ke 1 Kolam (Manual)</span>
+                </button>
+                <button type="button" @click="transferMode = 'multi'"
+                        :class="transferMode === 'multi' ? 'bg-[#031B4E] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'"
+                        class="flex-1 py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <span>Auto-Distribusi Multi-Kolam</span>
+                </button>
+            </div>
+
             <form @submit.prevent="submitTransfer()" class="space-y-4">
-                <div>
-                    <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">PILIH KOLAM PEMBESARAN TUJUAN *</label>
-                    <select x-model="transferForm.id_kolam_pembesaran" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/10">
-                        <option value="">Pilih Kolam Pembesaran...</option>
-                        @if(isset($kolamPembesaran) && count($kolamPembesaran) > 0)
-                            @foreach($kolamPembesaran as $kp)
-                                <option value="{{ $kp->nama_kolam }}">{{ $kp->nama_kolam }} ({{ $kp->tipe_kolam ?? 'Pembesaran' }} - Kapasitas: {{ number_format($kp->kapasitas, 0, ',', '.') }} kg)</option>
-                            @endforeach
-                        @else
-                            <option value="Kolam Pembesaran A-01">Kolam Pembesaran A-01 (Beton - Kapasitas: 2.000 kg)</option>
-                            <option value="Kolam Pembesaran B-02">Kolam Pembesaran B-02 (Terpal - Kapasitas: 1.500 kg)</option>
-                            <option value="Kolam Pembesaran Bioflok C-03">Kolam Pembesaran Bioflok C-03 (Bioflok - Kapasitas: 3.000 kg)</option>
-                        @endif
-                    </select>
+                
+                <!-- ================= MODE 1: SINGLE KOLAM ================= -->
+                <div x-show="transferMode === 'single'" class="space-y-3.5">
+                    <div>
+                        <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1">PILIH KOLAM PEMBESARAN TUJUAN *</label>
+                        <select x-model="transferForm.id_kolam_pembesaran" @change="fillBySinglePondCapacity()" required
+                                class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:border-emerald-600">
+                            <option value="">-- Pilih Kolam Pembesaran --</option>
+                            <template x-for="kp in kolamPembesaranList" :key="kp.id_kolam">
+                                <option :value="kp.id_kolam" x-text="kp.label"></option>
+                            </template>
+                        </select>
+                        <div x-show="selectedSinglePond" class="flex items-center justify-between text-[11px] pt-1 text-slate-500 font-medium">
+                            <span>Kapasitas Kolam: <strong class="text-slate-800" x-text="Number(selectedSinglePond?.kapasitas || 0).toLocaleString('id-ID') + ' Ekor'"></strong></span>
+                            <span class="text-sky-700 font-bold" x-show="singlePondCapacity > 0" 
+                                  x-text="'Target Panen Kapasitas Penuh: ~' + Math.round((singlePondCapacity * 0.85) / (selectedBatchToTransfer?.avg_ekor_per_kg || 4)).toLocaleString('id-ID') + ' kg'"></span>
+                        </div>
+                    </div>
+
+                    <!-- Input Kuantitas Bibit & Transfer Loss -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="text-[10px] font-extrabold uppercase text-slate-500 block">JUMLAH BIBIT PINDAH (EKOR) *</label>
+                                <span class="text-[9px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200" x-text="'Tersedia: ' + sisaBibitTersedia.toLocaleString('id-ID') + ' Ekor'"></span>
+                            </div>
+                            <input type="number" step="1" min="1" :max="sisaBibitTersedia" x-model="transferForm.jumlah_bibit_transfer" @input="onSingleBibitChange()" required
+                                   class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 bg-white focus:outline-none focus:border-emerald-600">
+                            <!-- Quick Buttons -->
+                            <div class="flex items-center gap-1.5 pt-1.5 flex-wrap">
+                                <button type="button" @click="fillBySinglePondCapacity()" x-show="singlePondCapacity > 0"
+                                        class="px-2 py-0.5 rounded-md bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-bold transition-colors">
+                                    ⚡ Sesuai Kapasitas (<span x-text="singlePondCapacity.toLocaleString('id-ID') + ' Ekor'"></span>)
+                                </button>
+                                <button type="button" @click="fillAllBibitSingle()"
+                                        class="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold transition-colors">
+                                    Pindahkan Semua (<span x-text="sisaBibitTersedia.toLocaleString('id-ID')"></span>)
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1">
+                                SUSUT / MATI SAAT TRANSFER (EKOR)
+                                <span class="text-[9px] text-slate-400 font-normal lowercase">(opsional afkir/loss)</span>
+                            </label>
+                            <input type="number" step="1" min="0" x-model="transferForm.jumlah_mati_transfer" placeholder="0"
+                                   class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-rose-700 bg-white focus:outline-none focus:border-rose-500">
+                            <p class="text-[10px] text-slate-400 italic pt-1">
+                                *Ikan mati/afkir saat penangkapan/grading otomatis dicatat di histori kematian.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- 3 Column Metrics -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                        <div>
+                            <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1">BIOMASSA AWAL (KG)</label>
+                            <input type="number" step="0.01" x-model="transferForm.biomassa_est" required
+                                   class="w-full px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-emerald-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-emerald-600">
+                            <p class="text-[9px] text-slate-400 italic pt-0.5">Proporsional dari bobot benih saat ini</p>
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="text-[10px] font-extrabold uppercase text-slate-500 block">TARGET PANEN (KG)</label>
+                                <span class="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1 rounded">SOP 85%</span>
+                            </div>
+                            <input type="number" step="1" x-model="transferForm.target_panen_kg" required
+                                   class="w-full px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-black text-slate-900 bg-slate-50 focus:bg-white focus:outline-none focus:border-emerald-600">
+                            <p class="text-[9px] text-slate-500 font-semibold pt-0.5">
+                                *~<span x-text="Math.round(Number(transferForm.jumlah_bibit_transfer || 0) * 0.85).toLocaleString('id-ID')"></span> ekor hidup ÷ <span x-text="selectedBatchToTransfer?.avg_ekor_per_kg || 4"></span> ekor/kg
+                            </p>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1">ESTIMASI TGL PANEN</label>
+                            <input type="date" x-model="transferForm.est_tgl_panen" required
+                                   class="w-full px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-amber-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-emerald-600">
+                            <p class="text-[9px] text-slate-400 italic pt-0.5">Sesuai SOP siklus pembesaran</p>
+                        </div>
+                    </div>
+
+                    <!-- FCR Safe / Overcapacity Indicator -->
+                    <div x-show="selectedSinglePond && singlePondCapacity > 0" class="p-3 rounded-xl border text-xs transition-all"
+                         :class="isSingleOvercapacity ? 'bg-amber-50/90 border-amber-200 text-amber-950' : 'bg-emerald-50/80 border-emerald-200 text-emerald-950'">
+                        <div class="flex items-center justify-between font-bold">
+                            <div class="flex items-center gap-1.5">
+                                <i class="fa-solid" :class="isSingleOvercapacity ? 'fa-triangle-exclamation text-amber-600' : 'fa-circle-check text-emerald-600'"></i>
+                                <span x-text="isSingleOvercapacity ? 'Peringatan: Jumlah Bibit Melebihi Kapasitas Kolam (+ ' + singleOvercapacityPercent + '%)' : 'Kepadatan Kolam Aman & Optimal (Sesuai Kapasitas)'"></span>
+                            </div>
+                            <span class="text-[11px] font-extrabold" x-text="Number(transferForm.jumlah_bibit_transfer || 0).toLocaleString('id-ID') + ' / ' + singlePondCapacity.toLocaleString('id-ID') + ' Ekor'"></span>
+                        </div>
+                        
+                        <div x-show="isSingleOvercapacity" class="pt-2 mt-2 border-t border-amber-200/80 space-y-1.5">
+                            <p class="text-[11px] text-amber-800 leading-relaxed">
+                                Kepadatan berlebih (*overstocking*) dapat menyebabkan stres pada ikan, penurunan kualitas air, dan <strong>pembengkakan rasio FCR (boros pakan)</strong>.
+                            </p>
+                            <label class="flex items-center gap-2 cursor-pointer pt-0.5 select-none font-semibold text-[11px] text-amber-900">
+                                <input type="checkbox" x-model="riskAcknowledged" class="rounded text-amber-600 focus:ring-amber-500 w-4 h-4 cursor-pointer">
+                                <span>Saya memahami risiko overcapacity terhadap FCR dan kualitas air kolam.</span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-3 gap-3">
-                    <div>
-                        <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">BIOMAKSA AWAL (KG) *</label>
-                        <input type="number" step="0.1" x-model="transferForm.biomassa_est" required
-                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-emerald-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-emerald-600">
+                <!-- ================= MODE 2: AUTO-DISTRIBUSI MULTI-KOLAM ================= -->
+                <div x-show="transferMode === 'multi'" class="space-y-3.5">
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="text-[10px] font-extrabold uppercase text-slate-500 block">TOTAL BIBIT YANG DIDISTRIBUSIKAN (EKOR) *</label>
+                                <span class="text-[9px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200" x-text="'Tersedia: ' + sisaBibitTersedia.toLocaleString('id-ID') + ' Ekor'"></span>
+                            </div>
+                            <input type="number" step="1" min="1" :max="sisaBibitTersedia" x-model="multiTotalBibitTransfer" required
+                                   class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 bg-white focus:outline-none focus:border-emerald-600">
+                            
+                            <!-- Quick Buttons for Multi Distribution -->
+                            <div class="flex items-center gap-1.5 pt-1.5 flex-wrap">
+                                <button type="button" @click="fillMultiByCapacity()" x-show="multiTotalCapacity > 0"
+                                        class="px-2 py-0.5 rounded-md bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-bold transition-colors">
+                                    ⚡ Sesuai Total Kapasitas (<span x-text="multiTotalCapacity.toLocaleString('id-ID') + ' Ekor'"></span>)
+                                </button>
+                                <button type="button" @click="multiTotalBibitTransfer = sisaBibitTersedia" 
+                                        class="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold transition-colors">
+                                    Distribusi Seluruh Sisa (<span x-text="sisaBibitTersedia.toLocaleString('id-ID') + ' Ekor'"></span>)
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1">
+                                SUSUT / MATI SAAT TRANSFER (EKOR)
+                                <span class="text-[9px] text-slate-400 font-normal lowercase">(opsional loss)</span>
+                            </label>
+                            <input type="number" step="1" min="0" x-model="transferForm.jumlah_mati_transfer" placeholder="0"
+                                   class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-rose-700 bg-white focus:outline-none focus:border-rose-500">
+                            <p class="text-[10px] text-slate-400 italic pt-1">*Otomatis dicatat di histori mortalitas.</p>
+                        </div>
                     </div>
+
+                    <!-- Checklist Kolam Tujuan -->
                     <div>
-                        <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">TARGET PANEN (KG) *</label>
-                        <input type="number" step="1" x-model="transferForm.target_panen_kg" required
-                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:border-emerald-600">
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="text-[10px] font-extrabold uppercase text-slate-500 block">PILIH KOLAM PEMBESARAN TUJUAN *</label>
+                            <span class="text-[10px] font-bold text-sky-700" x-text="multiSelectedPonds.length + ' Kolam Terpilih (Kapasitas Total: ' + multiTotalCapacity.toLocaleString('id-ID') + ' Ekor)'"></span>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-200">
+                            <template x-for="kp in kolamPembesaranList" :key="kp.id_kolam">
+                                <label class="flex items-center gap-2 p-2 rounded-lg bg-white border border-slate-200 hover:border-emerald-300 cursor-pointer text-xs transition-colors">
+                                    <input type="checkbox" :value="kp.id_kolam" x-model="multiSelectedPonds" @change="if(multiTotalBibitTransfer <= 0) fillMultiByCapacity()" class="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer">
+                                    <div class="flex-1 min-w-0">
+                                        <div class="font-extrabold text-slate-800 text-[11px] truncate" x-text="kp.nama_kolam"></div>
+                                        <div class="text-[10px] text-slate-400 font-semibold" x-text="(kp.tipe_kolam || 'Pembesaran') + ' • Kap: ' + Number(kp.kapasitas || 0).toLocaleString('id-ID') + ' Ekor'"></div>
+                                    </div>
+                                </label>
+                            </template>
+                        </div>
                     </div>
-                    <div>
-                        <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">ESTIMASI TGL PANEN *</label>
-                        <input type="date" x-model="transferForm.est_tgl_panen" required
-                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-amber-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-emerald-600">
+
+                    <!-- Live Breakdown Alokasi Proporsional Table -->
+                    <div x-show="multiAllocations.length > 0" class="space-y-2">
+                        <span class="text-[10px] font-extrabold uppercase text-slate-400 block tracking-wider">HASIL ALOKASI OTOMATIS (PROPORSIONAL KAPASITAS)</span>
+                        <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-2xs">
+                            <table class="w-full text-[11px] text-left">
+                                <thead class="bg-slate-50 text-[10px] font-extrabold uppercase text-slate-500 border-b border-slate-200">
+                                    <tr>
+                                        <th class="px-3 py-2">Kolam</th>
+                                        <th class="px-2 py-2 text-right">Kapasitas</th>
+                                        <th class="px-2 py-2 text-right">Bibit Ditebar</th>
+                                        <th class="px-2 py-2 text-right">Est. Hidup (85%)</th>
+                                        <th class="px-2 py-2 text-right">Biomassa Awal</th>
+                                        <th class="px-2 py-2 text-right">Target Panen</th>
+                                        <th class="px-3 py-2 text-center">Beban Kolam</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 font-medium">
+                                    <template x-for="alloc in multiAllocations" :key="alloc.id_kolam">
+                                        <tr class="hover:bg-slate-50/50">
+                                            <td class="px-3 py-2 font-bold text-slate-800" x-text="alloc.nama_kolam"></td>
+                                            <td class="px-2 py-2 text-right font-medium text-slate-500" x-text="alloc.kapasitas.toLocaleString('id-ID') + ' Ekor'"></td>
+                                            <td class="px-2 py-2 text-right font-extrabold text-sky-900" x-text="alloc.bibit_ekor.toLocaleString('id-ID') + ' Ekor'"></td>
+                                            <td class="px-2 py-2 text-right text-slate-600" x-text="alloc.est_hidup_ekor.toLocaleString('id-ID') + ' Ekor'"></td>
+                                            <td class="px-2 py-2 text-right text-slate-600" x-text="alloc.biomassa_kg + ' kg'"></td>
+                                            <td class="px-2 py-2 text-right">
+                                                <span class="font-black text-emerald-700 block" x-text="alloc.target_panen_kg.toLocaleString('id-ID') + ' kg'"></span>
+                                                <span class="text-[9px] text-slate-400 block" x-text="'(' + alloc.est_hidup_ekor.toLocaleString('id-ID') + ' ÷ ' + (selectedBatchToTransfer?.avg_ekor_per_kg || 4) + ')'"></span>
+                                            </td>
+                                            <td class="px-3 py-2 text-center">
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold"
+                                                      :class="alloc.is_overcapacity ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800'"
+                                                      x-text="alloc.percent_of_cap + '% (' + (alloc.is_overcapacity ? 'Over' : 'Aman') + ')'"></span>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Multi Overcapacity Risk Checkbox -->
+                        <div x-show="isMultiOvercapacity" class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs space-y-1.5">
+                            <div class="flex items-center gap-1.5 font-bold text-amber-900">
+                                <i class="fa-solid fa-triangle-exclamation text-amber-600"></i>
+                                <span>Sebagian kolam mengalami kepadatan di atas kapasitas rekomendasi.</span>
+                            </div>
+                            <label class="flex items-center gap-2 cursor-pointer pt-0.5 select-none font-semibold text-[11px] text-amber-900">
+                                <input type="checkbox" x-model="riskAcknowledged" class="rounded text-amber-600 focus:ring-amber-500 w-4 h-4 cursor-pointer">
+                                <span>Saya memahami risiko overcapacity terhadap FCR dan kualitas air kolam.</span>
+                            </label>
+                        </div>
                     </div>
                 </div>
 
+                <!-- Modal Footer -->
                 <div class="pt-3 flex items-center justify-end gap-2.5 border-t border-slate-100">
                     <button type="button" @click="transferModalOpen = false"
-                            class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50">
+                            class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors">
                         Batal
                     </button>
-                    <button type="submit" :disabled="isSubmitting"
-                            class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-emerald-600/20">
+                    <button type="submit" :disabled="isSubmitting || ((isSingleOvercapacity || isMultiOvercapacity) && !riskAcknowledged)"
+                            class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-emerald-600/20 transition-all">
                         <i class="fa-solid" :class="isSubmitting ? 'fa-spinner fa-spin' : 'fa-check'"></i>
-                        <span>Konfirmasi Pindah ke Pembesaran</span>
+                        <span x-text="transferMode === 'multi' ? 'Konfirmasi Distribusi ke ' + multiSelectedPonds.length + ' Kolam' : 'Konfirmasi Pindah ke Pembesaran'"></span>
                     </button>
                 </div>
             </form>
@@ -898,13 +1112,108 @@ function pembibitanComponent() {
         selectedBatchToDelete: null,
         transferModalOpen: false,
         selectedBatchToTransfer: null,
+        kolamPembesaranList: {!! json_encode($kolamPembesaranList ?? []) !!},
+        transferMode: 'single',
+        riskAcknowledged: false,
+        multiSelectedPonds: [],
+        multiTotalBibitTransfer: 0,
         transferForm: {
             id_kolam_pembesaran: '',
-            target_panen_kg: 500,
-            biomassa_est: 50
+            jumlah_bibit_transfer: 0,
+            biomassa_est: 0,
+            target_panen_kg: 0,
+            est_tgl_panen: '',
+            jumlah_mati_transfer: 0
         },
         showToast: false,
         toastMessage: '',
+
+        get selectedSinglePond() {
+            if (!this.transferForm.id_kolam_pembesaran) return null;
+            return (this.kolamPembesaranList || []).find(k => k.id_kolam == this.transferForm.id_kolam_pembesaran || k.nama_kolam === this.transferForm.id_kolam_pembesaran);
+        },
+
+        get singlePondCapacity() {
+            return this.selectedSinglePond ? Number(this.selectedSinglePond.kapasitas || 0) : 0;
+        },
+
+        get isSingleOvercapacity() {
+            if (this.singlePondCapacity <= 0) return false;
+            return Number(this.transferForm.jumlah_bibit_transfer || 0) > this.singlePondCapacity;
+        },
+
+        get singleOvercapacityPercent() {
+            if (this.singlePondCapacity <= 0) return 0;
+            const bibit = Number(this.transferForm.jumlah_bibit_transfer || 0);
+            const diff = bibit - this.singlePondCapacity;
+            return diff > 0 ? Math.round((diff / this.singlePondCapacity) * 100) : 0;
+        },
+
+        get sisaBibitTersedia() {
+            if (!this.selectedBatchToTransfer) return 0;
+            const item = this.selectedBatchToTransfer;
+            return Number(item.jumlahRaw !== undefined ? item.jumlahRaw : ((item.jumlahBibitAwal || 0) - (item.jumlahKematian || 0))) || 0;
+        },
+
+        get sisaBibitSetelahTransfer() {
+            const loss = Number(this.transferForm.jumlah_mati_transfer || 0);
+            if (this.transferMode === 'single') {
+                const tr = Number(this.transferForm.jumlah_bibit_transfer || 0);
+                return Math.max(0, this.sisaBibitTersedia - tr - loss);
+            } else {
+                const tr = Number(this.multiTotalBibitTransfer || 0);
+                return Math.max(0, this.sisaBibitTersedia - tr - loss);
+            }
+        },
+
+        get multiSelectedPondsDetails() {
+            const selectedIds = (this.multiSelectedPonds || []).map(id => String(id));
+            return (this.kolamPembesaranList || []).filter(k => selectedIds.includes(String(k.id_kolam)));
+        },
+
+        get multiTotalCapacity() {
+            return this.multiSelectedPondsDetails.reduce((sum, k) => sum + Number(k.kapasitas || 0), 0);
+        },
+
+        get multiAllocations() {
+            const totalCap = this.multiTotalCapacity;
+            const totalBibit = Number(this.multiTotalBibitTransfer || 0);
+            const item = this.selectedBatchToTransfer;
+            const avgEkorPerKg = item ? (Number(item.avg_ekor_per_kg || 4.0) > 0 ? Number(item.avg_ekor_per_kg || 4.0) : 4.0) : 4.0;
+            const totalBobotKg = item ? Number(item.totalBobotKg || 0) : 0;
+            const sisaBibitAwal = this.sisaBibitTersedia;
+            const harvestMonths = item ? Number(item.bulan_panen_max || 3.0) : 3.0;
+            const harvestDays = Math.max(30, Math.round(harvestMonths * 30));
+            const estHarvestDate = new Date(Date.now() + harvestDays * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+            return this.multiSelectedPondsDetails.map(k => {
+                const cap = Number(k.kapasitas || 0);
+                const ratio = totalCap > 0 ? (cap / totalCap) : (1 / Math.max(1, this.multiSelectedPondsDetails.length));
+                const bibitAlloc = Math.round(totalBibit * ratio);
+                const estHidup = Math.round(bibitAlloc * 0.85);
+                const targetPanen = Math.round(estHidup / avgEkorPerKg);
+                const biomassaAlloc = sisaBibitAwal > 0 ? Number(((bibitAlloc / sisaBibitAwal) * totalBobotKg).toFixed(2)) : 0;
+                const isOver = cap > 0 && bibitAlloc > cap;
+
+                return {
+                    id_kolam: k.id_kolam,
+                    nama_kolam: k.nama_kolam,
+                    tipe_kolam: k.tipe_kolam,
+                    kapasitas: cap,
+                    bibit_ekor: bibitAlloc,
+                    est_hidup_ekor: estHidup,
+                    biomassa_kg: biomassaAlloc,
+                    target_panen_kg: targetPanen,
+                    est_tgl_panen: estHarvestDate,
+                    is_overcapacity: isOver,
+                    percent_of_cap: cap > 0 ? Math.round((bibitAlloc / cap) * 100) : 0
+                };
+            });
+        },
+
+        get isMultiOvercapacity() {
+            return this.multiAllocations.some(a => a.is_overcapacity);
+        },
 
         onIkanSelected() {
             this.syncFaseAndStatusFromSOP();
@@ -1383,31 +1692,156 @@ function pembibitanComponent() {
             this.selectedBatchToDelete = null;
         },
 
+        fillBySinglePondCapacity() {
+            if (!this.selectedBatchToTransfer) return;
+            const cap = this.singlePondCapacity;
+            if (cap <= 0) return;
+            const idealBibit = Math.min(this.sisaBibitTersedia, cap);
+            this.transferForm.jumlah_bibit_transfer = idealBibit;
+            this.onSingleBibitChange();
+        },
+
+        fillAllBibitSingle() {
+            this.transferForm.jumlah_bibit_transfer = this.sisaBibitTersedia;
+            this.onSingleBibitChange();
+        },
+
+        onSingleBibitChange() {
+            if (!this.selectedBatchToTransfer) return;
+            const item = this.selectedBatchToTransfer;
+            const bibit = Number(this.transferForm.jumlah_bibit_transfer || 0);
+            const sisaAwal = this.sisaBibitTersedia;
+            const totalBobot = Number(item.totalBobotKg || 0);
+            const avgEkorPerKg = Number(item.avg_ekor_per_kg || 4.0) > 0 ? Number(item.avg_ekor_per_kg || 4.0) : 4.0;
+
+            if (sisaAwal > 0 && totalBobot > 0) {
+                this.transferForm.biomassa_est = Number(((bibit / sisaAwal) * totalBobot).toFixed(2));
+            } else {
+                this.transferForm.biomassa_est = Math.max(0.1, Number((bibit * 0.0005).toFixed(2)));
+            }
+
+            this.transferForm.target_panen_kg = Math.max(1, Math.round((bibit * 0.85) / avgEkorPerKg));
+        },
+
+        fillMultiByCapacity() {
+            const totalCap = this.multiTotalCapacity;
+            if (totalCap > 0) {
+                this.multiTotalBibitTransfer = Math.min(this.sisaBibitTersedia, totalCap);
+            }
+        },
+
         openTransferModal(item) {
             this.selectedBatchToTransfer = item;
-            const sisaBibit = item.jumlahRaw || (item.jumlahBibitAwal - item.jumlahKematian) || 1000;
-            const estBiomassa = item.totalBobotKg && item.totalBobotKg > 0 ? item.totalBobotKg : Math.max(10, Math.round(sisaBibit * 0.02));
-            const estHarvestDate = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            this.transferMode = 'single';
+            this.riskAcknowledged = false;
+            this.multiSelectedPonds = [];
+            
+            const sisaBibit = Number(item.jumlahRaw !== undefined ? item.jumlahRaw : ((item.jumlahBibitAwal || 0) - (item.jumlahKematian || 0))) || 1000;
+            const avgEkorPerKg = Number(item.avg_ekor_per_kg || 4.0) > 0 ? Number(item.avg_ekor_per_kg || 4.0) : 4.0;
+            const totalBobot = Number(item.totalBobotKg || 0);
+            
+            const firstPond = (this.kolamPembesaranList && this.kolamPembesaranList.length > 0) ? this.kolamPembesaranList[0] : null;
+            const firstCap = firstPond ? Number(firstPond.kapasitas || 2500) : 2500;
+            
+            const idealBibit = Math.min(sisaBibit, firstCap);
+            const initialBibit = idealBibit > 0 ? idealBibit : sisaBibit;
+            
+            const autoTargetPanen = Math.max(1, Math.round((initialBibit * 0.85) / avgEkorPerKg));
+            const estBiomassa = (sisaBibit > 0 && totalBobot > 0) ? Number(((initialBibit / sisaBibit) * totalBobot).toFixed(2)) : Math.max(0.1, Number((initialBibit * 0.0005).toFixed(2)));
+            
+            const harvestMonths = Number(item.bulan_panen_max || 3.0);
+            const harvestDays = Math.max(30, Math.round(harvestMonths * 30));
+            const estHarvestDate = new Date(Date.now() + harvestDays * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
             this.transferForm = {
-                id_kolam_pembesaran: '',
-                target_panen_kg: Math.max(100, Math.round(estBiomassa * 10)),
+                id_kolam_pembesaran: firstPond ? firstPond.id_kolam : '',
+                jumlah_bibit_transfer: initialBibit,
                 biomassa_est: estBiomassa,
-                est_tgl_panen: estHarvestDate
+                target_panen_kg: autoTargetPanen,
+                est_tgl_panen: estHarvestDate,
+                jumlah_mati_transfer: 0
             };
+
+            if (this.kolamPembesaranList && this.kolamPembesaranList.length > 0) {
+                this.multiSelectedPonds = this.kolamPembesaranList.slice(0, Math.min(3, this.kolamPembesaranList.length)).map(k => k.id_kolam);
+            }
+            
+            // Default multi distribution matches total capacity of selected ponds
+            const initMultiCap = this.multiTotalCapacity;
+            this.multiTotalBibitTransfer = initMultiCap > 0 ? Math.min(sisaBibit, initMultiCap) : sisaBibit;
+
             this.transferModalOpen = true;
         },
 
         async submitTransfer() {
             if (!this.selectedBatchToTransfer) return;
-            if (!this.transferForm.id_kolam_pembesaran) {
-                alert('Silakan pilih Kolam Pembesaran tujuan!');
-                return;
-            }
-
-            this.isSubmitting = true;
             const item = this.selectedBatchToTransfer;
             const rawId = item.id_batch || item.id.replace(/[^0-9]/g, '');
 
+            let payload = {};
+
+            if (this.transferMode === 'single') {
+                if (!this.transferForm.id_kolam_pembesaran) {
+                    alert('Silakan pilih Kolam Pembesaran tujuan!');
+                    return;
+                }
+                const trBibit = Number(this.transferForm.jumlah_bibit_transfer || 0);
+                if (trBibit <= 0) {
+                    alert('Jumlah bibit yang dipindahkan harus lebih dari 0!');
+                    return;
+                }
+                if (trBibit > this.sisaBibitTersedia) {
+                    alert('Jumlah bibit yang dipindahkan melebihi sisa bibit yang tersedia (' + this.sisaBibitTersedia.toLocaleString('id-ID') + ' ekor)!');
+                    return;
+                }
+                if (this.isSingleOvercapacity && !this.riskAcknowledged) {
+                    alert('Peringatan: Kepadatan kolam melebihi kapasitas rekomendasi! Silakan centang persetujuan risiko overcapacity sebelum melanjutkan.');
+                    return;
+                }
+
+                payload = {
+                    mode: 'single',
+                    id_kolam_pembesaran: this.transferForm.id_kolam_pembesaran,
+                    jumlah_bibit_transfer: trBibit,
+                    jumlah_mati_transfer: Number(this.transferForm.jumlah_mati_transfer || 0),
+                    target_panen_kg: this.transferForm.target_panen_kg,
+                    biomassa_est: this.transferForm.biomassa_est,
+                    est_tgl_panen: this.transferForm.est_tgl_panen
+                };
+            } else {
+                // Multi mode
+                if (this.multiSelectedPonds.length === 0) {
+                    alert('Silakan pilih minimal 1 kolam pembesaran tujuan untuk auto-distribusi!');
+                    return;
+                }
+                const trBibit = Number(this.multiTotalBibitTransfer || 0);
+                if (trBibit <= 0) {
+                    alert('Total bibit yang didistribusikan harus lebih dari 0!');
+                    return;
+                }
+                if (trBibit > this.sisaBibitTersedia) {
+                    alert('Total bibit yang didistribusikan melebihi sisa bibit yang tersedia (' + this.sisaBibitTersedia.toLocaleString('id-ID') + ' ekor)!');
+                    return;
+                }
+                if (this.isMultiOvercapacity && !this.riskAcknowledged) {
+                    alert('Peringatan: Satu atau lebih kolam mengalami overcapacity! Silakan centang persetujuan risiko overcapacity sebelum melanjutkan.');
+                    return;
+                }
+
+                payload = {
+                    mode: 'multi',
+                    jumlah_mati_transfer: Number(this.transferForm.jumlah_mati_transfer || 0),
+                    allocations: this.multiAllocations.map(a => ({
+                        id_kolam: a.id_kolam,
+                        bibit_ekor: a.bibit_ekor,
+                        biomassa_kg: a.biomassa_kg,
+                        target_panen_kg: a.target_panen_kg,
+                        est_tgl_panen: a.est_tgl_panen
+                    }))
+                };
+            }
+
+            this.isSubmitting = true;
             try {
                 const res = await fetch('/pembibitan/' + rawId + '/transfer', {
                     method: 'POST',
@@ -1416,28 +1850,29 @@ function pembibitanComponent() {
                         'Accept': 'application/json',
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
-                    body: JSON.stringify({
-                        id_kolam_pembesaran: this.transferForm.id_kolam_pembesaran,
-                        target_panen_kg: this.transferForm.target_panen_kg,
-                        biomassa_est: this.transferForm.biomassa_est,
-                        est_tgl_panen: this.transferForm.est_tgl_panen
-                    })
+                    body: JSON.stringify(payload)
                 });
 
                 const data = await res.json();
                 if (res.ok && data.success) {
                     const targetIdx = this.batches.findIndex(b => b.id === item.id || b.id_batch === rawId);
                     if (targetIdx !== -1) {
-                        this.batches[targetIdx].status = 'selesai';
-                        this.batches[targetIdx].fase = 'FINGERLING';
-                        this.batches[targetIdx].faseClass = this.getFaseClass('FINGERLING');
-                        this.batches[targetIdx].statusLabel = 'Selesai (Dipindahkan)';
-                        this.batches[targetIdx].statusClass = 'bg-slate-100 text-slate-700';
-                        this.batches[targetIdx].dotClass = 'bg-slate-500';
-                        this.batches[targetIdx].kolam_pembesaran = this.transferForm.id_kolam_pembesaran;
-                        if (data.batch_pembesaran) {
-                            this.batches[targetIdx].batch_pembesaran_id = '#PB-' + String(data.batch_pembesaran.id_pembesaran).padStart(5, '0');
-                            this.batches[targetIdx].tgl_pindah = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+                        const sisaAkhir = data.sisa_bibit_akhir !== undefined ? data.sisa_bibit_akhir : 0;
+                        this.batches[targetIdx].jumlahRaw = sisaAkhir;
+                        this.batches[targetIdx].jumlah = sisaAkhir.toLocaleString('id-ID');
+                        
+                        if (data.is_completed || sisaAkhir <= 0) {
+                            this.batches[targetIdx].status = 'selesai';
+                            this.batches[targetIdx].fase = 'FINGERLING';
+                            this.batches[targetIdx].faseClass = this.getFaseClass('FINGERLING');
+                            this.batches[targetIdx].statusLabel = 'Selesai (Dipindahkan)';
+                            this.batches[targetIdx].statusClass = 'bg-slate-100 text-slate-700';
+                            this.batches[targetIdx].dotClass = 'bg-slate-500';
+                        } else {
+                            this.batches[targetIdx].status = 'siap_pindah';
+                            this.batches[targetIdx].statusLabel = 'Siap Pindah (Sebagian Selesai)';
+                            this.batches[targetIdx].statusClass = 'bg-teal-100 text-teal-700';
+                            this.batches[targetIdx].dotClass = 'bg-teal-500';
                         }
                     }
 

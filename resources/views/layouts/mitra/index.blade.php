@@ -241,9 +241,28 @@
                                             this.phoneNum = cleanDigits;
                                         }
                                     },
+                                    get dialDigits() {
+                                        return (this.selectedCountry?.dial || '').replace(/[^0-9]/g, '');
+                                    },
+                                    get maxNationalDigits() {
+                                        return 15 - this.dialDigits.length;
+                                    },
+                                    get totalDigits() {
+                                        const cleanNum = (this.phoneNum || '').replace(/[^0-9]/g, '');
+                                        return cleanNum ? (this.dialDigits.length + cleanNum.length) : 0;
+                                    },
+                                    get isPhoneLengthValid() {
+                                        if (!this.phoneNum) return true;
+                                        const total = this.totalDigits;
+                                        return total >= 7 && total <= 15;
+                                    },
                                     updatePhone() {
                                         let num = (this.phoneNum || '').replace(/[^0-9]/g, '');
                                         if (num.startsWith('0')) num = num.substring(1);
+                                        const maxLen = this.maxNationalDigits;
+                                        if (num.length > maxLen) {
+                                            num = num.substring(0, maxLen);
+                                        }
                                         this.phoneNum = num;
                                         form.kontak = num ? `${this.selectedCountry.dial} ${num}` : '';
                                     },
@@ -261,7 +280,7 @@
                                     }
                                 }" @click.outside="countryMenuOpen = false" class="relative">
                                     <div class="flex items-center rounded-xl border transition-all"
-                                         :class="formMode === 'view' ? 'bg-slate-100 border-slate-200' : 'border-slate-200 bg-slate-50/70 focus-within:bg-white focus-within:ring-2 focus-within:ring-sky-500 focus-within:border-sky-500'">
+                                         :class="formMode === 'view' ? 'bg-slate-100 border-slate-200' : (phoneNum && totalDigits < 7 ? 'border-amber-300 bg-amber-50/40 focus-within:ring-2 focus-within:ring-amber-500' : 'border-slate-200 bg-slate-50/70 focus-within:bg-white focus-within:ring-2 focus-within:ring-sky-500 focus-within:border-sky-500')">
                                         <!-- Flag and Dial Code Button -->
                                         <button type="button"
                                                 @click="if (formMode !== 'view') countryMenuOpen = !countryMenuOpen"
@@ -280,10 +299,22 @@
                                                @keydown="if (!/[0-9]/.test($event.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'].includes($event.key) && !$event.ctrlKey && !$event.metaKey) $event.preventDefault()"
                                                inputmode="numeric"
                                                pattern="[0-9]*"
+                                               :maxlength="maxNationalDigits"
                                                :disabled="formMode === 'view'"
                                                :placeholder="selectedCountry.placeholder" 
                                                :class="formMode === 'view' ? 'text-slate-500 cursor-not-allowed font-bold' : 'text-slate-800 font-semibold'"
                                                class="w-full px-3.5 py-2.5 text-xs bg-transparent border-0 focus:outline-none rounded-r-xl">
+                                    </div>
+
+                                    <!-- ITU-T E.164 Phone Digit Indicator & Warning -->
+                                    <div class="flex items-center justify-between text-[9px] text-slate-400 mt-1 px-1 font-medium" x-show="formMode !== 'view'">
+                                        <span>Standar ITU (7 - 15 digit)</span>
+                                        <span :class="totalDigits > 0 && totalDigits < 7 ? 'text-amber-600 font-bold' : (totalDigits >= 7 && totalDigits <= 15 ? 'text-emerald-600 font-bold' : 'text-slate-400')">
+                                            <span x-text="totalDigits"></span> / 15 digit
+                                        </span>
+                                    </div>
+                                    <div x-show="formMode !== 'view' && phoneNum && totalDigits < 7" class="text-[9px] text-amber-600 font-bold mt-0.5 px-1 flex items-center gap-1">
+                                        <i class="fa-solid fa-triangle-exclamation"></i> Nomor terlalu pendek (minimal 7 digit internasional)
                                     </div>
 
                                     <!-- Dropdown Popover -->
@@ -294,41 +325,54 @@
                                          x-transition:leave="transition ease-in duration-100"
                                          x-transition:leave-start="opacity-100 translate-y-0 scale-100"
                                          x-transition:leave-end="opacity-0 translate-y-1 scale-98"
-                                         class="absolute z-50 top-full left-0 mt-1.5 w-full max-w-[calc(100vw-2.5rem)] sm:w-80 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden"
+                                         class="absolute z-50 top-full left-0 mt-2 w-full max-w-[calc(100vw-2.5rem)] sm:w-80 bg-white rounded-2xl shadow-2xl border border-slate-200/90 overflow-hidden"
                                          style="display: none;">
                                         
                                         <!-- Search Field -->
-                                        <div class="p-2 border-b border-slate-100 bg-slate-50/80 sticky top-0 z-10">
-                                            <div class="relative">
-                                                <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs absolute left-3 top-1/2 -translate-y-1/2"></i>
+                                        <div class="p-2.5 border-b border-slate-100 bg-slate-50/70 sticky top-0 z-10 backdrop-blur-xs">
+                                            <div class="relative flex items-center">
+                                                <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs absolute left-3 pointer-events-none"></i>
                                                 <input type="text"
                                                        x-model="countrySearch"
                                                        @keydown.enter.prevent
                                                        placeholder="Cari negara atau kode (+62)..."
-                                                       class="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#00897B] focus:border-[#00897B] font-medium">
+                                                       class="w-full pl-8 pr-7 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 font-medium text-slate-800 placeholder-slate-400 shadow-xs transition-all">
+                                                <button type="button" 
+                                                        x-show="countrySearch" 
+                                                        @click="countrySearch = ''" 
+                                                        class="absolute right-2.5 text-slate-400 hover:text-slate-600 p-0.5">
+                                                    <i class="fa-solid fa-circle-xmark text-xs"></i>
+                                                </button>
                                             </div>
                                         </div>
 
                                         <!-- Scrollable List -->
-                                        <div class="max-h-56 overflow-y-auto divide-y divide-slate-50 py-1">
+                                        <div class="max-h-60 overflow-y-auto p-1.5 space-y-0.5">
                                             <template x-for="c in filteredCountries" :key="c.code + c.dial">
                                                 <button type="button"
                                                         @click="selectCountry(c)"
-                                                        :class="selectedCountry.code === c.code && selectedCountry.dial === c.dial ? 'bg-[#00897B] text-white hover:bg-[#00796B]' : 'text-slate-700 hover:bg-slate-100'"
-                                                        class="w-full px-3.5 py-2.5 text-xs flex items-center justify-between text-left transition-colors font-medium">
-                                                    <div class="flex items-center gap-2.5 truncate pr-2">
-                                                        <span class="text-base shrink-0 leading-none" x-text="c.flag"></span>
-                                                        <span class="truncate" x-text="c.name"></span>
+                                                        :class="selectedCountry.code === c.code && selectedCountry.dial === c.dial ? 'bg-[#051B44] text-white shadow-xs' : 'text-slate-700 hover:bg-slate-100/90 hover:text-slate-900'"
+                                                        class="w-full px-3 py-2 text-xs flex items-center justify-between text-left rounded-xl transition-colors font-medium group">
+                                                    <div class="flex items-center gap-2 truncate pr-2">
+                                                        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md shrink-0 transition-colors"
+                                                              :class="selectedCountry.code === c.code && selectedCountry.dial === c.dial ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200'"
+                                                              x-text="c.code"></span>
+                                                        <span class="text-sm shrink-0 leading-none" x-text="c.flag"></span>
+                                                        <span class="truncate font-semibold" x-text="c.name"></span>
                                                     </div>
-                                                    <span class="font-extrabold shrink-0 text-[11px]"
-                                                          :class="selectedCountry.code === c.code && selectedCountry.dial === c.dial ? 'text-white/95' : 'text-slate-500'"
-                                                          x-text="c.dial"></span>
+                                                    <div class="flex items-center gap-1.5 shrink-0">
+                                                        <span class="font-extrabold text-[11px] font-mono"
+                                                              :class="selectedCountry.code === c.code && selectedCountry.dial === c.dial ? 'text-sky-300' : 'text-slate-500 group-hover:text-slate-700'"
+                                                              x-text="c.dial"></span>
+                                                        <i x-show="selectedCountry.code === c.code && selectedCountry.dial === c.dial" class="fa-solid fa-check text-[11px] text-sky-300"></i>
+                                                    </div>
                                                 </button>
                                             </template>
                                             
                                             <div x-show="filteredCountries.length === 0" class="px-4 py-6 text-center text-xs text-slate-400">
-                                                <i class="fa-solid fa-earth-americas text-slate-300 text-lg mb-1 block"></i>
-                                                Negara tidak ditemukan
+                                                <i class="fa-solid fa-earth-americas text-slate-300 text-xl mb-1.5 block"></i>
+                                                <span class="font-bold text-slate-600 block">Negara tidak ditemukan</span>
+                                                <span class="text-[10px] text-slate-400">Coba cari dengan nama atau kode negara</span>
                                             </div>
                                         </div>
                                     </div>
@@ -342,6 +386,59 @@
                                        placeholder="mitra@perusahaan.com" 
                                        :class="formMode === 'view' ? 'bg-slate-100 text-slate-500 cursor-not-allowed border-slate-200 font-bold' : 'bg-slate-50/70 focus:bg-white text-slate-700 font-semibold focus:ring-sky-500'"
                                        class="w-full px-3.5 py-2.5 rounded-xl border text-xs focus:outline-none focus:ring-2 transition-all">
+                            </div>
+                        </div>
+
+                        <!-- Logo / Foto Mitra (Upload Dari Perangkat) -->
+                        <div>
+                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1.5">
+                                LOGO / FOTO MITRA (DARI PERANGKAT)
+                            </label>
+
+                            <!-- Hidden Native File Input -->
+                            <input type="file" 
+                                   x-ref="logoFileInput" 
+                                   @change="handleLogoFileSelect($event)" 
+                                   accept="image/png, image/jpeg, image/jpg, image/webp, image/svg+xml" 
+                                   class="hidden">
+
+                            <div class="flex items-center gap-3.5 p-3 rounded-2xl border border-slate-200 bg-slate-50/70"
+                                 :class="formMode === 'view' ? 'opacity-85' : ''">
+                                
+                                <!-- Preview Box -->
+                                <div class="w-13 h-13 rounded-xl border border-slate-200 bg-white overflow-hidden shrink-0 flex items-center justify-center shadow-xs">
+                                    <template x-if="logoPreviewUrl || form.image">
+                                        <img :src="logoPreviewUrl || form.image" alt="Logo Mitra" class="w-full h-full object-cover">
+                                    </template>
+                                    <template x-if="!logoPreviewUrl && !form.image">
+                                        <div class="w-full h-full bg-slate-100 flex flex-col items-center justify-center text-slate-400">
+                                            <i class="fa-solid fa-cloud-arrow-up text-base"></i>
+                                            <span class="text-[8px] font-extrabold mt-0.5 uppercase tracking-wider">LOGO</span>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <!-- Actions & Info -->
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 flex-wrap" x-show="formMode !== 'view'">
+                                        <button type="button" 
+                                                @click="$refs.logoFileInput.click()" 
+                                                class="px-3 py-1.5 bg-[#051B44] hover:bg-navy-900 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shadow-xs cursor-pointer">
+                                            <i class="fa-solid fa-folder-open text-xs"></i>
+                                            <span x-text="(logoPreviewUrl || form.image) ? 'Ganti Logo' : 'Pilih Dari Perangkat'"></span>
+                                        </button>
+
+                                        <button type="button" 
+                                                x-show="logoPreviewUrl || form.image || form.logo_mitra" 
+                                                @click="removeLogo()" 
+                                                class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-bold rounded-xl transition-all flex items-center gap-1 cursor-pointer"
+                                                title="Hapus logo">
+                                            <i class="fa-solid fa-trash-can text-xs"></i>
+                                            <span>Hapus</span>
+                                        </button>
+                                    </div>
+                                    <p class="text-[10px] text-slate-400 mt-1 truncate" x-text="selectedLogoFileName ? ('File: ' + selectedLogoFileName) : 'Format: PNG, JPG, WEBP, SVG (Maks. 3MB)'"></p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -366,7 +463,7 @@
                                         :class="form.kategori === 'supplier' ? 'bg-[#051B44] text-white ring-2 ring-[#051B44] ring-offset-1 shadow-sm' : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200'"
                                         class="p-3 rounded-xl flex items-center gap-3 text-left transition-all cursor-pointer">
                                     <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                                         :class="form.kategori === 'supplier' ? 'bg-amber-400 text-slate-900' : 'bg-amber-100 text-amber-800'">
+                                         :class="form.kategori === 'supplier' ? 'bg-sky-400 text-slate-900' : 'bg-slate-100 text-slate-600'">
                                         <i class="fa-solid fa-truck-ramp-box text-sm"></i>
                                     </div>
                                     <div>
@@ -382,7 +479,7 @@
                                         :class="form.kategori === 'client' ? 'bg-[#051B44] text-white ring-2 ring-[#051B44] ring-offset-1 shadow-sm' : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200'"
                                         class="p-3 rounded-xl flex items-center gap-3 text-left transition-all cursor-pointer">
                                     <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                                         :class="form.kategori === 'client' ? 'bg-sky-400 text-slate-900' : 'bg-sky-100 text-sky-800'">
+                                         :class="form.kategori === 'client' ? 'bg-sky-400 text-slate-900' : 'bg-slate-100 text-slate-600'">
                                         <i class="fa-solid fa-cart-shopping text-sm"></i>
                                     </div>
                                     <div>
@@ -400,57 +497,57 @@
                             </label>
 
                             <!-- Sub-tipe untuk SUPPLIER: Supplier Pakan & Supplier Bibit -->
-                            <div x-show="form.kategori === 'supplier'" class="grid grid-cols-1 sm:grid-cols-2 gap-2 p-1.5 bg-amber-50/70 border border-amber-200/60 rounded-xl text-xs font-bold" :class="formMode === 'view' ? 'opacity-80 pointer-events-none' : ''">
+                            <div x-show="form.kategori === 'supplier'" class="grid grid-cols-1 sm:grid-cols-2 gap-2 p-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold" :class="formMode === 'view' ? 'opacity-80 pointer-events-none' : ''">
                                 <button type="button" 
                                         @click="if(formMode !== 'view') form.tipeKey = 'supplier_pakan'" 
                                         :disabled="formMode === 'view'"
-                                        :class="form.tipeKey === 'supplier_pakan' ? 'bg-[#051B44] text-white shadow-xs' : 'bg-white text-slate-700 hover:text-slate-900 border border-amber-200/50'" 
+                                        :class="form.tipeKey === 'supplier_pakan' ? 'bg-[#051B44] text-white shadow-xs' : 'bg-white text-slate-700 hover:text-slate-900 border border-slate-200'" 
                                         class="px-3.5 py-2.5 rounded-lg transition-all text-center flex items-center justify-center gap-2 cursor-pointer">
-                                    <i class="fa-solid fa-boxes-stacked text-xs"></i>
+                                    <i class="fa-solid fa-boxes-stacked text-xs" :class="form.tipeKey === 'supplier_pakan' ? 'text-sky-400' : 'text-sky-600'"></i>
                                     <span>Supplier Pakan</span>
                                 </button>
                                 <button type="button" 
                                         @click="if(formMode !== 'view') form.tipeKey = 'supplier_bibit'" 
                                         :disabled="formMode === 'view'"
-                                        :class="form.tipeKey === 'supplier_bibit' ? 'bg-[#051B44] text-white shadow-xs' : 'bg-white text-slate-700 hover:text-slate-900 border border-amber-200/50'" 
+                                        :class="form.tipeKey === 'supplier_bibit' ? 'bg-[#051B44] text-white shadow-xs' : 'bg-white text-slate-700 hover:text-slate-900 border border-slate-200'" 
                                         class="px-3.5 py-2.5 rounded-lg transition-all text-center flex items-center justify-center gap-2 cursor-pointer">
-                                    <i class="fa-solid fa-seedling text-xs"></i>
+                                    <i class="fa-solid fa-seedling text-xs" :class="form.tipeKey === 'supplier_bibit' ? 'text-sky-400' : 'text-emerald-600'"></i>
                                     <span>Supplier Bibit</span>
                                 </button>
                             </div>
 
                             <!-- Sub-tipe untuk CLIENT: Rumah Makan, Restoran, Pasar, Eksportir -->
-                            <div x-show="form.kategori === 'client'" class="grid grid-cols-2 sm:grid-cols-4 gap-2 p-1.5 bg-sky-50/60 border border-sky-200/60 rounded-xl text-xs font-bold" :class="formMode === 'view' ? 'opacity-80 pointer-events-none' : ''">
+                            <div x-show="form.kategori === 'client'" class="grid grid-cols-2 sm:grid-cols-4 gap-2 p-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold" :class="formMode === 'view' ? 'opacity-80 pointer-events-none' : ''">
                                 <button type="button" 
                                         @click="if(formMode !== 'view') form.tipeKey = 'rumah_makan'" 
                                         :disabled="formMode === 'view'"
-                                        :class="form.tipeKey === 'rumah_makan' ? 'bg-[#051B44] text-white shadow-xs' : 'bg-white text-slate-700 hover:text-slate-900 border border-sky-200/50'" 
+                                        :class="form.tipeKey === 'rumah_makan' ? 'bg-[#051B44] text-white shadow-xs' : 'bg-white text-slate-700 hover:text-slate-900 border border-slate-200'" 
                                         class="px-2.5 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer">
-                                    <i class="fa-solid fa-utensils text-xs"></i>
+                                    <i class="fa-solid fa-utensils text-xs" :class="form.tipeKey === 'rumah_makan' ? 'text-sky-400' : 'text-sky-600'"></i>
                                     <span class="truncate">Rumah Makan</span>
                                 </button>
                                 <button type="button" 
                                         @click="if(formMode !== 'view') form.tipeKey = 'restoran'" 
                                         :disabled="formMode === 'view'"
-                                        :class="form.tipeKey === 'restoran' ? 'bg-[#051B44] text-white shadow-xs' : 'bg-white text-slate-700 hover:text-slate-900 border border-sky-200/50'" 
+                                        :class="form.tipeKey === 'restoran' ? 'bg-[#051B44] text-white shadow-xs' : 'bg-white text-slate-700 hover:text-slate-900 border border-slate-200'" 
                                         class="px-2.5 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer">
-                                    <i class="fa-solid fa-hotel text-xs"></i>
+                                    <i class="fa-solid fa-hotel text-xs" :class="form.tipeKey === 'restoran' ? 'text-sky-400' : 'text-sky-600'"></i>
                                     <span class="truncate">Restoran</span>
                                 </button>
                                 <button type="button" 
                                         @click="if(formMode !== 'view') form.tipeKey = 'pasar'" 
                                         :disabled="formMode === 'view'"
-                                        :class="form.tipeKey === 'pasar' ? 'bg-[#051B44] text-white shadow-xs' : 'bg-white text-slate-700 hover:text-slate-900 border border-sky-200/50'" 
+                                        :class="form.tipeKey === 'pasar' ? 'bg-[#051B44] text-white shadow-xs' : 'bg-white text-slate-700 hover:text-slate-900 border border-slate-200'" 
                                         class="px-2.5 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer">
-                                    <i class="fa-solid fa-shop text-xs"></i>
+                                    <i class="fa-solid fa-shop text-xs" :class="form.tipeKey === 'pasar' ? 'text-sky-400' : 'text-sky-600'"></i>
                                     <span class="truncate">Pasar</span>
                                 </button>
                                 <button type="button" 
                                         @click="if(formMode !== 'view') form.tipeKey = 'eksportir'" 
                                         :disabled="formMode === 'view'"
-                                        :class="form.tipeKey === 'eksportir' ? 'bg-[#051B44] text-white shadow-xs' : 'bg-white text-slate-700 hover:text-slate-900 border border-sky-200/50'" 
+                                        :class="form.tipeKey === 'eksportir' ? 'bg-[#051B44] text-white shadow-xs' : 'bg-white text-slate-700 hover:text-slate-900 border border-slate-200'" 
                                         class="px-2.5 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer">
-                                    <i class="fa-solid fa-plane-departure text-xs"></i>
+                                    <i class="fa-solid fa-plane-departure text-xs" :class="form.tipeKey === 'eksportir' ? 'text-sky-400' : 'text-sky-600'"></i>
                                     <span class="truncate">Eksportir</span>
                                 </button>
                             </div>
@@ -645,35 +742,159 @@
             </button>
         </div>
 
-        <!-- Tipe Spesifik Filter Selector -->
-        <div class="sm:col-span-1 lg:col-span-5 bg-white p-3 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3">
-            <div class="w-8 h-8 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
-                <i class="fa-solid fa-sliders text-xs"></i>
+        <!-- Custom Tipe Spesifik Filter Dropdown -->
+        <div class="sm:col-span-1 lg:col-span-5 bg-white p-3 rounded-2xl border border-slate-200/80 shadow-xs relative" 
+             x-data="{ openTypeDropdown: false }" 
+             @click.outside="openTypeDropdown = false">
+            
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-sliders text-xs"></i>
+                </div>
+                
+                <div class="flex-1 min-w-0">
+                    <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block">TIPE MITRA</span>
+                    
+                    <!-- Dropdown Trigger Button -->
+                    <button type="button" 
+                            @click="openTypeDropdown = !openTypeDropdown" 
+                            class="w-full flex items-center justify-between gap-1 text-xs font-bold text-slate-800 text-left mt-0.5 hover:text-sky-600 transition-colors cursor-pointer group">
+                        <span class="truncate flex items-center gap-1.5" x-html="getTypeFilterLabel(filterTipe)"></span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200 group-hover:text-sky-600" 
+                           :class="openTypeDropdown ? 'rotate-180 text-sky-600' : ''"></i>
+                    </button>
+                </div>
+                
+                <!-- Clear Filter Button -->
+                <button type="button" 
+                        x-show="filterTipe" 
+                        @click="filterTipe = ''; openTypeDropdown = false" 
+                        class="w-6 h-6 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center text-xs transition-colors shrink-0 cursor-pointer"
+                        title="Hapus filter tipe">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
-            <div class="flex-1 min-w-0">
-                <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block">TIPE MITRA</span>
-                <select x-model="filterTipe" class="w-full bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer mt-0.5 truncate">
-                    <option value="">Semua Tipe Mitra</option>
-                    <optgroup label="── SUPPLIER ──">
-                        <option value="supplier_pakan">Supplier Pakan</option>
-                        <option value="supplier_bibit">Supplier Bibit</option>
-                    </optgroup>
-                    <optgroup label="── CLIENT / DISTRIBUSI ──">
-                        <option value="rumah_makan">Rumah Makan</option>
-                        <option value="restoran">Restoran</option>
-                        <option value="pasar">Pasar</option>
-                        <option value="eksportir">Eksportir</option>
-                    </optgroup>
-                </select>
+
+            <!-- Custom Popover Menu -->
+            <div x-show="openTypeDropdown" 
+                 x-transition:enter="transition ease-out duration-150"
+                 x-transition:enter-start="opacity-0 translate-y-1 scale-98"
+                 x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave="transition ease-in duration-100"
+                 x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave-end="opacity-0 translate-y-1 scale-98"
+                 class="absolute z-50 top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-2 overflow-hidden text-xs space-y-1"
+                 style="display: none;">
+                
+                <!-- All / Reset Option -->
+                <button type="button" 
+                        @click="filterTipe = ''; openTypeDropdown = false" 
+                        class="w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition-all cursor-pointer font-bold"
+                        :class="filterTipe === '' ? 'bg-sky-50 text-sky-700 font-extrabold' : 'text-slate-700 hover:bg-slate-50'">
+                    <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" :class="filterTipe === '' ? 'bg-[#051B44] text-white' : 'bg-slate-100 text-slate-500'">
+                            <i class="fa-solid fa-layer-group text-[10px]"></i>
+                        </div>
+                        <span>Semua Tipe Mitra</span>
+                    </div>
+                    <i x-show="filterTipe === ''" class="fa-solid fa-check text-sky-600 text-xs"></i>
+                </button>
+
+                <!-- Section 1: SUPPLIER -->
+                <div class="pt-2 border-t border-slate-100">
+                    <div class="px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-slate-400 flex items-center justify-between">
+                        <span>SUPPLIER (PEMASOK)</span>
+                        <span class="w-2 h-2 rounded-full bg-sky-500"></span>
+                    </div>
+                    
+                    <button type="button" 
+                            @click="filterTipe = 'supplier_pakan'; openTypeDropdown = false" 
+                            class="w-full px-3 py-1.5 rounded-xl flex items-center justify-between text-left transition-all cursor-pointer"
+                            :class="filterTipe === 'supplier_pakan' ? 'bg-sky-50 text-sky-700 font-extrabold' : 'text-slate-700 hover:bg-slate-50 font-semibold'">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-lg bg-sky-100 text-sky-600 flex items-center justify-center shrink-0">
+                                <i class="fa-solid fa-boxes-stacked text-[10px]"></i>
+                            </div>
+                            <span>Supplier Pakan</span>
+                        </div>
+                        <i x-show="filterTipe === 'supplier_pakan'" class="fa-solid fa-check text-sky-600 text-xs"></i>
+                    </button>
+
+                    <button type="button" 
+                            @click="filterTipe = 'supplier_bibit'; openTypeDropdown = false" 
+                            class="w-full px-3 py-1.5 rounded-xl flex items-center justify-between text-left transition-all cursor-pointer"
+                            :class="filterTipe === 'supplier_bibit' ? 'bg-emerald-50 text-emerald-700 font-extrabold' : 'text-slate-700 hover:bg-slate-50 font-semibold'">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                                <i class="fa-solid fa-seedling text-[10px]"></i>
+                            </div>
+                            <span>Supplier Bibit</span>
+                        </div>
+                        <i x-show="filterTipe === 'supplier_bibit'" class="fa-solid fa-check text-emerald-600 text-xs"></i>
+                    </button>
+                </div>
+
+                <!-- Section 2: CLIENT / DISTRIBUSI -->
+                <div class="pt-2 border-t border-slate-100">
+                    <div class="px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-slate-400 flex items-center justify-between">
+                        <span>CLIENT / DISTRIBUSI</span>
+                        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                    </div>
+
+                    <button type="button" 
+                            @click="filterTipe = 'rumah_makan'; openTypeDropdown = false" 
+                            class="w-full px-3 py-1.5 rounded-xl flex items-center justify-between text-left transition-all cursor-pointer"
+                            :class="filterTipe === 'rumah_makan' ? 'bg-rose-50 text-rose-700 font-extrabold' : 'text-slate-700 hover:bg-slate-50 font-semibold'">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+                                <i class="fa-solid fa-utensils text-[10px]"></i>
+                            </div>
+                            <span>Rumah Makan</span>
+                        </div>
+                        <i x-show="filterTipe === 'rumah_makan'" class="fa-solid fa-check text-rose-600 text-xs"></i>
+                    </button>
+
+                    <button type="button" 
+                            @click="filterTipe = 'restoran'; openTypeDropdown = false" 
+                            class="w-full px-3 py-1.5 rounded-xl flex items-center justify-between text-left transition-all cursor-pointer"
+                            :class="filterTipe === 'restoran' ? 'bg-blue-50 text-blue-700 font-extrabold' : 'text-slate-700 hover:bg-slate-50 font-semibold'">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                                <i class="fa-solid fa-hotel text-[10px]"></i>
+                            </div>
+                            <span>Restoran</span>
+                        </div>
+                        <i x-show="filterTipe === 'restoran'" class="fa-solid fa-check text-blue-600 text-xs"></i>
+                    </button>
+
+                    <button type="button" 
+                            @click="filterTipe = 'pasar'; openTypeDropdown = false" 
+                            class="w-full px-3 py-1.5 rounded-xl flex items-center justify-between text-left transition-all cursor-pointer"
+                            :class="filterTipe === 'pasar' ? 'bg-emerald-50 text-emerald-700 font-extrabold' : 'text-slate-700 hover:bg-slate-50 font-semibold'">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                                <i class="fa-solid fa-shop text-[10px]"></i>
+                            </div>
+                            <span>Pasar</span>
+                        </div>
+                        <i x-show="filterTipe === 'pasar'" class="fa-solid fa-check text-emerald-600 text-xs"></i>
+                    </button>
+
+                    <button type="button" 
+                            @click="filterTipe = 'eksportir'; openTypeDropdown = false" 
+                            class="w-full px-3 py-1.5 rounded-xl flex items-center justify-between text-left transition-all cursor-pointer"
+                            :class="filterTipe === 'eksportir' ? 'bg-purple-50 text-purple-700 font-extrabold' : 'text-slate-700 hover:bg-slate-50 font-semibold'">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center shrink-0">
+                                <i class="fa-solid fa-plane-departure text-[10px]"></i>
+                            </div>
+                            <span>Eksportir</span>
+                        </div>
+                        <i x-show="filterTipe === 'eksportir'" class="fa-solid fa-check text-purple-600 text-xs"></i>
+                    </button>
+                </div>
+
             </div>
-            <!-- Clear Filter Button -->
-            <button type="button" 
-                    x-show="filterTipe" 
-                    @click="filterTipe = ''" 
-                    class="w-6 h-6 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center text-xs transition-colors shrink-0 cursor-pointer"
-                    title="Hapus filter tipe">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
         </div>
 
     </div>
@@ -727,7 +948,7 @@
                                 <div class="flex flex-wrap items-center gap-1.5">
                                     <!-- Category Pill -->
                                     <template x-if="mitra.kategori === 'supplier' || (mitra.tipeKey && mitra.tipeKey.includes('supplier')) || (mitra.tipe && mitra.tipe.toLowerCase().includes('supplier'))">
-                                        <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-amber-100 text-amber-800 border border-amber-200 shrink-0">
+                                        <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-slate-100 text-slate-700 border border-slate-200 shrink-0">
                                             SUPPLIER
                                         </span>
                                     </template>
@@ -741,7 +962,7 @@
                                     <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold flex items-center gap-1 shrink-0"
                                           :class="{
                                               'bg-teal-50 text-teal-700 border border-teal-200': (mitra.tipeKey === 'supplier_bibit') || (mitra.tipe && (mitra.tipe.toLowerCase().includes('bibit') || mitra.tipe.toLowerCase().includes('benih'))),
-                                              'bg-amber-50 text-amber-700 border border-amber-200': (mitra.tipeKey === 'supplier_pakan' || mitra.tipeKey === 'supplier') || (mitra.tipe && mitra.tipe.toLowerCase().includes('pakan')),
+                                              'bg-sky-50 text-sky-700 border border-sky-200': (mitra.tipeKey === 'supplier_pakan' || mitra.tipeKey === 'supplier') || (mitra.tipe && mitra.tipe.toLowerCase().includes('pakan')),
                                               'bg-rose-50 text-rose-700 border border-rose-200': (mitra.tipeKey === 'rumah_makan') || (mitra.tipe && (mitra.tipe.toLowerCase().includes('rumah') || mitra.tipe.toLowerCase().includes('makan') || mitra.tipe.toLowerCase().startsWith('rm'))),
                                               'bg-blue-50 text-blue-700 border border-blue-200': (mitra.tipeKey === 'restoran') || (mitra.tipe && mitra.tipe.toLowerCase().includes('resto')),
                                               'bg-emerald-50 text-emerald-700 border border-emerald-200': (mitra.tipeKey === 'pasar') || (mitra.tipe && mitra.tipe.toLowerCase().includes('pasar')),
@@ -891,7 +1112,7 @@
                             <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold inline-flex items-center gap-1"
                                   :class="{
                                       'bg-teal-50 text-teal-700 border border-teal-200': (mitra.tipeKey === 'supplier_bibit') || (mitra.tipe && (mitra.tipe.toLowerCase().includes('bibit') || mitra.tipe.toLowerCase().includes('benih'))),
-                                      'bg-amber-50 text-amber-700 border border-amber-200': (mitra.tipeKey === 'supplier_pakan' || mitra.tipeKey === 'supplier') || (mitra.tipe && mitra.tipe.toLowerCase().includes('pakan')),
+                                      'bg-sky-50 text-sky-700 border border-sky-200': (mitra.tipeKey === 'supplier_pakan' || mitra.tipeKey === 'supplier') || (mitra.tipe && mitra.tipe.toLowerCase().includes('pakan')),
                                       'bg-rose-50 text-rose-700 border border-rose-200': (mitra.tipeKey === 'rumah_makan') || (mitra.tipe && (mitra.tipe.toLowerCase().includes('rumah') || mitra.tipe.toLowerCase().includes('makan') || mitra.tipe.toLowerCase().startsWith('rm'))),
                                       'bg-blue-50 text-blue-700 border border-blue-200': (mitra.tipeKey === 'restoran') || (mitra.tipe && mitra.tipe.toLowerCase().includes('resto')),
                                       'bg-emerald-50 text-emerald-700 border border-emerald-200': (mitra.tipeKey === 'pasar') || (mitra.tipe && mitra.tipe.toLowerCase().includes('pasar')),
@@ -1002,6 +1223,7 @@
                 lng: "106.816666",
                 kontak: "",
                 email: "",
+                logo_mitra: "",
                 image: ""
             },
 
@@ -1011,6 +1233,57 @@
             showAddressDropdown: false,
             searchAddressTimeout: null,
             mapLayerMode: "satellite",
+
+            selectedLogoFile: null,
+            selectedLogoFileName: "",
+            logoPreviewUrl: "",
+            hapusLogo: false,
+
+            handleLogoFileSelect(e) {
+                const file = e.target.files?.[0];
+                if (file) {
+                    if (file.size > 3 * 1024 * 1024) {
+                        alert("Ukuran file logo terlalu besar! Maksimal 3MB.");
+                        e.target.value = "";
+                        return;
+                    }
+                    this.selectedLogoFile = file;
+                    this.selectedLogoFileName = file.name;
+                    this.logoPreviewUrl = URL.createObjectURL(file);
+                    this.hapusLogo = false;
+                }
+            },
+
+            removeLogo() {
+                this.selectedLogoFile = null;
+                this.selectedLogoFileName = "";
+                this.logoPreviewUrl = "";
+                this.form.logo_mitra = "";
+                this.form.image = "";
+                this.hapusLogo = true;
+                if (this.$refs.logoFileInput) {
+                    this.$refs.logoFileInput.value = "";
+                }
+            },
+
+            getTypeFilterLabel(val) {
+                switch(val) {
+                    case 'supplier_pakan':
+                        return '<span class="w-2 h-2 rounded-full bg-sky-500 shrink-0"></span> <span>Supplier Pakan</span>';
+                    case 'supplier_bibit':
+                        return '<span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span> <span>Supplier Bibit</span>';
+                    case 'rumah_makan':
+                        return '<span class="w-2 h-2 rounded-full bg-rose-500 shrink-0"></span> <span>Rumah Makan</span>';
+                    case 'restoran':
+                        return '<span class="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span> <span>Restoran</span>';
+                    case 'pasar':
+                        return '<span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span> <span>Pasar</span>';
+                    case 'eksportir':
+                        return '<span class="w-2 h-2 rounded-full bg-purple-500 shrink-0"></span> <span>Eksportir</span>';
+                    default:
+                        return '<span class="text-slate-700">Semua Tipe Mitra</span>';
+                }
+            },
 
             toggleMapLayer() {
                 if (typeof window.toggleMitraMapLayer === "function") {
@@ -1209,6 +1482,11 @@
                 this.searchAddressQuery = "";
                 this.addressSuggestions = [];
                 this.showAddressDropdown = false;
+                this.selectedLogoFile = null;
+                this.selectedLogoFileName = "";
+                this.logoPreviewUrl = "";
+                this.hapusLogo = false;
+                if (this.$refs.logoFileInput) this.$refs.logoFileInput.value = "";
                 
                 let maxId = 0;
                 if (Array.isArray(this.mitras)) {
@@ -1231,6 +1509,7 @@
                     lng: "106.816666",
                     kontak: "",
                     email: "",
+                    logo_mitra: "",
                     image: ""
                 };
                 this.showForm = true;
@@ -1272,6 +1551,12 @@
                 this.form.kategori = resolved.kategori;
                 this.form.tipeKey = resolved.tipeKey;
 
+                this.selectedLogoFile = null;
+                this.selectedLogoFileName = "";
+                this.logoPreviewUrl = mitra.image || "";
+                this.hapusLogo = false;
+                if (this.$refs.logoFileInput) this.$refs.logoFileInput.value = "";
+
                 this.searchAddressQuery = mitra.alamat || "";
                 this.addressSuggestions = [];
                 this.showAddressDropdown = false;
@@ -1288,6 +1573,12 @@
                 const resolved = this.resolveKategoriAndKey(mitra);
                 this.form.kategori = resolved.kategori;
                 this.form.tipeKey = resolved.tipeKey;
+
+                this.selectedLogoFile = null;
+                this.selectedLogoFileName = "";
+                this.logoPreviewUrl = mitra.image || "";
+                this.hapusLogo = false;
+                if (this.$refs.logoFileInput) this.$refs.logoFileInput.value = "";
 
                 this.searchAddressQuery = mitra.alamat || "";
                 this.addressSuggestions = [];
@@ -1308,6 +1599,14 @@
                     return;
                 }
 
+                if (this.form.kontak && this.form.kontak.trim()) {
+                    const cleanPhoneDigits = this.form.kontak.replace(/[^0-9]/g, '');
+                    if (cleanPhoneDigits.length < 7 || cleanPhoneDigits.length > 15) {
+                        alert("Nomor telepon tidak valid! Sesuai aturan International Telecommunication Union (ITU), panjang nomor telepon harus antara 7 hingga 15 digit angka (termasuk kode negara).");
+                        return;
+                    }
+                }
+
                 const tipeMap = {
                     supplier_pakan: "Supplier Pakan",
                     supplier_bibit: "Supplier Bibit",
@@ -1322,15 +1621,31 @@
                 this.isSaving = true;
 
                 try {
+                    const formData = new FormData();
+                    formData.append('nama', this.form.nama || '');
+                    formData.append('tipe', this.form.tipe || '');
+                    formData.append('tipeKey', this.form.tipeKey || '');
+                    formData.append('alamat', this.form.alamat || '');
+                    formData.append('lat', this.form.lat || '');
+                    formData.append('lng', this.form.lng || '');
+                    formData.append('kontak', this.form.kontak || '');
+                    formData.append('email', this.form.email || '');
+
+                    if (this.selectedLogoFile) {
+                        formData.append('logo_file', this.selectedLogoFile);
+                    }
+                    if (this.hapusLogo) {
+                        formData.append('hapus_logo', '1');
+                    }
+
                     if (this.formMode === "create") {
                         const response = await fetch("{{ route('mitra.store') }}", {
                             method: "POST",
                             headers: {
-                                "Content-Type": "application/json",
                                 "Accept": "application/json",
                                 "X-CSRF-TOKEN": "{{ csrf_token() }}"
                             },
-                            body: JSON.stringify(this.form)
+                            body: formData
                         });
 
                         const result = await response.json();
@@ -1351,14 +1666,15 @@
                             return;
                         }
 
+                        formData.append('_method', 'PUT');
+
                         const response = await fetch("/mitra/" + targetId, {
-                            method: "PUT",
+                            method: "POST",
                             headers: {
-                                "Content-Type": "application/json",
                                 "Accept": "application/json",
                                 "X-CSRF-TOKEN": "{{ csrf_token() }}"
                             },
-                            body: JSON.stringify(this.form)
+                            body: formData
                         });
 
                         const result = await response.json();

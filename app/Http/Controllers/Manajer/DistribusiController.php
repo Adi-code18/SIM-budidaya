@@ -221,6 +221,18 @@ class DistribusiController extends Controller
         $oldStatus = $transaksi->status_order ?? 'pending';
         $newStatus = $request->input('status_order', $oldStatus);
 
+        // Validasi: Status hanya dapat dibatalkan jika saat ini masih 'pending'
+        if ($newStatus === 'dibatalkan' && $oldStatus !== 'pending') {
+            $msg = 'Pesanan tidak dapat dibatalkan karena sudah masuk tahap ' . strtoupper(str_replace('_', ' ', $oldStatus)) . '. Pembatalan hanya diperbolehkan saat status masih Pending.';
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $msg
+                ], 422);
+            }
+            return redirect()->back()->with('error', $msg);
+        }
+
         if ($request->filled('Total_kg')) {
             $transaksi->Total_kg = (float) $request->Total_kg;
         }

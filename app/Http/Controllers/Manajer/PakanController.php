@@ -97,28 +97,39 @@ class PakanController extends Controller
             ];
         });
 
-        // 2. Ambil Mitra Khusus Supplier untuk Modal Order WA & Pembelian
-        $suppliers = MitraDistributor::where('tipe_mitra', 'like', '%supplier%')
-            ->orWhere('tipe_mitra', 'like', '%distributor%')
-            ->orderBy('id_mitra', 'desc')
-            ->get()
-            ->map(function ($s) {
-                // Generate WhatsApp clean phone format
-                $phone = '+62 812-3456-7890';
-                $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
-                if (str_starts_with($cleanPhone, '0')) {
-                    $cleanPhone = '62' . substr($cleanPhone, 1);
-                }
+        // 2. Ambil Mitra KHUSUS Supplier Pakan (Eksklusif Supplier Pakan / Pelet)
+        $suppliers = MitraDistributor::where(function ($q) {
+            $q->where('tipe_mitra', 'like', '%pakan%')
+              ->orWhere('tipe_mitra', 'like', '%pelet%')
+              ->orWhere(function ($sub) {
+                  $sub->where('tipe_mitra', 'like', '%supplier%')
+                      ->where('tipe_mitra', 'not like', '%bibit%')
+                      ->where('tipe_mitra', 'not like', '%benih%');
+              });
+        })
+        ->where('tipe_mitra', 'not like', '%restoran%')
+        ->where('tipe_mitra', 'not like', '%resto%')
+        ->where('tipe_mitra', 'not like', '%rumah makan%')
+        ->where('tipe_mitra', 'not like', '%pasar%')
+        ->where('tipe_mitra', 'not like', '%ekspor%')
+        ->orderBy('nama_mitra', 'asc')
+        ->get()
+        ->map(function ($s) {
+            $phone = $s->kontak ?? $s->telepon ?? '+62 812-3456-7890';
+            $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+            if (str_starts_with($cleanPhone, '0')) {
+                $cleanPhone = '62' . substr($cleanPhone, 1);
+            }
 
-                return [
-                    'id_mitra'     => $s->id_mitra,
-                    'nama_mitra'   => $s->nama_mitra,
-                    'tipe_mitra'   => $s->tipe_mitra,
-                    'alamat'       => $s->alamat,
-                    'telepon'      => $phone,
-                    'wa_link'      => 'https://wa.me/' . $cleanPhone . '?text=' . urlencode("Halo {$s->nama_mitra}, saya dari AMS BUDIDAYA ingin memesan pasokan pakan ikan. Apakah stok pakan tersedia?"),
-                ];
-            });
+            return [
+                'id_mitra'     => $s->id_mitra,
+                'nama_mitra'   => $s->nama_mitra,
+                'tipe_mitra'   => $s->tipe_mitra,
+                'alamat'       => $s->alamat,
+                'telepon'      => $phone,
+                'wa_link'      => 'https://wa.me/' . $cleanPhone . '?text=' . urlencode("Halo {$s->nama_mitra}, saya dari AMS BUDIDAYA ingin memesan pasokan pakan ikan. Apakah stok pakan tersedia?"),
+            ];
+        });
 
         // 3. Kolam Aktif untuk Input Log Pakan (Pembesaran & Pembibitan) dengan Auto Sinkronisasi DOC & Fase
         $now = Carbon::now();

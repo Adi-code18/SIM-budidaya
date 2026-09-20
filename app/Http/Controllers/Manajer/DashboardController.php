@@ -176,7 +176,100 @@ class DashboardController extends Controller
             'month' => $chartMonth,
         ];
 
-        return view('layouts.dashboard.index', compact('metrics', 'mitraList', 'pakanRekap', 'chartDatasets'));
+        // 5. Data Profitabilitas & Laba-Rugi (Bulan Ini & Tahun Ini)
+        $currentYear = Carbon::now()->year;
+        $currentMonth = Carbon::now()->month;
+        $currentMonthName = Carbon::now()->translatedFormat('F');
+
+        // A. Keuangan Bulan Ini
+        $incomeBulanIni = (float) Keuangan::whereYear('tanggal_transaksi', $currentYear)
+            ->whereMonth('tanggal_transaksi', $currentMonth)
+            ->whereIn('tipe_transaksi', ['pemasukan', 'income'])
+            ->sum('nominal');
+
+        $expenseBulanIni = (float) Keuangan::whereYear('tanggal_transaksi', $currentYear)
+            ->whereMonth('tanggal_transaksi', $currentMonth)
+            ->whereIn('tipe_transaksi', ['pengeluaran', 'expense'])
+            ->sum('nominal');
+
+        $labaBulanIni = $incomeBulanIni - $expenseBulanIni;
+        $marginBulanIni = $incomeBulanIni > 0 ? round(($labaBulanIni / $incomeBulanIni) * 100, 1) : 0;
+        $costRatioBulanIni = $incomeBulanIni > 0 ? round(($expenseBulanIni / $incomeBulanIni) * 100, 1) : 0;
+
+        // B. Keuangan Tahun Ini
+        $incomeTahunIni = (float) Keuangan::whereYear('tanggal_transaksi', $currentYear)
+            ->whereIn('tipe_transaksi', ['pemasukan', 'income'])
+            ->sum('nominal');
+
+        $expenseTahunIni = (float) Keuangan::whereYear('tanggal_transaksi', $currentYear)
+            ->whereIn('tipe_transaksi', ['pengeluaran', 'expense'])
+            ->sum('nominal');
+
+        $labaTahunIni = $incomeTahunIni - $expenseTahunIni;
+        $marginTahunIni = $incomeTahunIni > 0 ? round(($labaTahunIni / $incomeTahunIni) * 100, 1) : 0;
+        $costRatioTahunIni = $incomeTahunIni > 0 ? round(($expenseTahunIni / $incomeTahunIni) * 100, 1) : 0;
+
+        // C. Rekap 12 Bulan Sepanjang Tahun Ini (Untuk Trend / Sparkline Matriks Laba-Rugi)
+        $monthlyFinance = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $mName = Carbon::createFromDate($currentYear, $m, 1)->translatedFormat('M');
+            $in = (float) Keuangan::whereYear('tanggal_transaksi', $currentYear)
+                ->whereMonth('tanggal_transaksi', $m)
+                ->whereIn('tipe_transaksi', ['pemasukan', 'income'])
+                ->sum('nominal');
+            $out = (float) Keuangan::whereYear('tanggal_transaksi', $currentYear)
+                ->whereMonth('tanggal_transaksi', $m)
+                ->whereIn('tipe_transaksi', ['pengeluaran', 'expense'])
+                ->sum('nominal');
+            $profit = $in - $out;
+            $monthlyFinance[] = [
+                'month_num'          => $m,
+                'month_name'         => $mName,
+                'pemasukan'          => $in,
+                'pemasukan_format'   => 'Rp ' . number_format($in, 0, ',', '.'),
+                'pengeluaran'        => $out,
+                'pengeluaran_format' => 'Rp ' . number_format($out, 0, ',', '.'),
+                'laba_rugi'          => $profit,
+                'laba_rugi_format'   => ($profit >= 0 ? '+Rp ' : '-Rp ') . number_format(abs($profit), 0, ',', '.'),
+                'is_profit'          => $profit >= 0,
+                'has_data'           => ($in > 0 || $out > 0),
+                'is_current'         => ($m === $currentMonth)
+            ];
+        }
+
+        $financialSummary = [
+            'bulan_ini' => [
+                'nama_bulan'         => $currentMonthName . ' ' . $currentYear,
+                'pemasukan'          => $incomeBulanIni,
+                'pemasukan_format'   => 'Rp ' . number_format($incomeBulanIni, 0, ',', '.'),
+                'pengeluaran'        => $expenseBulanIni,
+                'pengeluaran_format' => 'Rp ' . number_format($expenseBulanIni, 0, ',', '.'),
+                'laba_rugi'          => $labaBulanIni,
+                'laba_rugi_format'   => ($labaBulanIni >= 0 ? '+Rp ' : '-Rp ') . number_format(abs($labaBulanIni), 0, ',', '.'),
+                'is_untung'          => $labaBulanIni >= 0,
+                'status_label'       => $labaBulanIni >= 0 ? 'Surplus (Untung)' : 'Defisit (Rugi)',
+                'margin_percent'     => $marginBulanIni,
+                'cost_ratio'         => $costRatioBulanIni,
+            ],
+            'tahun_ini' => [
+                'nama_tahun'         => 'Tahun ' . $currentYear,
+                'pemasukan'          => $incomeTahunIni,
+                'pemasukan_format'   => 'Rp ' . number_format($incomeTahunIni, 0, ',', '.'),
+                'pengeluaran'        => $expenseTahunIni,
+                'pengeluaran_format' => 'Rp ' . number_format($expenseTahunIni, 0, ',', '.'),
+                'laba_rugi'          => $labaTahunIni,
+                'laba_rugi_format'   => ($labaTahunIni >= 0 ? '+Rp ' : '-Rp ') . number_format(abs($labaTahunIni), 0, ',', '.'),
+                'is_untung'          => $labaTahunIni >= 0,
+                'status_label'       => $labaTahunIni >= 0 ? 'Surplus (Untung)' : 'Defisit (Rugi)',
+                'margin_percent'     => $marginTahunIni,
+                'cost_ratio'         => $costRatioTahunIni,
+                'avg_laba_bulan'     => round($labaTahunIni / max(1, $currentMonth), 0),
+                'avg_laba_format'    => 'Rp ' . number_format(round($labaTahunIni / max(1, $currentMonth), 0), 0, ',', '.') . '/bln',
+            ],
+            'monthly_breakdown'      => $monthlyFinance
+        ];
+
+        return view('layouts.dashboard.index', compact('metrics', 'mitraList', 'pakanRekap', 'chartDatasets', 'financialSummary'));
     }
 
     public function exportExcel(Request $request)
