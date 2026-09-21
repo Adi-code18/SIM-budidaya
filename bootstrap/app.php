@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Middleware\EnsureSingleSession;
 use App\Http\Middleware\RoleMiddleware;
 use App\Http\Middleware\SecurityHeadersMiddleware;
 use Illuminate\Database\QueryException;
@@ -8,7 +7,6 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
-use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Support\Facades\Log;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -19,11 +17,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Tambahkan security headers dan single session listener ke web middleware
+        // Tambahkan security headers ke web middleware
         $middleware->web(append: [
             SecurityHeadersMiddleware::class,
-            AuthenticateSession::class,
-            EnsureSingleSession::class,
         ]);
 
         // Daftarkan middleware alias untuk otorisasi peran
