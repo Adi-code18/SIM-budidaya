@@ -466,6 +466,19 @@ class PakanController extends Controller
             ]);
         }
 
+        // 3. Otomatisasi Pertambahan Bobot Biomassa & Rekalkulasi FCR Batch Pembesaran
+        if ($fase !== 'pembibitan') {
+            $activeBatch = BatchPembesaran::where('id_kolam', $request->id_kolam)
+                ->where('status_siklus', '!=', 'selesai')
+                ->where('status_siklus', '!=', 'gagal')
+                ->latest('id_pembesaran')
+                ->first();
+
+            if ($activeBatch) {
+                $activeBatch->applyFeedGrowth($kgPelet, $kgDaun);
+            }
+        }
+
         // Update kolam ph air jika diisi
         if ($request->filled('ph_air')) {
             Kolam::where('id_kolam', $request->id_kolam)->update([

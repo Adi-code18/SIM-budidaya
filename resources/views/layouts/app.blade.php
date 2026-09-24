@@ -16,6 +16,11 @@
         - Tailwind CSS: Utility-first CSS framework untuk styling responsif & modern.
     ========================================================================= --}}
 
+    <meta name="turbo-cache-control" content="no-cache">
+    
+    <!-- Hotwire Turbo (Instant SPA-like Navigation) -->
+    <script src="https://cdn.jsdelivr.net/npm/@hotwired/turbo@8.0.12/dist/turbo.es2017-umd.js"></script>
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -42,6 +47,13 @@
     {{-- SweetAlert2 (Modal Dialog & Toast Notifikasi Elegan) --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
+        /* Turbo Progress Bar */
+        .turbo-progress-bar {
+            background: linear-gradient(90deg, #0284C7, #38BDF8) !important;
+            height: 3px !important;
+            box-shadow: 0 0 12px rgba(2, 132, 199, 0.8) !important;
+        }
+
         /* Backdrop overlay hanya untuk modal dialog, BUKAN untuk toast */
         .swal2-container {
             z-index: 99999 !important;
@@ -635,7 +647,7 @@
 
                         {{-- Opsi Logout Form --}}
                         <div class="py-1">
-                            <form action="{{ route('logout') }}" method="POST">
+                            <form action="{{ route('logout') }}" method="POST" data-turbo="false">
                                 @csrf
                                 <button type="submit" 
                                         class="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors cursor-pointer text-left">

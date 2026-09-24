@@ -159,8 +159,8 @@
                 </div>
             </div>
 
-            <!-- Row 2: FCR Benchmark & Spesifikasi Panen -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-sky-50/40 rounded-2xl border border-sky-100">
+            <!-- Row 2: FCR Benchmark, Spesifikasi Panen & Harga Pasar -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 p-4 bg-sky-50/40 rounded-2xl border border-sky-100">
                 <!-- Field 4: FCR Ideal (Min - Max) -->
                 <div class="space-y-1.5">
                     <label class="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 block">
@@ -201,7 +201,26 @@
                     <p class="text-[10px] text-slate-400 font-medium">Estimasi lama tebar s.d panen.</p>
                 </div>
 
-                <!-- Field 6: Target Konsumsi -->
+                <!-- Field 6: Harga Jual Pasar Acuan -->
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 block">
+                        HARGA PASAR / KG (RP) <span class="text-rose-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-2 text-xs font-bold text-slate-400">Rp</span>
+                        <input type="number" 
+                               x-model="form.harga_jual_kg" 
+                               :disabled="isSubmitting"
+                               placeholder="Contoh: 48000" 
+                               step="500"
+                               min="0"
+                               required
+                               class="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-xs font-bold text-emerald-800 bg-white focus:ring-2 focus:ring-emerald-500 transition-all">
+                    </div>
+                    <p class="text-[10px] text-slate-400 font-medium">Harga acuan estimasi omset panen.</p>
+                </div>
+
+                <!-- Field 7: Target Konsumsi -->
                 <div class="space-y-1.5">
                     <label class="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 block">
                         TARGET KONSUMSI
@@ -214,7 +233,7 @@
                     <p class="text-[10px] text-slate-400 font-medium">Ukuran standar panen siap jual.</p>
                 </div>
 
-                <!-- Field 7: Rekomendasi Pakan -->
+                <!-- Field 8: Rekomendasi Pakan -->
                 <div class="space-y-1.5">
                     <label class="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 block">
                         REKOMENDASI PAKAN
@@ -276,6 +295,7 @@
                 <thead>
                     <tr class="bg-slate-50/70 border-b border-slate-200/80 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
                         <th class="py-4 px-6">SPESIES IKAN</th>
+                        <th class="py-4 px-6">HARGA PASAR / KG</th>
                         <th class="py-4 px-6">FCR IDEAL (TARGET)</th>
                         <th class="py-4 px-6">SIKLUS PANEN</th>
                         <th class="py-4 px-6">TARGET KONSUMSI &amp; PAKAN</th>
@@ -287,7 +307,7 @@
                     
                     <template x-if="filteredIkans.length === 0">
                         <tr>
-                            <td colspan="6" class="py-12 text-center text-slate-400 text-xs font-medium">
+                            <td colspan="7" class="py-12 text-center text-slate-400 text-xs font-medium">
                                 <i class="fa-solid fa-fish text-3xl text-slate-300 block mb-2"></i>
                                 Belum ada data jenis ikan yang terdaftar.<br>
                                 <span class="text-[11px] text-slate-400">Klik tombol <strong>Tambah Jenis Ikan</strong> untuk menambahkan data baru.</span>
@@ -309,8 +329,14 @@
                                 </div>
                             </td>
                             <td class="py-4 px-6">
-                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black bg-emerald-50 text-emerald-800 border border-emerald-200/60 shadow-xs">
-                                    <i class="fa-solid fa-scale-balanced text-[10px] text-emerald-600"></i>
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                    <i class="fa-solid fa-tag text-[10px] text-emerald-600"></i>
+                                    <span x-text="'Rp ' + Number(item.harga_jual_kg || 0).toLocaleString('id-ID') + '/kg'"></span>
+                                </span>
+                            </td>
+                            <td class="py-4 px-6">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black bg-sky-50 text-sky-800 border border-sky-200/60 shadow-xs">
+                                    <i class="fa-solid fa-scale-balanced text-[10px] text-sky-600"></i>
                                     <span x-text="(item.fcr_min ? Number(item.fcr_min).toFixed(1) : '1.0') + ' – ' + (item.fcr_max ? Number(item.fcr_max).toFixed(1) : '1.2')"></span>
                                 </span>
                             </td>
@@ -424,6 +450,7 @@ function ikanComponent() {
             bulan_panen_max: 3.0,
             target_konsumsi: '8–10 ekor / kg',
             jenis_pakan_didukung: 'Pelet + Vitamin',
+            harga_jual_kg: 30000,
             id_batch: ''
         },
 
@@ -478,6 +505,7 @@ function ikanComponent() {
                 bulan_panen_max: item.bulan_panen_max ?? 3.0,
                 target_konsumsi: item.target_konsumsi ?? '',
                 jenis_pakan_didukung: item.jenis_pakan_didukung ?? '',
+                harga_jual_kg: item.harga_jual_kg ?? 30000,
                 id_batch: item.id_batch || ''
             };
             this.showForm = true;
@@ -496,6 +524,7 @@ function ikanComponent() {
                 bulan_panen_max: 3.0,
                 target_konsumsi: '',
                 jenis_pakan_didukung: '',
+                harga_jual_kg: 30000,
                 id_batch: ''
             };
         },

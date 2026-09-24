@@ -22,6 +22,7 @@ class Ikan extends Model
         'bulan_panen_max',
         'target_konsumsi',
         'jenis_pakan_didukung',
+        'harga_jual_kg',
     ];
 
     protected $casts = [
@@ -29,6 +30,7 @@ class Ikan extends Model
         'fcr_max'         => 'float',
         'bulan_panen_min' => 'float',
         'bulan_panen_max' => 'float',
+        'harga_jual_kg'   => 'float',
     ];
 
     protected $appends = [

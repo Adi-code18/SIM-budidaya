@@ -61,6 +61,61 @@ class BatchPembesaran extends Model
     }
 
     /**
+     * Dapatkan target FCR SOP acuan ikan.
+     */
+    public function getTargetFcrSop(): float
+    {
+        $ikanRef = $this->ikan_ref;
+        if ($ikanRef && (float)$ikanRef->fcr_min > 0 && (float)$ikanRef->fcr_max > 0) {
+            return round(((float)$ikanRef->fcr_min + (float)$ikanRef->fcr_max) / 2, 2);
+        }
+
+        $jenis = strtolower($this->jenis_ikan ?? '');
+        if (str_contains($jenis, 'gurame') || str_contains($jenis, 'gurami')) {
+            return 1.65;
+        } elseif (str_contains($jenis, 'nila')) {
+            return 1.25;
+        } elseif (str_contains($jenis, 'lele')) {
+            return 1.15;
+        } elseif (str_contains($jenis, 'patin')) {
+            return 1.20;
+        } elseif (str_contains($jenis, 'mas')) {
+            return 1.40;
+        } elseif (str_contains($jenis, 'bawal')) {
+            return 1.35;
+        }
+
+        return 1.30;
+    }
+
+    /**
+     * Otomatisasi Pertambahan Bobot (Biomassa) & Rekalkulasi FCR saat Input Log Pakan
+     */
+    public function applyFeedGrowth(float $kgPelet, float $kgDaun = 0): void
+    {
+        if ($kgPelet <= 0 && $kgDaun <= 0) {
+            return;
+        }
+
+        $targetFcr = $this->getTargetFcrSop();
+        // Pelet memiliki konversi pakan 100%, dedaunan / pakan suplemen ~30%
+        $effectiveFeedKg = $kgPelet + ($kgDaun * 0.30);
+        $pertambahanBiomassaKg = round($effectiveFeedKg / $targetFcr, 2);
+
+        if ($pertambahanBiomassaKg > 0) {
+            $newBiomassa = (float) $this->biomassa_est + $pertambahanBiomassaKg;
+            if ($this->target_panen_kg > 0) {
+                $newBiomassa = min($newBiomassa, (float) $this->target_panen_kg * 1.2);
+            }
+            $this->biomassa_est = $newBiomassa;
+        }
+
+        // Simpan FCR terbaru
+        $this->fcr = $this->calculateCumulativeFcr();
+        $this->save();
+    }
+
+    /**
      * Hitung FCR Kumulatif (Running FCR) saat siklus berjalan hari ke-N.
      * Formula SOP: Akumulasi Pakan Hari 1 s.d. N (kg) / (Estimasi Biomassa Hari ke-N - Biomassa Awal Tebar)
      */
@@ -73,9 +128,18 @@ class BatchPembesaran extends Model
 
         $biomassaAwal = $this->getBiomassaAwalKg();
         $currentBiomassa = (float) ($this->biomassa_est > 0 ? $this->biomassa_est : 0);
-        $pertambahanBiomassa = max(0.1, $currentBiomassa - $biomassaAwal);
+        $pertambahanBiomassa = $currentBiomassa - $biomassaAwal;
 
-        return round($totalPakan / $pertambahanBiomassa, 2);
+        if ($pertambahanBiomassa <= 0.05) {
+            return $this->getTargetFcrSop();
+        }
+
+        $calculated = round($totalPakan / $pertambahanBiomassa, 2);
+        if ($calculated < 0.8 || $calculated > 3.5) {
+            return $this->getTargetFcrSop();
+        }
+
+        return $calculated;
     }
 
     /**
@@ -91,9 +155,18 @@ class BatchPembesaran extends Model
 
         $biomassaAwal = $this->getBiomassaAwalKg();
         $biomassaPanen = (float) ($this->jumlah_panen_kg > 0 ? $this->jumlah_panen_kg : $this->biomassa_est);
-        $pertambahanBiomassa = max(0.1, $biomassaPanen - $biomassaAwal);
+        $pertambahanBiomassa = $biomassaPanen - $biomassaAwal;
 
-        return round($totalPakan / $pertambahanBiomassa, 2);
+        if ($pertambahanBiomassa <= 0.05) {
+            return $this->getTargetFcrSop();
+        }
+
+        $calculated = round($totalPakan / $pertambahanBiomassa, 2);
+        if ($calculated < 0.8 || $calculated > 3.5) {
+            return $this->getTargetFcrSop();
+        }
+
+        return $calculated;
     }
 
     /**
@@ -110,9 +183,17 @@ class BatchPembesaran extends Model
         $biomassaAwal = $this->getBiomassaAwalKg();
         $biomassaPanen = (float) ($this->jumlah_panen_kg > 0 ? $this->jumlah_panen_kg : $this->biomassa_est);
         $totalBiomassaHasil = ($biomassaPanen + $mortalitasKg) - $biomassaAwal;
-        $pertambahanBiomassa = max(0.1, $totalBiomassaHasil);
 
-        return round($totalPakan / $pertambahanBiomassa, 2);
+        if ($totalBiomassaHasil <= 0.05) {
+            return $this->getTargetFcrSop();
+        }
+
+        $calculated = round($totalPakan / $totalBiomassaHasil, 2);
+        if ($calculated < 0.8 || $calculated > 3.5) {
+            return $this->getTargetFcrSop();
+        }
+
+        return $calculated;
     }
 
     /**
@@ -159,7 +240,16 @@ class BatchPembesaran extends Model
         if ($this->batchPembibitan && $this->batchPembibitan->total_bobot_kg > 0) {
             return (float) $this->batchPembibitan->total_bobot_kg;
         }
-        return (float) max(0, round(($this->biomassa_est ?: 50) * 0.1, 1));
+
+        $totalPakan = $this->getTotalPakanKg();
+        if ($totalPakan > 0) {
+            $targetFcr = $this->getTargetFcrSop();
+            $pertumbuhanEst = $totalPakan / $targetFcr;
+            $awalEst = max(1.0, (float)$this->biomassa_est - $pertumbuhanEst);
+            return round($awalEst, 1);
+        }
+
+        return (float) ($this->biomassa_est > 0 ? $this->biomassa_est : 0.0);
     }
 
     /**
@@ -189,9 +279,11 @@ class BatchPembesaran extends Model
             $targetFcr = 1.45;
         }
 
-        // Harga Jual Pasar Acuan (Rp/Kg)
-        $hargaJualPerKg = 24000;
-        if (str_contains($jenis, 'lele')) {
+        // Harga Jual Pasar Acuan (Rp/Kg) - Diambil langsung dari Master Data Ikan
+        $hargaJualPerKg = 30000;
+        if ($ikanRef && (float)$ikanRef->harga_jual_kg > 0) {
+            $hargaJualPerKg = (float)$ikanRef->harga_jual_kg;
+        } elseif (str_contains($jenis, 'lele')) {
             $hargaJualPerKg = 23000;
         } elseif (str_contains($jenis, 'nila')) {
             $hargaJualPerKg = 32000;

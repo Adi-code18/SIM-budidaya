@@ -43,6 +43,7 @@ class IkanController extends Controller
             'bulan_panen_max'      => 'nullable|numeric|min:0.1',
             'target_konsumsi'      => 'nullable|string|max:50',
             'jenis_pakan_didukung' => 'nullable|string|max:100',
+            'harga_jual_kg'        => 'nullable|numeric|min:0',
             'id_batch'             => 'nullable|exists:batch_pembibitan,id_batch',
         ], [
             'nama_ikan.required'         => 'Nama jenis ikan wajib diisi.',
@@ -60,6 +61,7 @@ class IkanController extends Controller
             'bulan_panen_max'      => $request->bulan_panen_max,
             'target_konsumsi'      => $request->target_konsumsi,
             'jenis_pakan_didukung' => $request->jenis_pakan_didukung,
+            'harga_jual_kg'        => $request->harga_jual_kg ?? 30000,
             'id_batch'             => $request->id_batch ?: null,
         ]);
 
@@ -90,6 +92,7 @@ class IkanController extends Controller
             'bulan_panen_max'      => 'nullable|numeric|min:0.1',
             'target_konsumsi'      => 'nullable|string|max:50',
             'jenis_pakan_didukung' => 'nullable|string|max:100',
+            'harga_jual_kg'        => 'nullable|numeric|min:0',
             'id_batch'             => 'nullable|exists:batch_pembibitan,id_batch',
         ]);
 
@@ -103,6 +106,7 @@ class IkanController extends Controller
             'bulan_panen_max'      => $request->bulan_panen_max,
             'target_konsumsi'      => $request->target_konsumsi,
             'jenis_pakan_didukung' => $request->jenis_pakan_didukung,
+            'harga_jual_kg'        => $request->harga_jual_kg ?? $ikan->harga_jual_kg ?? 30000,
             'id_batch'             => $request->id_batch ?: null,
         ]);
 

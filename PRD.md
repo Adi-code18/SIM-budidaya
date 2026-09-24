@@ -272,3 +272,76 @@ flowchart TD
 4. **Ketersediaan & Pemulihan Keamanan (Resilience):**
    - Kebijakan *Single Active Session* untuk mencegah penggunaan akun bersama secara ilegal.
    - Manajer memiliki mekanisme darurat untuk mereset dan meregenerasi 2FA petugas jika terjadi kehilangan perangkat.
+## task fitur yang udah jalan sama belum
+skema fitur admin 
+[✓]admin role dengan fitur secure recapcha dari claude flare
+[✓]fitur lupa password pada manajer 
+[✓]fitur logout
+[✓]fitur pengaturan profile petugas 
+[😁]panel dashboard admin
+-[😁]fitur exsport laporan ke excel
+-[✓]fitur monitorin data ikan,fvr rata rata , target panen.
+-[✓]fitur pantau kerugian dan keuntungan keuangan (profit loss)
+-[✓]fitur monitoring lokasi mitra yang berkerjasama dengan kita
+skema fitur data master
+[✓]panel master data 
+-[✓]fitur master pakan 
+--[✓]fitur tambah item pakan
+--[✓]fitur restok pakan
+--[✓]fitur edit pakan 
+--[✓]fitur hapus data pakan
+-[✓]fitur master ikan
+--[✓]fitur tambah jenis ikan 
+--[✓]fitur edit jenis ikan 
+--[✓]fitur hapus jenis ikan
+-[😁]fitur master petugas
+--[✓]fitur tambah petugas
+--[✓]fitur edit profile petugas
+--[✓]fitur qr code 2fa google authentcator
+--[😁]fitur ganti password petugas
+--[✓]fitur hapus data petugas
+-[✓]fitur master mitra 
+--[✓]fitur tambah master mitra
+--[✓]fitur view lengkap data mitra
+--[✓]fitur edit data mitra
+--[✓]fitur hapus data mitra
+skema fitur budidaya dan operasional
+-[✓]pembibitan
+--[✓]fitur tambah batch pembibitan baru
+--[✓]fitur viewing data batch
+--[✓]fitur pindah data ke pembesaran
+--[✓]fitur edit data pembibitan
+--[✓]fitur hapus data pembibitan
+-[✓]pembesaran
+--[✓]fitur tambah batch data pembesaran
+--[✓]fitur viewing data  batch pembesaran
+--[✓]fitur edith data batch pembesaran 
+--[✓]fitur hapus data batch pembesaran
+--[✓] fitur selesaikan panen , tapi harus ada order dari distributor 
+-[✓]log pakan
+skema fitur distribusi 
+-[✓]fitur order & distribusi
+--[✓]fitur tambah order baru
+--[✓]fitur hapus order 
+--[✓]fitur ubah status order
+Skema Transaksi keuangan
+-[😁]fitur transaksi 
+--[✓]fitur tambah / catat transaksi selain panen dan beli bibit.
+--[😁]fitur cetak transaksi keluar dan masuk
+--[✓]fitur edit transaksi
+--[✓]fitur hapus data transaksi
+--[✓]fitur view data transaksi
+--[]fitur cetak laporan analisis 
+Skema petugas 
+-[✓] distribusi
+--[✓]fitur navigasi pesanan 
+--[✓]fitur riwayat
+--[✓]profil
+-[😁] pembesaran
+--[✓]fitur dashboard yang diamana itu untuk list kolam 
+--[😁]fitur log pakan pembesaran
+--[✓]fitur profil
+-[😁] pembibitan
+--[✓]fitur input batch pembibitan baru
+--[😁]fitur log pakan pembibitan
+--[✓]profile 

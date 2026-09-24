@@ -3,62 +3,7 @@
 @section('title', 'Input Batch Pembesaran - AMS BUDIDAYA Mobile')
 
 @section('content')
-<div class="p-4 space-y-4" x-data="{
-    idPembesaran: 'PB-2026-BG-101',
-    tanggalTebar: new Date().toISOString().split('T')[0],
-    jenisIkan: '',
-    kolamTebar: '',
-    sumberBenih: 'Hatchery Internal',
-    biayaBeliBibit: '',
-    biomassaAwal: 0,
-    targetPanenTgl: '',
-    targetPanenKg: 1000,
-    isSubmitting: false,
-    async handleSubmit() {
-        if (!this.jenisIkan || !this.kolamTebar) {
-            triggerToast('Mohon pilih Jenis Ikan dan Kolam Tebar!', 'error');
-            return;
-        }
-
-        this.isSubmitting = true;
-        try {
-            const res = await fetch('{{ route('petugas.pembesaran.store-batch') }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({
-                    jenis_ikan: this.jenisIkan,
-                    id_kolam: this.kolamTebar,
-                    tgl_tebar: this.tanggalTebar,
-                    sumber_benih: this.sumberBenih,
-                    biaya_beli_bibit: this.sumberBenih === 'Pemasok Eksternal' ? Number(this.biayaBeliBibit) : 0,
-                    biomassa_est: this.biomassaAwal,
-                    target_panen_kg: this.targetPanenKg
-                })
-            });
-
-            const data = await res.json();
-            if (res.ok && data.success) {
-                triggerToast(data.message || 'Siklus pembesaran berhasil dimulai!', 'success');
-                setTimeout(() => {
-                    window.location.href = '{{ route('petugas.pembesaran.dashboard') }}';
-                }, 1000);
-            } else {
-                triggerToast(data.message || 'Gagal memulai siklus pembesaran.', 'error');
-            }
-        } catch (e) {
-            triggerToast('Siklus pembesaran ' + this.idPembesaran + ' berhasil dimulai!', 'success');
-            setTimeout(() => {
-                window.location.href = '{{ route('petugas.pembesaran.dashboard') }}';
-            }, 1000);
-        } finally {
-            this.isSubmitting = false;
-        }
-    }
-}">
+<div class="p-4 space-y-4" x-data="createBatchPembesaranForm()">
 
     <!-- Title Header Box Card -->
     <div class="bg-white rounded-3xl border border-slate-200/90 p-4 shadow-xs space-y-1">
@@ -206,4 +151,65 @@
     </div>
 
 </div>
+
+<script>
+function createBatchPembesaranForm() {
+    return {
+        idPembesaran: 'PB-{{ date('Y') }}-{{ rand(100, 999) }}',
+        tanggalTebar: new Date().toISOString().split('T')[0],
+        jenisIkan: '',
+        kolamTebar: '',
+        sumberBenih: 'Hatchery Internal',
+        biayaBeliBibit: '',
+        biomassaAwal: 0,
+        targetPanenTgl: '',
+        targetPanenKg: 1000,
+        isSubmitting: false,
+        async handleSubmit() {
+            if (!this.jenisIkan || !this.kolamTebar) {
+                triggerToast('Mohon pilih Jenis Ikan dan Kolam Tebar!', 'error');
+                return;
+            }
+
+            this.isSubmitting = true;
+            try {
+                const res = await fetch('{{ route('petugas.pembesaran.store-batch') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        jenis_ikan: this.jenisIkan,
+                        id_kolam: this.kolamTebar,
+                        tgl_tebar: this.tanggalTebar,
+                        sumber_benih: this.sumberBenih,
+                        biaya_beli_bibit: this.sumberBenih === 'Pemasok Eksternal' ? Number(this.biayaBeliBibit) : 0,
+                        biomassa_est: this.biomassaAwal,
+                        target_panen_kg: this.targetPanenKg
+                    })
+                });
+
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    triggerToast(data.message || 'Siklus pembesaran berhasil dimulai!', 'success');
+                    setTimeout(() => {
+                        window.location.href = '{{ route('petugas.pembesaran.dashboard') }}';
+                    }, 1000);
+                } else {
+                    triggerToast(data.message || 'Gagal memulai siklus pembesaran.', 'error');
+                }
+            } catch (e) {
+                triggerToast('Siklus pembesaran ' + this.idPembesaran + ' berhasil dimulai!', 'success');
+                setTimeout(() => {
+                    window.location.href = '{{ route('petugas.pembesaran.dashboard') }}';
+                }, 1000);
+            } finally {
+                this.isSubmitting = false;
+            }
+        }
+    };
+}
+</script>
 @endsection

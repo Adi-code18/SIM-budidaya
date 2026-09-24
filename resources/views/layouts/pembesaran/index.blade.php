@@ -1345,7 +1345,7 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">KAPASITAS DAYA TAMPUNG (EKOR / KG) *</label>
-                        <input type="number" step="50" min="10" x-model="kolamForm.kapasitas" required placeholder="2500"
+                        <input type="number" step="1" min="100" x-model="kolamForm.kapasitas" required placeholder="2500"
                                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:border-sky-600">
                     </div>
                     <div>

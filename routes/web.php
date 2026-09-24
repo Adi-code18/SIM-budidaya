@@ -232,3 +232,17 @@ Route::get('/preview-email-otp', function () {
     return new App\Mail\SendOtpMail('482915', 'Adi Darmawan', 5);
 });
 
+if (app()->environment('local', 'testing')) {
+    Route::get('/test-login/{role?}', function ($role = 'manajer') {
+        $user = \App\Models\User::where('role', $role)->first() ?? \App\Models\User::first();
+        if ($user) {
+            \Illuminate\Support\Facades\Auth::login($user);
+            session()->regenerate();
+            $user->update(['last_session_id' => session()->getId()]);
+            session(['user_session_id' => session()->getId()]);
+        }
+        return redirect()->route('dashboard');
+    });
+}
+
+
