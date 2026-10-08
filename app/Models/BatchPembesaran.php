@@ -17,6 +17,8 @@ class BatchPembesaran extends Model
         'id_user',
         'id_batch_pembibitan',
         'asal_bibit',
+        'jumlah_tebar_ekor',
+        'biomassa_awal_kg',
         'biaya_beli_bibit',
         'tgl_tebar',
         'est_tgl_panen',
@@ -24,6 +26,7 @@ class BatchPembesaran extends Model
         'fcr',
         'target_panen_kg',
         'jumlah_panen_kg',
+        'jumlah_panen_ekor',
         'jenis_ikan',
         'status_siklus',
     ];
@@ -237,6 +240,10 @@ class BatchPembesaran extends Model
      */
     public function getBiomassaAwalKg(): float
     {
+        if ((float)$this->biomassa_awal_kg > 0) {
+            return (float) $this->biomassa_awal_kg;
+        }
+
         if ($this->batchPembibitan && $this->batchPembibitan->total_bobot_kg > 0) {
             return (float) $this->batchPembibitan->total_bobot_kg;
         }
@@ -250,6 +257,30 @@ class BatchPembesaran extends Model
         }
 
         return (float) ($this->biomassa_est > 0 ? $this->biomassa_est : 0.0);
+    }
+
+    /**
+     * Hitung Ikan Hilang / Mati Tak Terdeteksi (Uncounted Dead Fish).
+     * Formula SOP: Jumlah Ekor Tebar - Jumlah Ekor Panen Riil
+     */
+    public function getMatiTakTerdeteksiEkor(): int
+    {
+        if ((int)$this->jumlah_tebar_ekor > 0 && (int)$this->jumlah_panen_ekor > 0) {
+            return max(0, (int)$this->jumlah_tebar_ekor - (int)$this->jumlah_panen_ekor);
+        }
+        return 0;
+    }
+
+    /**
+     * Hitung Survival Rate (SR) pada Siklus Pembesaran.
+     * Formula: (Jumlah Ekor Panen / Jumlah Ekor Tebar) * 100%
+     */
+    public function getSurvivalRatePembesaran(): float
+    {
+        if ((int)$this->jumlah_tebar_ekor > 0 && (int)$this->jumlah_panen_ekor > 0) {
+            return round(((int)$this->jumlah_panen_ekor / (int)$this->jumlah_tebar_ekor) * 100, 1);
+        }
+        return 100.0;
     }
 
     /**

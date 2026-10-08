@@ -314,6 +314,9 @@ class PembesaranController extends Controller
             'id_batch_pembibitan'  => 'nullable|numeric',
             'biaya_beli_bibit'     => 'nullable|numeric|min:0',
             'jumlah_bibit'         => 'nullable|numeric|min:1',
+            'jumlah_tebar_ekor'    => 'nullable|numeric|min:0',
+            'biomassa_awal_kg'     => 'nullable|numeric|min:0',
+            'jumlah_panen_ekor'    => 'nullable|numeric|min:0',
             'survival_rate'        => 'nullable|numeric|min:10|max:100',
             'tgl_tebar'            => 'nullable|date',
             'est_tgl_panen'        => 'nullable|date',
@@ -345,7 +348,7 @@ class PembesaranController extends Controller
         }
 
         // Validasi: Jika mengambil dari pembibitan, pastikan batch pembibitan sudah fase Fingerling / Benih
-        $jumlahBibitAwal = (float) ($request->jumlah_bibit ?? 0);
+        $jumlahBibitAwal = (float) ($request->jumlah_tebar_ekor ?? $request->jumlah_bibit ?? 0);
         if ($request->filled('id_batch_pembibitan')) {
             $sourceBatch = \App\Models\BatchPembibitan::find($request->id_batch_pembibitan);
             if ($sourceBatch) {
@@ -392,12 +395,18 @@ class PembesaranController extends Controller
         }
 
         // Otomatisasi Biomassa Awal (Kg) jika tidak diisi atau 0
-        if ($request->filled('biomassa_est') && (float)$request->biomassa_est > 0) {
+        if ($request->filled('biomassa_awal_kg') && (float)$request->biomassa_awal_kg > 0) {
+            $biomassaAwalKg = (float) $request->biomassa_awal_kg;
+            $biomassaEst = (float) ($request->biomassa_est ?? $biomassaAwalKg);
+        } elseif ($request->filled('biomassa_est') && (float)$request->biomassa_est > 0) {
             $biomassaEst = (float) $request->biomassa_est;
+            $biomassaAwalKg = $biomassaEst;
         } elseif ($jumlahBibitAwal > 0) {
-            $biomassaEst = round($jumlahBibitAwal * 0.015, 1);
+            $biomassaAwalKg = round($jumlahBibitAwal * 0.015, 1);
+            $biomassaEst = $biomassaAwalKg;
         } else {
-            $biomassaEst = round($targetPanenKg * 0.1, 1);
+            $biomassaAwalKg = round($targetPanenKg * 0.1, 1);
+            $biomassaEst = $biomassaAwalKg;
         }
 
         $batch = BatchPembesaran::create([
@@ -405,6 +414,8 @@ class PembesaranController extends Controller
             'id_user'             => Auth::id() ?? 1,
             'id_batch_pembibitan' => $request->id_batch_pembibitan ?: null,
             'asal_bibit'          => $asalBibit,
+            'jumlah_tebar_ekor'   => (int) $jumlahBibitAwal,
+            'biomassa_awal_kg'    => $biomassaAwalKg,
             'biaya_beli_bibit'    => $biayaBeliBibit,
             'tgl_tebar'           => $tglTebar,
             'est_tgl_panen'       => $estTglPanen,
@@ -412,6 +423,7 @@ class PembesaranController extends Controller
             'fcr'                 => $request->fcr ?? $defaultFcr,
             'target_panen_kg'     => $targetPanenKg,
             'jumlah_panen_kg'     => 0.00,
+            'jumlah_panen_ekor'   => (int) ($request->jumlah_panen_ekor ?? 0),
             'jenis_ikan'          => $jenis,
             'status_siklus'       => $statusSiklus,
         ]);
@@ -466,15 +478,18 @@ class PembesaranController extends Controller
         }
 
         $request->validate([
-            'id_kolam'        => 'nullable',
-            'jenis_ikan'      => 'nullable|string',
-            'tgl_tebar'       => 'nullable|date',
-            'est_tgl_panen'   => 'nullable|date',
-            'biomassa_est'    => 'nullable|numeric',
-            'target_panen_kg' => 'nullable|numeric',
-            'jumlah_panen_kg' => 'nullable|numeric',
-            'fcr'             => 'nullable|numeric',
-            'status_siklus'   => 'nullable|string',
+            'id_kolam'          => 'nullable',
+            'jenis_ikan'        => 'nullable|string',
+            'tgl_tebar'         => 'nullable|date',
+            'est_tgl_panen'     => 'nullable|date',
+            'jumlah_tebar_ekor' => 'nullable|numeric',
+            'biomassa_awal_kg'  => 'nullable|numeric',
+            'jumlah_panen_ekor' => 'nullable|numeric',
+            'biomassa_est'      => 'nullable|numeric',
+            'target_panen_kg'   => 'nullable|numeric',
+            'jumlah_panen_kg'   => 'nullable|numeric',
+            'fcr'               => 'nullable|numeric',
+            'status_siklus'     => 'nullable|string',
         ]);
 
         if ($request->filled('id_kolam')) {
@@ -513,6 +528,18 @@ class PembesaranController extends Controller
 
         if ($request->filled('est_tgl_panen')) {
             $batch->est_tgl_panen = $request->est_tgl_panen;
+        }
+
+        if ($request->has('jumlah_tebar_ekor')) {
+            $batch->jumlah_tebar_ekor = $request->jumlah_tebar_ekor;
+        }
+
+        if ($request->has('biomassa_awal_kg')) {
+            $batch->biomassa_awal_kg = $request->biomassa_awal_kg;
+        }
+
+        if ($request->has('jumlah_panen_ekor')) {
+            $batch->jumlah_panen_ekor = $request->jumlah_panen_ekor;
         }
 
         if ($request->has('biomassa_est')) {
