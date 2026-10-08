@@ -1,5 +1,5 @@
 # 🐟 SIM-BUDIDAYA (Versi 3.0)
-> **Sistem Informasi Manajemen Budidaya & Distribusi Ikan Terpadu (End-to-End Supply Chain & Aquaculture Management System)**
+> **Sistem Informasi Manajemen Budidaya & Distribusi Ikan  (End-to-End Supply Chain & Aquaculture Management System)**
 >
 > *Berdasarkan Acuan Dokumen SOP Peternakan AquaFarm (Doc 2.0) & Business Requirement Document (BRD-SIMBUD-2026-V3.0)*
 
@@ -289,4 +289,4 @@ SIM-budidaya/
 
 ## 📄 LISENSI & KONTRIBUTOR
 * **Pengembang:** Adi Darmawan (*Software Engineer / Lead Analyst*)
-* **Proyek:** SIM-BUDIDAYA - Sistem Manajemen & Rantai Pasok Budidaya Ikan Terpadu
+* **Proyek:** SIM-BUDIDAYA - Sistem Manajemen & Rantai Pasok Budidaya Ikan 
