@@ -125,9 +125,16 @@
                             <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">STATUS ORDER</label>
                             <select x-model="form.status" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
                                 <template x-for="option in statusOptions" :key="option.value">
-                                    <option :value="option.value" x-text="option.label"></option>
+                                    <option :value="option.value"
+                                            :disabled="option.value === 'dibatalkan' && formMode === 'edit' && form.initialStatus !== 'pending'"
+                                            x-text="(option.value === 'dibatalkan' && formMode === 'edit' && form.initialStatus !== 'pending') ? (option.label + ' (Hanya saat Pending)') : option.label">
+                                    </option>
                                 </template>
                             </select>
+                            <p x-show="formMode === 'edit' && form.initialStatus !== 'pending'" class="text-[10px] text-amber-600 mt-1 font-medium flex items-center gap-1">
+                                <i class="fa-solid fa-circle-exclamation text-amber-500"></i>
+                                <span>Pesanan yang sudah diproses tidak dapat dibatalkan (hanya saat status <strong>Pending</strong>).</span>
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -324,7 +331,7 @@
             <div>
                 <h4 class="text-xs sm:text-sm font-extrabold tracking-wide uppercase text-slate-900">BUFFER STOK PEMBEROKAN &amp; CROSS-BATCH FULFILLMENT</h4>
                 <p class="text-xs text-slate-500 font-medium mt-0.5">
-                    Surplus panen otomatis masuk buffer pemberokan, sedangkan defisit order mitra terpenuhi melalui pasokan lintas kolam (*zero backorder*).
+                    Surplus panen otomatis masuk buffer pemberokan, sedangkan defisit order mitra terpenuhi melalui pasokan lintas kolam.
                 </p>
             </div>
         </div>
@@ -417,6 +424,11 @@
                     class="px-4 py-2 rounded-xl text-xs transition-all">
                 Selesai (<span x-text="kpiSelesai"></span>)
             </button>
+            <button @click="activeTab = 'dibatalkan'" 
+                    :class="activeTab === 'dibatalkan' ? 'bg-[#051B44] text-white font-bold' : 'text-slate-600 hover:bg-slate-100 font-semibold'" 
+                    class="px-4 py-2 rounded-xl text-xs transition-all">
+                Dibatalkan (<span x-text="kpiDibatalkan"></span>)
+            </button>
         </div>
 
         <button @click="openCreateForm()" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#006699] hover:bg-[#005580] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-all">
@@ -449,14 +461,21 @@
                         <span class="px-2 py-0.5 rounded-lg bg-sky-50 text-sky-800 border border-sky-200 text-[10px] font-extrabold" x-text="order.jenis_ikan || 'Ikan Konsumsi'"></span>
                     </div>
 
-                    <div class="bg-slate-50 border border-slate-100 p-3 rounded-xl flex items-center justify-between">
-                        <div>
-                            <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">VOLUME</span>
-                            <h3 class="text-lg font-extrabold text-slate-900 mt-0.5" x-text="order.volume"></h3>
+                    <div class="bg-slate-50 border border-slate-100 p-3 rounded-xl space-y-2.5">
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">VOLUME</span>
+                                <h3 class="text-base font-black text-slate-900 mt-0.5" x-text="order.volume"></h3>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">TOTAL HARGA</span>
+                                <h3 class="text-base font-black text-emerald-700 mt-0.5" x-text="order.harga_format || ('Rp ' + Number(order.harga_total || 0).toLocaleString('id-ID'))"></h3>
+                            </div>
                         </div>
-                        <div class="text-right" x-show="order.batch_code">
-                            <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">BATCH ASAL</span>
-                            <span class="text-xs font-extrabold text-sky-700 mt-0.5 block" x-text="order.batch_code"></span>
+
+                        <div class="pt-2 border-t border-slate-200/60 flex items-center justify-between text-[11px]" x-show="order.batch_code">
+                            <span class="text-slate-400 font-semibold">Batch Asal:</span>
+                            <span class="font-extrabold text-sky-700 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-100" x-text="order.batch_code"></span>
                         </div>
                     </div>
 
@@ -466,7 +485,7 @@
                     </div>
                 </div>
 
-                <div x-show="order.status !== 'selesai'" class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
+                <div x-show="order.status !== 'selesai' && order.status !== 'dibatalkan'" class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
                     <button type="button" @click="printLabel(order)" class="px-3 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors">
                         <i class="fa-solid fa-print text-xs"></i>
                         <span>Cetak Label</span>
@@ -483,6 +502,17 @@
                         <span>Lihat Invoice</span>
                     </button>
                 </div>
+
+                <div x-show="order.status === 'dibatalkan'" class="pt-2 border-t border-slate-100 flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-600 flex items-center gap-1.5 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">
+                        <i class="fa-solid fa-ban text-rose-500"></i>
+                        <span>Pesanan Dibatalkan</span>
+                    </span>
+                    <button type="button" @click="printLabel(order)" class="px-3 py-1.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-xs flex items-center gap-1.5 transition-colors">
+                        <i class="fa-solid fa-print text-xs"></i>
+                        <span>Label</span>
+                    </button>
+                </div>
             </div>
         </template>
 
@@ -497,53 +527,97 @@
 
     </div>
 
-    <div x-show="showInvoice" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4" style="display: none;">
-        <div class="w-full max-w-lg rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden">
-            <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200 bg-slate-50">
-                <div>
-                    <p class="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400">Invoice</p>
-                    <h3 class="text-lg font-extrabold text-slate-900" x-text="selectedInvoice?.id || '#INV-0000'"></h3>
-                </div>
-                <button type="button" @click="closeInvoice()" class="w-8 h-8 rounded-lg border border-slate-200 text-slate-600 hover:bg-white">✕</button>
-            </div>
-
-            <div class="p-5 space-y-4" x-show="selectedInvoice">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Pelanggan</span>
-                    <span class="text-sm font-bold text-slate-800" x-text="selectedInvoice?.customer"></span>
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Komoditas / Ikan</span>
-                    <span class="text-sm font-bold text-sky-900" x-text="(selectedInvoice?.jenis_ikan || 'Ikan Konsumsi') + (selectedInvoice?.batch_code ? ' (' + selectedInvoice.batch_code + ')' : '')"></span>
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Volume</span>
-                    <span class="text-sm font-bold text-slate-800" x-text="selectedInvoice?.volume"></span>
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Tanggal Order</span>
-                    <span class="text-sm font-bold text-slate-800" x-text="selectedInvoice?.tanggal"></span>
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Alamat</span>
-                    <span class="text-sm font-bold text-slate-800 text-right" x-text="selectedInvoice?.alamat"></span>
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Status</span>
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase" :class="statusClass(selectedInvoice?.status)" x-text="statusLabel(selectedInvoice?.status)"></span>
-                </div>
-
-                <div class="rounded-xl bg-slate-50 border border-slate-200 p-4">
-                    <div class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-400">
-                        <span>Total Nilai Transaksi</span>
-                        <span class="text-sm font-extrabold text-emerald-700" x-text="selectedInvoice?.harga_format || 'Rp 0'"></span>
+    <!-- Modal Detail Invoice / Bukti Order Distribusi -->
+    <div x-show="showInvoice" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4" style="display: none;">
+        <div class="w-full max-w-xl rounded-3xl bg-white shadow-2xl border border-slate-200 overflow-hidden" @click.outside="closeInvoice()">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/80">
+                <div class="flex items-center gap-3">
+                    <img src="{{ asset('images/logo sample di invoice.png') }}" alt="Logo Aquafarm" class="w-9 h-9 object-contain">
+                    <div>
+                        <p class="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400">FAKTUR PENGIRIMAN &amp; INVOICE</p>
+                        <h3 class="text-base font-extrabold text-slate-900" x-text="selectedInvoice?.id || '#INV-0000'"></h3>
                     </div>
                 </div>
+                <button type="button" @click="closeInvoice()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors">✕</button>
             </div>
 
-            <div class="flex items-center justify-end gap-3 px-5 py-4 border-t border-slate-200 bg-slate-50">
-                <button type="button" @click="closeInvoice()" class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-white">Tutup</button>
-                <button type="button" @click="printLabel(selectedInvoice)" class="px-4 py-2 rounded-xl bg-[#051B44] text-white text-xs font-bold hover:bg-navy-900">Cetak</button>
+            <!-- Modal Body -->
+            <div class="p-6 space-y-4 max-h-[75vh] overflow-y-auto" x-show="selectedInvoice">
+                
+                <!-- Layout 2 Kolom Identitas Pengirim & Penerima -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <!-- Pengirim -->
+                    <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs space-y-1.5">
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block">DARI (PENGIRIM)</span>
+                        <div class="font-extrabold text-slate-800 text-xs">PT Aquafarm Nusantara (SIM Budidaya)</div>
+                        <div class="text-[11px] text-slate-600 leading-relaxed">Kawasan Minapolitan Agribisnis No. 88, Blok Perikanan Terpadu, Jawa Barat 40123</div>
+                        <div class="text-[11px] text-slate-700 font-semibold pt-0.5"><span class="text-slate-400 font-normal">Telp:</span> +62 812-8899-0011</div>
+                    </div>
+
+                    <!-- Penerima (Nomor Telp Disensor) -->
+                    <div class="p-3.5 rounded-2xl bg-sky-50/60 border border-sky-200/80 text-xs space-y-1.5">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-sky-800 block">KEPADA (PENERIMA)</span>
+                            <span class="text-[9px] font-bold text-sky-700 bg-white px-2 py-0.5 rounded-md border border-sky-200">Telp Terlindungi</span>
+                        </div>
+                        <div class="font-black text-slate-900 text-xs" x-text="selectedInvoice?.customer || '-'"></div>
+                        <div class="text-[11px] text-slate-700 leading-relaxed" x-text="selectedInvoice?.alamat || '-'"></div>
+                        <div class="text-[11px] text-slate-800 font-bold pt-0.5">
+                            <span class="text-slate-400 font-normal">Telp:</span> <span class="font-mono text-sky-950" x-text="maskPhoneNumber(selectedInvoice?.telepon)"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rincian Komoditas & Muatan -->
+                <div class="rounded-2xl border border-slate-200 p-4 space-y-3 bg-white">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">RINCIAN MUATAN &amp; STATUS</span>
+                    
+                    <div class="grid grid-cols-2 gap-3 text-xs">
+                        <div>
+                            <span class="text-slate-400 text-[11px] block">Komoditas Ikan</span>
+                            <span class="font-bold text-slate-800" x-text="(selectedInvoice?.jenis_ikan || 'Ikan Konsumsi') + (selectedInvoice?.batch_code ? ' (' + selectedInvoice.batch_code + ')' : '')"></span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 text-[11px] block">Volume / Berat</span>
+                            <span class="font-extrabold text-slate-900" x-text="selectedInvoice?.volume || '-'"></span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 text-[11px] block">Tanggal Order</span>
+                            <span class="font-semibold text-slate-700" x-text="selectedInvoice?.tanggal || '-'"></span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 text-[11px] block">Status Pengiriman</span>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase inline-block mt-0.5" :class="statusClass(selectedInvoice?.status)" x-text="statusLabel(selectedInvoice?.status)"></span>
+                        </div>
+                    </div>
+
+                    <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-600">Total Nilai Transaksi</span>
+                        <span class="text-base font-black text-emerald-700" x-text="selectedInvoice?.harga_format || 'Rp 0'"></span>
+                    </div>
+                </div>
+
+                <!-- Notice Handle With Care -->
+                <div class="p-3 rounded-xl bg-amber-50/80 border border-amber-200/80 flex items-center justify-between text-xs text-amber-900 font-bold">
+                    <span class="tracking-widest uppercase text-[11px] flex items-center gap-2">
+                        <i class="fa-solid fa-triangle-exclamation text-amber-600"></i>
+                        <span>PLEASE HANDLE WITH CARE</span>
+                    </span>
+                    <span class="text-[10px] text-amber-700 font-medium">Ikan Hidup Beroksigen</span>
+                </div>
+
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="flex items-center justify-between gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/80">
+                <button type="button" @click="closeInvoice()" class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-white transition-colors">Tutup</button>
+                <div class="flex items-center gap-2">
+                    <button type="button" @click="printLabel(selectedInvoice)" class="px-4 py-2 rounded-xl bg-[#051B44] text-white text-xs font-bold hover:bg-sky-950 flex items-center gap-2 shadow-sm transition-all">
+                        <i class="fa-solid fa-print text-xs"></i>
+                        <span>Cetak Label Pengiriman</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -656,6 +730,9 @@ function distribusiComponent() {
         get kpiPending() {
             return this.orders.filter(o => o.status === 'pending').length;
         },
+        get kpiDibatalkan() {
+            return this.orders.filter(o => o.status === 'dibatalkan').length;
+        },
 
         get filteredOrders() {
             if (this.activeTab === 'semua') {
@@ -668,7 +745,8 @@ function distribusiComponent() {
             { value: 'pending', label: 'Pending / Menunggu Konfirmasi' },
             { value: 'pemberokian', label: 'Dalam Pemberokian' },
             { value: 'siap_kirim', label: 'Siap Kirim / Dikirim' },
-            { value: 'selesai', label: 'Selesai' }
+            { value: 'selesai', label: 'Selesai' },
+            { value: 'dibatalkan', label: 'Dibatalkan' }
         ],
 
         statusLabel(status) {
@@ -676,7 +754,10 @@ function distribusiComponent() {
                 pending: 'Pending',
                 pemberokian: 'Pemberokian',
                 siap_kirim: 'Siap Kirim',
-                selesai: 'Selesai'
+                dalam_pengiriman: 'Dalam Pengiriman',
+                dikirim: 'Dalam Pengiriman',
+                selesai: 'Selesai',
+                dibatalkan: 'Dibatalkan'
             };
             return map[status] || status;
         },
@@ -686,7 +767,10 @@ function distribusiComponent() {
                 pending: 'bg-[#FEE2E2] text-[#991B1B]',
                 pemberokian: 'bg-[#E0F2FE] text-[#0284C7]',
                 siap_kirim: 'bg-[#C6F6D5] text-[#22543D]',
-                selesai: 'bg-[#E2E8F0] text-[#475569]'
+                dalam_pengiriman: 'bg-amber-100 text-amber-800',
+                dikirim: 'bg-amber-100 text-amber-800',
+                selesai: 'bg-[#E2E8F0] text-[#475569]',
+                dibatalkan: 'bg-slate-200 text-slate-700 font-extrabold border border-slate-300'
             };
             return map[status] || 'bg-[#E2E8F0] text-[#475569]';
         },
@@ -750,6 +834,7 @@ function distribusiComponent() {
                 alamat: '',
                 jenisOrder: 'reguler',
                 status: 'pending',
+                initialStatus: 'pending',
                 totalBerat: '',
                 totalHarga: ''
             };
@@ -774,6 +859,7 @@ function distribusiComponent() {
                 alamat: order.alamat,
                 jenisOrder: order.jenis_order || 'reguler',
                 status: order.status,
+                initialStatus: order.status,
                 totalBerat: String(order.total_kg !== undefined ? order.total_kg : (order.volume || '')).replace(/[^0-9.]/g, ''),
                 totalHarga: order.harga_format || ''
             };
@@ -782,6 +868,10 @@ function distribusiComponent() {
 
         async saveForm() {
             if (this.formMode === 'edit') {
+                if (this.form.status === 'dibatalkan' && this.form.initialStatus && this.form.initialStatus !== 'pending') {
+                    alert('Pesanan tidak dapat dibatalkan karena sudah diproses (' + this.statusLabel(this.form.initialStatus) + '). Pembatalan hanya diperbolehkan saat status masih Pending!');
+                    return;
+                }
                 const rawId = this.form.id_transaksi || String(this.form.id).replace(/[^0-9]/g, '');
                 const totalKg = Number(this.form.totalBerat) || 0;
                 const hargaTotal = this.form.totalHarga ? Number(String(this.form.totalHarga).replace(/[^0-9]/g, '')) : (totalKg * 35000);
@@ -957,10 +1047,23 @@ function distribusiComponent() {
             this.formMode = 'create';
         },
 
+        maskPhoneNumber(phone) {
+            if (!phone || phone === '-' || phone === 'null') return '0812-****-5643';
+            const clean = String(phone).trim();
+            const digits = clean.replace(/\D/g, '');
+            if (digits.length >= 8) {
+                const prefix = digits.substring(0, 4);
+                const suffix = digits.substring(digits.length - 4);
+                return prefix + '-****-' + suffix;
+            }
+            return '0812-****-5643';
+        },
+
         openInvoice(order) {
             this.selectedInvoice = {
                 id: order.id,
                 customer: order.customer,
+                telepon: order.telepon,
                 jenis_ikan: order.jenis_ikan,
                 batch_code: order.batch_code,
                 kolam_asal: order.kolam_asal,
@@ -986,28 +1089,327 @@ function distribusiComponent() {
     };
 }
 
+function maskPhoneNumber(phone) {
+    if (!phone || phone === '-' || phone === 'null') return '0812-****-5643';
+    const clean = String(phone).trim();
+    const digits = clean.replace(/\D/g, '');
+    if (digits.length >= 8) {
+        const prefix = digits.substring(0, 4);
+        const suffix = digits.substring(digits.length - 4);
+        return prefix + '-****-' + suffix;
+    }
+    return '0812-****-5643';
+}
+
+function formatLabelDate(dateStr) {
+    if (!dateStr) dateStr = new Date();
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+}
+
 function printLabel(order) {
     if (!order) return;
-    const content = [
-        'ORDER LABEL - DISTRIBUSI AMS BUDIDAYA',
-        '---------------------------------------',
-        'ID Order    : ' + order.id,
-        'Komoditas   : ' + (order.jenis_ikan || 'Ikan Konsumsi') + (order.batch_code ? ' (' + order.batch_code + ')' : ''),
-        'Customer    : ' + order.customer,
-        'Volume      : ' + order.volume,
-        'Alamat      : ' + order.alamat,
-        'Tgl Order   : ' + order.tanggal,
-        'Status      : ' + (order.status === 'pending' ? 'Pending' : order.status === 'pemberokian' ? 'Pemberokian' : order.status === 'siap_kirim' ? 'Siap Kirim' : 'Selesai')
-    ].join('\n');
+
+    const user = {
+        nama: @json(Auth::user()->nama ?? 'PT Aquafarm'),
+        alamat: @json(Auth::user()->alamat ?? 'Jl. Raya Minapolitan Perikanan No. 88, Blok Agribisnis Terpadu, Jawa Barat 40123'),
+        no_tlp: @json(Auth::user()->no_tlp ?? '+62 812-8899-0011')
+    };
+
+    if (!user.alamat || user.alamat.trim() === '') {
+        user.alamat = 'Jl. Raya Minapolitan Perikanan No. 88, Blok Agribisnis Terpadu, Jawa Barat 40123';
+    }
+    if (!user.no_tlp || user.no_tlp.trim() === '') {
+        user.no_tlp = '+62 812-8899-0011';
+    }
+    if (!user.nama || user.nama.trim() === '') {
+        user.nama = 'PT Aquafarm';
+    }
+
+    const logoUrl = "{{ asset('images/logo sample di invoice.png') }}";
+    const maskedPhone = maskPhoneNumber(order.telepon);
+    const formattedDate = formatLabelDate(order.tanggal);
+
+    const printableHtml = `<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shipping Label - ${order.id || 'ORDER'}</title>
+<style>
+  @page {
+    size: A5 landscape;
+    margin: 6mm;
+  }
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  body {
+    font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+    color: #111;
+    background-color: #f3f4f6;
+    padding: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+  .label-card {
+    width: 720px;
+    max-width: 100%;
+    background: #ffffff;
+    border: 2px solid #000000;
+    position: relative;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  }
+  .grid-container {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+  }
+  .column-left, .column-right {
+    display: table-cell;
+    vertical-align: top;
+    padding: 16px 20px;
+    width: 50%;
+  }
+  .column-left {
+    border-right: 2px solid #000000;
+  }
+  .column-right {
+    position: relative;
+  }
+  .header-tag {
+    font-size: 15px;
+    font-weight: 800;
+    color: #000000;
+    margin-bottom: 8px;
+    letter-spacing: -0.2px;
+  }
+  .address-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+  .address-table td {
+    padding: 1.5px 0;
+    vertical-align: top;
+  }
+  .address-table .label-cell {
+    width: 62px;
+    font-weight: 600;
+    color: #111;
+  }
+  .address-table .colon-cell {
+    width: 12px;
+    text-align: center;
+    font-weight: 600;
+  }
+  .address-table .value-cell {
+    color: #222;
+    font-weight: 500;
+  }
+  .address-table .value-cell.bold {
+    font-weight: 700;
+    color: #000;
+  }
+  .return-address-block {
+    margin-top: 26px;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+  .return-address-title {
+    font-weight: 700;
+    margin-bottom: 2px;
+    color: #333;
+  }
+  .return-address-text {
+    color: #555;
+  }
+  .additional-info-title {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: #000;
+    margin-top: 14px;
+    margin-bottom: 6px;
+  }
+  .additional-info-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11.5px;
+    line-height: 1.4;
+  }
+  .additional-info-table td {
+    padding: 1.5px 0;
+    vertical-align: top;
+  }
+  .additional-info-table .lbl {
+    width: 125px;
+    font-weight: 600;
+    color: #333;
+  }
+  .additional-info-table .sep {
+    width: 10px;
+  }
+  .additional-info-table .val {
+    color: #222;
+  }
+  .corner-logo {
+    position: absolute;
+    bottom: 8px;
+    right: 12px;
+    width: 54px;
+    height: 54px;
+    object-fit: contain;
+    opacity: 0.95;
+    background: transparent;
+  }
+  .bottom-row {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+    border-top: 2px solid #000000;
+  }
+  .handle-care-text {
+    display: table-cell;
+    vertical-align: middle;
+    text-align: center;
+    font-size: 13.5px;
+    font-weight: 800;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #555;
+    padding: 10px 14px;
+    border-right: 2px solid #000000;
+  }
+  .date-text {
+    display: table-cell;
+    vertical-align: middle;
+    width: 180px;
+    text-align: center;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #111;
+    padding: 10px 12px;
+    white-space: nowrap;
+  }
+  @media print {
+    body {
+      background-color: #fff !important;
+      padding: 0 !important;
+      min-height: auto !important;
+    }
+    .label-card {
+      box-shadow: none !important;
+      width: 100% !important;
+      border: 2px solid #000000 !important;
+      page-break-inside: avoid;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="label-card">
+    <div class="grid-container">
+      <!-- SENDER / FROM (KIRI) -->
+      <div class="column-left">
+        <div class="header-tag">From :</div>
+        <table class="address-table">
+          <tr>
+            <td class="label-cell">Name</td>
+            <td class="colon-cell">:</td>
+            <td class="value-cell bold">PT Aquafarm</td>
+          </tr>
+          <tr>
+            <td class="label-cell">Address</td>
+            <td class="colon-cell">:</td>
+            <td class="value-cell">${user.alamat}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">Phone</td>
+            <td class="colon-cell">:</td>
+            <td class="value-cell">${user.no_tlp}</td>
+          </tr>
+        </table>
+
+        <div class="return-address-block">
+          <div class="return-address-title">Return Address:</div>
+          <div class="return-address-text">
+           ${user.alamat}
+          </div>
+        </div>
+      </div>
+
+      <!-- RECIPIENT / TO (KANAN) -->
+      <div class="column-right">
+        <div class="header-tag">To :</div>
+        <table class="address-table">
+          <tr>
+            <td class="label-cell">Name</td>
+            <td class="colon-cell">:</td>
+            <td class="value-cell bold">${order.customer || 'Pelanggan / Mitra'}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">Address</td>
+            <td class="colon-cell">:</td>
+            <td class="value-cell">${order.alamat || '-'}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">Phone</td>
+            <td class="colon-cell">:</td>
+            <td class="value-cell bold" style="letter-spacing: 0.5px;">${maskedPhone}</td>
+          </tr>
+        </table>
+
+        <div class="additional-info-title">Additional information:</div>
+        <table class="additional-info-table">
+          <tr>
+            <td class="lbl">Order ID / Resi</td>
+            <td class="sep">:</td>
+            <td class="val" style="font-weight: 700; color: #051b44;">${order.id || '-'}</td>
+          </tr>
+          <tr>
+            <td class="lbl">Commodity</td>
+            <td class="sep">:</td>
+            <td class="val">${order.jenis_ikan || 'Ikan Konsumsi'}${order.batch_code ? ' (' + order.batch_code + ')' : ''}</td>
+          </tr>
+          <tr>
+            <td class="lbl">Net Volume</td>
+            <td class="sep">:</td>
+            <td class="val" style="font-weight: 700;">${order.volume || '-'}</td>
+          </tr>
+        </table>
+
+        <!-- Logo Aquafarm di Ujung Kanan Bawah Sesuai Permintaan -->
+        <img src="${logoUrl}" alt="Logo Aquafarm" class="corner-logo">
+      </div>
+    </div>
+
+    <!-- BOTTOM ROW: PLEASE HANDLE WITH CARE + DATE -->
+    <div class="bottom-row">
+      <div class="handle-care-text">PLEASE HANDLE WITH CARE</div>
+      <div class="date-text">Date: ${formattedDate}</div>
+    </div>
+  </div>
+</body>
+</html>`;
 
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
-    const printable = '<html><head><title>Label Order</title></head><body><pre style="font-family: sans-serif; padding: 24px; line-height: 1.6; font-size: 14px;">' + content.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</pre></body></html>';
-    printWindow.document.write(printable);
+    printWindow.document.write(printableHtml);
     printWindow.document.close();
     printWindow.focus();
-    setTimeout(() => printWindow.print(), 300);
+    setTimeout(() => {
+        printWindow.print();
+    }, 450);
 }
 </script>
 @endpush

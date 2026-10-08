@@ -142,6 +142,13 @@ class TransaksiDistribusiController extends Controller
             'id_user'        => 'nullable|exists:users,id_user',
         ]);
 
+        if (isset($validated['status_order']) && $validated['status_order'] === 'dibatalkan' && $transaksi->status_order !== 'pending') {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Pesanan tidak dapat dibatalkan karena sudah masuk tahap ' . strtoupper($transaksi->status_order) . '. Pembatalan hanya diperbolehkan saat status masih Pending.'
+            ], 422);
+        }
+
         if ($request->hasFile('Bukti_sampai')) {
             if ($transaksi->Bukti_sampai && Storage::disk('public')->exists($transaksi->Bukti_sampai)) {
                 Storage::disk('public')->delete($transaksi->Bukti_sampai);

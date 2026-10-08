@@ -73,6 +73,11 @@ class StokPakanController extends Controller
                 $stokSummary['item_aman_count']++;
             }
 
+            // Ambil transaksi pembelian terakhir untuk mendapatkan supplier terakhir
+            $latestPembelian = $item->pembelian ? $item->pembelian->sortByDesc('id_pembelian')->first() : null;
+            $latestMitraId = $latestPembelian?->id_mitra;
+            $latestMitraNama = $latestPembelian?->mitra?->nama_mitra;
+
             return [
                 'id_stok_pakan'       => $item->id_stok_pakan,
                 'kode_pakan'          => 'PKN-' . str_pad($item->id_stok_pakan, 4, '0', STR_PAD_LEFT),
@@ -82,6 +87,8 @@ class StokPakanController extends Controller
                 'stok_tersisa'        => $sisaStok,
                 'batas_minimum'       => (float) $item->batas_minimum,
                 'harga_per_satuan'    => (float) $item->harga_per_satuan,
+                'id_mitra'            => $latestMitraId,
+                'nama_mitra_terakhir' => $latestMitraNama,
                 'keterangan'          => $item->keterangan,
                 'burn_rate_harian'    => $burnRateHarian,
                 'sisa_hari'           => $sisaHari,
@@ -92,27 +99,39 @@ class StokPakanController extends Controller
             ];
         });
 
-        // 2. Ambil Mitra Khusus Supplier untuk Modal Order WA & Pembelian
-        $suppliers = MitraDistributor::where('tipe_mitra', 'like', '%supplier%')
-            ->orWhere('tipe_mitra', 'like', '%distributor%')
-            ->orderBy('id_mitra', 'desc')
-            ->get()
-            ->map(function ($s) {
-                $phone = '+62 812-3456-7890';
-                $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
-                if (str_starts_with($cleanPhone, '0')) {
-                    $cleanPhone = '62' . substr($cleanPhone, 1);
-                }
+        // 2. Ambil Mitra KHUSUS Supplier Pakan (Eksklusif Supplier Pakan / Pelet)
+        $suppliers = MitraDistributor::where(function ($q) {
+            $q->where('tipe_mitra', 'like', '%pakan%')
+              ->orWhere('tipe_mitra', 'like', '%pelet%')
+              ->orWhere(function ($sub) {
+                  $sub->where('tipe_mitra', 'like', '%supplier%')
+                      ->where('tipe_mitra', 'not like', '%bibit%')
+                      ->where('tipe_mitra', 'not like', '%benih%');
+              });
+        })
+        ->where('tipe_mitra', 'not like', '%restoran%')
+        ->where('tipe_mitra', 'not like', '%resto%')
+        ->where('tipe_mitra', 'not like', '%rumah makan%')
+        ->where('tipe_mitra', 'not like', '%pasar%')
+        ->where('tipe_mitra', 'not like', '%ekspor%')
+        ->orderBy('nama_mitra', 'asc')
+        ->get()
+        ->map(function ($s) {
+            $phone = $s->kontak ?? $s->telepon ?? '+62 812-3456-7890';
+            $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+            if (str_starts_with($cleanPhone, '0')) {
+                $cleanPhone = '62' . substr($cleanPhone, 1);
+            }
 
-                return [
-                    'id_mitra'     => $s->id_mitra,
-                    'nama_mitra'   => $s->nama_mitra,
-                    'tipe_mitra'   => $s->tipe_mitra,
-                    'alamat'       => $s->alamat,
-                    'telepon'      => $phone,
-                    'wa_link'      => 'https://wa.me/' . $cleanPhone . '?text=' . urlencode("Halo {$s->nama_mitra}, saya dari AMS BUDIDAYA ingin memesan pasokan pakan ikan. Apakah stok pakan tersedia?"),
-                ];
-            });
+            return [
+                'id_mitra'     => $s->id_mitra,
+                'nama_mitra'   => $s->nama_mitra,
+                'tipe_mitra'   => $s->tipe_mitra,
+                'alamat'       => $s->alamat,
+                'telepon'      => $phone,
+                'wa_link'      => 'https://wa.me/' . $cleanPhone . '?text=' . urlencode("Halo {$s->nama_mitra}, saya dari AMS BUDIDAYA ingin memesan pasokan pakan ikan. Apakah stok pakan tersedia?"),
+            ];
+        });
 
         return view('layouts.stok_pakan.index', [
             'stokPakan'    => $enrichedStokPakan,
@@ -122,7 +141,7 @@ class StokPakanController extends Controller
     }
 
     /**
-     * Tambah Master Item Pakan Baru
+     * Tambah Master Item Pakan Baru (Otomatis Masuk Keuangan jika ada stok awal & harga)
      */
     public function store(Request $request)
     {
@@ -133,6 +152,21 @@ class StokPakanController extends Controller
             'stok_tersisa'        => 'required|numeric|min:0',
             'batas_minimum'       => 'required|numeric|min:0',
             'harga_per_satuan'    => 'required|numeric|min:0',
+            'id_mitra'            => [
+                'nullable',
+                'exists:mitra_distributor,id_mitra',
+                function ($attribute, $value, $fail) {
+                    if ($value) {
+                        $m = MitraDistributor::find($value);
+                        if ($m) {
+                            $raw = strtolower($m->tipe_mitra);
+                            if (str_contains($raw, 'resto') || str_contains($raw, 'makan') || str_contains($raw, 'bibit') || str_contains($raw, 'benih') || str_contains($raw, 'pasar') || str_contains($raw, 'ekspor')) {
+                                $fail('Mitra yang dipilih harus berstatus Supplier Pakan.');
+                            }
+                        }
+                    }
+                }
+            ],
             'keterangan'          => 'nullable|string',
         ], [
             'nama_pakan.required'          => 'Nama jenis pakan wajib diisi.',
@@ -142,6 +176,27 @@ class StokPakanController extends Controller
             'batas_minimum.required'       => 'Batas minimum peringatan wajib diisi.',
             'harga_per_satuan.required'    => 'Harga acuan per satuan wajib diisi.',
         ]);
+
+        // Validasi Duplikasi Nama Pakan (Case-Insensitive & Trimmed)
+        $cleanNamaPakan = trim($request->nama_pakan ?? '');
+        $existingPakan = StokPakan::whereRaw('LOWER(TRIM(nama_pakan)) = ?', [strtolower($cleanNamaPakan)])->first();
+        if ($existingPakan) {
+            $msg = "Nama jenis pakan '{$existingPakan->nama_pakan}' sudah terdaftar dalam tabel gudang (Stok saat ini: {$existingPakan->stok_tersisa} {$existingPakan->satuan}). Tidak dapat menambahkan nama pakan yang sama. Jika ingin menambah pasokan pakan, silakan gunakan fitur 'Catat Pembelian / Restock Pakan'.";
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $msg,
+                    'is_duplicate' => true,
+                    'duplicate_item' => [
+                        'id_stok_pakan' => $existingPakan->id_stok_pakan,
+                        'nama_pakan'    => $existingPakan->nama_pakan,
+                        'stok_tersisa'  => $existingPakan->stok_tersisa,
+                        'satuan'        => $existingPakan->satuan
+                    ]
+                ], 422);
+            }
+            return redirect()->back()->withErrors(['nama_pakan' => $msg])->withInput();
+        }
 
         $stok = StokPakan::create([
             'nama_pakan'          => $validated['nama_pakan'],
@@ -153,15 +208,59 @@ class StokPakanController extends Controller
             'keterangan'          => $validated['keterangan'] ?? null,
         ]);
 
+        $stokAwal = (float) $validated['stok_tersisa'];
+        $hargaSatuan = (float) $validated['harga_per_satuan'];
+        $totalBiaya = $stokAwal * $hargaSatuan;
+        $mitra = !empty($validated['id_mitra']) ? MitraDistributor::find($validated['id_mitra']) : null;
+        $today = Carbon::now()->toDateString();
+        $idUser = Auth::id() ?? 1;
+
+        // 1. Simpan riwayat transaksi Pembelian Pakan jika stok awal > 0
+        $pembelian = null;
+        if ($stokAwal > 0) {
+            $pembelian = PembelianPakan::create([
+                'id_user'        => $idUser,
+                'id_stok_pakan'  => $stok->id_stok_pakan,
+                'id_mitra'       => $mitra ? $mitra->id_mitra : null,
+                'nama_pakan'     => $stok->nama_pakan,
+                'tgl_beli'       => $today,
+                'jumlah'         => $stokAwal,
+                'harga_satuan'   => $hargaSatuan,
+                'total_biaya'    => $totalBiaya,
+                'keterangan'     => "Pengadaan stok awal {$stok->nama_pakan}" . ($mitra ? " dari {$mitra->nama_mitra}" : ""),
+            ]);
+        }
+
+        // 2. OTOMATIS CATAT PENGELUARAN KE KEUANGAN (BUKU KAS)
+        if ($totalBiaya > 0) {
+            Keuangan::create([
+                'id_user'           => $idUser,
+                'id_kolam'          => null,
+                'tanggal_transaksi' => $today,
+                'tipe_transaksi'    => 'pengeluaran',
+                'kategori'          => 'pakan',
+                'nominal'           => $totalBiaya,
+                'keterangan'        => "Pengadaan stok awal {$stokAwal} {$stok->satuan} {$stok->nama_pakan}" . ($mitra ? " ({$mitra->nama_mitra})" : " (Supplier Pakan)"),
+                'ref_id'            => $pembelian ? ('BELI-PAKAN-' . $pembelian->id_pembelian) : ('STOK-AWAL-' . $stok->id_stok_pakan),
+            ]);
+        }
+
+        $message = "Master item pakan '{$stok->nama_pakan}' berhasil ditambahkan";
+        if ($totalBiaya > 0) {
+            $message .= " dan pengeluaran awal sebesar Rp " . number_format($totalBiaya, 0, ',', '.') . " telah otomatis dicatat ke Keuangan!";
+        } else {
+            $message .= "!";
+        }
+
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => "Master item pakan '{$stok->nama_pakan}' berhasil ditambahkan ke katalog!",
+                'message' => $message,
                 'item'    => $stok
             ]);
         }
 
-        return redirect()->route('stok-pakan')->with('success', "Master item pakan '{$stok->nama_pakan}' berhasil ditambahkan!");
+        return redirect()->route('stok-pakan')->with('success', $message);
     }
 
     /**
@@ -181,6 +280,24 @@ class StokPakanController extends Controller
             'keterangan'          => 'nullable|string',
         ]);
 
+        // Validasi Duplikasi Nama Pakan terhadap item lain (Case-Insensitive & Trimmed)
+        $cleanNamaPakan = trim($request->nama_pakan ?? '');
+        $existingPakan = StokPakan::where('id_stok_pakan', '!=', $id)
+            ->whereRaw('LOWER(TRIM(nama_pakan)) = ?', [strtolower($cleanNamaPakan)])
+            ->first();
+        if ($existingPakan) {
+            $msg = "Nama jenis pakan '{$existingPakan->nama_pakan}' sudah digunakan oleh item pakan lain di gudang (PKN-" . str_pad($existingPakan->id_stok_pakan, 4, '0', STR_PAD_LEFT) . "). Mohon gunakan nama yang berbeda.";
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $msg,
+                    'is_duplicate' => true,
+                ], 422);
+            }
+            return redirect()->back()->withErrors(['nama_pakan' => $msg])->withInput();
+        }
+
+        // Validasi dan simpan data update master
         $stok->update([
             'nama_pakan'          => $validated['nama_pakan'],
             'kategori_peruntukan' => $validated['kategori_peruntukan'],
@@ -190,6 +307,16 @@ class StokPakanController extends Controller
             'harga_per_satuan'    => $validated['harga_per_satuan'],
             'keterangan'          => $validated['keterangan'] ?? null,
         ]);
+
+        // Sinkronisasi mitra supplier terakhir jika dipilih di modal edit
+        if ($request->has('id_mitra')) {
+            $latestPembelian = $stok->pembelian()->latest('id_pembelian')->first();
+            if ($latestPembelian) {
+                $latestPembelian->update([
+                    'id_mitra' => $request->id_mitra ?: null
+                ]);
+            }
+        }
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
@@ -259,10 +386,23 @@ class StokPakanController extends Controller
             'keterangan'     => $request->keterangan ?? "Restock pakan {$stokItem->nama_pakan} dari " . ($mitra ? $mitra->nama_mitra : 'Supplier'),
         ]);
 
-        // 2. OTOMATIS TAMBAHKAN STOK DI GUDANG
+        // 2. OTOMATIS TAMBAHKAN STOK DI GUDANG DENGAN HARGA RATA-RATA TERTIMBANG (MOVING AVERAGE)
+        $stokLama = (float) $stokItem->stok_tersisa;
+        $hargaLama = (float) $stokItem->harga_per_satuan;
+        $stokBaru = $stokLama + $jumlahBeli;
+
+        // Hitung Moving Weighted Average Price (Harga Rata-Rata Tertimbang)
+        if ($stokBaru > 0) {
+            $totalNilaiLama = max(0, $stokLama) * $hargaLama;
+            $totalNilaiBaru = $jumlahBeli * $hargaSatuan;
+            $hargaRataRata = round(($totalNilaiLama + $totalNilaiBaru) / $stokBaru);
+        } else {
+            $hargaRataRata = $hargaSatuan;
+        }
+
         $stokItem->update([
-            'stok_tersisa'     => (float) $stokItem->stok_tersisa + $jumlahBeli,
-            'harga_per_satuan' => $hargaSatuan > 0 ? $hargaSatuan : $stokItem->harga_per_satuan,
+            'stok_tersisa'     => $stokBaru,
+            'harga_per_satuan' => $hargaRataRata,
         ]);
 
         // 3. OTOMATIS CATAT PENGELUARAN KE BUKU KAS KEUANGAN

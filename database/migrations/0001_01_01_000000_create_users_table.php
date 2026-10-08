@@ -21,6 +21,7 @@ return new class extends Migration
             $table->timestamp('two_factor_confirmed_at')->nullable();
             $table->string('role')->default('pekerja');
             $table->string('no_tlp')->nullable();
+            $table->text('alamat')->nullable();
             $table->string('last_session_id')->nullable();
             $table->string('email_otp', 6)->nullable();
             $table->timestamp('email_otp_expires_at')->nullable();

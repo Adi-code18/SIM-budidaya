@@ -194,21 +194,23 @@
                                     for (let c of this.countries) {
                                         if (val.startsWith(c.dial)) {
                                             this.selectedCountry = c;
-                                            this.phoneNum = val.slice(c.dial.length).trim();
+                                            this.phoneNum = val.slice(c.dial.length).replace(/[^0-9]/g, '');
                                             return;
                                         }
                                     }
-                                    if (val.startsWith('0')) {
+                                    let cleanDigits = val.replace(/[^0-9]/g, '');
+                                    if (cleanDigits.startsWith('0')) {
                                         this.selectedCountry = this.countries[0];
-                                        this.phoneNum = val.slice(1).trim();
+                                        this.phoneNum = cleanDigits.slice(1);
                                     } else {
-                                        this.phoneNum = val;
+                                        this.phoneNum = cleanDigits;
                                     }
                                 }
                             },
                             updatePhone() {
-                                let num = (this.phoneNum || '').trim();
-                                if (num.startsWith('0')) num = num.substring(1).trim();
+                                let num = (this.phoneNum || '').replace(/[^0-9]/g, '');
+                                if (num.startsWith('0')) num = num.substring(1);
+                                this.phoneNum = num;
                                 this.fullValue = num ? `${this.selectedCountry.dial} ${num}` : '';
                             },
                             selectCountry(c) {
@@ -239,6 +241,9 @@
                                        x-ref="phoneInput"
                                        x-model="phoneNum"
                                        @input="updatePhone()"
+                                       @keydown="if (!/[0-9]/.test($event.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'].includes($event.key) && !$event.ctrlKey && !$event.metaKey) $event.preventDefault()"
+                                       inputmode="numeric"
+                                       pattern="[0-9]*"
                                        :placeholder="selectedCountry.placeholder"
                                        class="w-full px-3.5 py-2.5 text-xs font-bold text-slate-800 bg-transparent border-0 focus:outline-none rounded-r-xl">
                             </div>
@@ -251,43 +256,64 @@
                                  x-transition:leave="transition ease-in duration-100"
                                  x-transition:leave-start="opacity-100 translate-y-0 scale-100"
                                  x-transition:leave-end="opacity-0 translate-y-1 scale-98"
-                                 class="absolute z-50 top-full left-0 mt-1.5 w-72 sm:w-80 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden"
+                                 class="absolute z-50 top-full left-0 mt-2 w-72 sm:w-80 bg-white rounded-2xl shadow-2xl border border-slate-200/90 overflow-hidden"
                                  style="display: none;">
                                 
-                                <div class="p-2 border-b border-slate-100 bg-slate-50/80 sticky top-0 z-10">
-                                    <div class="relative">
-                                        <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs absolute left-3 top-1/2 -translate-y-1/2"></i>
+                                <div class="p-2.5 border-b border-slate-100 bg-slate-50/70 sticky top-0 z-10 backdrop-blur-xs">
+                                    <div class="relative flex items-center">
+                                        <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs absolute left-3 pointer-events-none"></i>
                                         <input type="text"
                                                x-model="countrySearch"
                                                @keydown.enter.prevent
                                                placeholder="Cari negara atau kode (+62)..."
-                                               class="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#00897B] focus:border-[#00897B] font-medium">
+                                               class="w-full pl-8 pr-7 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 font-medium text-slate-800 placeholder-slate-400 shadow-xs transition-all">
+                                        <button type="button" 
+                                                x-show="countrySearch" 
+                                                @click="countrySearch = ''" 
+                                                class="absolute right-2.5 text-slate-400 hover:text-slate-600 p-0.5">
+                                            <i class="fa-solid fa-circle-xmark text-xs"></i>
+                                        </button>
                                     </div>
                                 </div>
 
-                                <div class="max-h-56 overflow-y-auto divide-y divide-slate-50 py-1">
+                                <div class="max-h-60 overflow-y-auto p-1.5 space-y-0.5">
                                     <template x-for="c in filteredCountries" :key="c.code + c.dial">
                                         <button type="button"
                                                 @click="selectCountry(c)"
-                                                :class="selectedCountry.code === c.code && selectedCountry.dial === c.dial ? 'bg-[#00897B] text-white hover:bg-[#00796B]' : 'text-slate-700 hover:bg-slate-100'"
-                                                class="w-full px-3.5 py-2.5 text-xs flex items-center justify-between text-left transition-colors font-medium">
-                                            <div class="flex items-center gap-2.5 truncate pr-2">
-                                                <span class="text-base shrink-0 leading-none" x-text="c.flag"></span>
-                                                <span class="truncate" x-text="c.name"></span>
+                                                :class="selectedCountry.code === c.code && selectedCountry.dial === c.dial ? 'bg-[#051B44] text-white shadow-xs' : 'text-slate-700 hover:bg-slate-100/90 hover:text-slate-900'"
+                                                class="w-full px-3 py-2 text-xs flex items-center justify-between text-left rounded-xl transition-colors font-medium group">
+                                            <div class="flex items-center gap-2 truncate pr-2">
+                                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md shrink-0 transition-colors"
+                                                      :class="selectedCountry.code === c.code && selectedCountry.dial === c.dial ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200'"
+                                                      x-text="c.code"></span>
+                                                <span class="text-sm shrink-0 leading-none" x-text="c.flag"></span>
+                                                <span class="truncate font-semibold" x-text="c.name"></span>
                                             </div>
-                                            <span class="font-extrabold shrink-0 text-[11px]"
-                                                  :class="selectedCountry.code === c.code && selectedCountry.dial === c.dial ? 'text-white/95' : 'text-slate-500'"
-                                                  x-text="c.dial"></span>
+                                            <div class="flex items-center gap-1.5 shrink-0">
+                                                <span class="font-extrabold text-[11px] font-mono"
+                                                      :class="selectedCountry.code === c.code && selectedCountry.dial === c.dial ? 'text-sky-300' : 'text-slate-500 group-hover:text-slate-700'"
+                                                      x-text="c.dial"></span>
+                                                <i x-show="selectedCountry.code === c.code && selectedCountry.dial === c.dial" class="fa-solid fa-check text-[11px] text-sky-300"></i>
+                                            </div>
                                         </button>
                                     </template>
                                     <div x-show="filteredCountries.length === 0" class="px-4 py-6 text-center text-xs text-slate-400">
-                                        <i class="fa-solid fa-earth-americas text-slate-300 text-lg mb-1 block"></i>
-                                        Negara tidak ditemukan
+                                        <i class="fa-solid fa-earth-americas text-slate-300 text-xl mb-1.5 block"></i>
+                                        <span class="font-bold text-slate-600 block">Negara tidak ditemukan</span>
+                                        <span class="text-[10px] text-slate-400">Coba cari dengan nama atau kode negara</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- Input Alamat Pengguna -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Alamat Lengkap / Domisili</label>
+                    <textarea name="alamat" rows="2" placeholder="Contoh: Jl. Raya Minapolitan Perikanan No. 88, Blok Agribisnis, Jawa Barat 40123"
+                              class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 focus:bg-white focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/10 transition-all">{{ old('alamat', $user->alamat ?? '') }}</textarea>
+                    <p class="text-[11px] text-slate-400 mt-1">Alamat ini digunakan sebagai identitas resmi akun dan referensi pengirim/pengelola.</p>
                 </div>
 
                 <div class="pt-4 border-t border-slate-100">
@@ -339,6 +365,13 @@
                         <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-sky-100 text-sky-800 border border-sky-200">
                             {{ $user->role ?? 'Manajer' }}
                         </span>
+                    </div>
+
+                    <div class="p-3 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+                        <span class="font-bold text-slate-500 block text-[11px]">Alamat Terdaftar</span>
+                        <p class="font-semibold text-slate-700 text-xs leading-relaxed">
+                            {{ $user->alamat ?: 'Belum diatur' }}
+                        </p>
                     </div>
 
                     <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-100">

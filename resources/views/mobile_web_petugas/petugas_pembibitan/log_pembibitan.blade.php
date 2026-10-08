@@ -3,70 +3,7 @@
 @section('title', 'Log Pembibitan Baru - AMS BUDIDAYA Mobile')
 
 @section('content')
-<div class="p-4 space-y-4" x-data="{
-    batchId: 'BCH-{{ date('Y') }}-{{ rand(10, 99) }}',
-    kolam: '',
-    selectedIkanId: '',
-    ikansList: {!! json_encode($ikans ?? []) !!},
-    isEstLocked: true,
-    tglPemijahan: new Date().toISOString().split('T')[0],
-    estPrcsPembibitaan: '',
-    jumlahBibitAwal: 100000,
-    statusBatch: 'aktif',
-    kematianTelur: 0,
-    isSubmitting: false,
-
-    onIkanSelected() {
-        if (!this.selectedIkanId) return;
-        const found = this.ikansList.find(i => String(i.id_ikan) === String(this.selectedIkanId));
-        if (found && this.tglPemijahan) {
-            const totalDays = Number(found.durasi_penetasan || 0) + Number(found.durasi_pembibitan || 0);
-            const d = new Date(this.tglPemijahan);
-            d.setDate(d.getDate() + totalDays);
-            this.estPrcsPembibitaan = d.toISOString().split('T')[0];
-            this.isEstLocked = true;
-        }
-    },
-
-    async handleSubmit() {
-        if (!this.kolam) {
-            triggerToast('Mohon pilih Kolam Hatchery!', 'error');
-            return;
-        }
-        this.isSubmitting = true;
-        try {
-            const res = await fetch('{{ route('petugas.pembibitan.store-batch') }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({
-                    id_kolam: this.kolam,
-                    id_ikan: this.selectedIkanId || null,
-                    tgl_pemijahan: this.tglPemijahan,
-                    est_prcs_pembibitaan: this.estPrcsPembibitaan,
-                    jumlah_bibitAwal: this.jumlahBibitAwal,
-                    status: this.statusBatch
-                })
-            });
-            const data = await res.json();
-            if (res.ok && data.success) {
-                triggerToast('Data pembibitan ' + this.batchId + ' berhasil disimpan!', 'success');
-                setTimeout(() => {
-                    window.location.href = '{{ route('petugas.pembibitan.dashboard') }}';
-                }, 1200);
-            } else {
-                triggerToast(data.message || 'Gagal menyimpan log pembibitan!', 'error');
-            }
-        } catch (e) {
-            triggerToast('Terjadi kesalahan jaringan.', 'error');
-        } finally {
-            this.isSubmitting = false;
-        }
-    }
-}">
+<div class="p-4 space-y-4" x-data="pembibitanForm()">
 
     <!-- Top Blue Header Banner -->
     <div class="bg-navy-800 rounded-3xl p-5 text-white shadow-md space-y-2 relative overflow-hidden">
@@ -187,4 +124,73 @@
     </div>
 
 </div>
+
+<script>
+function pembibitanForm() {
+    return {
+        batchId: 'BCH-{{ date('Y') }}-{{ rand(10, 99) }}',
+        kolam: '',
+        selectedIkanId: '',
+        ikansList: @json($ikans ?? []),
+        isEstLocked: true,
+        tglPemijahan: new Date().toISOString().split('T')[0],
+        estPrcsPembibitaan: '',
+        jumlahBibitAwal: 100000,
+        statusBatch: 'aktif',
+        kematianTelur: 0,
+        isSubmitting: false,
+
+        onIkanSelected() {
+            if (!this.selectedIkanId) return;
+            const found = this.ikansList.find(i => String(i.id_ikan) === String(this.selectedIkanId));
+            if (found && this.tglPemijahan) {
+                const totalDays = Number(found.durasi_penetasan || 0) + Number(found.durasi_pembibitan || 0);
+                const d = new Date(this.tglPemijahan);
+                d.setDate(d.getDate() + totalDays);
+                this.estPrcsPembibitaan = d.toISOString().split('T')[0];
+                this.isEstLocked = true;
+            }
+        },
+
+        async handleSubmit() {
+            if (!this.kolam) {
+                triggerToast('Mohon pilih Kolam Hatchery!', 'error');
+                return;
+            }
+            this.isSubmitting = true;
+            try {
+                const res = await fetch('{{ route('petugas.pembibitan.store-batch') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        id_kolam: this.kolam,
+                        id_ikan: this.selectedIkanId || null,
+                        tgl_pemijahan: this.tglPemijahan,
+                        est_prcs_pembibitaan: this.estPrcsPembibitaan,
+                        jumlah_bibitAwal: this.jumlahBibitAwal,
+                        status: this.statusBatch
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    triggerToast('Data pembibitan ' + this.batchId + ' berhasil disimpan!', 'success');
+                    setTimeout(() => {
+                        window.location.href = '{{ route('petugas.pembibitan.dashboard') }}';
+                    }, 1200);
+                } else {
+                    triggerToast(data.message || 'Gagal menyimpan log pembibitan!', 'error');
+                }
+            } catch (e) {
+                triggerToast('Terjadi kesalahan jaringan.', 'error');
+            } finally {
+                this.isSubmitting = false;
+            }
+        }
+    };
+}
+</script>
 @endsection

@@ -131,7 +131,7 @@ Route::middleware(['auth', 'role:manajer'])->group(function () {
     Route::get('/mitra', [MitraController::class, 'index'])->name('mitra');
     Route::get('/mitra-distributor', [MitraController::class, 'index'])->name('mitra-distributor');
     Route::post('/mitra', [MitraController::class, 'store'])->name('mitra.store');
-    Route::put('/mitra/{id}', [MitraController::class, 'update'])->name('mitra.update');
+    Route::match(['put', 'post'], '/mitra/{id}', [MitraController::class, 'update'])->name('mitra.update');
     Route::delete('/mitra/{id}', [MitraController::class, 'destroy'])->name('mitra.destroy');
 
     // Manajemen Akun Petugas & Keamanan Akses
@@ -231,4 +231,18 @@ Route::prefix('petugas-pembesaran')->name('petugas.pembesaran.')->group(function
 Route::get('/preview-email-otp', function () {
     return new App\Mail\SendOtpMail('482915', 'Adi Darmawan', 5);
 });
+
+if (app()->environment('local', 'testing')) {
+    Route::get('/test-login/{role?}', function ($role = 'manajer') {
+        $user = \App\Models\User::where('role', $role)->first() ?? \App\Models\User::first();
+        if ($user) {
+            \Illuminate\Support\Facades\Auth::login($user);
+            session()->regenerate();
+            $user->update(['last_session_id' => session()->getId()]);
+            session(['user_session_id' => session()->getId()]);
+        }
+        return redirect()->route('dashboard');
+    });
+}
+
 

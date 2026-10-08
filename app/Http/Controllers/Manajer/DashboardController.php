@@ -19,18 +19,40 @@ class DashboardController extends Controller
     public function index()
     {
         // 1. KPI Calculations from database
-        $activeBatches = BatchPembesaran::where('status_siklus', '!=', 'gagal')->get();
+        $activeBatches = BatchPembesaran::with(['kolam', 'batchPembibitan.ikan'])->where('status_siklus', '!=', 'gagal')->get();
         $totalStok = $activeBatches->where('status_siklus', '!=', 'selesai')->sum('biomassa_est');
         if ($totalStok == 0) {
             $totalStok = $activeBatches->sum('biomassa_est');
         }
 
-        $avgFcrVal = BatchPembesaran::whereNotNull('fcr')->where('fcr', '>', 0)->avg('fcr');
-        if (!$avgFcrVal || $avgFcrVal <= 0) {
-            $totalPakanSemua = ManajemenPakan::sum('kg_pelet') + ManajemenPakan::sum('kg_daun');
-            $avgFcrVal = $totalStok > 0 ? round($totalPakanSemua / $totalStok, 2) : 0;
+        $fcrList = [];
+        $optimalCount = 0;
+        $totalEvaluated = 0;
+
+        foreach ($activeBatches as $b) {
+            $fcrVal = $b->fcr > 0 ? (float)$b->fcr : $b->calculateActualFcr();
+            if ($fcrVal > 0) {
+                $fcrList[] = $fcrVal;
+                $ikan = $b->ikan_ref;
+                $fcrMax = $ikan ? (float)$ikan->fcr_max : 1.35;
+                if ($fcrVal <= $fcrMax) {
+                    $optimalCount++;
+                }
+                $totalEvaluated++;
+            }
         }
-        $avgFcr = round((float)$avgFcrVal, 2);
+
+        $avgFcr = count($fcrList) > 0 ? round(array_sum($fcrList) / count($fcrList), 2) : 0.0;
+        if ($avgFcr <= 0) {
+            $totalPakanSemua = ManajemenPakan::sum('kg_pelet') + ManajemenPakan::sum('kg_daun');
+            $avgFcr = $totalStok > 0 ? round($totalPakanSemua / $totalStok, 2) : 0.0;
+        }
+
+        if ($totalEvaluated > 0) {
+            $fcrStatus = ($optimalCount / $totalEvaluated >= 0.7) ? 'Efisiensi Pakan Optimal' : 'Perlu Evaluasi Pakan';
+        } else {
+            $fcrStatus = $avgFcr > 0 ? ($avgFcr <= 1.35 ? 'Efisiensi Pakan Optimal' : 'Perlu Evaluasi Pakan') : 'Belum Ada Data Pakan';
+        }
 
         $targetPanen = BatchPembesaran::where('status_siklus', '!=', 'selesai')->sum('target_panen_kg');
         if ($targetPanen == 0) {
@@ -58,7 +80,7 @@ class DashboardController extends Controller
             'totalStok'       => number_format($totalStok, 0, ',', '.'),
             'totalStokTrend'  => $totalStokTrend,
             'fcr'             => $avgFcr > 0 ? number_format($avgFcr, 2, '.', '') : '0.00',
-            'fcrStatus'       => $avgFcr > 0 ? ($avgFcr <= 1.25 ? 'Efisiensi Pakan Optimal' : 'Perlu Evaluasi Pakan') : 'Belum Ada Data Pakan',
+            'fcrStatus'       => $fcrStatus,
             'targetPanen'     => number_format($targetPanen, 0, ',', '.'),
             'targetPanenNote' => $targetNote,
             'targetPanenTag'  => $targetTag,
@@ -154,7 +176,100 @@ class DashboardController extends Controller
             'month' => $chartMonth,
         ];
 
-        return view('layouts.dashboard.index', compact('metrics', 'mitraList', 'pakanRekap', 'chartDatasets'));
+        // 5. Data Profitabilitas & Laba-Rugi (Bulan Ini & Tahun Ini)
+        $currentYear = Carbon::now()->year;
+        $currentMonth = Carbon::now()->month;
+        $currentMonthName = Carbon::now()->translatedFormat('F');
+
+        // A. Keuangan Bulan Ini
+        $incomeBulanIni = (float) Keuangan::whereYear('tanggal_transaksi', $currentYear)
+            ->whereMonth('tanggal_transaksi', $currentMonth)
+            ->whereIn('tipe_transaksi', ['pemasukan', 'income'])
+            ->sum('nominal');
+
+        $expenseBulanIni = (float) Keuangan::whereYear('tanggal_transaksi', $currentYear)
+            ->whereMonth('tanggal_transaksi', $currentMonth)
+            ->whereIn('tipe_transaksi', ['pengeluaran', 'expense'])
+            ->sum('nominal');
+
+        $labaBulanIni = $incomeBulanIni - $expenseBulanIni;
+        $marginBulanIni = $incomeBulanIni > 0 ? round(($labaBulanIni / $incomeBulanIni) * 100, 1) : 0;
+        $costRatioBulanIni = $incomeBulanIni > 0 ? round(($expenseBulanIni / $incomeBulanIni) * 100, 1) : 0;
+
+        // B. Keuangan Tahun Ini
+        $incomeTahunIni = (float) Keuangan::whereYear('tanggal_transaksi', $currentYear)
+            ->whereIn('tipe_transaksi', ['pemasukan', 'income'])
+            ->sum('nominal');
+
+        $expenseTahunIni = (float) Keuangan::whereYear('tanggal_transaksi', $currentYear)
+            ->whereIn('tipe_transaksi', ['pengeluaran', 'expense'])
+            ->sum('nominal');
+
+        $labaTahunIni = $incomeTahunIni - $expenseTahunIni;
+        $marginTahunIni = $incomeTahunIni > 0 ? round(($labaTahunIni / $incomeTahunIni) * 100, 1) : 0;
+        $costRatioTahunIni = $incomeTahunIni > 0 ? round(($expenseTahunIni / $incomeTahunIni) * 100, 1) : 0;
+
+        // C. Rekap 12 Bulan Sepanjang Tahun Ini (Untuk Trend / Sparkline Matriks Laba-Rugi)
+        $monthlyFinance = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $mName = Carbon::createFromDate($currentYear, $m, 1)->translatedFormat('M');
+            $in = (float) Keuangan::whereYear('tanggal_transaksi', $currentYear)
+                ->whereMonth('tanggal_transaksi', $m)
+                ->whereIn('tipe_transaksi', ['pemasukan', 'income'])
+                ->sum('nominal');
+            $out = (float) Keuangan::whereYear('tanggal_transaksi', $currentYear)
+                ->whereMonth('tanggal_transaksi', $m)
+                ->whereIn('tipe_transaksi', ['pengeluaran', 'expense'])
+                ->sum('nominal');
+            $profit = $in - $out;
+            $monthlyFinance[] = [
+                'month_num'          => $m,
+                'month_name'         => $mName,
+                'pemasukan'          => $in,
+                'pemasukan_format'   => 'Rp ' . number_format($in, 0, ',', '.'),
+                'pengeluaran'        => $out,
+                'pengeluaran_format' => 'Rp ' . number_format($out, 0, ',', '.'),
+                'laba_rugi'          => $profit,
+                'laba_rugi_format'   => ($profit >= 0 ? '+Rp ' : '-Rp ') . number_format(abs($profit), 0, ',', '.'),
+                'is_profit'          => $profit >= 0,
+                'has_data'           => ($in > 0 || $out > 0),
+                'is_current'         => ($m === $currentMonth)
+            ];
+        }
+
+        $financialSummary = [
+            'bulan_ini' => [
+                'nama_bulan'         => $currentMonthName . ' ' . $currentYear,
+                'pemasukan'          => $incomeBulanIni,
+                'pemasukan_format'   => 'Rp ' . number_format($incomeBulanIni, 0, ',', '.'),
+                'pengeluaran'        => $expenseBulanIni,
+                'pengeluaran_format' => 'Rp ' . number_format($expenseBulanIni, 0, ',', '.'),
+                'laba_rugi'          => $labaBulanIni,
+                'laba_rugi_format'   => ($labaBulanIni >= 0 ? '+Rp ' : '-Rp ') . number_format(abs($labaBulanIni), 0, ',', '.'),
+                'is_untung'          => $labaBulanIni >= 0,
+                'status_label'       => $labaBulanIni >= 0 ? 'Surplus (Untung)' : 'Defisit (Rugi)',
+                'margin_percent'     => $marginBulanIni,
+                'cost_ratio'         => $costRatioBulanIni,
+            ],
+            'tahun_ini' => [
+                'nama_tahun'         => 'Tahun ' . $currentYear,
+                'pemasukan'          => $incomeTahunIni,
+                'pemasukan_format'   => 'Rp ' . number_format($incomeTahunIni, 0, ',', '.'),
+                'pengeluaran'        => $expenseTahunIni,
+                'pengeluaran_format' => 'Rp ' . number_format($expenseTahunIni, 0, ',', '.'),
+                'laba_rugi'          => $labaTahunIni,
+                'laba_rugi_format'   => ($labaTahunIni >= 0 ? '+Rp ' : '-Rp ') . number_format(abs($labaTahunIni), 0, ',', '.'),
+                'is_untung'          => $labaTahunIni >= 0,
+                'status_label'       => $labaTahunIni >= 0 ? 'Surplus (Untung)' : 'Defisit (Rugi)',
+                'margin_percent'     => $marginTahunIni,
+                'cost_ratio'         => $costRatioTahunIni,
+                'avg_laba_bulan'     => round($labaTahunIni / max(1, $currentMonth), 0),
+                'avg_laba_format'    => 'Rp ' . number_format(round($labaTahunIni / max(1, $currentMonth), 0), 0, ',', '.') . '/bln',
+            ],
+            'monthly_breakdown'      => $monthlyFinance
+        ];
+
+        return view('layouts.dashboard.index', compact('metrics', 'mitraList', 'pakanRekap', 'chartDatasets', 'financialSummary'));
     }
 
     public function exportExcel(Request $request)

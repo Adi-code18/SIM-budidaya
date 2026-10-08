@@ -281,6 +281,201 @@
 
     </div>
 
+    <!-- ========================================================================= -->
+    <!-- SECTION: KEUNTUNGAN & KERUGIAN (BULAN INI & TAHUN INI) -->
+    <!-- ========================================================================= -->
+    <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
+        
+        <!-- Header Section with Period Switcher Tabs -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-[#0B2570] text-white flex items-center justify-center shadow-md shadow-[#0B2570]/20 flex-shrink-0">
+                    <i class="fa-solid fa-scale-balanced text-lg"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-base font-extrabold text-slate-900">Analisis Keuntungan &amp; Kerugian (Profit &amp; Loss)</h3>
+                        <span class="px-2 py-0.5 rounded-md text-[10px] font-black tracking-wide"
+                              :class="currentFinancialData.is_untung ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-rose-100 text-rose-800 border border-rose-200'"
+                              x-text="currentFinancialData.status_label">
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-500 font-medium mt-0.5">
+                        Ringkasan performa margin laba bersih operasional dan arus kas keuangan budidaya.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Tab Switcher (Bulan Ini | Tahun Ini | 12 Bulan) -->
+            <div class="flex items-center gap-1.5 p-1 bg-slate-100/90 rounded-2xl border border-slate-200/60 shadow-2xs self-start sm:self-auto">
+                <button type="button" 
+                        @click="finTab = 'bulan'"
+                        :class="finTab === 'bulan' ? 'bg-[#0B2570] text-white shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900 font-semibold hover:bg-slate-200/60'"
+                        class="px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer">
+                    <i class="fa-regular fa-calendar-check text-[11px]"></i>
+                    <span>Bulan Ini (<span x-text="financialSummary.bulan_ini?.nama_bulan || 'Bln Berjalan'"></span>)</span>
+                </button>
+                <button type="button" 
+                        @click="finTab = 'tahun'"
+                        :class="finTab === 'tahun' ? 'bg-[#0B2570] text-white shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900 font-semibold hover:bg-slate-200/60'"
+                        class="px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer">
+                    <i class="fa-solid fa-landmark text-[11px]"></i>
+                    <span>Tahun Ini (<span x-text="financialSummary.tahun_ini?.nama_tahun || 'Tahun 2026'"></span>)</span>
+                </button>
+                <button type="button" 
+                        @click="finTab = 'breakdown'"
+                        :class="finTab === 'breakdown' ? 'bg-[#0B2570] text-white shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900 font-semibold hover:bg-slate-200/60'"
+                        class="px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer">
+                    <i class="fa-solid fa-chart-column text-[11px]"></i>
+                    <span>12 Bulan Sepanjang Tahun</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- TAB 1 & 2: KARTU RINGKASAN FINANSIAL (BULAN INI & TAHUN INI) -->
+        <div x-show="finTab === 'bulan' || finTab === 'tahun'" 
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 translate-y-1"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            
+            <!-- Card 1: Laba / Rugi Bersih -->
+            <div class="p-5 rounded-2xl border transition-all"
+                 :class="currentFinancialData.is_untung 
+                    ? 'bg-gradient-to-br from-emerald-50/90 via-white to-emerald-50/40 border-emerald-200/80 shadow-xs hover:border-emerald-300' 
+                    : 'bg-gradient-to-br from-rose-50/90 via-white to-rose-50/40 border-rose-200/80 shadow-xs hover:border-rose-300'">
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider"
+                          :class="currentFinancialData.is_untung ? 'text-emerald-800' : 'text-rose-800'">
+                        <span x-text="finTab === 'bulan' ? 'LABA / RUGI BERSIH BULAN INI' : 'LABA / RUGI BERSIH TAHUN INI'"></span>
+                    </span>
+                    <div class="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold"
+                         :class="currentFinancialData.is_untung ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'">
+                        <i class="fa-solid" :class="currentFinancialData.is_untung ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down'"></i>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <h4 class="text-2xl lg:text-3xl font-black tracking-tight"
+                        :class="currentFinancialData.is_untung ? 'text-emerald-950' : 'text-rose-950'"
+                        x-text="currentFinancialData.laba_rugi_format || 'Rp 0'">
+                    </h4>
+                </div>
+
+                <div class="mt-4 pt-3 border-t flex items-center justify-between text-xs"
+                     :class="currentFinancialData.is_untung ? 'border-emerald-100 text-emerald-800' : 'border-rose-100 text-rose-800'">
+                    <span class="font-bold flex items-center gap-1">
+                        <i class="fa-solid" :class="currentFinancialData.is_untung ? 'fa-circle-check text-emerald-600' : 'fa-circle-exclamation text-rose-600'"></i>
+                        <span x-text="currentFinancialData.is_untung ? 'Profit Margin: ' + currentFinancialData.margin_percent + '%' : 'Margin Defisit: ' + Math.abs(currentFinancialData.margin_percent) + '%'"></span>
+                    </span>
+                    <span class="text-[11px] font-semibold text-slate-500" x-show="finTab === 'tahun'" x-text="'Rata-rata: ' + (currentFinancialData.avg_laba_format || '')"></span>
+                </div>
+            </div>
+
+            <!-- Card 2: Total Pemasukan (Omset) -->
+            <div class="p-5 rounded-2xl bg-gradient-to-br from-sky-50/70 via-white to-sky-50/30 border border-sky-200/80 shadow-xs hover:border-sky-300 transition-all">
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-sky-900">
+                        <span x-text="finTab === 'bulan' ? 'TOTAL PEMASUKAN (OMSET) BULAN INI' : 'TOTAL PEMASUKAN (OMSET) TAHUN INI'"></span>
+                    </span>
+                    <div class="w-8 h-8 rounded-xl bg-sky-100 text-[#0B2570] flex items-center justify-center text-xs font-bold">
+                        <i class="fa-solid fa-money-bill-trend-up"></i>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <h4 class="text-2xl lg:text-3xl font-black text-[#0B2570] tracking-tight"
+                        x-text="currentFinancialData.pemasukan_format || 'Rp 0'">
+                    </h4>
+                </div>
+
+                <div class="mt-4 pt-3 border-t border-sky-100 flex items-center justify-between text-xs text-sky-900">
+                    <span class="font-semibold text-slate-500">Penjualan Ikan &amp; Distribusi</span>
+                    <a href="{{ route('keuangan') }}" class="font-extrabold text-[#0055CC] hover:underline flex items-center gap-1 text-[11px]">
+                        <span>Buku Kas</span>
+                        <i class="fa-solid fa-arrow-right text-[9px]"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Card 3: Total Pengeluaran (Biaya Operasional & Pakan) -->
+            <div class="p-5 rounded-2xl bg-gradient-to-br from-amber-50/70 via-white to-amber-50/30 border border-amber-200/80 shadow-xs hover:border-amber-300 transition-all">
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-amber-900">
+                        <span x-text="finTab === 'bulan' ? 'TOTAL PENGELUARAN BULAN INI' : 'TOTAL PENGELUARAN TAHUN INI'"></span>
+                    </span>
+                    <div class="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center text-xs font-bold">
+                        <i class="fa-solid fa-receipt"></i>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <h4 class="text-2xl lg:text-3xl font-black text-amber-950 tracking-tight"
+                        x-text="currentFinancialData.pengeluaran_format || 'Rp 0'">
+                    </h4>
+                </div>
+
+                <div class="mt-4 pt-3 border-t border-amber-100 flex items-center justify-between text-xs text-amber-900">
+                    <span class="font-semibold text-slate-500">Biaya Pakan, Bibit, &amp; Kolam</span>
+                    <span class="font-bold text-[11px] text-amber-800" x-text="'Cost Ratio: ' + (currentFinancialData.cost_ratio || 0) + '%'"></span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- TAB 3: MATRIKS REKAP 12 BULAN (TAHUN ANGGARAN BERJALAN) -->
+        <div x-show="finTab === 'breakdown'" 
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 translate-y-1"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             class="space-y-3"
+             style="display: none;">
+            <div class="flex items-center justify-between text-xs">
+                <span class="font-bold text-slate-700">Rincian Profitabilitas Bulanan (Januari – Desember <span x-text="currentYear"></span>)</span>
+                <span class="text-[11px] text-slate-500 italic">Bulan berjalan ditandai dengan sorotan khusus</span>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                <template x-for="item in (financialSummary.monthly_breakdown || [])" :key="item.month_num">
+                    <div class="p-3.5 rounded-2xl border transition-all flex flex-col justify-between"
+                         :class="{
+                             'bg-emerald-50/70 border-emerald-300 ring-2 ring-emerald-500/30 shadow-xs': item.is_current && item.is_profit && item.has_data,
+                             'bg-rose-50/70 border-rose-300 ring-2 ring-rose-500/30 shadow-xs': item.is_current && !item.is_profit && item.has_data,
+                             'bg-sky-50/60 border-sky-300 ring-2 ring-sky-500/30 shadow-xs': item.is_current && !item.has_data,
+                             'bg-white border-slate-200/80 hover:border-sky-300 shadow-2xs': !item.is_current
+                         }">
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-black text-slate-900" x-text="item.month_name"></span>
+                                <span x-show="item.is_current" class="text-[8px] font-black uppercase px-1.5 py-0.5 rounded bg-[#0B2570] text-white">Bln Ini</span>
+                            </div>
+
+                            <div class="mt-2 space-y-1 text-[11px]">
+                                <div class="flex justify-between text-slate-500">
+                                    <span>Masuk:</span>
+                                    <span class="font-bold text-slate-800" x-text="item.has_data ? item.pemasukan_format : '-'"></span>
+                                </div>
+                                <div class="flex justify-between text-slate-500">
+                                    <span>Keluar:</span>
+                                    <span class="font-bold text-slate-800" x-text="item.has_data ? item.pengeluaran_format : '-'"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3 pt-2 border-t border-slate-100">
+                            <div class="text-[10px] font-bold text-slate-400 uppercase">Laba / Rugi:</div>
+                            <div class="text-xs font-black truncate mt-0.5"
+                                 :class="item.has_data ? (item.is_profit ? 'text-emerald-700' : 'text-rose-700') : 'text-slate-400'"
+                                 x-text="item.has_data ? item.laba_rugi_format : 'Rp 0'">
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+    </div>
+
     <!-- Main Chart Section: Analisis Konsumsi Pakan -->
     <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
@@ -491,6 +686,35 @@
                 this.toast.type = type;
                 this.toast.show = true;
                 setTimeout(() => { this.toast.show = false; }, 3500);
+            },
+
+            // Tab Finansial: 'bulan' | 'tahun' | 'breakdown'
+            finTab: 'bulan',
+
+            // Data Profitabilitas & Laba Rugi dari Backend
+            financialSummary: {!! json_encode($financialSummary ?? []) !!},
+
+            get currentFinancialData() {
+                if (this.finTab === 'tahun') {
+                    return this.financialSummary.tahun_ini || {
+                        pemasukan_format: 'Rp 0',
+                        pengeluaran_format: 'Rp 0',
+                        laba_rugi_format: 'Rp 0',
+                        is_untung: true,
+                        status_label: 'Surplus',
+                        margin_percent: 0,
+                        cost_ratio: 0
+                    };
+                }
+                return this.financialSummary.bulan_ini || {
+                    pemasukan_format: 'Rp 0',
+                    pengeluaran_format: 'Rp 0',
+                    laba_rugi_format: 'Rp 0',
+                    is_untung: true,
+                    status_label: 'Surplus',
+                    margin_percent: 0,
+                    cost_ratio: 0
+                };
             },
 
             // KPI Metrics

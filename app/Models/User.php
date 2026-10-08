@@ -21,6 +21,7 @@ class User extends Authenticatable
         'password',
         'role',
         'no_tlp',
+        'alamat',
         'foto_profil',
         'two_factor_secret',
         'two_factor_confirmed_at',
