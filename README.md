@@ -146,8 +146,8 @@ Menggunakan metode kombinasi antara pelet komersial berprotein tinggi dengan pak
      - Deteksi otomatis jika FCR berjalan > `fcr_max` (dari Master Data Ikan).
      - Menampilkan estimasi nominal rupiah pakan yang terbuang secara *real-time*.
    - [ ] **Kalkulasi Kerugian Panen & Ikan Mati Tak Terdeteksi (*Uncounted Mortality*)**:
-     - Menghitung **$\text{Ekor Hilang} = \text{jumlah\_tebar\_ekor} - \text{jumlah\_panen\_ekor}$.
-     - Menghitung **$\text{Laba/Rugi Bersih} = \text{Omset Penjualan} - (\text{Biaya Bibit} + \text{Total Biaya Pakan} + \text{Biaya Operasional})$.
+     - Menghitung** $\text{Ekor Hilang} = \text{jumlah\_tebar\_ekor} - \text{jumlah\_panen\_ekor}$.
+     - Menghitung** $\text{Laba/Rugi Bersih} = \text{Omset Penjualan} - (\text{Biaya Bibit} + \text{Total Biaya Pakan} + \text{Biaya Operasional})$.
    - [ ] **Kalkulator Audit & Simulasi FCR Interaktif (Uji Silang Mandiri)**:
      - Widget interaktif di dashboard agar Manajer/User dapat memasukkan parameter pakan, bobot tebar, dan panen secara manual untuk memverifikasi keakuratan rumus secara langsung tanpa ada kalkulasi yang meleset (*zero miss*).
 
