@@ -7,74 +7,91 @@ use App\Models\BatchPembibitan;
 use App\Models\Kolam;
 use App\Models\Ikan;
 use App\Models\User;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 class BatchPembibitanSeeder extends Seeder
 {
     public function run(): void
     {
+        Schema::disableForeignKeyConstraints();
+        DB::table('batch_pembibitan')->truncate();
+        Schema::enableForeignKeyConstraints();
+
         $petugasPembibitan = User::where('role', 'pembibitan')->first() ?? User::first();
-        $userId = $petugasPembibitan->id_user;
+        $userId = $petugasPembibitan ? $petugasPembibitan->id_user : 1;
 
         $kolamPemijahan = Kolam::where('nama_kolam', 'like', '%Pemijahan%')->first() ?? Kolam::first();
         $kolamPendederan = Kolam::where('nama_kolam', 'like', '%Pendederan%')->first() ?? Kolam::first();
 
-        $ikanLele = Ikan::where('nama_ikan', 'like', '%Lele%')->first();
-        $ikanGurami = Ikan::where('nama_ikan', 'like', '%Gurami%')->first();
-        $ikanNila = Ikan::where('nama_ikan', 'like', '%Nila%')->first();
-        $ikanPatin = Ikan::where('nama_ikan', 'like', '%Patin%')->first();
+        $ikanNila = Ikan::where('nama_ikan', 'like', '%Nila%')->first() ?? Ikan::first();
+        $ikanLele = Ikan::where('nama_ikan', 'like', '%Lele%')->first() ?? $ikanNila;
 
+        // 1 Kondisi 1 Contoh untuk setiap fase pertumbuhan & status pembibitan
         $batches = [
-            // Sample 1: Kondisi Fase TELUR (Baru Memijah - DOC 1 Hari)
+            // 1. Kondisi Fase TELUR (Inkubasi penetasan - status: aktif)
             [
                 'id_kolam'              => $kolamPemijahan->id_kolam,
                 'id_user'               => $userId,
-                'id_ikan'               => $ikanLele ? $ikanLele->id_ikan : null,
+                'id_ikan'               => $ikanNila ? $ikanNila->id_ikan : null,
                 'tgl_pemijahan'         => now()->subDays(1)->toDateString(),
-                'est_prcs_pembibitaan'  => now()->addDays(14)->toDateString(),
-                'jumlah_bibitAwal'      => 180000,
-                'jenis_ikan'            => $ikanLele ? $ikanLele->nama_ikan : 'Ikan Lele',
+                'est_prcs_pembibitaan'  => now()->addDays(20)->toDateString(),
+                'jumlah_telur'          => 150000,
+                'jumlah_menetas'        => 0,
+                'survival_rate'         => null,
+                'jumlah_bibitAwal'      => 150000,
+                'jenis_ikan'            => $ikanNila ? $ikanNila->nama_ikan : 'Ikan Nila',
                 'fase_pertumbuhan'      => 'TELUR',
                 'jumlah_kematian'       => 200,
-                'total_bobot_kg'        => 12.00,
+                'total_bobot_kg'        => 8.00,
                 'status'                => 'aktif',
             ],
-            // Sample 2: Kondisi Fase LARVA (Perawatan Larva Aktif - DOC 6 Hari)
-            [
-                'id_kolam'              => $kolamPendederan->id_kolam,
-                'id_user'               => $userId,
-                'id_ikan'               => $ikanGurami ? $ikanGurami->id_ikan : null,
-                'tgl_pemijahan'         => now()->subDays(6)->toDateString(),
-                'est_prcs_pembibitaan'  => now()->addDays(35)->toDateString(),
-                'jumlah_bibitAwal'      => 120000,
-                'jenis_ikan'            => $ikanGurami ? $ikanGurami->nama_ikan : 'Ikan Gurami',
-                'fase_pertumbuhan'      => 'LARVA',
-                'jumlah_kematian'       => 950,
-                'total_bobot_kg'        => 22.50,
-                'status'                => 'aktif',
-            ],
-            // Sample 3: Kondisi Fase FINGERLING (Benih Siap Tebar / Siap Pindah ke Pembesaran)
+            // 2. Kondisi Fase LARVA (Perawatan burayak - status: aktif)
             [
                 'id_kolam'              => $kolamPendederan->id_kolam,
                 'id_user'               => $userId,
                 'id_ikan'               => $ikanNila ? $ikanNila->id_ikan : null,
-                'tgl_pemijahan'         => now()->subDays(22)->toDateString(),
-                'est_prcs_pembibitaan'  => now()->toDateString(),
-                'jumlah_bibitAwal'      => 85000,
+                'tgl_pemijahan'         => now()->subDays(7)->toDateString(),
+                'est_prcs_pembibitaan'  => now()->addDays(14)->toDateString(),
+                'jumlah_telur'          => 120000,
+                'jumlah_menetas'        => 105000,
+                'survival_rate'         => 87.50,
+                'jumlah_bibitAwal'      => 105000,
                 'jenis_ikan'            => $ikanNila ? $ikanNila->nama_ikan : 'Ikan Nila',
-                'fase_pertumbuhan'      => 'FINGERLING',
-                'jumlah_kematian'       => 1200,
-                'total_bobot_kg'        => 42.00,
-                'status'                => 'siap_pindah',
+                'fase_pertumbuhan'      => 'LARVA',
+                'jumlah_kematian'       => 1100,
+                'total_bobot_kg'        => 20.00,
+                'status'                => 'aktif',
             ],
-            // Sample 4: Kondisi Batch Selesai (Telah Ditransfer ke Kolam Pembesaran)
+            // 3. Kondisi Fase FINGERLING (Benih siap tebar/pindah ke kolam pembesaran - status: siap_pindah)
             [
                 'id_kolam'              => $kolamPendederan->id_kolam,
                 'id_user'               => $userId,
-                'id_ikan'               => $ikanPatin ? $ikanPatin->id_ikan : null,
-                'tgl_pemijahan'         => now()->subDays(45)->toDateString(),
+                'id_ikan'               => $ikanNila ? $ikanNila->id_ikan : null,
+                'tgl_pemijahan'         => now()->subDays(21)->toDateString(),
+                'est_prcs_pembibitaan'  => now()->toDateString(),
+                'jumlah_telur'          => 90000,
+                'jumlah_menetas'        => 80000,
+                'survival_rate'         => 88.00,
+                'jumlah_bibitAwal'      => 80000,
+                'jenis_ikan'            => $ikanNila ? $ikanNila->nama_ikan : 'Ikan Nila',
+                'fase_pertumbuhan'      => 'FINGERLING',
+                'jumlah_kematian'       => 1200,
+                'total_bobot_kg'        => 45.00,
+                'status'                => 'siap_pindah',
+            ],
+            // 4. Kondisi Batch Selesai (Telah ditransfer ke kolam pembesaran - status: selesai)
+            [
+                'id_kolam'              => $kolamPendederan->id_kolam,
+                'id_user'               => $userId,
+                'id_ikan'               => $ikanLele ? $ikanLele->id_ikan : null,
+                'tgl_pemijahan'         => now()->subDays(40)->toDateString(),
                 'est_prcs_pembibitaan'  => now()->subDays(15)->toDateString(),
-                'jumlah_bibitAwal'      => 90000,
-                'jenis_ikan'            => $ikanPatin ? $ikanPatin->nama_ikan : 'Ikan Patin',
+                'jumlah_telur'          => 85000,
+                'jumlah_menetas'        => 76000,
+                'survival_rate'         => 89.40,
+                'jumlah_bibitAwal'      => 76000,
+                'jenis_ikan'            => $ikanLele ? $ikanLele->nama_ikan : 'Ikan Lele',
                 'fase_pertumbuhan'      => 'FINGERLING',
                 'jumlah_kematian'       => 1500,
                 'total_bobot_kg'        => 50.00,
@@ -83,15 +100,7 @@ class BatchPembibitanSeeder extends Seeder
         ];
 
         foreach ($batches as $batch) {
-            BatchPembibitan::updateOrCreate(
-                [
-                    'id_kolam'         => $batch['id_kolam'],
-                    'jenis_ikan'       => $batch['jenis_ikan'],
-                    'fase_pertumbuhan' => $batch['fase_pertumbuhan'],
-                    'status'           => $batch['status'],
-                ],
-                $batch
-            );
+            BatchPembibitan::create($batch);
         }
     }
 }

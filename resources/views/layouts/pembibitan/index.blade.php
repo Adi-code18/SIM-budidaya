@@ -22,6 +22,8 @@
 
     <!-- ========= INPUT FORM SECTION ========= -->
     <div x-show="showForm"
+         x-cloak
+         style="display: none;"
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0 -translate-y-2"
          x-transition:enter-end="opacity-100 translate-y-0"
@@ -78,6 +80,44 @@
                                    @input="if(form.jumlahBibitAwal !== '' && Number(form.jumlahBibitAwal) < 0) form.jumlahBibitAwal = Math.abs(Number(form.jumlahBibitAwal)) || 0"
                                    class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
                             <span class="text-xs font-bold text-slate-400">ekor/btr</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section: Kalkulasi Survival Rate (SR) Penetasan Otomatis -->
+            <div class="p-4 bg-sky-50/80 rounded-2xl border border-sky-200/90 space-y-3">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="w-7 h-7 rounded-lg bg-[#051B44] text-white flex items-center justify-center text-xs">
+                            <i class="fa-solid fa-chart-pie"></i>
+                        </div>
+                        <span class="text-xs font-extrabold text-[#0B2570]">Perhitungan Survival Rate (SR) Penetasan Otomatis</span>
+                    </div>
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black"
+                          :class="calcSurvivalRate >= 80 ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : (calcSurvivalRate >= 60 ? 'bg-sky-100 text-sky-800 border border-sky-200' : 'bg-rose-100 text-rose-800 border border-rose-200')"
+                          x-text="calcSurvivalRate + '% Survival Rate'">
+                    </span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-600 block mb-1">JUMLAH TELUR (BUTIR)</label>
+                        <input type="number" min="0" step="1" x-model.number="form.jumlah_telur" @input="updateMenetasLimit()" placeholder="Contoh: 100000"
+                               class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-800 bg-white focus:ring-2 focus:ring-sky-500">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-600 block mb-1">JUMLAH MENETAS (LARVA)</label>
+                        <input type="number" min="0" :max="form.jumlah_telur || 99999999" step="1" x-model.number="form.jumlah_menetas" @input="validateMenetas()" placeholder="Contoh: 85000"
+                               class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-800 bg-white focus:ring-2 focus:ring-sky-500">
+                        <span x-show="form.jumlah_menetas > form.jumlah_telur && form.jumlah_telur > 0" class="text-[10px] text-rose-600 font-bold mt-0.5 block">
+                            ⚠️ Jumlah menetas tidak boleh melebihi jumlah telur!
+                        </span>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-600 block mb-1">HASIL SR PERSENTASE</label>
+                        <div class="px-3.5 py-2 rounded-xl border border-sky-200 bg-white text-xs font-mono font-black text-[#0B2570] flex items-center justify-between">
+                            <span x-text="calcSurvivalRate + ' %'">0 %</span>
+                            <span class="text-[9px] font-bold text-slate-400">SR = (Menetas / Telur) × 100%</span>
                         </div>
                     </div>
                 </div>
@@ -387,6 +427,13 @@
                             </td>
                             <td class="py-4 px-6">
                                 <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase" :class="item.faseClass" x-text="item.fase"></span>
+                                <template x-if="item.survival_rate">
+                                    <span class="mt-1 flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-black bg-sky-50 text-sky-800 border border-sky-200"
+                                          :title="'SR: ' + item.survival_rate + '% (Telur: ' + (item.jumlah_telur || '-') + ', Menetas: ' + (item.jumlah_menetas || '-') + ')'">
+                                        <i class="fa-solid fa-chart-pie text-[8px] text-sky-600"></i>
+                                        <span x-text="'SR ' + item.survival_rate + '%'"></span>
+                                    </span>
+                                </template>
                             </td>
                             <td class="py-4 px-6 text-slate-700 font-bold" x-text="item.usia"></td>
                             <td class="py-4 px-6 text-slate-900 font-extrabold" x-text="item.jumlah"></td>
@@ -655,6 +702,12 @@
                 <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
                     <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">TANGGAL INPUT</span>
                     <span class="font-bold text-slate-700 text-sm" x-text="selectedBatch?.inputDate"></span>
+                </div>
+
+                <div class="p-3.5 bg-sky-50/90 rounded-xl border border-sky-200">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-sky-800 block mb-1">SURVIVAL RATE (SR)</span>
+                    <span class="font-extrabold text-[#0B2570] text-sm" x-text="(selectedBatch?.survival_rate ? selectedBatch.survival_rate + '%' : '-')"></span>
+                    <span class="text-[9px] text-slate-500 block mt-0.5" x-show="selectedBatch?.jumlah_telur" x-text="'Telur: ' + Number(selectedBatch?.jumlah_telur || 0).toLocaleString('id-ID') + ' | Menetas: ' + Number(selectedBatch?.jumlah_menetas || 0).toLocaleString('id-ID')"></span>
                 </div>
 
                 <div class="p-3.5 bg-sky-50/60 rounded-xl border border-sky-100 flex items-center justify-between">
@@ -1085,13 +1138,38 @@ function pembibitanComponent() {
             id: 'BCH-' + new Date().getFullYear() + '-' + String(Math.floor(10 + Math.random() * 90)) + '-A01',
             id_batch: null,
             fase_pertumbuhan: 'TELUR',
-            jumlahBibitAwal: 250000,
+            jumlah_telur: 250000,
+            jumlah_menetas: 212500,
+            survival_rate: 85.0,
+            jumlahBibitAwal: 212500,
             totalBobotKg: 25.0,
             tglPemijahan: new Date().toISOString().split('T')[0],
             est_prcs_pembibitaan: '',
             jumlahKematian: 0,
             statusBatch: 'inkubasi',
             kolam: ''
+        },
+
+        get calcSurvivalRate() {
+            const telur = Number(this.form.jumlah_telur || 0);
+            const menetas = Number(this.form.jumlah_menetas || 0);
+            if (telur <= 0 || menetas <= 0) return 0;
+            return Number(((menetas / telur) * 100).toFixed(1));
+        },
+
+        validateMenetas() {
+            const telur = Number(this.form.jumlah_telur || 0);
+            if (telur > 0 && Number(this.form.jumlah_menetas) > telur) {
+                this.form.jumlah_menetas = telur;
+            }
+            if (Number(this.form.jumlah_menetas) > 0) {
+                this.form.jumlahBibitAwal = Number(this.form.jumlah_menetas);
+            }
+            this.form.survival_rate = this.calcSurvivalRate;
+        },
+
+        updateMenetasLimit() {
+            this.validateMenetas();
         },
 
         batches: {!! json_encode($batches ?? []) !!},
@@ -1292,7 +1370,10 @@ function pembibitanComponent() {
                 id: item.id,
                 id_batch: item.id_batch,
                 fase_pertumbuhan: itemFase,
-                jumlahBibitAwal: item.jumlahBibitAwal || 250000,
+                jumlah_telur: item.jumlah_telur || 250000,
+                jumlah_menetas: item.jumlah_menetas || item.jumlahBibitAwal || 212500,
+                survival_rate: item.survival_rate || 85.0,
+                jumlahBibitAwal: item.jumlah_menetas || item.jumlahBibitAwal || 212500,
                 totalBobotKg: item.totalBobotKg || 25.0,
                 tglPemijahan: item.tglPemijahan || new Date().toISOString().split('T')[0],
                 est_prcs_pembibitaan: item.est_prcs_raw || (item.est_prcs_pembibitaan && item.est_prcs_pembibitaan !== '-' ? item.est_prcs_pembibitaan : ''),
@@ -1311,7 +1392,10 @@ function pembibitanComponent() {
                 id: 'BCH-' + new Date().getFullYear() + '-' + String(Math.floor(10 + Math.random() * 90)) + '-A01',
                 id_batch: null,
                 fase_pertumbuhan: 'TELUR',
-                jumlahBibitAwal: 250000,
+                jumlah_telur: 250000,
+                jumlah_menetas: 212500,
+                survival_rate: 85.0,
+                jumlahBibitAwal: 212500,
                 totalBobotKg: 25.0,
                 tglPemijahan: new Date().toISOString().split('T')[0],
                 est_prcs_pembibitaan: '',
@@ -1476,6 +1560,9 @@ function pembibitanComponent() {
                             est_prcs_pembibitaan: this.form.est_prcs_pembibitaan,
                             fase_pertumbuhan: faseVal,
                             jumlah_bibitAwal: bibitAwalNum,
+                            jumlah_telur: Number(this.form.jumlah_telur || 0),
+                            jumlah_menetas: Number(this.form.jumlah_menetas || 0),
+                            survival_rate: this.calcSurvivalRate,
                             jumlah_kematian: matiNum,
                             total_bobot_kg: bobotKgNum,
                             status: rawStatus
@@ -1503,6 +1590,9 @@ function pembibitanComponent() {
                             this.batches[targetIndex].kolam = this.form.kolam;
                             this.batches[targetIndex].tglPemijahan = this.form.tglPemijahan;
                             this.batches[targetIndex].jumlahBibitAwal = bibitAwalNum;
+                            this.batches[targetIndex].jumlah_telur = Number(this.form.jumlah_telur || 0);
+                            this.batches[targetIndex].jumlah_menetas = Number(this.form.jumlah_menetas || 0);
+                            this.batches[targetIndex].survival_rate = this.calcSurvivalRate;
                             this.batches[targetIndex].jumlahKematian = matiNum;
                             this.batches[targetIndex].jumlah = sisaBibit.toLocaleString('id-ID');
                             this.batches[targetIndex].totalBobotKg = bobotKgNum;
@@ -1545,6 +1635,9 @@ function pembibitanComponent() {
                         est_prcs_pembibitaan: this.form.est_prcs_pembibitaan,
                         fase_pertumbuhan: faseVal,
                         jumlah_bibitAwal: bibitAwalNum,
+                        jumlah_telur: Number(this.form.jumlah_telur || 0),
+                        jumlah_menetas: Number(this.form.jumlah_menetas || 0),
+                        survival_rate: this.calcSurvivalRate,
                         jumlah_kematian: matiNum,
                         total_bobot_kg: bobotKgNum,
                         status: rawStatus
@@ -1579,6 +1672,9 @@ function pembibitanComponent() {
                         usia: diffDays + ' Hari',
                         usiaDays: diffDays,
                         jumlahBibitAwal: bibitAwalNum,
+                        jumlah_telur: Number(newBatch.jumlah_telur || this.form.jumlah_telur || 0),
+                        jumlah_menetas: Number(newBatch.jumlah_menetas || this.form.jumlah_menetas || 0),
+                        survival_rate: Number(newBatch.survival_rate || this.calcSurvivalRate || 0),
                         jumlahKematian: matiNum,
                         jumlah: sisaBibit.toLocaleString('id-ID'),
                         jumlahRaw: sisaBibit,

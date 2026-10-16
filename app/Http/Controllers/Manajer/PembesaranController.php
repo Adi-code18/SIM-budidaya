@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Manajer;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\BatchPembesaran;
 use App\Models\Keuangan;
 use App\Models\Kolam;
 use App\Models\ManajemenPakan;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -75,7 +77,75 @@ class PembesaranController extends Controller
         $totalBiomassa = $totalBiomassaKg / 1000; // in Ton
 
         $today = Carbon::today()->toDateString();
-        $fedTodayKolamIds = \App\Models\ManajemenPakan::whereDate('tgl_log', $today)->pluck('id_kolam')->toArray();
+        $fedTodayKolamIds = ManajemenPakan::whereDate('tgl_log', $today)->pluck('id_kolam')->toArray();
+
+        // =====================================================================
+        // OPTIMASI PERFORMA: Pre-fetch semua data per-batch SEBELUM loop
+        // Menghilangkan ~80-100 N+1 query menjadi ~5 query batch
+        // =====================================================================
+
+        // Pre-fetch: Total pakan per kolam (untuk FCR & finansial)
+        $kolamIds = $batchRecords->pluck('id_kolam')->unique()->filter()->toArray();
+        $pakanPerKolam = ManajemenPakan::whereIn('id_kolam', $kolamIds)
+            ->selectRaw('id_kolam, SUM(kg_pelet) as total_pelet, SUM(kg_daun) as total_daun')
+            ->groupBy('id_kolam')
+            ->get()
+            ->keyBy('id_kolam');
+
+        // Pre-fetch: pH air terakhir per kolam
+        $latestPhPerKolam = [];
+        $phRecords = ManajemenPakan::whereIn('id_kolam', $kolamIds)
+            ->whereNotNull('ph_air')
+            ->where('ph_air', '>', 0)
+            ->selectRaw('id_kolam, ph_air, tgl_log')
+            ->orderBy('tgl_log', 'desc')
+            ->get();
+        foreach ($phRecords as $ph) {
+            if (!isset($latestPhPerKolam[$ph->id_kolam])) {
+                $latestPhPerKolam[$ph->id_kolam] = (float) $ph->ph_air;
+            }
+        }
+
+        // Pre-fetch: Active orders per batch pembesaran
+        $pembesaranIds = $batchRecords->pluck('id_pembesaran')->toArray();
+        $activeOrders = \App\Models\TransaksiDistribusi::with('mitra')
+            ->whereIn('id_pembesaran', $pembesaranIds)
+            ->where('status_order', '!=', 'selesai')
+            ->orderBy('id_transaksi', 'desc')
+            ->get()
+            ->groupBy('id_pembesaran');
+
+        // Pre-fetch: Avg harga pakan pelet (1 query untuk semua batch)
+        $avgHargaPakan = 12000;
+        $peletPrice = \App\Models\StokPakan::where('nama_pakan', 'like', '%Pelet%')
+            ->where('satuan', 'kg')
+            ->where('harga_per_satuan', '>', 0)
+            ->avg('harga_per_satuan');
+        if ($peletPrice && $peletPrice > 0) {
+            $avgHargaPakan = round((float) $peletPrice);
+        }
+
+        // Pre-fetch: Semua master ikan (utk lookup referensi, bukan query per batch)
+        $allIkan = \App\Models\Ikan::all();
+        $ikanLookup = [];
+        foreach ($allIkan as $ik) {
+            $ikanLookup[strtolower($ik->nama_ikan)] = $ik;
+        }
+
+        // Pre-fetch: Biaya operasional per kolam dari Keuangan
+        $biayaOpPerKolam = [];
+        if (count($kolamIds) > 0) {
+            $biayaOpRecords = \App\Models\Keuangan::whereIn('id_kolam', $kolamIds)
+                ->where('tipe_transaksi', 'pengeluaran')
+                ->where('ref_id', 'not like', 'BELI-BIBIT%')
+                ->where('kategori', 'not like', '%pakan%')
+                ->selectRaw('id_kolam, SUM(nominal) as total_biaya')
+                ->groupBy('id_kolam')
+                ->get();
+            foreach ($biayaOpRecords as $rec) {
+                $biayaOpPerKolam[$rec->id_kolam] = (float) $rec->total_biaya;
+            }
+        }
 
         $batches = [];
         $fcrAccum = [];
@@ -88,6 +158,15 @@ class PembesaranController extends Controller
             $fcrMax = $ikanRef ? (float)$ikanRef->fcr_max : 1.30;
             $targetKonsumsi = $ikanRef ? $ikanRef->target_konsumsi : '-';
             $jenisPakan = $ikanRef ? $ikanRef->jenis_pakan_didukung : 'Pelet';
+
+            // Gunakan data pre-fetched untuk kalkulasi FCR (bukan query per batch)
+            $pakanData = $pakanPerKolam->get($b->id_kolam);
+            $totalPakanKg = $pakanData ? (float)($pakanData->total_pelet ?? 0) + (float)($pakanData->total_daun ?? 0) : 0;
+
+            // Inject pre-fetched data ke model agar method bisa menggunakannya
+            $b->_prefetched_total_pakan = $totalPakanKg;
+            $b->_prefetched_avg_harga_pakan = $avgHargaPakan;
+            $b->_prefetched_biaya_operasional = $biayaOpPerKolam[$b->id_kolam] ?? 0;
 
             $fcrKumulatif = $b->calculateCumulativeFcr();
             $fcrKomersial = $b->calculateCommercialFcr();
@@ -104,7 +183,7 @@ class PembesaranController extends Controller
                 $fcrDisplay = '0.00';
             }
 
-            // Analisis Finansial Laba / Rugi Kolam
+            // Analisis Finansial Laba / Rugi Kolam (menggunakan data pre-fetched)
             $fin = $b->calculateFinancials();
 
             $statusSiklus = strtolower($b->status_siklus ?? 'berjalan');
@@ -167,15 +246,15 @@ class PembesaranController extends Controller
             $estTglPanen = $b->est_tgl_panen ?? ($b->tgl_tebar ? Carbon::parse($b->tgl_tebar)->addDays($estDays)->toDateString() : null);
             $isHarvestDue = ($statusSiklus !== 'selesai') && ($estTglPanen ? Carbon::today()->gte(Carbon::parse($estTglPanen)) : ($doc >= $estDaysMin));
 
-            // Active order linked to this batch
-            $activeOrder = \App\Models\TransaksiDistribusi::with('mitra')
-                ->where('id_pembesaran', $b->id_pembesaran)
-                ->where('status_order', '!=', 'selesai')
-                ->latest('id_transaksi')
-                ->first();
+            // Active order dari pre-fetched data (bukan query per batch)
+            $batchOrders = $activeOrders->get($b->id_pembesaran);
+            $activeOrder = $batchOrders ? $batchOrders->first() : null;
 
             $orderTargetKg = $activeOrder ? (float)$activeOrder->Total_kg : 0;
             $orderMitraNama = $activeOrder && $activeOrder->mitra ? $activeOrder->mitra->nama_mitra : null;
+
+            // pH air dari pre-fetched data (bukan query per batch)
+            $phAirValue = isset($latestPhPerKolam[$b->id_kolam]) ? number_format($latestPhPerKolam[$b->id_kolam], 1) : '-';
 
             $batches[] = [
                 'id_pembesaran'       => $b->id_pembesaran,
@@ -224,7 +303,7 @@ class PembesaranController extends Controller
                 'status_label'        => $statusLabel,
                 'status_class'        => $statusClass,
                 'asal_bibit'          => $b->asal_bibit ?? ($b->id_batch_pembibitan ? 'pembibitan_sendiri' : 'beli_luar'),
-                'ph_air'              => ($logPh = ManajemenPakan::where('id_kolam', $b->id_kolam)->whereNotNull('ph_air')->where('ph_air', '>', 0)->latest('tgl_log')->value('ph_air')) ? number_format($logPh, 1) : '-',
+                'ph_air'              => $phAirValue,
 
                 // Data Finansial Laba / Rugi Kolam
                 'total_pakan_kg'      => number_format($fin['total_pakan_kg'], 1, ',', '.'),
@@ -246,6 +325,17 @@ class PembesaranController extends Controller
                 'status_finansial'    => $fin['status_finansial'],
                 'status_fin_label'    => $fin['status_label'],
                 'status_fin_badge'    => $fin['status_badge'],
+
+                // Analisis Inefisiensi Pakan & Mortalitas
+                'wasted_analysis'     => ($wasted = $b->getWastedFeedAnalysis()),
+                'is_feed_waste'       => $wasted['is_inefficient'],
+                'wasted_rupiah'       => $wasted['wasted_rupiah'],
+                'wasted_format'       => $wasted['wasted_format'],
+                'wasted_kg'           => $wasted['wasted_pakan_kg'],
+                'mati_tak_terdeteksi' => $b->getMatiTakTerdeteksiEkor(),
+                'sr_pembesaran'       => $b->getSurvivalRatePembesaran(),
+                'jumlah_tebar_ekor'   => (int) ($b->jumlah_tebar_ekor > 0 ? $b->jumlah_tebar_ekor : round($b->biomassa_est * 4)),
+                'biomassa_awal_kg'    => $b->getBiomassaAwalKg(),
             ];
         }
 
@@ -633,6 +723,12 @@ class PembesaranController extends Controller
 
         $batch->save();
 
+        AuditLog::record(
+            'edit_batch',
+            'pembesaran',
+            "Memperbarui batch pembesaran #PB-" . str_pad($cleanId, 5, '0', STR_PAD_LEFT) . " (Status: " . ($batch->status_siklus ?? 'berjalan') . ")"
+        );
+
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
@@ -653,6 +749,12 @@ class PembesaranController extends Controller
             return response()->json(['success' => false, 'message' => 'Batch pembesaran tidak ditemukan.'], 404);
         }
 
+        AuditLog::record(
+            'hapus_batch',
+            'pembesaran',
+            "Menghapus batch pembesaran #PB-" . str_pad($cleanId, 5, '0', STR_PAD_LEFT) . " ({$batch->jenis_ikan})"
+        );
+
         // Hapus entri kas pembelian bibit jika ada
         $pbRef = 'BELI-BIBIT-PB-' . str_pad($cleanId, 4, '0', STR_PAD_LEFT);
         Keuangan::where('ref_id', $pbRef)->delete();
@@ -667,6 +769,24 @@ class PembesaranController extends Controller
         }
 
         return redirect()->route('pembesaran')->with('success', 'Batch pembesaran berhasil dihapus!');
+    }
+
+    public function exportKartuKontrolPdf($id)
+    {
+        $cleanId = is_numeric($id) ? $id : (int) preg_replace('/[^0-9]/', '', $id);
+        $batch = BatchPembesaran::with(['kolam', 'user', 'batchPembibitan.kolam'])->findOrFail($cleanId);
+        $ikanRef = $batch->ikan_ref;
+        $financials = $batch->calculateFinancials();
+        $wasted = $batch->getWastedFeedAnalysis();
+        $pakanLogs = ManajemenPakan::where('id_kolam', $batch->id_kolam)
+            ->when($batch->tgl_tebar, fn($q) => $q->whereDate('tgl_log', '>=', $batch->tgl_tebar))
+            ->orderBy('tgl_log', 'asc')
+            ->get();
+
+        $pdf = Pdf::loadView('layouts.pembesaran.kartu_kontrol_pdf', compact('batch', 'ikanRef', 'financials', 'wasted', 'pakanLogs'))
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->download('Kartu_Kontrol_Kolam_' . str_pad($batch->id_pembesaran, 4, '0', STR_PAD_LEFT) . '.pdf');
     }
 
     public function storeKolam(Request $request)

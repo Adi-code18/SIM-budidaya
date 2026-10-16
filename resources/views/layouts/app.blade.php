@@ -16,29 +16,22 @@
         - Tailwind CSS: Utility-first CSS framework untuk styling responsif & modern.
     ========================================================================= --}}
 
-    <meta name="turbo-cache-control" content="no-cache">
-    
-    <!-- Hotwire Turbo (Instant SPA-like Navigation) -->
-    <script src="https://cdn.jsdelivr.net/npm/@hotwired/turbo@8.0.12/dist/turbo.es2017-umd.js"></script>
-
-    <!-- Google Fonts -->
+    <!-- DNS Prefetch & Preconnect for Fast Asset Loading -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Chart.js (Visualisasi Statistik & Grafik) -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <!-- Leaflet.js Assets (Pemetaan GIS & Geocoding Lokasi Mitra/Kolam) -->
-    <link rel="stylesheet" href="{{ asset('leaflet/leaflet.css') }}" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
-    <script src="{{ asset('leaflet/leaflet.js') }}"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    @stack('styles')
     
     <!-- Alpine.js (State Management Reaktif di Frontend) -->
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
@@ -47,13 +40,6 @@
     {{-- SweetAlert2 (Modal Dialog & Toast Notifikasi Elegan) --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        /* Turbo Progress Bar */
-        .turbo-progress-bar {
-            background: linear-gradient(90deg, #0284C7, #38BDF8) !important;
-            height: 3px !important;
-            box-shadow: 0 0 12px rgba(2, 132, 199, 0.8) !important;
-        }
-
         /* Backdrop overlay hanya untuk modal dialog, BUKAN untuk toast */
         .swal2-container {
             z-index: 99999 !important;
@@ -308,24 +294,6 @@
         };
     </script>
     
-    <!-- Tailwind CSS (Konfigurasi Palette & Custom Theme) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        navy: {
-                            700: '#1E3E62',
-                            800: '#0F2C59',
-                            900: '#0B192C',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    
     {{-- Laravel Vite Compilation (CSS & JS Utama) --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
@@ -363,6 +331,25 @@
         }
         [x-cloak] {
             display: none !important;
+        }
+
+        /* =========================================================================
+           SIDEBAR ACCORDION (High-Performance CSS Grid Animation - No FOUC/Glitch)
+           ========================================================================= */
+        .sidebar-accordion {
+            display: grid;
+            grid-template-rows: 0fr;
+            opacity: 0;
+            pointer-events: none;
+            transition: grid-template-rows 220ms cubic-bezier(0.4, 0, 0.2, 1), opacity 180ms ease;
+        }
+        .sidebar-accordion.is-open {
+            grid-template-rows: 1fr;
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .sidebar-accordion > .sidebar-accordion-inner {
+            overflow: hidden;
         }
 
         /* =========================================================================
@@ -425,6 +412,8 @@
         
         {{-- A. Mobile Sidebar Backdrop --}}
         <div x-show="sidebarOpen" 
+             x-cloak
+             style="display: none;"
              x-transition:enter="transition-opacity ease-linear duration-300"
              x-transition:enter-start="opacity-0"
              x-transition:enter-end="opacity-100"
@@ -436,7 +425,7 @@
 
         {{-- B. Sidebar Navigasi (Menu Samping) --}}
         <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" 
-               class="fixed inset-y-0 left-0 z-50 w-64 bg-[#031B4E] text-white flex flex-col transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 shrink-0 shadow-2xl">
+               class="fixed inset-y-0 left-0 z-50 w-64 bg-[#031B4E] text-white flex flex-col max-lg:transition-transform max-lg:duration-300 max-lg:ease-in-out lg:static lg:translate-x-0 shrink-0 shadow-2xl">
             
             {{-- Branding / Logo Header Sidebar --}}
             <div class="h-20 px-5 flex items-center justify-between border-b border-white/10">
@@ -454,12 +443,18 @@
                 </button>
             </div>
 
+            @php
+                $isMasterActive = request()->routeIs('ikan*') || request()->routeIs('petugas*') || request()->routeIs('mitra*') || request()->routeIs('stok-pakan*') || request()->routeIs('log-pakan.stok*');
+                $isBudidayaActive = request()->routeIs('pembibitan*') || request()->routeIs('pembesaran*') || request()->routeIs('pembudidaya*') || (request()->routeIs('log-pakan*') && !request()->routeIs('log-pakan.stok*'));
+                $isKeuanganActive = request()->routeIs('keuangan*');
+            @endphp
+
             {{-- Menu Link & Accordion Group Navigasi --}}
             <nav class="flex-1 px-3.5 py-6 overflow-y-auto space-y-1.5"
                  x-data="{
-                    openMaster: {{ (request()->routeIs('ikan*') || request()->routeIs('petugas*') || request()->routeIs('mitra*') || request()->routeIs('stok-pakan*')) ? 'true' : 'false' }},
-                    openBudidaya: {{ (request()->routeIs('pembibitan*') || request()->routeIs('pembesaran*') || request()->routeIs('pembudidaya*') || request()->routeIs('log-pakan*')) ? 'true' : 'false' }},
-                    openKeuangan: {{ request()->routeIs('keuangan*') ? 'true' : 'false' }}
+                    openMaster: {{ $isMasterActive ? 'true' : 'false' }},
+                    openBudidaya: {{ $isBudidayaActive ? 'true' : 'false' }},
+                    openKeuangan: {{ $isKeuanganActive ? 'true' : 'false' }}
                  }">
                 
                 {{-- 1. Dashboard --}}
@@ -473,42 +468,44 @@
                 <div class="space-y-1">
                     <button type="button" 
                             @click="openMaster = !openMaster" 
-                            class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all duration-200 text-xs font-semibold cursor-pointer {{ (request()->routeIs('ikan*') || request()->routeIs('petugas*') || request()->routeIs('mitra*')) ? 'text-white bg-white/10' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}">
+                            class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all duration-200 text-xs font-semibold cursor-pointer {{ $isMasterActive ? 'text-white bg-white/10' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}"
+                            :class="openMaster ? 'text-white bg-white/10' : 'text-slate-300 hover:bg-white/10 hover:text-white'">
                         <div class="flex items-center gap-3">
                             <i class="fa-solid fa-database text-sm w-5 text-center text-sky-400"></i>
                             <span>Master Data</span>
                         </div>
-                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 inline-block transition-transform duration-200" :style="openMaster ? 'transform: rotate(180deg);' : 'transform: rotate(0deg);'"></i>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 inline-block transition-transform duration-200 {{ $isMasterActive ? 'rotate-180' : '' }}" 
+                           :class="openMaster ? 'rotate-180' : ''"></i>
                     </button>
                     
                     {{-- Submenu Master Data --}}
-                    <div x-show="openMaster" 
-                         x-collapse
-                         class="pl-4 pr-1 space-y-1 pt-1 pb-1 ml-4 border-l border-white/15">
-                        
-                        <a href="{{ route('stok-pakan') }}" 
-                           class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium {{ request()->routeIs('stok-pakan*') ? 'bg-[#0284C7] text-white font-bold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/5' }}">
-                            <i class="fa-solid fa-boxes-stacked text-xs w-4 text-center"></i>
-                            <span>Master Stok Pakan</span>
-                        </a>
+                    <div class="sidebar-accordion {{ $isMasterActive ? 'is-open' : '' }}"
+                         :class="openMaster ? 'is-open' : ''">
+                        <div class="sidebar-accordion-inner pl-4 pr-1 space-y-1 pt-1 pb-1 ml-4 border-l border-white/15">
+                            <a href="{{ route('stok-pakan') }}" 
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium {{ request()->routeIs('stok-pakan*') ? 'bg-[#0284C7] text-white font-bold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/5' }}">
+                                <i class="fa-solid fa-boxes-stacked text-xs w-4 text-center"></i>
+                                <span>Master Stok Pakan</span>
+                            </a>
 
-                        <a href="{{ route('ikan') }}" 
-                           class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium {{ request()->routeIs('ikan*') ? 'bg-[#0284C7] text-white font-bold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/5' }}">
-                            <i class="fa-solid fa-fish text-xs w-4 text-center"></i>
-                            <span>Jenis Ikan</span>
-                        </a>
+                            <a href="{{ route('ikan') }}" 
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium {{ request()->routeIs('ikan*') ? 'bg-[#0284C7] text-white font-bold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/5' }}">
+                                <i class="fa-solid fa-fish text-xs w-4 text-center"></i>
+                                <span>Jenis Ikan</span>
+                            </a>
 
-                        <a href="{{ route('petugas') }}" 
-                           class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium {{ request()->routeIs('petugas*') ? 'bg-[#0284C7] text-white font-bold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/5' }}">
-                            <i class="fa-solid fa-users-gear text-xs w-4 text-center"></i>
-                            <span>Manajemen Petugas</span>
-                        </a>
+                            <a href="{{ route('petugas') }}" 
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium {{ request()->routeIs('petugas*') ? 'bg-[#0284C7] text-white font-bold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/5' }}">
+                                <i class="fa-solid fa-users-gear text-xs w-4 text-center"></i>
+                                <span>Manajemen Petugas</span>
+                            </a>
 
-                        <a href="{{ route('mitra') }}" 
-                           class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium {{ request()->routeIs('mitra*') ? 'bg-[#0284C7] text-white font-bold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/5' }}">
-                            <i class="fa-regular fa-handshake text-xs w-4 text-center"></i>
-                            <span>Manajemen Mitra</span>
-                        </a>
+                            <a href="{{ route('mitra') }}" 
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium {{ request()->routeIs('mitra*') ? 'bg-[#0284C7] text-white font-bold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/5' }}">
+                                <i class="fa-regular fa-handshake text-xs w-4 text-center"></i>
+                                <span>Manajemen Mitra</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -516,36 +513,38 @@
                 <div class="space-y-1">
                     <button type="button" 
                             @click="openBudidaya = !openBudidaya" 
-                            class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all duration-200 text-xs font-semibold cursor-pointer {{ (request()->routeIs('pembibitan*') || request()->routeIs('pembesaran*') || request()->routeIs('pembudidaya*') || request()->routeIs('log-pakan*')) ? 'text-white bg-white/10' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}">
+                            class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all duration-200 text-xs font-semibold cursor-pointer {{ $isBudidayaActive ? 'text-white bg-white/10' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}"
+                            :class="openBudidaya ? 'text-white bg-white/10' : 'text-slate-300 hover:bg-white/10 hover:text-white'">
                         <div class="flex items-center gap-3">
                             <i class="fa-solid fa-water text-sm w-5 text-center text-sky-400"></i>
                             <span>Budidaya & Operasional</span>
                         </div>
-                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 inline-block transition-transform duration-200" :style="openBudidaya ? 'transform: rotate(180deg);' : 'transform: rotate(0deg);'"></i>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 inline-block transition-transform duration-200 {{ $isBudidayaActive ? 'rotate-180' : '' }}" 
+                           :class="openBudidaya ? 'rotate-180' : ''"></i>
                     </button>
                     
                     {{-- Submenu Budidaya --}}
-                    <div x-show="openBudidaya" 
-                         x-collapse
-                         class="pl-4 pr-1 space-y-1 pt-1 pb-1 ml-4 border-l border-white/15">
-                        
-                        <a href="{{ route('pembibitan') }}" 
-                           class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium {{ request()->routeIs('pembibitan*') ? 'bg-[#0284C7] text-white font-bold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/5' }}">
-                            <i class="fa-solid fa-droplet text-xs w-4 text-center"></i>
-                            <span>Pembibitan</span>
-                        </a>
+                    <div class="sidebar-accordion {{ $isBudidayaActive ? 'is-open' : '' }}"
+                         :class="openBudidaya ? 'is-open' : ''">
+                        <div class="sidebar-accordion-inner pl-4 pr-1 space-y-1 pt-1 pb-1 ml-4 border-l border-white/15">
+                            <a href="{{ route('pembibitan') }}" 
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium {{ request()->routeIs('pembibitan*') ? 'bg-[#0284C7] text-white font-bold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/5' }}">
+                                <i class="fa-solid fa-droplet text-xs w-4 text-center"></i>
+                                <span>Pembibitan</span>
+                            </a>
 
-                        <a href="{{ route('pembesaran') }}" 
-                           class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium {{ (request()->routeIs('pembesaran*') || request()->routeIs('pembudidaya*')) ? 'bg-[#0284C7] text-white font-bold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/5' }}">
-                            <i class="fa-solid fa-bars-staggered text-xs w-4 text-center"></i>
-                            <span>Pembesaran</span>
-                        </a>
+                            <a href="{{ route('pembesaran') }}" 
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium {{ (request()->routeIs('pembesaran*') || request()->routeIs('pembudidaya*')) ? 'bg-[#0284C7] text-white font-bold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/5' }}">
+                                <i class="fa-solid fa-bars-staggered text-xs w-4 text-center"></i>
+                                <span>Pembesaran</span>
+                            </a>
 
-                        <a href="{{ route('log-pakan') }}" 
-                           class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium {{ request()->routeIs('log-pakan*') ? 'bg-[#0284C7] text-white font-bold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/5' }}">
-                            <i class="fa-regular fa-calendar text-xs w-4 text-center"></i>
-                            <span>Log Pakan</span>
-                        </a>
+                            <a href="{{ route('log-pakan') }}" 
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium {{ request()->routeIs('log-pakan*') ? 'bg-[#0284C7] text-white font-bold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/5' }}">
+                                <i class="fa-regular fa-calendar text-xs w-4 text-center"></i>
+                                <span>Log Pakan</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -560,30 +559,32 @@
                 <div class="space-y-1">
                     <button type="button" 
                             @click="openKeuangan = !openKeuangan" 
-                            class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all duration-200 text-xs font-semibold cursor-pointer {{ request()->routeIs('keuangan*') ? 'text-white bg-white/10' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}">
+                            class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all duration-200 text-xs font-semibold cursor-pointer {{ $isKeuanganActive ? 'text-white bg-white/10' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}"
+                            :class="openKeuangan ? 'text-white bg-white/10' : 'text-slate-300 hover:bg-white/10 hover:text-white'">
                         <div class="flex items-center gap-3">
                             <i class="fa-regular fa-credit-card text-sm w-5 text-center text-sky-400"></i>
                             <span>Keuangan</span>
                         </div>
-                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 inline-block transition-transform duration-200" :style="openKeuangan ? 'transform: rotate(180deg);' : 'transform: rotate(0deg);'"></i>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 inline-block transition-transform duration-200 {{ $isKeuanganActive ? 'rotate-180' : '' }}" 
+                           :class="openKeuangan ? 'rotate-180' : ''"></i>
                     </button>
                     
                     {{-- Submenu Keuangan --}}
-                    <div x-show="openKeuangan" 
-                         x-collapse
-                         class="pl-4 pr-1 space-y-1 pt-1 pb-1 ml-4 border-l border-white/15">
-                        
-                        <a href="{{ route('keuangan.transaksi') }}" 
-                           class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium {{ request()->routeIs('keuangan.transaksi*') ? 'bg-[#0284C7] text-white font-bold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/5' }}">
-                            <i class="fa-solid fa-receipt text-xs w-4 text-center"></i>
-                            <span>Transaksi Keuangan</span>
-                        </a>
+                    <div class="sidebar-accordion {{ $isKeuanganActive ? 'is-open' : '' }}"
+                         :class="openKeuangan ? 'is-open' : ''">
+                        <div class="sidebar-accordion-inner pl-4 pr-1 space-y-1 pt-1 pb-1 ml-4 border-l border-white/15">
+                            <a href="{{ route('keuangan.transaksi') }}" 
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium {{ request()->routeIs('keuangan.transaksi*') ? 'bg-[#0284C7] text-white font-bold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/5' }}">
+                                <i class="fa-solid fa-receipt text-xs w-4 text-center"></i>
+                                <span>Transaksi Keuangan</span>
+                            </a>
 
-                        <a href="{{ route('keuangan') }}" 
-                           class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium {{ (request()->routeIs('keuangan') && !request()->routeIs('keuangan.transaksi*')) ? 'bg-[#0284C7] text-white font-bold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/5' }}">
-                            <i class="fa-solid fa-chart-line text-xs w-4 text-center"></i>
-                            <span>Laporan & Analisis</span>
-                        </a>
+                            <a href="{{ route('keuangan') }}" 
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium {{ (request()->routeIs('keuangan') && !request()->routeIs('keuangan.transaksi*')) ? 'bg-[#0284C7] text-white font-bold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/5' }}">
+                                <i class="fa-solid fa-chart-line text-xs w-4 text-center"></i>
+                                <span>Laporan & Analisis</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </nav>
@@ -624,6 +625,7 @@
                          x-transition:leave-start="opacity-100 scale-100 translate-y-0"
                          x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
                          x-cloak
+                         style="display: none;"
                          class="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-50 divide-y divide-slate-100">
                         
                         {{-- Header User Ringkas --}}
@@ -647,7 +649,7 @@
 
                         {{-- Opsi Logout Form --}}
                         <div class="py-1">
-                            <form action="{{ route('logout') }}" method="POST" data-turbo="false">
+                            <form action="{{ route('logout') }}" method="POST">
                                 @csrf
                                 <button type="submit" 
                                         class="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors cursor-pointer text-left">
@@ -667,6 +669,57 @@
         </div>
 
     </div>
+
+
+
+    <!-- Top Loading Indicator Bar (YouTube / GitHub style) -->
+    <div id="top-nav-loader" class="fixed top-0 left-0 right-0 h-[3px] z-[99999] bg-gradient-to-r from-sky-400 via-sky-500 to-indigo-600 opacity-0 pointer-events-none transition-all duration-300" style="width: 0%;"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const loader = document.getElementById('top-nav-loader');
+
+            document.querySelectorAll('aside nav a[href]').forEach(function (link) {
+                link.addEventListener('click', function (e) {
+                    if (this.href.startsWith('#') || this.target === '_blank' || e.ctrlKey || e.metaKey) return;
+                    
+                    // 1. Reset all links to inactive state
+                    document.querySelectorAll('aside nav a').forEach(function (el) {
+                        el.classList.remove('bg-[#0284C7]', 'text-white', 'shadow-md', 'shadow-sky-600/30', 'font-bold');
+                        el.classList.add('text-slate-300');
+                    });
+                    
+                    // 2. Set clicked link to active state
+                    this.classList.remove('text-slate-300', 'hover:bg-white/10', 'hover:bg-white/5');
+                    this.classList.add('bg-[#0284C7]', 'text-white', 'shadow-md', 'shadow-sky-600/30', 'font-bold');
+
+                    // 3. Coordinate parent accordion button styling
+                    const parentAccordion = this.closest('.sidebar-accordion');
+                    document.querySelectorAll('aside nav button').forEach(function (btn) {
+                        btn.classList.remove('text-white', 'bg-white/10');
+                        btn.classList.add('text-slate-300');
+                    });
+                    if (parentAccordion) {
+                        const parentBtn = parentAccordion.previousElementSibling;
+                        if (parentBtn && parentBtn.tagName === 'BUTTON') {
+                            parentBtn.classList.remove('text-slate-300');
+                            parentBtn.classList.add('text-white', 'bg-white/10');
+                        }
+                    }
+
+                    // 4. Animate sleek top progress bar instantly
+                    if (loader) {
+                        loader.style.width = '0%';
+                        loader.style.opacity = '1';
+                        loader.style.transition = 'width 500ms cubic-bezier(0.4, 0, 0.2, 1), opacity 200ms ease';
+                        requestAnimationFrame(function () {
+                            loader.style.width = '75%';
+                        });
+                    }
+                });
+            });
+        });
+    </script>
 
     @stack('scripts')
 </body>

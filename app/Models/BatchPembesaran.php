@@ -224,10 +224,67 @@ class BatchPembesaran extends Model
     }
 
     /**
+     * Analisis Inefisiensi Pakan Berjalan & Nominal Rupiah Terbuang.
+     * Deteksi otomatis jika FCR berjalan > fcr_max (dari Master Data Ikan).
+     */
+    public function getWastedFeedAnalysis(): array
+    {
+        $currentFcr = $this->calculateActualFcr();
+        $ikanRef = $this->ikan_ref;
+        $fcrMax = $ikanRef && (float)$ikanRef->fcr_max > 0 ? (float)$ikanRef->fcr_max : 1.30;
+        $totalPakan = $this->getTotalPakanKg();
+        $biomassaAwal = $this->getBiomassaAwalKg();
+        $biomassaSaatIni = (float)($this->biomassa_est > 0 ? $this->biomassa_est : 0);
+        $deltaBiomassa = max(0.1, $biomassaSaatIni - $biomassaAwal);
+
+        // Gunakan harga pre-fetched jika tersedia (menghindari query per batch)
+        $avgHargaPakan = 12000;
+        if (isset($this->_prefetched_avg_harga_pakan)) {
+            $avgHargaPakan = $this->_prefetched_avg_harga_pakan;
+        } else {
+            $peletPrice = StokPakan::where('nama_pakan', 'like', '%Pelet%')
+                ->where('satuan', 'kg')
+                ->where('harga_per_satuan', '>', 0)
+                ->avg('harga_per_satuan');
+            if ($peletPrice && $peletPrice > 0) {
+                $avgHargaPakan = round((float)$peletPrice);
+            }
+        }
+
+        $isInefficient = ($currentFcr > $fcrMax && $totalPakan > 0);
+        $wastedKg = 0.0;
+        $wastedRupiah = 0;
+        $excessFcr = 0.0;
+
+        if ($isInefficient) {
+            $excessFcr = round($currentFcr - $fcrMax, 2);
+            $maxAllowedPakan = round($deltaBiomassa * $fcrMax, 1);
+            $wastedKg = max(0.0, round($totalPakan - $maxAllowedPakan, 1));
+            $wastedRupiah = round($wastedKg * $avgHargaPakan);
+        }
+
+        return [
+            'is_inefficient'   => $isInefficient,
+            'fcr_current'      => $currentFcr,
+            'fcr_max'          => $fcrMax,
+            'excess_fcr'       => $excessFcr,
+            'wasted_pakan_kg'  => $wastedKg,
+            'wasted_rupiah'    => $wastedRupiah,
+            'wasted_format'    => 'Rp ' . number_format($wastedRupiah, 0, ',', '.'),
+            'avg_harga_pakan'  => $avgHargaPakan,
+        ];
+    }
+
+    /**
      * Ambil total akumulasi pakan yang diberikan ke kolam ini sejak tanggal tebar (kg).
      */
     public function getTotalPakanKg(): float
     {
+        // Gunakan data pre-fetched dari controller jika tersedia (menghindari query per batch)
+        if (isset($this->_prefetched_total_pakan)) {
+            return (float) $this->_prefetched_total_pakan;
+        }
+
         $queryPakan = ManajemenPakan::where('id_kolam', $this->id_kolam);
         if ($this->tgl_tebar) {
             $queryPakan->whereDate('tgl_log', '>=', $this->tgl_tebar);
@@ -346,14 +403,19 @@ class BatchPembesaran extends Model
             $totalPakanPerhitungan = $actualPakanKg;
         }
 
+        // Gunakan harga pre-fetched jika tersedia (menghindari query per batch)
         $avgHargaPakan = 12000;
-        $peletPrice = StokPakan::where('nama_pakan', 'like', '%Pelet%')
-            ->where('satuan', 'kg')
-            ->where('harga_per_satuan', '>', 0)
-            ->avg('harga_per_satuan');
+        if (isset($this->_prefetched_avg_harga_pakan)) {
+            $avgHargaPakan = $this->_prefetched_avg_harga_pakan;
+        } else {
+            $peletPrice = StokPakan::where('nama_pakan', 'like', '%Pelet%')
+                ->where('satuan', 'kg')
+                ->where('harga_per_satuan', '>', 0)
+                ->avg('harga_per_satuan');
 
-        if ($peletPrice && $peletPrice > 0) {
-            $avgHargaPakan = round((float) $peletPrice);
+            if ($peletPrice && $peletPrice > 0) {
+                $avgHargaPakan = round((float) $peletPrice);
+            }
         }
         $biayaPakan = round($totalPakanPerhitungan * $avgHargaPakan);
 
@@ -369,8 +431,11 @@ class BatchPembesaran extends Model
         }
 
         // 5. Biaya Operasional Kolam Tambahan dari Buku Kas
+        // Gunakan data pre-fetched jika tersedia (menghindari query per batch)
         $biayaOperasional = 0;
-        if ($this->id_kolam && $this->tgl_tebar) {
+        if (isset($this->_prefetched_biaya_operasional)) {
+            $biayaOperasional = $this->_prefetched_biaya_operasional;
+        } elseif ($this->id_kolam && $this->tgl_tebar) {
             $biayaOperasional = (float) Keuangan::where('id_kolam', $this->id_kolam)
                 ->where('tipe_transaksi', 'pengeluaran')
                 ->where('ref_id', 'not like', 'BELI-BIBIT%')

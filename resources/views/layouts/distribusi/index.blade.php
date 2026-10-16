@@ -6,13 +6,32 @@
 <div class="space-y-6" x-data="distribusiComponent()">
 
     <!-- Subtitle & Page Title Header -->
-    <div class="flex items-center gap-3">
-        <h1 class="text-xl font-extrabold text-[#0B2570] tracking-tight">Manajemen Distribusi</h1>
-        <span class="text-xs font-semibold text-slate-400">Logistik Utama</span>
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center gap-3">
+                <h1 class="text-xl font-extrabold text-[#0B2570] tracking-tight">Manajemen Distribusi</h1>
+                <span class="text-xs font-semibold text-slate-400">Logistik Utama</span>
+            </div>
+            <p class="text-xs text-slate-500 font-medium mt-0.5">Kelola alur order, surat jalan resmi, tahapan pemberokan &amp; grading ikan.</p>
+        </div>
+        <div class="flex items-center gap-2.5">
+            <a href="{{ route('distribusi.export-pdf') }}" target="_blank"
+               class="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-rose-700 border border-slate-200 font-bold text-xs shadow-xs transition-all flex items-center gap-2">
+                <i class="fa-solid fa-file-pdf text-rose-600 text-xs"></i>
+                <span>Ekspor Rekap (PDF)</span>
+            </a>
+            <button @click="openCreateForm()"
+                    class="px-5 py-2.5 rounded-xl bg-[#051B44] hover:bg-sky-950 text-white font-bold text-xs shadow-md shadow-sky-950/20 transition-all flex items-center gap-2">
+                <i class="fa-solid fa-cart-shopping text-xs"></i>
+                <span>Input Order Baru</span>
+            </button>
+        </div>
     </div>
 
     <!-- ========= INPUT FORM SECTION ========= -->
     <div x-show="showForm"
+         x-cloak
+         style="display: none;"
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0 -translate-y-2"
          x-transition:enter-end="opacity-100 translate-y-0"
@@ -302,6 +321,52 @@
                     </p>
                 </div>
 
+                <!-- Section 4: Workflow Pemberokan & Grading Standar Resto -->
+                <div class="space-y-4 pt-2 border-t border-slate-100">
+                    <div class="flex items-center gap-2.5 text-sm font-bold text-slate-900">
+                        <div class="w-8 h-8 rounded-xl bg-[#0B2570] text-white flex items-center justify-center">
+                            <i class="fa-solid fa-hourglass-half text-xs"></i>
+                        </div>
+                        <span>Workflow Pemberokan &amp; Grading (Standar Resto / Pasar)</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">GRADING SIZE / SORTIR IKAN</label>
+                            <select x-model="form.grading_size" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                                <option value="Size 4-6 (Jumbo Resto)">Size 4-6 ekor/kg (Jumbo Resto)</option>
+                                <option value="Size 6-8 (Warung / Pasar)">Size 6-8 ekor/kg (Warung / Pasar)</option>
+                                <option value="Size 8-10 (Supermarket)">Size 8-10 ekor/kg (Supermarket)</option>
+                                <option value="Size 10-12 (Baby Fish)">Size 10-12 ekor/kg (Baby Fish)</option>
+                                <option value="Grade Standar">Grade Standar Campur</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">DURASI TIMER PEMBEROKAN</label>
+                            <select x-model.number="form.durasi_pemberokan_jam" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                                <option value="12">12 Jam (Pemberokan Kilat Pasar)</option>
+                                <option value="18">18 Jam (SOP Resto &amp; Rumah Makan)</option>
+                                <option value="24">24 Jam (Pengiriman Luar Kota / Ekspor)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">NO SURAT JALAN</label>
+                            <div class="px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-mono font-bold text-sky-800 bg-sky-50/50 flex items-center justify-between">
+                                <span x-text="form.no_surat_jalan || 'SJ/{{ date('Y') }}/{{ date('m') }}/[AUTO]'"></span>
+                                <i class="fa-solid fa-file-invoice text-sky-600 text-xs"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">CATATAN SORTIR &amp; KONDISI IKAN</label>
+                        <input type="text" x-model="form.catatan_grading" placeholder="Contoh: Lendir bersih, bau lumpur hilang, estimasi susut bobot ~2.5%"
+                               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                    </div>
+                </div>
+
                 <!-- Form Actions -->
                 <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                     <button type="button" @click="showForm = false; formMode = 'create'"
@@ -450,7 +515,10 @@
             <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs flex flex-col justify-between space-y-4">
                 <div class="space-y-3">
                     <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold text-[#0055CC]" x-text="order.id"></span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-[#0055CC]" x-text="order.id"></span>
+                            <span class="text-[10px] font-mono font-bold text-sky-800 bg-sky-50 px-2 py-0.5 rounded border border-sky-200" x-text="order.no_surat_jalan || 'SJ-Auto'"></span>
+                        </div>
                         <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase" :class="statusClass(order.status)" x-text="statusLabel(order.status)"></span>
                     </div>
                     <div class="flex items-start justify-between gap-2">
@@ -458,8 +526,22 @@
                             <h4 class="font-extrabold text-slate-900 text-sm" x-text="order.customer"></h4>
                             <span class="text-[10px] text-slate-400 font-semibold" x-text="order.tipe_mitra"></span>
                         </div>
-                        <span class="px-2 py-0.5 rounded-lg bg-sky-50 text-sky-800 border border-sky-200 text-[10px] font-extrabold" x-text="order.jenis_ikan || 'Ikan Konsumsi'"></span>
+                        <div class="flex flex-col items-end gap-1">
+                            <span class="px-2 py-0.5 rounded-lg bg-sky-50 text-sky-800 border border-sky-200 text-[10px] font-extrabold" x-text="order.jenis_ikan || 'Ikan Konsumsi'"></span>
+                            <span class="px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-800 border border-indigo-200 text-[9px] font-bold" x-text="order.grading_size || 'Grade Standar'"></span>
+                        </div>
                     </div>
+
+                    <!-- Countdown Timer Pemberokan (Jika status pemberokian) -->
+                    <template x-if="order.status === 'pemberokian' || order.is_pemberokan_active">
+                        <div class="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-semibold flex items-center justify-between">
+                            <span class="flex items-center gap-1.5 font-bold">
+                                <i class="fa-solid fa-hourglass-half text-amber-600 animate-spin" style="animation-duration: 4s;"></i>
+                                <span>Timer Pemberokan:</span>
+                            </span>
+                            <span class="font-black text-amber-950 font-mono" x-text="getPemberokanCountdown(order)"></span>
+                        </div>
+                    </template>
 
                     <div class="bg-slate-50 border border-slate-100 p-3 rounded-xl space-y-2.5">
                         <div class="grid grid-cols-2 gap-2">
@@ -485,22 +567,37 @@
                     </div>
                 </div>
 
-                <div x-show="order.status !== 'selesai' && order.status !== 'dibatalkan'" class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
-                    <button type="button" @click="printLabel(order)" class="px-3 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors">
-                        <i class="fa-solid fa-print text-xs"></i>
-                        <span>Cetak Label</span>
-                    </button>
-                    <button type="button" @click="openEditForm(order)"
-                            class="bg-[#051B44] hover:bg-navy-900 text-white px-3 py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs">
-                        <span>Ubah Status</span>
-                    </button>
+                <div x-show="order.status !== 'selesai' && order.status !== 'dibatalkan'" class="space-y-2 pt-2 border-t border-slate-100">
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" @click="printLabel(order)" class="px-3 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors">
+                            <i class="fa-solid fa-print text-xs"></i>
+                            <span>Label</span>
+                        </button>
+                        <button type="button" @click="openEditForm(order)"
+                                class="bg-[#051B44] hover:bg-navy-900 text-white px-3 py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs">
+                            <span>Ubah Status</span>
+                        </button>
+                    </div>
+                    <!-- Tombol Cetak Surat Jalan PDF Resmi -->
+                    <a :href="'/distribusi/' + (order.id_transaksi || order.id) + '/surat-jalan-pdf'" target="_blank"
+                       class="w-full py-2 rounded-xl bg-sky-50 text-sky-800 hover:bg-sky-100 border border-sky-200 font-bold text-xs flex items-center justify-center gap-2 transition-colors">
+                        <i class="fa-solid fa-file-invoice text-sky-600 text-xs"></i>
+                        <span>Cetak Surat Jalan (PDF)</span>
+                    </a>
                 </div>
 
-                <div x-show="order.status === 'selesai'" class="pt-2 border-t border-slate-100">
-                    <button type="button" @click="openInvoice(order)" class="w-full py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 font-bold text-xs flex items-center justify-center gap-2 transition-colors">
-                        <i class="fa-regular fa-file-lines text-xs"></i>
-                        <span>Lihat Invoice</span>
-                    </button>
+                <div x-show="order.status === 'selesai'" class="space-y-2 pt-2 border-t border-slate-100">
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" @click="openInvoice(order)" class="py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 font-bold text-xs flex items-center justify-center gap-2 transition-colors">
+                            <i class="fa-regular fa-file-lines text-xs"></i>
+                            <span>Invoice</span>
+                        </button>
+                        <a :href="'/distribusi/' + (order.id_transaksi || order.id) + '/surat-jalan-pdf'" target="_blank"
+                           class="py-2 rounded-xl bg-sky-50 text-sky-800 hover:bg-sky-100 border border-sky-200 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors">
+                            <i class="fa-solid fa-file-invoice text-sky-600 text-xs"></i>
+                            <span>Surat Jalan</span>
+                        </a>
+                    </div>
                 </div>
 
                 <div x-show="order.status === 'dibatalkan'" class="pt-2 border-t border-slate-100 flex items-center justify-between">
@@ -690,6 +787,25 @@ function distribusiComponent() {
             }
         },
 
+        getPemberokanCountdown(order) {
+            if (!order) return '-';
+            if (order.status !== 'pemberokian' && !order.is_pemberokan_active) {
+                return (order.durasi_pemberokan_jam || 18) + ' Jam (Standar)';
+            }
+            if (!order.waktu_selesai_pemberokan) {
+                return (order.durasi_pemberokan_jam || 18) + ' Jam (Berjalan)';
+            }
+            const end = new Date(order.waktu_selesai_pemberokan).getTime();
+            const now = new Date().getTime();
+            const diff = end - now;
+            if (diff <= 0) {
+                return '✓ Selesai Pemberokan';
+            }
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            return `${hours}j ${mins}m tersisa`;
+        },
+
         form: {
             id: '#ORD-2023-0001',
             id_transaksi: null,
@@ -704,7 +820,11 @@ function distribusiComponent() {
             jenisOrder: 'reguler',
             status: 'pending',
             totalBerat: '',
-            totalHarga: ''
+            totalHarga: '',
+            grading_size: 'Size 6-8 (Warung / Pasar)',
+            durasi_pemberokan_jam: 18,
+            catatan_grading: '',
+            no_surat_jalan: ''
         },
 
         orders: {!! isset($orders) && count($orders) > 0 ? json_encode($orders) : json_encode([]) !!},
@@ -836,7 +956,11 @@ function distribusiComponent() {
                 status: 'pending',
                 initialStatus: 'pending',
                 totalBerat: '',
-                totalHarga: ''
+                totalHarga: '',
+                grading_size: 'Size 6-8 (Warung / Pasar)',
+                durasi_pemberokan_jam: 18,
+                catatan_grading: '',
+                no_surat_jalan: ''
             };
             this.jenisOrder = 'reguler';
         },
@@ -861,7 +985,11 @@ function distribusiComponent() {
                 status: order.status,
                 initialStatus: order.status,
                 totalBerat: String(order.total_kg !== undefined ? order.total_kg : (order.volume || '')).replace(/[^0-9.]/g, ''),
-                totalHarga: order.harga_format || ''
+                totalHarga: order.harga_format || '',
+                grading_size: order.grading_size || 'Size 6-8 (Warung / Pasar)',
+                durasi_pemberokan_jam: order.durasi_pemberokan_jam || 18,
+                catatan_grading: order.catatan_grading || '',
+                no_surat_jalan: order.no_surat_jalan || ''
             };
             this.jenisOrder = order.jenis_order || 'reguler';
         },
@@ -879,7 +1007,10 @@ function distribusiComponent() {
                 const editPayload = {
                     status_order: this.form.status,
                     Total_kg: totalKg,
-                    harga_total: hargaTotal
+                    harga_total: hargaTotal,
+                    grading_size: this.form.grading_size,
+                    durasi_pemberokan_jam: this.form.durasi_pemberokan_jam,
+                    catatan_grading: this.form.catatan_grading
                 };
 
                 if (this.panen_kuras && this.id_kolam_surplus) {
@@ -923,8 +1054,11 @@ function distribusiComponent() {
                     const target = this.orders.find(item => item.id === this.form.id || item.id_transaksi == rawId);
                     if (target) {
                         target.status = data.transaksi ? data.transaksi.status_order : this.form.status;
-                        if (data.transaksi && data.transaksi.Jenis_order) {
-                            target.jenis_ikan = data.transaksi.Jenis_order;
+                        if (data.transaksi) {
+                            if (data.transaksi.Jenis_order) target.jenis_ikan = data.transaksi.Jenis_order;
+                            if (data.transaksi.no_surat_jalan) target.no_surat_jalan = data.transaksi.no_surat_jalan;
+                            if (data.transaksi.grading_size) target.grading_size = data.transaksi.grading_size;
+                            if (data.transaksi.waktu_selesai_pemberokan) target.waktu_selesai_pemberokan = data.transaksi.waktu_selesai_pemberokan;
                         }
                     }
 
@@ -961,7 +1095,10 @@ function distribusiComponent() {
                     Total_kg: totalKg,
                     harga_total: hargaTotal,
                     Jenis_order: this.form.jenis_ikan || this.form.jenisOrder,
-                    status_order: this.form.status
+                    status_order: this.form.status,
+                    grading_size: this.form.grading_size,
+                    durasi_pemberokan_jam: this.form.durasi_pemberokan_jam,
+                    catatan_grading: this.form.catatan_grading
                 };
 
                 if (this.panen_kuras && this.id_kolam_surplus) {
@@ -1034,6 +1171,10 @@ function distribusiComponent() {
                             status: this.form.status,
                             alamat: this.form.alamat,
                             tanggal: newTrx.tanggal_order || new Date().toLocaleDateString('id-ID'),
+                            no_surat_jalan: newTrx.no_surat_jalan || 'SJ-Generated',
+                            grading_size: newTrx.grading_size || this.form.grading_size,
+                            durasi_pemberokan_jam: newTrx.durasi_pemberokan_jam || this.form.durasi_pemberokan_jam,
+                            waktu_selesai_pemberokan: newTrx.waktu_selesai_pemberokan,
                             label: true
                         });
                     } else {

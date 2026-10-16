@@ -59,10 +59,10 @@ class DashboardController extends Controller
             $targetPanen = BatchPembesaran::sum('target_panen_kg');
         }
 
-        // Total pakan dari database
-        $totalPakan = ManajemenPakan::sum('kg_pelet') + ManajemenPakan::sum('kg_daun');
-        $avgPhVal = ManajemenPakan::whereNotNull('ph_air')->where('ph_air', '>', 0)->avg('ph_air');
-        $avgPh = $avgPhVal ? round((float)$avgPhVal, 1) : 0.0;
+        // Total pakan dari database (1 query, bukan 2)
+        $pakanTotals = ManajemenPakan::selectRaw('SUM(kg_pelet) as total_pelet, SUM(kg_daun) as total_daun, AVG(CASE WHEN ph_air IS NOT NULL AND ph_air > 0 THEN ph_air END) as avg_ph')->first();
+        $totalPakan = (float) ($pakanTotals->total_pelet ?? 0) + (float) ($pakanTotals->total_daun ?? 0);
+        $avgPh = $pakanTotals->avg_ph ? round((float) $pakanTotals->avg_ph, 1) : 0.0;
 
         // Active batch count & trend label
         $activeBatchCount = $activeBatches->where('status_siklus', 'berjalan')->count();
@@ -177,50 +177,53 @@ class DashboardController extends Controller
         ];
 
         // 5. Data Profitabilitas & Laba-Rugi (Bulan Ini & Tahun Ini)
+        // OPTIMASI PERFORMA: 1 query agregasi menggantikan 30+ query terpisah
         $currentYear = Carbon::now()->year;
         $currentMonth = Carbon::now()->month;
         $currentMonthName = Carbon::now()->translatedFormat('F');
 
-        // A. Keuangan Bulan Ini
-        $incomeBulanIni = (float) Keuangan::whereYear('tanggal_transaksi', $currentYear)
-            ->whereMonth('tanggal_transaksi', $currentMonth)
-            ->whereIn('tipe_transaksi', ['pemasukan', 'income'])
-            ->sum('nominal');
+        // SINGLE QUERY: Ambil semua data keuangan tahun ini, di-group per bulan & tipe
+        $keuanganAggregated = Keuangan::whereYear('tanggal_transaksi', $currentYear)
+            ->selectRaw('MONTH(tanggal_transaksi) as bulan, tipe_transaksi, SUM(nominal) as total')
+            ->groupBy('bulan', 'tipe_transaksi')
+            ->get();
 
-        $expenseBulanIni = (float) Keuangan::whereYear('tanggal_transaksi', $currentYear)
-            ->whereMonth('tanggal_transaksi', $currentMonth)
-            ->whereIn('tipe_transaksi', ['pengeluaran', 'expense'])
-            ->sum('nominal');
+        // Build lookup per bulan dari hasil 1 query
+        $monthlyLookup = [];
+        foreach ($keuanganAggregated as $row) {
+            $m = (int) $row->bulan;
+            $tipe = $row->tipe_transaksi;
+            if (in_array($tipe, ['pemasukan', 'income'])) {
+                $monthlyLookup[$m]['in'] = ($monthlyLookup[$m]['in'] ?? 0) + (float) $row->total;
+            } elseif (in_array($tipe, ['pengeluaran', 'expense'])) {
+                $monthlyLookup[$m]['out'] = ($monthlyLookup[$m]['out'] ?? 0) + (float) $row->total;
+            }
+        }
 
+        // A. Keuangan Bulan Ini (dari lookup, bukan query baru)
+        $incomeBulanIni = $monthlyLookup[$currentMonth]['in'] ?? 0;
+        $expenseBulanIni = $monthlyLookup[$currentMonth]['out'] ?? 0;
         $labaBulanIni = $incomeBulanIni - $expenseBulanIni;
         $marginBulanIni = $incomeBulanIni > 0 ? round(($labaBulanIni / $incomeBulanIni) * 100, 1) : 0;
         $costRatioBulanIni = $incomeBulanIni > 0 ? round(($expenseBulanIni / $incomeBulanIni) * 100, 1) : 0;
 
-        // B. Keuangan Tahun Ini
-        $incomeTahunIni = (float) Keuangan::whereYear('tanggal_transaksi', $currentYear)
-            ->whereIn('tipe_transaksi', ['pemasukan', 'income'])
-            ->sum('nominal');
-
-        $expenseTahunIni = (float) Keuangan::whereYear('tanggal_transaksi', $currentYear)
-            ->whereIn('tipe_transaksi', ['pengeluaran', 'expense'])
-            ->sum('nominal');
-
+        // B. Keuangan Tahun Ini (dari lookup, bukan query baru)
+        $incomeTahunIni = 0;
+        $expenseTahunIni = 0;
+        foreach ($monthlyLookup as $mData) {
+            $incomeTahunIni += $mData['in'] ?? 0;
+            $expenseTahunIni += $mData['out'] ?? 0;
+        }
         $labaTahunIni = $incomeTahunIni - $expenseTahunIni;
         $marginTahunIni = $incomeTahunIni > 0 ? round(($labaTahunIni / $incomeTahunIni) * 100, 1) : 0;
         $costRatioTahunIni = $incomeTahunIni > 0 ? round(($expenseTahunIni / $incomeTahunIni) * 100, 1) : 0;
 
-        // C. Rekap 12 Bulan Sepanjang Tahun Ini (Untuk Trend / Sparkline Matriks Laba-Rugi)
+        // C. Rekap 12 Bulan Sepanjang Tahun Ini (dari lookup, bukan 24 query)
         $monthlyFinance = [];
         for ($m = 1; $m <= 12; $m++) {
             $mName = Carbon::createFromDate($currentYear, $m, 1)->translatedFormat('M');
-            $in = (float) Keuangan::whereYear('tanggal_transaksi', $currentYear)
-                ->whereMonth('tanggal_transaksi', $m)
-                ->whereIn('tipe_transaksi', ['pemasukan', 'income'])
-                ->sum('nominal');
-            $out = (float) Keuangan::whereYear('tanggal_transaksi', $currentYear)
-                ->whereMonth('tanggal_transaksi', $m)
-                ->whereIn('tipe_transaksi', ['pengeluaran', 'expense'])
-                ->sum('nominal');
+            $in = $monthlyLookup[$m]['in'] ?? 0;
+            $out = $monthlyLookup[$m]['out'] ?? 0;
             $profit = $in - $out;
             $monthlyFinance[] = [
                 'month_num'          => $m,
@@ -393,5 +396,14 @@ class DashboardController extends Controller
             'Pragma' => 'no-cache',
             'Expires' => '0'
         ]);
+    }
+
+    public function auditLogs(Request $request)
+    {
+        $logs = \App\Models\AuditLog::with('user')->latest('id_log')->paginate(30);
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json($logs);
+        }
+        return view('layouts.dashboard.audit_logs', compact('logs'));
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Manajer;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\Keuangan;
 use App\Models\ManajemenPakan;
 use App\Models\MitraDistributor;
@@ -338,6 +339,12 @@ class StokPakanController extends Controller
         $nama = $stok->nama_pakan;
         $stok->delete();
 
+        AuditLog::record(
+            'hapus_pakan',
+            'pakan',
+            "Menghapus master item pakan '{$nama}'"
+        );
+
         if (request()->wantsJson() || request()->ajax()) {
             return response()->json([
                 'success' => true,
@@ -416,6 +423,12 @@ class StokPakanController extends Controller
             'keterangan'        => "Pembelian {$jumlahBeli} {$stokItem->satuan} {$stokItem->nama_pakan} (" . ($mitra ? $mitra->nama_mitra : 'Supplier') . ")",
             'ref_id'            => 'BELI-PAKAN-' . $pembelian->id_pembelian,
         ]);
+
+        AuditLog::record(
+            'restock_pakan',
+            'pakan',
+            "Restock pakan {$stokItem->nama_pakan} sebanyak {$jumlahBeli} {$stokItem->satuan} (Rp " . number_format($totalBiaya, 0, ',', '.') . ") dari " . ($mitra ? $mitra->nama_mitra : 'Supplier')
+        );
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([

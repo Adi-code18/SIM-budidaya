@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Manajer;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\BatchPembibitan;
 use App\Models\BatchPembesaran;
 use App\Models\Kolam;
@@ -96,26 +97,27 @@ class PembibitanController extends Controller
         ];
 
         $batches = [];
-        $firstDefaultIkan = \App\Models\Ikan::first();
+        $allIkan = \App\Models\Ikan::all();
+        $firstDefaultIkan = $allIkan->first();
 
         foreach ($batchRecords as $b) {
             $days = $b->tgl_pemijahan ? (int) abs(Carbon::parse($b->tgl_pemijahan)->startOfDay()->diffInDays(now()->startOfDay())) : 0;
             
-            // Resolusi fleksibel data varietas ikan
+            // Resolusi fleksibel data varietas ikan dari memory (tanpa query per batch)
             $ikanObj = $b->ikan;
             if (!$ikanObj && $b->id_ikan) {
-                $ikanObj = \App\Models\Ikan::find($b->id_ikan);
+                $ikanObj = $allIkan->firstWhere('id_ikan', $b->id_ikan);
             }
             if (!$ikanObj && $b->jenis_ikan) {
                 $cleanName = trim(preg_replace('/^ikan\s+/i', '', $b->jenis_ikan));
-                $ikanObj = \App\Models\Ikan::where('nama_ikan', $b->jenis_ikan)
-                    ->orWhere('nama_ikan', 'like', "%{$cleanName}%")
-                    ->first();
+                $ikanObj = $allIkan->first(function ($ik) use ($b, $cleanName) {
+                    return $ik->nama_ikan === $b->jenis_ikan || stripos($ik->nama_ikan, $cleanName) !== false;
+                });
             }
             // Jika belum terhubung, cocokkan berdasarkan total durasi SOP tanggal pemijahan -> estimasi selesai
             if (!$ikanObj && $b->tgl_pemijahan && $b->est_prcs_pembibitaan) {
                 $batchTotalDays = (int) abs(Carbon::parse($b->tgl_pemijahan)->startOfDay()->diffInDays(Carbon::parse($b->est_prcs_pembibitaan)->startOfDay()));
-                $ikanObj = \App\Models\Ikan::all()->first(function($ik) use ($batchTotalDays) {
+                $ikanObj = $allIkan->first(function($ik) use ($batchTotalDays) {
                     return ($ik->durasi_penetasan + $ik->durasi_pembibitan) === $batchTotalDays;
                 });
             }
@@ -248,6 +250,12 @@ class PembibitanController extends Controller
                 'usia'                 => $days . ' Hari',
                 'usiaDays'             => $days,
                 'jumlahBibitAwal'      => $b->jumlah_bibitAwal,
+                'jumlah_telur'         => $b->jumlah_telur,
+                'jumlah_menetas'       => $b->jumlah_menetas,
+                'survival_rate'        => (float) ($b->survival_rate > 0 ? $b->survival_rate : $b->calculateSurvivalRate()),
+                'sr_format'            => number_format((float) ($b->survival_rate > 0 ? $b->survival_rate : $b->calculateSurvivalRate()), 1, '.', '') . '%',
+                'sr_status'            => ((float) ($b->survival_rate > 0 ? $b->survival_rate : $b->calculateSurvivalRate())) >= 75.0 ? 'Optimal (Sesuai SOP)' : 'Perlu Evaluasi (SR < 75%)',
+                'is_sr_optimal'        => ((float) ($b->survival_rate > 0 ? $b->survival_rate : $b->calculateSurvivalRate())) >= 75.0,
                 'jumlahKematian'       => $b->jumlah_kematian,
                 'jumlah'               => number_format($sisaEkor, 0, ',', '.'),
                 'jumlahRaw'            => $sisaEkor,
@@ -447,7 +455,9 @@ class PembibitanController extends Controller
             'jenis_ikan'            => 'nullable|string',
             'tgl_pemijahan'         => 'nullable|date',
             'fase_pertumbuhan'      => 'nullable|string',
-            'jumlah_bibitAwal'      => 'required|numeric|min:1',
+            'jumlah_bibitAwal'      => 'nullable|numeric|min:1',
+            'jumlah_telur'          => 'nullable|numeric|min:1',
+            'jumlah_menetas'        => 'nullable|numeric|min:0',
             'jumlah_kematian'       => 'nullable|numeric|min:0',
             'total_bobot_kg'        => 'nullable|numeric|min:0',
         ]);
@@ -489,13 +499,30 @@ class PembibitanController extends Controller
             }
         }
 
+        // Penanganan Input Telur, Menetas, dan Kalkulasi SR Otomatis
+        $jumlahTelur = $request->filled('jumlah_telur') ? (int)$request->jumlah_telur : null;
+        $jumlahMenetas = $request->filled('jumlah_menetas') ? (int)$request->jumlah_menetas : null;
+        $survivalRate = null;
+
+        if ($jumlahTelur && $jumlahTelur > 0) {
+            $menetasVal = $jumlahMenetas !== null ? $jumlahMenetas : $jumlahTelur;
+            $survivalRate = round(($menetasVal / $jumlahTelur) * 100, 1);
+            $jumlahBibitAwal = $menetasVal;
+            $jumlahKematian = max(0, $jumlahTelur - $menetasVal);
+        } else {
+            $jumlahBibitAwal = $request->jumlah_bibitAwal ?: 1000;
+            $jumlahKematian = ($fase === 'TELUR') ? 0 : ($request->jumlah_kematian ?? 0);
+            if ($jumlahMenetas && $jumlahMenetas > 0 && $jumlahBibitAwal > 0) {
+                $survivalRate = round(($jumlahMenetas / $jumlahBibitAwal) * 100, 1);
+            }
+        }
+
         $rawBobot = $request->total_bobot_kg;
         if (!$rawBobot || $rawBobot <= 0) {
-            $sisa = max(0, $request->jumlah_bibitAwal - ($request->jumlah_kematian ?? 0));
+            $sisa = max(0, $jumlahBibitAwal - $jumlahKematian);
             $rawBobot = $fase === 'TELUR' ? ($sisa * 0.0001) : ($fase === 'LARVA' ? ($sisa * 0.0008) : ($sisa * 0.02));
         }
 
-        $jumlahKematian = ($fase === 'TELUR') ? 0 : ($request->jumlah_kematian ?? 0);
         $estPrcs = $request->est_prcs_pembibitaan ?: Carbon::parse($tglPemijahan)->addDays($sopDays)->toDateString();
 
         $statusReq = strtolower($request->status ?? 'aktif');
@@ -516,12 +543,22 @@ class PembibitanController extends Controller
             'jenis_ikan'           => $jenisIkan,
             'tgl_pemijahan'        => $tglPemijahan,
             'est_prcs_pembibitaan' => $estPrcs,
-            'jumlah_bibitAwal'     => $request->jumlah_bibitAwal,
+            'jumlah_bibitAwal'     => $jumlahBibitAwal,
+            'jumlah_telur'         => $jumlahTelur,
+            'jumlah_menetas'       => $jumlahMenetas,
+            'survival_rate'        => $survivalRate,
             'jumlah_kematian'      => $jumlahKematian,
             'total_bobot_kg'       => round($rawBobot, 2),
             'fase_pertumbuhan'     => $fase,
             'status'               => $statusReq,
         ]);
+
+        // Audit Log Aktivitas
+        AuditLog::record(
+            'tambah_batch',
+            'pembibitan',
+            "Membuat batch pembibitan baru #BT-" . str_pad($batch->id_batch, 5, '0', STR_PAD_LEFT) . " ({$batch->jenis_ikan}, " . number_format($batch->jumlah_bibitAwal, 0, ',', '.') . " ekor, SR: " . ($survivalRate ? $survivalRate . '%' : 'N/A') . ")"
+        );
 
         if ($request->wantsJson() || $request->ajax()) {
             $batch->load(['ikan', 'kolam']);
@@ -555,6 +592,8 @@ class PembibitanController extends Controller
             'est_prcs_pembibitaan'  => 'nullable|date',
             'fase_pertumbuhan'      => 'nullable|string',
             'jumlah_bibitAwal'      => 'nullable|numeric',
+            'jumlah_telur'          => 'nullable|numeric',
+            'jumlah_menetas'        => 'nullable|numeric',
             'jumlah_kematian'       => 'nullable|numeric',
             'total_bobot_kg'        => 'nullable|numeric',
             'status'                => 'nullable|string',
@@ -615,7 +654,22 @@ class PembibitanController extends Controller
             $batch->fase_pertumbuhan = $days <= $penetasan ? 'TELUR' : ($days <= $larvaEndDay ? 'LARVA' : 'FINGERLING');
         }
 
-        if ($request->has('jumlah_bibitAwal')) {
+        if ($request->has('jumlah_telur')) {
+            $batch->jumlah_telur = $request->jumlah_telur;
+        }
+        if ($request->has('jumlah_menetas')) {
+            $batch->jumlah_menetas = $request->jumlah_menetas;
+        }
+
+        // Auto-recalculate SR if telur / menetas updated
+        if ($batch->jumlah_telur > 0) {
+            $menetasVal = $batch->jumlah_menetas !== null ? (int)$batch->jumlah_menetas : (int)$batch->jumlah_bibitAwal;
+            $batch->survival_rate = round(($menetasVal / (int)$batch->jumlah_telur) * 100, 1);
+            if ($request->has('jumlah_menetas')) {
+                $batch->jumlah_bibitAwal = $menetasVal;
+                $batch->jumlah_kematian = max(0, (int)$batch->jumlah_telur - $menetasVal);
+            }
+        } elseif ($request->has('jumlah_bibitAwal')) {
             $batch->jumlah_bibitAwal = $request->jumlah_bibitAwal;
         }
 
@@ -632,6 +686,11 @@ class PembibitanController extends Controller
         if ($request->filled('status')) {
             $statusVal = strtolower($request->status);
             if ($statusVal === 'gagal') {
+                AuditLog::record(
+                    'gagal_batch',
+                    'pembibitan',
+                    "Batch pembibitan #BT-" . str_pad($cleanId, 5, '0', STR_PAD_LEFT) . " dinyatakan GAGAL dan dihapus."
+                );
                 $batch->delete();
                 if ($request->wantsJson() || $request->ajax()) {
                     return response()->json([
@@ -655,6 +714,12 @@ class PembibitanController extends Controller
         $batch->save();
         $batch->load(['ikan', 'kolam']);
 
+        AuditLog::record(
+            'edit_batch',
+            'pembibitan',
+            "Memperbarui batch pembibitan #BT-" . str_pad($cleanId, 5, '0', STR_PAD_LEFT) . " ({$batch->jenis_ikan})"
+        );
+
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
@@ -677,6 +742,13 @@ class PembibitanController extends Controller
             }
             return redirect()->route('pembibitan')->with('error', 'Data batch tidak ditemukan.');
         }
+
+        $jenisIkan = $batch->jenis_ikan ?? 'Ikan';
+        AuditLog::record(
+            'hapus_batch',
+            'pembibitan',
+            "Menghapus batch pembibitan #BT-" . str_pad($cleanId, 5, '0', STR_PAD_LEFT) . " ({$jenisIkan})"
+        );
 
         $batch->delete();
 

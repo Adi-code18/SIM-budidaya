@@ -626,6 +626,17 @@
                                 </div>
                             </div>
 
+                            <!-- Alert Inefisiensi Pakan (Jika Ada Feed Waste) -->
+                            <template x-if="item.wasted_analysis && item.wasted_analysis.is_feed_waste">
+                                <div class="mt-2.5 p-2 bg-rose-50 border border-rose-200/90 rounded-xl text-[10px] text-rose-800 flex items-center justify-between">
+                                    <div class="flex items-center gap-1.5 font-bold">
+                                        <i class="fa-solid fa-triangle-exclamation text-rose-600"></i>
+                                        <span>Inefisiensi Pakan: <span class="font-extrabold text-rose-950" x-text="item.wasted_analysis.wasted_kg + ' kg'"></span></span>
+                                    </div>
+                                    <span class="font-black text-rose-900 bg-rose-100 px-1.5 py-0.5 rounded text-[9px]" x-text="'~' + item.wasted_analysis.wasted_rupiah_format"></span>
+                                </div>
+                            </template>
+
                             <div class="mt-3">
                                 <div class="flex items-center justify-between text-xs font-semibold">
                                     <span class="text-[10px] text-slate-500 font-bold" x-text="'Target Panen: ' + item.target_format + ' kg'"></span>
@@ -689,6 +700,12 @@
                                             <i class="fa-solid fa-eye text-sky-600 w-4"></i>
                                             <span>Detail Batch</span>
                                         </button>
+
+                                        <!-- Cetak Kartu Kontrol PDF -->
+                                        <a :href="'/pembesaran/' + item.id_pembesaran + '/kartu-kontrol-pdf'" target="_blank" class="w-full px-3.5 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50 flex items-center gap-2.5">
+                                            <i class="fa-solid fa-file-pdf text-rose-600 w-4"></i>
+                                            <span>Kartu Kontrol PDF</span>
+                                        </a>
 
                                         <!-- Edit Batch (Hanya aktif jika belum selesai) -->
                                         <template x-if="item.status_siklus !== 'selesai'">
@@ -868,14 +885,14 @@
                         <div class="p-2.5 bg-white/10 rounded-xl border border-white/5 space-y-1">
                             <span class="text-[9px] uppercase tracking-wider text-sky-300 font-extrabold block">1. FCR KUMULATIF</span>
                             <span class="text-base font-extrabold text-white block" x-text="selectedBatch?.fcr_kumulatif || '-'"></span>
-                            <span class="text-[9px] text-slate-300 block leading-tight">Akumulasi pakan s.d. hari ini / pertambahan biomassa</span>
+                            <span class="text-[9px] text-slate-300 block leading-tight">Akumulasi pakan / biomassa berjalan</span>
                         </div>
 
                         <!-- FCR Komersial -->
                         <div class="p-2.5 bg-white/10 rounded-xl border border-white/5 space-y-1">
                             <span class="text-[9px] uppercase tracking-wider text-emerald-300 font-extrabold block">2. FCR KOMERSIAL</span>
                             <span class="text-base font-extrabold text-white block" x-text="selectedBatch?.fcr_komersial || '-'"></span>
-                            <span class="text-[9px] text-slate-300 block leading-tight">Saat panen: Total Pakan / Net Panen</span>
+                            <span class="text-[9px] text-slate-300 block leading-tight">Total Pakan / Net Terjual Riil</span>
                         </div>
 
                         <!-- FCR Biologis -->
@@ -885,13 +902,37 @@
                             <span class="text-[9px] text-slate-300 block leading-tight">Memperhitungkan bobot ikan mortalitas</span>
                         </div>
 
-                        <!-- Target Ideal Spesies -->
+                        <!-- FCR Periodik & Target SOP -->
                         <div class="p-2.5 bg-white/10 rounded-xl border border-white/5 space-y-1">
-                            <span class="text-[9px] uppercase tracking-wider text-amber-300 font-extrabold block">4. STANDAR SOP</span>
-                            <span class="text-base font-extrabold text-white block" x-text="selectedBatch?.fcr_target || '-'"></span>
-                            <span class="text-[9px] text-slate-300 block leading-tight">Standar FCR ideal master data ikan</span>
+                            <div class="flex items-center justify-between">
+                                <span class="text-[9px] uppercase tracking-wider text-amber-300 font-extrabold block">4. FCR PERIODIK</span>
+                                <span class="text-[8px] bg-amber-400/20 text-amber-300 px-1 rounded" x-text="'SOP ' + (selectedBatch?.fcr_target || '-')"></span>
+                            </div>
+                            <span class="text-base font-extrabold text-white block" x-text="selectedBatch?.fcr_periodik || selectedBatch?.fcr_kumulatif || '-'"></span>
+                            <span class="text-[9px] text-slate-300 block leading-tight">Sampling interval pakan per minggu</span>
                         </div>
                     </div>
+
+                    <!-- Alert Audit Pakan Terbuang & Uncounted Mortality -->
+                    <template x-if="(selectedBatch?.wasted_analysis && selectedBatch?.wasted_analysis.is_feed_waste) || (selectedBatch?.mati_tak_terdeteksi > 0)">
+                        <div class="p-3 bg-white/10 rounded-xl border border-rose-400/30 space-y-2">
+                            <template x-if="selectedBatch?.wasted_analysis && selectedBatch?.wasted_analysis.is_feed_waste">
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="text-rose-300 font-bold flex items-center gap-1.5">
+                                        <i class="fa-solid fa-triangle-exclamation text-rose-400"></i>
+                                        <span>Inefisiensi Pakan (Feed Waste): <strong class="text-white" x-text="selectedBatch?.wasted_analysis.wasted_kg + ' kg'"></strong></span>
+                                    </span>
+                                    <span class="text-rose-200 font-extrabold" x-text="'Potensi Kerugian: ~' + selectedBatch?.wasted_analysis.wasted_rupiah_format"></span>
+                                </div>
+                            </template>
+                            <template x-if="selectedBatch?.mati_tak_terdeteksi > 0">
+                                <div class="text-[11px] text-amber-200 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-skull-crossbones text-amber-400"></i>
+                                    <span>Uncounted Mortality: <strong class="text-white" x-text="selectedBatch?.mati_tak_terdeteksi + ' ekor'"></strong> ikan hilang / kanibal / tidak tercatat saat sampling.</span>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
 
                     <!-- Progress Capaian Target -->
                     <div class="pt-1 border-t border-white/10">
@@ -1069,6 +1110,14 @@
                         </button>
                     </div>
                 </template>
+                <!-- Cetak Kartu Kontrol PDF -->
+                <a :href="'/pembesaran/' + selectedBatch?.id_pembesaran + '/kartu-kontrol-pdf'" 
+                   target="_blank" 
+                   class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-colors">
+                    <i class="fa-solid fa-file-pdf text-xs"></i>
+                    <span>Cetak Kartu Kontrol PDF</span>
+                </a>
+
                 <button type="button" @click="detailModalOpen = false" class="px-5 py-2 rounded-xl bg-[#031B4E] text-white font-bold hover:bg-navy-900 text-xs shadow-md shadow-sky-950/20 transition-all">
                     Tutup
                 </button>

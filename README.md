@@ -137,38 +137,38 @@ Menggunakan metode kombinasi antara pelet komersial berprotein tinggi dengan pak
 ### 🔥 Fitur Roadmap / Yang Harus "Digas" (To-Do List)
 
 1. **📊 Engine Validasi Kalkulasi FCR Presisi & Analisis Kerugian Multi-Metode (Prioritas Utama)**
-   - [ ] **Kalkulasi 4 Jenis FCR Terpadu di UI Dashboard & Detail Kolam**:
+   - [x] **Kalkulasi 4 Jenis FCR Terpadu di UI Dashboard & Detail Kolam**:
      - **FCR Komersial (Saat Panen):** $\frac{\text{Total Pakan (kg)}}{\text{Biomassa Panen (kg)} - \text{Biomassa Awal (kg)}}$.
      - **FCR Biologis (Panen + Mortalitas):** $\frac{\text{Total Pakan (kg)}}{(\text{Biomassa Panen} + \text{Bobot Ikan Mati}) - \text{Biomassa Awal}}$.
      - **FCR Periodik / Sampling:** $\frac{\text{Pakan Periode Ini (kg)}}{\text{Biomassa Akhir Periode} - \text{Biomassa Awal Periode}}$.
      - **FCR Kumulatif (Running FCR Harian):** $\frac{\text{Akumulasi Pakan s.d. Hari-N}}{\text{Estimasi Biomassa Hari-N} - \text{Biomassa Awal}}$.
-   - [ ] **Indikator & Warning Inefisiensi Pakan Berjalan (Biaya Boros)**:
+   - [x] **Indikator & Warning Inefisiensi Pakan Berjalan (Biaya Boros)**:
      - Deteksi otomatis jika FCR berjalan > `fcr_max` (dari Master Data Ikan).
      - Menampilkan estimasi nominal rupiah pakan yang terbuang secara *real-time*.
-   - [ ] **Kalkulasi Kerugian Panen & Ikan Mati Tak Terdeteksi (*Uncounted Mortality*)**:
+   - [x] **Kalkulasi Kerugian Panen & Ikan Mati Tak Terdeteksi (*Uncounted Mortality*)**:
      - Menghitung  $$\text{Ekor Hilang} = \text{Jumlah Tebar Ekor} - \text{Jumlah Panen Ekor}$$
      - Menghitung  $\text{Laba/Rugi Bersih}$ = $\text{Omset Penjualan} - (\text{Biaya Bibit} + \text{Total Biaya Pakan} + \text{Biaya Operasional})$ .
-   - [ ] **Kalkulator Audit & Simulasi FCR Interaktif (Uji Silang Mandiri)**:
+   - [x] **Kalkulator Audit & Simulasi FCR Interaktif (Uji Silang Mandiri)**:
      - Widget interaktif di dashboard agar Manajer/User dapat memasukkan parameter pakan, bobot tebar, dan panen secara manual untuk memverifikasi keakuratan rumus secara langsung tanpa ada kalkulasi yang meleset (*zero miss*).
 
 2. **⏱️ Workflow Pemberokan & Grading (Panen & Distribusi)**
-   - [ ] Implementasi **Timer Pemberokan** otomatis (12–24 jam) khusus order bertipe `Rumah Makan`.
-   - [ ] Form input **Grading & Sortir Ikan** (pencatatan kelas ukuran / ekor per kg).
-   - [ ] Status transisi: `Diproses ➔ Pemberokan ➔ Grading ➔ Packing ➔ Siap Kirim`.
+   - [x] Implementasi **Timer Pemberokan** otomatis (12–24 jam) khusus order bertipe `Rumah Makan` / mitra resto.
+   - [x] Form input **Grading & Sortir Ikan** (pencatatan kelas ukuran / ekor per kg).
+   - [x] Status transisi: `Diproses ➔ Pemberokan ➔ Grading ➔ Packing ➔ Siap Kirim`.
 
 3. **📄 Dokumen & Cetak PDF Surat Jalan**
-   - [ ] Generator otomatis Nomor Surat Jalan resmi (`SJ/2026/10/001`).
-   - [ ] Tombol cetak / export Surat Jalan dalam format **PDF** untuk kurir/petugas logistik.
+   - [x] Generator otomatis Nomor Surat Jalan resmi (`SJ/2026/10/001`).
+   - [x] Tombol cetak / export Surat Jalan dalam format **PDF** untuk kurir/petugas logistik via DomPDF.
 
 4. **🧬 Perhitungan Survival Rate (SR) Pembibitan Otomatis**
-   - [ ] Field input `jumlah_telur` dan `jumlah_menetas` pada form batch pembibitan.
-   - [ ] Auto-kalkulasi rumus $SR = (\text{Jumlah Menetas} / \text{Total Telur}) \times 100\%$.
+   - [x] Field input `jumlah_telur` dan `jumlah_menetas` pada form batch pembibitan.
+   - [x] Auto-kalkulasi rumus $SR = (\text{Jumlah Menetas} / \text{Total Telur}) \times 100\%$.
 
 5. **📑 Ekspor Laporan Komprehensif (PDF & Excel)**
-   - [ ] Ekspor Laporan Keuangan Bulanan, Kartu Kontrol Kolam, & Rekap Distribusi ke format PDF (DomPDF).
+   - [x] Ekspor Laporan Keuangan Bulanan, Kartu Kontrol Kolam, & Rekap Distribusi ke format PDF (DomPDF).
 
 6. **🛡️ Audit Log Aktivitas Sistem**
-   - [ ] Pencatatan log aktivitas krusial pengguna (hapus batch, restock pakan, void transaksi) ke tabel `audit_logs`.
+   - [x] Pencatatan log aktivitas krusial pengguna (hapus batch, restock pakan, void transaksi) ke tabel `audit_logs` & antarmuka riwayat audit log.
 
 ---
 

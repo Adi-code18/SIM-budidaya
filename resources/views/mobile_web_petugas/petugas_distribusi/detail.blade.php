@@ -126,6 +126,25 @@
         </div>
     </div>
 
+    <!-- Official Surat Jalan PDF Access Card -->
+    <div class="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center text-lg border border-sky-100 shrink-0">
+                <i class="fa-solid fa-file-invoice"></i>
+            </div>
+            <div>
+                <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">SURAT JALAN RESMI</span>
+                <h4 class="text-xs font-extrabold text-navy-900">{{ $transaksi->getOrGenerateSuratJalan() }}</h4>
+                <p class="text-[10px] text-slate-500 font-medium">Dokumen digital otomatis dari sistem</p>
+            </div>
+        </div>
+        <a href="{{ route('distribusi.surat-jalan.pdf', ['id' => $transaksi->id_transaksi]) }}" target="_blank"
+           class="px-3 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm active:scale-95 transition-all">
+            <i class="fa-solid fa-file-pdf text-xs"></i>
+            <span>Buka PDF</span>
+        </a>
+    </div>
+
     @php
         $mitra = $transaksi->mitra;
         $mitraNama = $mitra ? $mitra->nama_mitra : 'Mitra Distribusi';

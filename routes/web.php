@@ -64,6 +64,11 @@ Route::get('/2fa/cancel', [TwoFactorController::class, 'cancel'])->name('2fa.can
 
 Route::middleware(['auth'])->group(function () {
     Route::post('/2fa/disable', [TwoFactorController::class, 'disable'])->name('2fa.disable');
+
+    // Akses Dokumen Surat Jalan PDF Resmi (dapat diakses oleh Manajer maupun Petugas Pengiriman)
+    Route::get('/distribusi/surat-jalan/{id}/pdf', [\App\Http\Controllers\Manajer\DistribusiController::class, 'cetakSuratJalanPdf'])->name('distribusi.surat-jalan.pdf');
+    Route::get('/distribusi/{id}/surat-jalan-pdf', [\App\Http\Controllers\Manajer\DistribusiController::class, 'cetakSuratJalanPdf'])->name('distribusi.surat-jalan.direct');
+    Route::get('/distribusi/{id}/surat-jalan', [\App\Http\Controllers\Manajer\DistribusiController::class, 'cetakSuratJalanPdf']);
 });
 
 // =========================================================================
@@ -93,6 +98,7 @@ Route::middleware(['auth', 'role:manajer'])->group(function () {
     Route::post('/pembesaran/kolam', [PembesaranController::class, 'storeKolam'])->name('pembesaran.kolam.store');
     Route::put('/pembesaran/{id}', [PembesaranController::class, 'update'])->name('pembesaran.update');
     Route::delete('/pembesaran/{id}', [PembesaranController::class, 'destroy'])->name('pembesaran.destroy');
+    Route::get('/pembesaran/{id}/kartu-kontrol-pdf', [PembesaranController::class, 'exportKartuKontrolPdf'])->name('pembesaran.kartu-kontrol.pdf');
 
     // Monitoring Kolam & Pembudidaya
     Route::get('/pembudidaya', [PembudidayaController::class, 'index'])->name('pembudidaya');
@@ -118,14 +124,20 @@ Route::middleware(['auth', 'role:manajer'])->group(function () {
     Route::get('/distribusi', [DistribusiController::class, 'index'])->name('distribusi');
     Route::post('/distribusi', [DistribusiController::class, 'store'])->name('distribusi.store');
     Route::put('/distribusi/{id}', [DistribusiController::class, 'update'])->name('distribusi.update');
+    Route::delete('/distribusi/{id}', [DistribusiController::class, 'destroy'])->name('distribusi.destroy');
+    Route::get('/distribusi/export-pdf', [DistribusiController::class, 'exportRekapPdf'])->name('distribusi.export-pdf');
 
     // Rekap & Laporan Keuangan
     Route::get('/keuangan', [KeuanganWebController::class, 'index'])->name('keuangan');
     Route::get('/keuangan/transaksi', [KeuanganWebController::class, 'transaksi'])->name('keuangan.transaksi');
+    Route::get('/keuangan/export-pdf', [KeuanganWebController::class, 'exportPdf'])->name('keuangan.export-pdf');
     Route::post('/keuangan', [KeuanganWebController::class, 'store'])->name('keuangan.store');
     Route::post('/keuangan/transaksi', [KeuanganWebController::class, 'store']);
     Route::put('/keuangan/{id}', [KeuanganWebController::class, 'update'])->name('keuangan.update');
     Route::delete('/keuangan/{id}', [KeuanganWebController::class, 'destroy'])->name('keuangan.destroy');
+
+    // Audit Log Aktivitas Sistem
+    Route::get('/audit-logs', [DashboardController::class, 'auditLogs'])->name('dashboard.audit-logs');
 
     // Manajemen Mitra Distributor
     Route::get('/mitra', [MitraController::class, 'index'])->name('mitra');

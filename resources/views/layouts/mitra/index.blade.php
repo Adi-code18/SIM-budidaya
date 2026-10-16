@@ -48,6 +48,8 @@
 
     <!-- 2. Form Section: Input / Edit / View Mitra (Ditampilkan saat showForm = true) -->
     <div x-show="showForm" 
+         x-cloak
+         style="display: none;"
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0 -translate-y-2"
          x-transition:enter-end="opacity-100 translate-y-0"
@@ -1181,7 +1183,12 @@
 </div>
 @endsection
 
+@push('styles')
+<link rel="stylesheet" href="{{ asset('leaflet/leaflet.css') }}" />
+@endpush
+
 @push('scripts')
+<script src="{{ asset('leaflet/leaflet.js') }}"></script>
 <script>
     /**
      * =========================================================================

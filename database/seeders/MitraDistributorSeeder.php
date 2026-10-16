@@ -5,16 +5,23 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\MitraDistributor;
 use App\Models\User;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 class MitraDistributorSeeder extends Seeder
 {
     public function run(): void
     {
-        $manajer = User::where('role', 'manajer')->first() ?? User::first();
-        $userId = $manajer->id_user;
+        Schema::disableForeignKeyConstraints();
+        DB::table('mitra_distributor')->truncate();
+        Schema::enableForeignKeyConstraints();
 
+        $manajer = User::where('role', 'manajer')->first() ?? User::first();
+        $userId = $manajer ? $manajer->id_user : 1;
+
+        // 1 Kondisi 1 Contoh untuk setiap tipe mitra (Supplier & Client)
         $mitraList = [
-            // SUPPLIER
+            // 1. Kondisi Tipe: Supplier Pakan
             [
                 'id_user'    => $userId,
                 'nama_mitra' => 'CV Sentosa Pakan Mandiri',
@@ -23,6 +30,7 @@ class MitraDistributorSeeder extends Seeder
                 'latitude'   => -7.32550000,
                 'longitude'  => 108.24120000,
             ],
+            // 2. Kondisi Tipe: Supplier Bibit
             [
                 'id_user'    => $userId,
                 'nama_mitra' => 'Balai Pembenihan Unggul Mina Raya',
@@ -31,15 +39,7 @@ class MitraDistributorSeeder extends Seeder
                 'latitude'   => -7.35120000,
                 'longitude'  => 108.15230000,
             ],
-            // CLIENT / DISTRIBUTOR
-            [
-                'id_user'    => $userId,
-                'nama_mitra' => 'RM Lesehan Gurame Saung Sunda',
-                'tipe_mitra' => 'Rumah Makan',
-                'alamat'     => 'Jl. Letnan Harun No. 24, Sukarindi, Kota Tasikmalaya, Jawa Barat',
-                'latitude'   => -7.30890000,
-                'longitude'  => 108.21850000,
-            ],
+            // 3. Kondisi Tipe: Buyer Restoran
             [
                 'id_user'    => $userId,
                 'nama_mitra' => 'Resto Seafood & Grill Tasik',
@@ -48,6 +48,7 @@ class MitraDistributorSeeder extends Seeder
                 'latitude'   => -7.31938300,
                 'longitude'  => 108.21510000,
             ],
+            // 4. Kondisi Tipe: Buyer Pasar Tradisional
             [
                 'id_user'    => $userId,
                 'nama_mitra' => 'Pasar Induk Cikurubuk Grosir Ikan',
@@ -56,6 +57,7 @@ class MitraDistributorSeeder extends Seeder
                 'latitude'   => -7.33820000,
                 'longitude'  => 108.20540000,
             ],
+            // 5. Kondisi Tipe: Buyer Eksportir
             [
                 'id_user'    => $userId,
                 'nama_mitra' => 'PT Nusantara Aqua Global Export',
@@ -67,10 +69,7 @@ class MitraDistributorSeeder extends Seeder
         ];
 
         foreach ($mitraList as $mitra) {
-            MitraDistributor::updateOrCreate(
-                ['nama_mitra' => $mitra['nama_mitra']],
-                $mitra
-            );
+            MitraDistributor::create($mitra);
         }
     }
 }

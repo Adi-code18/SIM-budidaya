@@ -17,11 +17,7 @@ class PetugasController extends Controller
 {
     public function index()
     {
-        $users = User::where('role', '!=', 'manajer')->get()->map(function ($u) {
-            $u->secret_key = $u->two_factor_secret_decrypted;
-            $u->qr_code_svg = $u->two_factor_qr_code_svg;
-            return $u;
-        });
+        $users = User::where('role', '!=', 'manajer')->latest('id_user')->get();
 
         return view('layouts.petugas.index', compact('users'));
     }

@@ -38,6 +38,20 @@
             <p class="text-xs text-slate-500 font-medium mt-0.5">Operasional budidaya & ringkasan analitik terkini.</p>
         </div>
         <div class="flex items-center gap-3 flex-wrap">
+            <!-- FCR Simulator Quick Button -->
+            <button type="button" 
+                    @click="fcrModalOpen = true"
+                    class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg border border-sky-300 bg-sky-50 text-xs font-bold text-[#0055CC] shadow-xs hover:bg-sky-100 hover:border-sky-400 transition-all cursor-pointer">
+                <i class="fa-solid fa-calculator text-[#0077C6]"></i>
+                <span>Simulator FCR (SOP)</span>
+            </button>
+
+            <!-- Audit Log Navigation Button -->
+            <a href="{{ route('dashboard.audit-logs') }}"
+               class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 shadow-xs hover:bg-slate-50 hover:border-slate-400 transition-all cursor-pointer">
+                <i class="fa-solid fa-clock-rotate-left text-slate-500"></i>
+                <span>Audit Log Sistem</span>
+            </a>
             
             <!-- Date / Period Calendar Filter Popover -->
             <div class="relative" @click.outside="datePickerOpen = false">
@@ -240,11 +254,15 @@
         </div>
 
         <!-- Card 2: FCR Rata-rata -->
-        <div class="bg-[#DDF2FF] p-5 rounded-2xl border border-[#BEE3F8] shadow-xs flex flex-col justify-between hover:shadow-md transition-all">
+        <div @click="fcrModalOpen = true" 
+             class="bg-[#DDF2FF] p-5 rounded-2xl border border-[#BEE3F8] shadow-xs flex flex-col justify-between hover:shadow-md hover:border-sky-400 transition-all cursor-pointer group relative">
+            <span class="absolute top-3 right-3 text-[10px] font-bold text-[#006699] opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 px-2 py-0.5 rounded-full border border-sky-200">
+                <i class="fa-solid fa-calculator mr-1"></i>Simulasikan
+            </span>
             <div>
                 <div class="flex items-center justify-between">
                     <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-600">FCR RATA-RATA</span>
-                    <div class="w-9 h-9 rounded-xl bg-[#BEE3F8]/60 text-[#006699] flex items-center justify-center shadow-xs">
+                    <div class="w-9 h-9 rounded-xl bg-[#BEE3F8]/60 text-[#006699] flex items-center justify-center shadow-xs group-hover:bg-[#051B44] group-hover:text-white transition-colors">
                         <i class="fa-solid fa-chart-line text-base"></i>
                     </div>
                 </div>
@@ -252,9 +270,12 @@
                     <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight" x-text="metrics.fcr">1.12</h3>
                 </div>
             </div>
-            <div class="mt-4 flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
-                <i class="fa-regular fa-circle-check"></i>
-                <span x-text="metrics.fcrStatus">Efisiensi Pakan Optimal</span>
+            <div class="mt-4 flex items-center justify-between text-xs font-semibold text-emerald-600">
+                <div class="flex items-center gap-1.5">
+                    <i class="fa-regular fa-circle-check"></i>
+                    <span x-text="metrics.fcrStatus">Efisiensi Pakan Optimal</span>
+                </div>
+                <span class="text-[11px] text-[#0077C6] group-hover:underline font-bold">Audit SOP &rarr;</span>
             </div>
         </div>
 
@@ -631,10 +652,265 @@
 
 
 
+    <!-- ========================================================================= -->
+    <!-- MODAL: KALKULATOR & SIMULATOR AUDIT FCR PRESISI (MULTI-METODE SOP) -->
+    <!-- ========================================================================= -->
+    <div x-show="fcrModalOpen" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+         style="display: none;">
+        
+        <div @click.outside="fcrModalOpen = false"
+             class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden transform transition-all">
+            
+            <!-- Header Modal -->
+            <div class="px-6 py-5 bg-gradient-to-r from-[#051B44] to-[#0B2570] text-white flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center border border-white/20">
+                        <i class="fa-solid fa-calculator text-sky-300 text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-extrabold tracking-tight">Kalkulator &amp; Simulator Audit FCR SOP (Multi-Metode)</h3>
+                        <p class="text-xs text-sky-200">Simulasi 4 varian FCR, evaluasi pakan terbuang (wasted feed), dan audit finansial.</p>
+                    </div>
+                </div>
+                <button type="button" @click="fcrModalOpen = false" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body Scrollable -->
+            <div class="p-6 overflow-y-auto space-y-6">
+                <!-- Preset Button Selection -->
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                    <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Preset Komoditas Budidaya:</div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <button type="button" 
+                                @click="setKomoditasPreset('lele')"
+                                :class="simKomoditas === 'lele' ? 'bg-[#0B2570] text-white font-bold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'"
+                                class="px-3 py-2 rounded-xl text-xs flex items-center justify-center gap-2 transition-all">
+                            <span>🐟 Lele Sangkuriang</span>
+                        </button>
+                        <button type="button" 
+                                @click="setKomoditasPreset('nila')"
+                                :class="simKomoditas === 'nila' ? 'bg-[#0B2570] text-white font-bold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'"
+                                class="px-3 py-2 rounded-xl text-xs flex items-center justify-center gap-2 transition-all">
+                            <span>🐠 Nila Merah / Hitam</span>
+                        </button>
+                        <button type="button" 
+                                @click="setKomoditasPreset('patin')"
+                                :class="simKomoditas === 'patin' ? 'bg-[#0B2570] text-white font-bold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'"
+                                class="px-3 py-2 rounded-xl text-xs flex items-center justify-center gap-2 transition-all">
+                            <span>🐋 Ikan Patin</span>
+                        </button>
+                        <button type="button" 
+                                @click="setKomoditasPreset('custom')"
+                                :class="simKomoditas === 'custom' ? 'bg-[#0B2570] text-white font-bold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'"
+                                class="px-3 py-2 rounded-xl text-xs flex items-center justify-center gap-2 transition-all">
+                            <span>⚙️ Kustom Manual</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Input Parameters Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Kolom 1: Biomassa -->
+                    <div class="p-4 rounded-2xl bg-white border border-slate-200 space-y-3">
+                        <div class="text-xs font-extrabold text-[#0B2570] flex items-center gap-2">
+                            <i class="fa-solid fa-weight-scale text-sky-600"></i>
+                            <span>1. Parameter Biomassa</span>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Bobot Tebar Awal (W₀)</label>
+                            <div class="relative">
+                                <input type="number" step="0.1" min="0" x-model.number="simTebar" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#0B2570]">
+                                <span class="absolute right-3 top-2 text-[10px] text-slate-400 font-bold">kg</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Bobot Panen / Akhir (Wₜ)</label>
+                            <div class="relative">
+                                <input type="number" step="0.1" min="0" x-model.number="simPanen" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#0B2570]">
+                                <span class="absolute right-3 top-2 text-[10px] text-slate-400 font-bold">kg</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Total Pakan Diberikan (F)</label>
+                            <div class="relative">
+                                <input type="number" step="0.1" min="0" x-model.number="simPakan" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#0B2570]">
+                                <span class="absolute right-3 top-2 text-[10px] text-slate-400 font-bold">kg</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kolom 2: Mortalitas & Target SOP -->
+                    <div class="p-4 rounded-2xl bg-white border border-slate-200 space-y-3">
+                        <div class="text-xs font-extrabold text-[#0B2570] flex items-center gap-2">
+                            <i class="fa-solid fa-skull-crossbones text-rose-500"></i>
+                            <span>2. Mortalitas &amp; Batas SOP</span>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Ikan Mati Terdata (M)</label>
+                            <div class="relative">
+                                <input type="number" step="0.1" min="0" x-model.number="simMatiTerdata" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#0B2570]">
+                                <span class="absolute right-3 top-2 text-[10px] text-slate-400 font-bold">kg</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Mati Tak Tercatat (Uncounted)</label>
+                            <div class="relative">
+                                <input type="number" step="0.1" min="0" x-model.number="simMatiTakTercatat" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#0B2570]">
+                                <span class="absolute right-3 top-2 text-[10px] text-slate-400 font-bold">kg</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Target Maksimal FCR SOP</label>
+                            <div class="relative">
+                                <input type="number" step="0.05" min="0.5" x-model.number="simTargetFcr" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#0B2570]">
+                                <span class="absolute right-3 top-2 text-[10px] text-slate-400 font-bold">ratio</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kolom 3: Harga Finansial -->
+                    <div class="p-4 rounded-2xl bg-white border border-slate-200 space-y-3">
+                        <div class="text-xs font-extrabold text-[#0B2570] flex items-center gap-2">
+                            <i class="fa-solid fa-coins text-amber-500"></i>
+                            <span>3. Harga &amp; Valuasi</span>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Harga Pakan / kg</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-2 text-[10px] text-slate-400 font-bold">Rp</span>
+                                <input type="number" step="500" min="0" x-model.number="simHargaPakan" class="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#0B2570]">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Harga Jual Ikan / kg</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-2 text-[10px] text-slate-400 font-bold">Rp</span>
+                                <input type="number" step="500" min="0" x-model.number="simHargaJual" class="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#0B2570]">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Pertumbuhan Bersih (ΔW)</label>
+                            <div class="px-3 py-2 bg-slate-100 rounded-xl text-xs font-bold text-slate-700 flex justify-between items-center">
+                                <span>Net Biomassa</span>
+                                <span x-text="simBiomassaNetto + ' kg'">0 kg</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Simulation Output Metric Cards -->
+                <div>
+                    <div class="text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-3">Hasil Evaluasi Multi-Metode:</div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <!-- FCR Komersial -->
+                        <div class="p-4 rounded-2xl bg-sky-50 border border-sky-200">
+                            <div class="text-[10px] font-extrabold uppercase text-sky-800">FCR KOMERSIAL</div>
+                            <div class="text-2xl font-black text-[#0B2570] mt-1" x-text="simFcrKomersial">1.07</div>
+                            <div class="text-[10px] text-slate-500 mt-1">Pakan ÷ Bobot Terjual</div>
+                        </div>
+
+                        <!-- FCR Biologis -->
+                        <div class="p-4 rounded-2xl bg-indigo-50 border border-indigo-200">
+                            <div class="text-[10px] font-extrabold uppercase text-indigo-800">FCR BIOLOGIS</div>
+                            <div class="text-2xl font-black text-indigo-950 mt-1" x-text="simFcrBiologis">1.01</div>
+                            <div class="text-[10px] text-slate-500 mt-1">Memperhitungkan Mati</div>
+                        </div>
+
+                        <!-- Feed Efficiency -->
+                        <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200">
+                            <div class="text-[10px] font-extrabold uppercase text-emerald-800">FEED EFFICIENCY</div>
+                            <div class="text-2xl font-black text-emerald-700 mt-1">
+                                <span x-text="simFeedEfficiency">93.5</span>%
+                            </div>
+                            <div class="text-[10px] text-slate-500 mt-1">Konversi Daging Efektif</div>
+                        </div>
+
+                        <!-- Pakan Terbuang & Rupiah -->
+                        <div class="p-4 rounded-2xl border transition-all"
+                             :class="simWastedFeedKg > 0 ? 'bg-rose-50 border-rose-200' : 'bg-slate-50 border-slate-200'">
+                            <div class="text-[10px] font-extrabold uppercase"
+                                 :class="simWastedFeedKg > 0 ? 'text-rose-800' : 'text-slate-600'">
+                                PAKAN TERBUANG
+                            </div>
+                            <div class="text-2xl font-black mt-1"
+                                 :class="simWastedFeedKg > 0 ? 'text-rose-600' : 'text-slate-800'">
+                                <span x-text="simWastedFeedKg">0</span> <span class="text-xs font-semibold">kg</span>
+                            </div>
+                            <div class="text-[10px] font-bold mt-1"
+                                 :class="simWastedFeedKg > 0 ? 'text-rose-700' : 'text-emerald-600'"
+                                 x-text="simWastedFeedKg > 0 ? 'Rupiah: Rp ' + simWastedFeedRp.toLocaleString('id-ID') : 'Nol Pemborosan (Aman)'">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dynamic SOP Status & Recommendation Box -->
+                <div class="p-4 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                     :class="{
+                         'bg-emerald-50 border-emerald-200 text-emerald-900': simStatusEvaluation.color === 'emerald',
+                         'bg-sky-50 border-sky-200 text-sky-900': simStatusEvaluation.color === 'sky',
+                         'bg-amber-50 border-amber-200 text-amber-900': simStatusEvaluation.color === 'amber',
+                         'bg-rose-50 border-rose-200 text-rose-900': simStatusEvaluation.color === 'rose',
+                         'bg-slate-50 border-slate-200 text-slate-800': simStatusEvaluation.color === 'slate'
+                     }">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg shrink-0"
+                             :class="{
+                                 'bg-emerald-200 text-emerald-800': simStatusEvaluation.color === 'emerald',
+                                 'bg-sky-200 text-sky-800': simStatusEvaluation.color === 'sky',
+                                 'bg-amber-200 text-amber-800': simStatusEvaluation.color === 'amber',
+                                 'bg-rose-200 text-rose-800': simStatusEvaluation.color === 'rose',
+                                 'bg-slate-200 text-slate-800': simStatusEvaluation.color === 'slate'
+                             }">
+                            <i class="fa-solid" :class="{
+                                'fa-circle-check': simStatusEvaluation.color === 'emerald' || simStatusEvaluation.color === 'sky',
+                                'fa-triangle-exclamation': simStatusEvaluation.color === 'amber',
+                                'fa-circle-xmark': simStatusEvaluation.color === 'rose',
+                                'fa-circle-info': simStatusEvaluation.color === 'slate'
+                            }"></i>
+                        </div>
+                        <div>
+                            <div class="text-sm font-extrabold" x-text="simStatusEvaluation.label">Sangat Efisien</div>
+                            <p class="text-xs opacity-80" x-text="simStatusEvaluation.desc">FCR di bawah standar SOP</p>
+                        </div>
+                    </div>
+                    <div class="text-xs font-semibold px-3 py-1.5 rounded-xl bg-white/80 border shadow-2xs">
+                        Rasio Efisiensi Target: <span class="font-bold font-mono" x-text="simTargetFcr">1.10</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+                <span class="text-xs text-slate-500">
+                    <i class="fa-solid fa-shield-halved text-sky-600 mr-1"></i> Standar Operasional Budidaya AMS (Zero Miss Loss)
+                </span>
+                <button type="button" @click="fcrModalOpen = false" class="px-4 py-2 bg-[#051B44] text-white text-xs font-bold rounded-xl hover:bg-[#0B2570] transition-colors">
+                    Tutup Simulator
+                </button>
+            </div>
+        </div>
+    </div>
+
 </div>
 @endsection
 
+@push('styles')
+<link rel="stylesheet" href="{{ asset('leaflet/leaflet.css') }}" />
+@endpush
+
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ asset('leaflet/leaflet.js') }}"></script>
 <style>
     .leaflet-popup-content-wrapper {
         border-radius: 1rem !important;
@@ -675,6 +951,89 @@
             chartDropdownOpen: false,
             chartPeriodLabel: '7 Hari Terakhir',
             
+            // State Simulator FCR & Loss Audit
+            fcrModalOpen: false,
+            simKomoditas: 'lele',
+            simTebar: 50,
+            simPanen: 500,
+            simPakan: 480,
+            simMatiTerdata: 15,
+            simMatiTakTercatat: 10,
+            simHargaPakan: 12500,
+            simHargaJual: 24000,
+            simTargetFcr: 1.10,
+
+            setKomoditasPreset(type) {
+                this.simKomoditas = type;
+                if (type === 'lele') {
+                    this.simTargetFcr = 1.10;
+                    this.simHargaPakan = 12500;
+                    this.simHargaJual = 24000;
+                } else if (type === 'nila') {
+                    this.simTargetFcr = 1.35;
+                    this.simHargaPakan = 11500;
+                    this.simHargaJual = 32000;
+                } else if (type === 'patin') {
+                    this.simTargetFcr = 1.45;
+                    this.simHargaPakan = 11000;
+                    this.simHargaJual = 26000;
+                }
+            },
+
+            get simBiomassaNetto() {
+                const w0 = parseFloat(this.simTebar) || 0;
+                const wt = parseFloat(this.simPanen) || 0;
+                return Math.max(0, parseFloat((wt - w0).toFixed(1)));
+            },
+
+            get simFcrKomersial() {
+                const net = this.simBiomassaNetto;
+                if (net <= 0) return 0;
+                const feed = parseFloat(this.simPakan) || 0;
+                return parseFloat((feed / net).toFixed(2));
+            },
+
+            get simFcrBiologis() {
+                const w0 = parseFloat(this.simTebar) || 0;
+                const wt = parseFloat(this.simPanen) || 0;
+                const m = parseFloat(this.simMatiTerdata) || 0;
+                const u = parseFloat(this.simMatiTakTercatat) || 0;
+                const feed = parseFloat(this.simPakan) || 0;
+                const totalBio = (wt + m + u) - w0;
+                if (totalBio <= 0) return 0;
+                return parseFloat((feed / totalBio).toFixed(2));
+            },
+
+            get simFeedEfficiency() {
+                const fcr = this.simFcrKomersial;
+                if (fcr <= 0) return 0;
+                return parseFloat(((1 / fcr) * 100).toFixed(1));
+            },
+
+            get simWastedFeedKg() {
+                const net = this.simBiomassaNetto;
+                const target = parseFloat(this.simTargetFcr) || 1.10;
+                const feed = parseFloat(this.simPakan) || 0;
+                const pakanIdeal = net * target;
+                return Math.max(0, parseFloat((feed - pakanIdeal).toFixed(1)));
+            },
+
+            get simWastedFeedRp() {
+                const wastedKg = this.simWastedFeedKg;
+                const price = parseFloat(this.simHargaPakan) || 0;
+                return Math.round(wastedKg * price);
+            },
+
+            get simStatusEvaluation() {
+                const fcr = this.simFcrKomersial;
+                const target = parseFloat(this.simTargetFcr) || 1.10;
+                if (fcr === 0) return { label: 'Data Belum Lengkap', color: 'slate', desc: 'Isi parameter panen' };
+                if (fcr <= target) return { label: 'Sangat Efisien & Prima', color: 'emerald', desc: 'FCR di bawah / setara standar SOP' };
+                if (fcr <= target * 1.1) return { label: 'Optimal Wajar', color: 'sky', desc: 'FCR dalam batas toleransi budidaya' };
+                if (fcr <= target * 1.25) return { label: 'Perlu Pengawasan Pakan', color: 'amber', desc: 'Pakan mulai inefisien, cek sisa pakan di kolam' };
+                return { label: 'Inefisiensi Akut / Boros', color: 'rose', desc: 'Pakan terbuang tinggi, potensi overfeeding atau mortalitas tinggi' };
+            },
+
             // Toast State
             toast: {
                 show: false,

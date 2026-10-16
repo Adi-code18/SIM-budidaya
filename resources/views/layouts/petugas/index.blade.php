@@ -166,6 +166,8 @@
     <!-- TAB 2: FORM REGISTRASI PETUGAS BARU                                      -->
     <!-- ========================================================================= -->
     <div x-show="activeTab === 'create'"
+         x-cloak
+         style="display: none;"
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0 translate-y-1"
          x-transition:enter-end="opacity-100 translate-y-0"
@@ -389,6 +391,8 @@
     <!-- TAB 3: FORM EDIT DATA PETUGAS                                            -->
     <!-- ========================================================================= -->
     <div x-show="activeTab === 'edit'"
+         x-cloak
+         style="display: none;"
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0 translate-y-1"
          x-transition:enter-end="opacity-100 translate-y-0"

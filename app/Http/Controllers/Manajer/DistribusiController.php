@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Manajer;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\BatchPembesaran;
 use App\Models\Keuangan;
 use App\Models\MitraDistributor;
 use App\Models\TransaksiDistribusi;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -44,6 +46,14 @@ class DistribusiController extends Controller
                 'batch_code'    => $t->batchPembesaran ? ('#PB-' . str_pad($t->id_pembesaran, 5, '0', STR_PAD_LEFT)) : null,
                 'jenis_order'   => $t->Jenis_order ?? 'Ikan Segar',
                 'status'        => $status,
+                'no_surat_jalan'          => $t->getOrGenerateSuratJalan(),
+                'waktu_mulai_pemberokan'  => $t->waktu_mulai_pemberokan ? Carbon::parse($t->waktu_mulai_pemberokan)->toIso8601String() : null,
+                'waktu_selesai_pemberokan'=> $t->waktu_selesai_pemberokan ? Carbon::parse($t->waktu_selesai_pemberokan)->toIso8601String() : null,
+                'durasi_pemberokan_jam'   => $t->durasi_pemberokan_jam ?? 18,
+                'is_pemberokan_active'    => $t->isPemberokanActive(),
+                'sisa_pemberokan_menit'   => $t->getSisaPemberokanMenit(),
+                'grading_size'            => $t->grading_size ?? 'Grade Standar',
+                'catatan_grading'         => $t->catatan_grading ?? '',
                 'alamat'        => $t->mitra ? $t->mitra->alamat : 'Alamat mitra belum diset',
                 'tanggal'       => $t->tanggal_order ? Carbon::parse($t->tanggal_order)->toDateString() : Carbon::today()->toDateString(),
                 'label'         => true
@@ -182,16 +192,38 @@ class DistribusiController extends Controller
             }
         }
 
+        $noSuratJalan = TransaksiDistribusi::generateNoSuratJalan();
+        $durasiPemberokan = (int) ($request->durasi_pemberokan_jam ?: 18);
+        $waktuMulaiPemberokan = null;
+        $waktuSelesaiPemberokan = null;
+
+        if (in_array($status, ['pemberokan', 'pemberokian'])) {
+            $waktuMulaiPemberokan = now();
+            $waktuSelesaiPemberokan = now()->addHours($durasiPemberokan);
+        }
+
         $transaksi = TransaksiDistribusi::create([
-            'id_user'       => Auth::id() ?? 1,
-            'id_mitra'      => $request->id_mitra,
-            'id_pembesaran' => $request->id_pembesaran,
-            'tanggal_order' => $request->tanggal_order ?? Carbon::today()->toDateString(),
-            'Total_kg'      => $totalKg,
-            'harga_total'   => $hargaTotal,
-            'status_order'  => $status,
-            'Jenis_order'   => $jenisOrder,
+            'no_surat_jalan'           => $noSuratJalan,
+            'id_user'                  => Auth::id() ?? 1,
+            'id_mitra'                 => $request->id_mitra,
+            'id_pembesaran'            => $request->id_pembesaran,
+            'tanggal_order'            => $request->tanggal_order ?? Carbon::today()->toDateString(),
+            'Total_kg'                 => $totalKg,
+            'harga_total'              => $hargaTotal,
+            'status_order'             => $status,
+            'waktu_mulai_pemberokan'   => $waktuMulaiPemberokan,
+            'waktu_selesai_pemberokan' => $waktuSelesaiPemberokan,
+            'durasi_pemberokan_jam'    => $durasiPemberokan,
+            'grading_size'             => $request->grading_size ?? 'Grade Standar',
+            'catatan_grading'          => $request->catatan_grading,
+            'Jenis_order'              => $jenisOrder,
         ]);
+
+        AuditLog::record(
+            'tambah_order',
+            'distribusi',
+            "Membuat order distribusi baru #ORD-" . str_pad($transaksi->id_transaksi, 4, '0', STR_PAD_LEFT) . " ({$noSuratJalan}, {$totalKg} kg {$jenisOrder})"
+        );
 
         // Otomatisasi Kas Masuk ke Buku Keuangan saat status SIAP KIRIM (SOP Pelunasan di Awal)
         if ($transaksi->status_order === 'siap_kirim') {
@@ -273,11 +305,37 @@ class DistribusiController extends Controller
             }
         }
 
+        if ($request->filled('durasi_pemberokan_jam')) {
+            $transaksi->durasi_pemberokan_jam = (int) $request->durasi_pemberokan_jam;
+        }
+        if ($request->filled('grading_size')) {
+            $transaksi->grading_size = $request->grading_size;
+        }
+        if ($request->filled('catatan_grading')) {
+            $transaksi->catatan_grading = $request->catatan_grading;
+        }
+
+        if (in_array($newStatus, ['pemberokan', 'pemberokian']) && !$transaksi->waktu_mulai_pemberokan) {
+            $durasi = $transaksi->durasi_pemberokan_jam ?: 18;
+            $transaksi->waktu_mulai_pemberokan = now();
+            $transaksi->waktu_selesai_pemberokan = now()->addHours($durasi);
+        }
+
+        if (empty($transaksi->no_surat_jalan)) {
+            $transaksi->no_surat_jalan = $transaksi->getOrGenerateSuratJalan();
+        }
+
         $transaksi->status_order = $newStatus;
         $transaksi->save();
 
-        // Otomatisasi Kas Masuk ke Buku Keuangan saat status SIAP KIRIM (SOP Pelunasan di Awal)
-        if ($newStatus === 'siap_kirim') {
+        AuditLog::record(
+            'ubah_status_distribusi',
+            'distribusi',
+            "Mengubah status order #ORD-" . str_pad($transaksi->id_transaksi, 4, '0', STR_PAD_LEFT) . " dari " . strtoupper(str_replace('_', ' ', $oldStatus)) . " ke " . strtoupper(str_replace('_', ' ', $newStatus))
+        );
+
+        // Otomatisasi Kas Masuk ke Buku Keuangan saat status Siap Kirim, Dalam Pengiriman, atau Selesai
+        if (in_array($newStatus, ['siap_kirim', 'dalam_pengiriman', 'selesai'])) {
             $this->recordIncomeToKeuangan($transaksi);
         } elseif (in_array($newStatus, ['pending', 'pemberokian', 'dibatalkan'])) {
             $orderRef = 'ORD-' . str_pad($transaksi->id_transaksi, 4, '0', STR_PAD_LEFT);
@@ -286,7 +344,7 @@ class DistribusiController extends Controller
 
         if ($request->wantsJson() || $request->ajax()) {
             $msg = 'Status order distribusi berhasil diperbarui ke: ' . strtoupper(str_replace('_', ' ', $newStatus)) . '!';
-            if ($newStatus === 'siap_kirim') {
+            if (in_array($newStatus, ['siap_kirim', 'dalam_pengiriman', 'selesai'])) {
                 $msg .= ' Kas masuk telah otomatis dibukukan ke Keuangan.';
             }
             return response()->json([
@@ -300,7 +358,7 @@ class DistribusiController extends Controller
     }
 
     /**
-     * Otomatis Catat Kas Masuk (Pemasukan Penjualan Ikan) saat status menjadi Siap Kirim (SOP Lunas di Muka)
+     * Otomatis Catat Kas Masuk (Pemasukan Penjualan Ikan) saat status menjadi Siap Kirim, Dalam Pengiriman, atau Selesai
      */
     private function recordIncomeToKeuangan(TransaksiDistribusi $transaksi)
     {
@@ -310,6 +368,7 @@ class DistribusiController extends Controller
         $idKolam = $transaksi->batchPembesaran ? $transaksi->batchPembesaran->id_kolam : null;
         $orderRef = 'ORD-' . str_pad($transaksi->id_transaksi, 4, '0', STR_PAD_LEFT);
         $totalKgFormatted = number_format($transaksi->Total_kg, 1, ',', '.');
+        $statusLabel = strtoupper(str_replace('_', ' ', $transaksi->status_order ?? 'Siap Kirim'));
 
         Keuangan::updateOrCreate(
             ['ref_id' => $orderRef],
@@ -320,7 +379,7 @@ class DistribusiController extends Controller
                 'tipe_transaksi'    => 'pemasukan',
                 'kategori'          => 'Penjualan Panen ' . $species,
                 'nominal'           => (float) $transaksi->harga_total,
-                'keterangan'        => "Pelunasan transaksi #{$orderRef} ({$totalKgFormatted} kg {$species}) oleh {$mitraNama} [Status: Siap Kirim]",
+                'keterangan'        => "Pelunasan transaksi #{$orderRef} ({$totalKgFormatted} kg {$species}) oleh {$mitraNama} [Status: {$statusLabel}]",
             ]
         );
     }
@@ -522,5 +581,73 @@ class DistribusiController extends Controller
             'success'     => true,
             'jenis_order' => "{$species} (Lintas Kolam: " . implode(', ', $parts) . ")"
         ];
+    }
+
+    public function destroy($id)
+    {
+        $cleanId = is_numeric($id) ? $id : (int) preg_replace('/[^0-9]/', '', $id);
+        $transaksi = TransaksiDistribusi::find($cleanId);
+
+        if (!$transaksi) {
+            return response()->json(['success' => false, 'message' => 'Pesanan distribusi tidak ditemukan.'], 404);
+        }
+
+        if (!in_array($transaksi->status_order, ['pending', 'dibatalkan'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pesanan yang sedang dalam proses pengiriman atau selesai tidak dapat dihapus.'
+            ], 422);
+        }
+
+        $orderRef = 'ORD-' . str_pad($transaksi->id_transaksi, 4, '0', STR_PAD_LEFT);
+        Keuangan::where('ref_id', $orderRef)->delete();
+
+        AuditLog::record(
+            'hapus_order',
+            'distribusi',
+            "Menghapus order distribusi #ORD-" . str_pad($cleanId, 4, '0', STR_PAD_LEFT)
+        );
+
+        $transaksi->delete();
+
+        if (request()->wantsJson() || request()->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Order distribusi #ORD-" . str_pad($cleanId, 4, '0', STR_PAD_LEFT) . " berhasil dihapus!"
+            ]);
+        }
+
+        return redirect()->route('distribusi')->with('success', 'Order distribusi berhasil dihapus!');
+    }
+
+    public function cetakSuratJalanPdf(Request $request, $id)
+    {
+        $cleanId = is_numeric($id) ? $id : (int) preg_replace('/[^0-9]/', '', $id);
+        $order = TransaksiDistribusi::with(['mitra.user', 'batchPembesaran.kolam', 'user'])->findOrFail($cleanId);
+        $order->getOrGenerateSuratJalan();
+
+        $pdf = Pdf::loadView('layouts.distribusi.surat_jalan_pdf', compact('order'))
+            ->setPaper('a4', 'portrait');
+
+        $safeNo = str_replace(['/', '\\'], '-', $order->no_surat_jalan ?: ('SJ-' . $order->id_transaksi));
+        if ($request->query('download') === '1') {
+            return $pdf->download("Surat_Jalan_{$safeNo}.pdf");
+        }
+        return $pdf->stream("Surat_Jalan_{$safeNo}.pdf");
+    }
+
+    public function exportRekapPdf(?Request $request = null)
+    {
+        $orders = TransaksiDistribusi::with(['mitra', 'batchPembesaran.kolam', 'user'])
+            ->latest('tanggal_order')
+            ->get();
+
+        $totalKg = $orders->sum('Total_kg');
+        $totalNilai = $orders->sum('harga_total');
+
+        $pdf = Pdf::loadView('layouts.distribusi.rekap_pdf', compact('orders', 'totalKg', 'totalNilai'))
+            ->setPaper('a4', 'landscape');
+
+        return $pdf->download('Rekapitulasi_Distribusi_' . date('Ymd') . '.pdf');
     }
 }

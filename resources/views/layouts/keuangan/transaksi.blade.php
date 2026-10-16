@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Transaksi Keuangan - AMS BUDIDAYA')
+@section('title', 'Buku Kas & Transaksi Keuangan - AMS BUDIDAYA')
 
 @section('content')
 <div class="space-y-6" x-data="transaksiKeuanganComponent()">
@@ -34,15 +34,15 @@
                 </div>
             </div>
             <div class="text-right text-[10px] text-slate-600">
-                <div class="font-extrabold text-xs text-slate-900 uppercase">BUKU JURNAL KAS</div>
+                <div class="font-extrabold text-xs text-slate-900 uppercase">BUKU KAS OPERASIONAL</div>
                 <div class="font-mono text-slate-700">No: JRN-KAS/{{ date('Ym') }}</div>
                 <div>Tgl Cetak: {{ \Carbon\Carbon::now()->translatedFormat('d F Y, H:i') }} WIB</div>
                 <div>Oleh: {{ Auth::user()->nama ?? 'Manajer AMS Budidaya' }}</div>
             </div>
         </div>
         <div class="border-t border-slate-400 mt-3 pt-2 text-center">
-            <h2 class="text-base font-extrabold uppercase tracking-wider text-slate-900">BUKU MUTASI KAS OPERASIONAL BUDIDAYA</h2>
-            <p class="text-[11px] font-semibold text-slate-600">Rekapitulasi Arus Transaksi Masuk & Keluar Kas Operasional</p>
+            <h2 class="text-base font-extrabold uppercase tracking-wider text-slate-900">BUKU KAS &amp; MUTASI TRANSAKSI (CASH LEDGER)</h2>
+            <p class="text-[11px] font-semibold text-slate-600">Rekapitulasi Arus Kas Debit (Penerimaan), Kredit (Pengeluaran) &amp; Saldo Berjalan</p>
         </div>
     </div>
 
@@ -50,51 +50,59 @@
     <div class="no-print flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
             <div class="flex items-center gap-2">
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-sky-100 text-sky-700">Buku Kas & Jurnal</span>
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-sky-100 text-sky-700">Farm Cash Ledger</span>
+                <span class="text-xs font-bold text-slate-400">• Buku Kas &amp; Saldo Berjalan</span>
             </div>
-            <h1 class="text-2xl font-extrabold text-[#0B2570] tracking-tight mt-1">Transaksi Keuangan</h1>
-            <p class="text-xs text-slate-500 font-medium mt-0.5">Catat transaksi pemasukan/pengeluaran kas operasional dan kelola riwayat mutasi kas.</p>
+            <h1 class="text-2xl font-extrabold text-[#0B2570] tracking-tight mt-1">Buku Kas &amp; Transaksi Keuangan</h1>
+            <p class="text-xs text-slate-500 font-medium mt-0.5">Pencatatan kas operasional terstruktur dengan kolom Debit (Masuk), Kredit (Keluar), dan Saldo Berjalan.</p>
         </div>
         <div class="flex items-center gap-3">
             <button onclick="window.print()"
                     class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-bold text-xs shadow-2xs transition-all flex items-center gap-2 cursor-pointer">
                 <i class="fa-solid fa-print text-slate-400"></i>
-                <span>Cetak Jurnal Kas</span>
+                <span>Cetak Buku Kas</span>
             </button>
             <button @click="showForm ? (showForm = false) : openCreateForm()"
-                    class="px-4 py-2 rounded-xl bg-[#051B44] hover:bg-navy-900 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-2 cursor-pointer">
+                    class="px-4 py-2 rounded-xl bg-[#0B2570] hover:bg-[#07194D] text-white font-bold text-xs shadow-xs transition-all flex items-center gap-2 cursor-pointer">
                 <i class="fa-solid" :class="showForm ? 'fa-table-list' : 'fa-plus'"></i>
                 <span x-text="showForm ? 'Tutup Form' : 'Catat Transaksi Baru'"></span>
             </button>
         </div>
     </div>
 
-    <!-- Quick Balance Summary Mini Strip -->
+    <!-- Quick Balance Summary Mini Strip (Debit, Kredit, Saldo) -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
             <div>
-                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">TOTAL PEMASUKAN</span>
+                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">TOTAL PENERIMAAN KAS (DEBIT)</span>
                 <span class="text-lg font-extrabold text-emerald-600 tracking-tight">Rp {{ number_format($totalIncome, 0, ',', '.') }}</span>
+                <span class="text-[10px] text-slate-400 font-medium block mt-0.5">Penjualan panen &amp; hasil budidaya</span>
             </div>
-            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
                 <i class="fa-solid fa-arrow-down-long text-sm"></i>
             </div>
         </div>
         <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
             <div>
-                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">TOTAL PENGELUARAN</span>
+                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">TOTAL PENGELUARAN KAS (KREDIT)</span>
                 <span class="text-lg font-extrabold text-rose-600 tracking-tight">Rp {{ number_format($totalExpense, 0, ',', '.') }}</span>
+                <span class="text-[10px] text-slate-400 font-medium block mt-0.5">HPP pakan, bibit &amp; beban operasional</span>
             </div>
-            <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
+            <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
                 <i class="fa-solid fa-arrow-up-long text-sm"></i>
             </div>
         </div>
         <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
             <div>
-                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">SALDO KAS OPERASIONAL</span>
-                <span class="text-lg font-extrabold {{ $saldo >= 0 ? 'text-[#0B2570]' : 'text-rose-600' }} tracking-tight">Rp {{ number_format($saldo, 0, ',', '.') }}</span>
+                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">SALDO KAS BERJALAN (NET BALANCE)</span>
+                <span class="text-lg font-extrabold {{ $saldo >= 0 ? 'text-[#0B2570]' : 'text-rose-600' }} tracking-tight">
+                    {{ ($saldo >= 0 ? '+ ' : '- ') }}Rp {{ number_format(abs($saldo), 0, ',', '.') }}
+                </span>
+                <span class="text-[10px] font-bold {{ $saldo >= 0 ? 'text-emerald-600' : 'text-rose-600' }} block mt-0.5">
+                    {{ $saldo >= 0 ? 'Kas Surplus & Likuid' : 'Defisit Kas Operasional' }}
+                </span>
             </div>
-            <div class="w-10 h-10 rounded-xl bg-sky-50 text-[#0B2570] flex items-center justify-center">
+            <div class="w-10 h-10 rounded-xl bg-sky-50 text-[#0B2570] flex items-center justify-center shrink-0">
                 <i class="fa-solid fa-wallet text-sm"></i>
             </div>
         </div>
@@ -102,17 +110,19 @@
 
     <!-- ========= INPUT FORM SECTION ========= -->
     <div x-show="showForm"
+         x-cloak
+         style="display: none;"
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0 -translate-y-2"
          x-transition:enter-end="opacity-100 translate-y-0"
          class="space-y-5">
 
         <!-- Header Form -->
-        <div class="bg-[#051B44] rounded-2xl p-6 sm:p-8 text-white shadow-xs">
+        <div class="bg-[#0B2570] rounded-2xl p-6 sm:p-8 text-white shadow-xs">
             <div class="flex items-center justify-between">
                 <div>
-                    <h2 class="text-xl font-extrabold text-white" x-text="formMode === 'view' ? 'Detail Transaksi Keuangan' : (formMode === 'edit' ? 'Edit Transaksi Keuangan' : 'Pencatatan Transaksi Keuangan Baru')"></h2>
-                    <p class="text-xs text-sky-200/80 font-medium mt-1" x-text="formMode === 'view' ? 'Melihat rincian transaksi kas dan jurnal operasional budidaya.' : 'Catat transaksi masuk (pemasukan) atau keluar (pengeluaran) untuk operasional budidaya.'"></p>
+                    <h2 class="text-xl font-extrabold text-white" x-text="formMode === 'view' ? 'Detail Transaksi Kas' : (formMode === 'edit' ? 'Edit Transaksi Kas' : 'Pencatatan Transaksi Kas Baru')"></h2>
+                    <p class="text-xs text-sky-200/80 font-medium mt-1" x-text="formMode === 'view' ? 'Melihat rincian mutasi kas, kategori akun, dan alokasi kolam.' : 'Catat penerimaan (debit) atau pengeluaran (kredit) untuk pembukuan operasional budidaya.'"></p>
                 </div>
                 <div x-show="formMode === 'view'">
                     <span class="px-3 py-1 rounded-full text-xs font-bold bg-sky-500/20 text-sky-200 border border-sky-400/30">Mode Baca (Read Only)</span>
@@ -130,27 +140,27 @@
                     <!-- Section 1: Informasi Dasar -->
                     <div class="space-y-4">
                         <div class="flex items-center gap-2.5 text-sm font-bold text-slate-900">
-                            <div class="w-8 h-8 rounded-xl bg-[#051B44] text-white flex items-center justify-center">
+                            <div class="w-8 h-8 rounded-xl bg-[#0B2570] text-white flex items-center justify-center">
                                 <i class="fa-solid fa-circle-info text-xs"></i>
                             </div>
-                            <span>Informasi Dasar</span>
+                            <span>Tipe Arus Kas &amp; Referensi</span>
                         </div>
 
                         <!-- Tipe Transaksi Toggle -->
                         <div>
-                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1.5">TIPE TRANSAKSI</label>
+                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1.5">TIPE ARUS KAS</label>
                             <div class="flex items-center gap-2 p-1 bg-slate-100 rounded-xl max-w-sm text-xs font-bold" :class="formMode === 'view' ? 'opacity-70 pointer-events-none' : ''">
                                 <button type="button" @click="if (formMode !== 'view') { tipeTransaksi = 'income'; form.tipe = 'income'; }"
-                                        :class="tipeTransaksi === 'income' ? 'bg-[#051B44] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'"
+                                        :class="tipeTransaksi === 'income' ? 'bg-[#0B2570] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'"
                                         :disabled="formMode === 'view'"
                                         class="flex-1 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer">
-                                    <i class="fa-solid fa-arrow-down text-[10px]"></i> Pemasukan (Income)
+                                    <i class="fa-solid fa-arrow-down text-[10px]"></i> Penerimaan / Debit
                                 </button>
                                 <button type="button" @click="if (formMode !== 'view') { tipeTransaksi = 'expense'; form.tipe = 'expense'; }"
-                                        :class="tipeTransaksi === 'expense' ? 'bg-[#051B44] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'"
+                                        :class="tipeTransaksi === 'expense' ? 'bg-[#0B2570] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'"
                                         :disabled="formMode === 'view'"
                                         class="flex-1 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer">
-                                    <i class="fa-solid fa-arrow-up text-[10px]"></i> Pengeluaran (Expense)
+                                    <i class="fa-solid fa-arrow-up text-[10px]"></i> Pengeluaran / Kredit
                                 </button>
                             </div>
                         </div>
@@ -169,13 +179,13 @@
                         </div>
                     </div>
 
-                    <!-- Section 2: Detail Finansial -->
+                    <!-- Section 2: Detail Finansial & Klasifikasi Akun -->
                     <div class="space-y-4">
                         <div class="flex items-center gap-2.5 text-sm font-bold text-slate-900">
-                            <div class="w-8 h-8 rounded-xl bg-[#10B981] text-white flex items-center justify-center">
+                            <div class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center">
                                 <i class="fa-solid fa-coins text-xs"></i>
                             </div>
-                            <span>Detail Finansial</span>
+                            <span>Detail Nominal &amp; Klasifikasi Akun</span>
                         </div>
 
                         <div>
@@ -190,27 +200,40 @@
                         </div>
 
                         <div>
-                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">KATEGORI <span class="text-rose-500">*</span></label>
+                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">KLASIFIKASI KATEGORI AKUN <span class="text-rose-500">*</span></label>
                             <select x-model="form.kategori" :disabled="formMode === 'view'" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all disabled:bg-slate-100 disabled:cursor-not-allowed">
-                                <option value="">Pilih Kategori...</option>
-                                <option value="Penjualan Panen">Penjualan Panen</option>
-                                <option value="Penjualan Ekspor Ikan Patin">Penjualan Ekspor Ikan Patin</option>
-                                <option value="Penjualan Panen Ikan Nila">Penjualan Panen Ikan Nila</option>
-                                <option value="Penjualan Benih Bibit Ikan">Penjualan Benih Bibit Ikan</option>
-                                <option value="Pembelian Pakan Pelet">Pembelian Pakan Pelet</option>
-                                <option value="Pembelian Obat &amp; Probiotik">Pembelian Obat &amp; Probiotik</option>
-                                <option value="Biaya Listrik &amp; Operasional Aerator">Biaya Listrik &amp; Operasional Aerator</option>
-                                <option value="Gaji &amp; Honor Petugas">Gaji &amp; Honor Petugas</option>
-                                <option value="Operasional &amp; Perawatan">Operasional &amp; Perawatan</option>
-                                <option value="Transportasi &amp; Distribusi">Transportasi &amp; Distribusi</option>
-                                <option value="Lain-lain">Lain-lain</option>
+                                <option value="">Pilih Kategori Akun...</option>
+                                
+                                <optgroup label="── Penerimaan Kas (Debit / Inflow) ──">
+                                    <option value="Penjualan Panen Ikan">Penjualan Panen Ikan</option>
+                                    <option value="Penjualan Panen Ikan Nila">Penjualan Panen Ikan Nila</option>
+                                    <option value="Penjualan Panen Ikan Lele">Penjualan Panen Ikan Lele</option>
+                                    <option value="Penjualan Panen Ikan Patin">Penjualan Panen Ikan Patin</option>
+                                    <option value="Penjualan Bibit / Fingerling">Penjualan Bibit / Fingerling</option>
+                                    <option value="Pendapatan Non-Operasional">Pendapatan Non-Operasional</option>
+                                </optgroup>
+
+                                <optgroup label="── Harga Pokok Produksi / HPP Budidaya (Kredit) ──">
+                                    <option value="Pembelian Pakan Pelet">Pembelian Pakan Pelet</option>
+                                    <option value="Pembelian Pakan Alami (Cacing/Maggot)">Pembelian Pakan Alami (Cacing/Maggot)</option>
+                                    <option value="Pembelian Bibit Ikan">Pembelian Bibit Ikan (Beli Luar)</option>
+                                </optgroup>
+
+                                <optgroup label="── Beban Operasional / OPEX Fasilitas (Kredit) ──">
+                                    <option value="Biaya Listrik &amp; Operasional Aerator">Biaya Listrik, Pompa &amp; Aerator</option>
+                                    <option value="Pembelian Obat &amp; Probiotik">Pembelian Probiotik, Vitamin &amp; Obat Air</option>
+                                    <option value="Operasional &amp; Perawatan">Perawatan Filter &amp; Kolam</option>
+                                    <option value="Gaji &amp; Honor Petugas">Gaji &amp; Upah Tenaga Kerja Lapangan</option>
+                                    <option value="Transportasi &amp; Distribusi">Beban Logistik &amp; Armada</option>
+                                    <option value="Operasional Umum &amp; Lain-lain">Operasional Umum &amp; Lain-lain</option>
+                                </optgroup>
                             </select>
                         </div>
 
                         <div>
-                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">ALOKASI KOLAM (OPSIONAL)</label>
+                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">ALOKASI KOLAM BUDIDAYA (OPSIONAL)</label>
                             <select x-model="form.id_kolam" :disabled="formMode === 'view'" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all disabled:bg-slate-100 disabled:cursor-not-allowed">
-                                <option value="">Tidak dialokasikan ke kolam spesifik</option>
+                                <option value="">Tidak dialokasikan ke kolam spesifik (Beban Farm Umum)</option>
                                 @foreach($kolams as $kolam)
                                     <option value="{{ $kolam->id_kolam }}">{{ $kolam->nama_kolam }} ({{ $kolam->tipe_kolam }})</option>
                                 @endforeach
@@ -218,8 +241,8 @@
                         </div>
 
                         <div>
-                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">KETERANGAN / DESKRIPSI</label>
-                            <textarea rows="3" x-model="form.keterangan" :disabled="formMode === 'view'" placeholder="Tuliskan catatan transaksi, nomor nota, atau detail pembelian..."
+                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">URAIAN / CATATAN TRANSAKSI</label>
+                            <textarea rows="3" x-model="form.keterangan" :disabled="formMode === 'view'" placeholder="Tuliskan keterangan transaksi, nomor nota/kwitansi, atau detail rekanan..."
                                       class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all disabled:bg-slate-100 disabled:cursor-not-allowed"></textarea>
                         </div>
                     </div>
@@ -231,9 +254,9 @@
                             Tutup
                         </button>
                         <button type="submit" x-show="formMode !== 'view'" :disabled="isLoading"
-                                class="px-6 py-2.5 rounded-xl bg-[#051B44] hover:bg-navy-900 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50">
+                                class="px-6 py-2.5 rounded-xl bg-[#0B2570] hover:bg-[#07194D] text-white font-bold text-xs shadow-sm transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50">
                             <i class="fa-solid fa-spinner fa-spin" x-show="isLoading"></i>
-                            <span x-text="formMode === 'edit' ? 'Simpan Perubahan' : 'Simpan Transaksi'"></span>
+                            <span x-text="formMode === 'edit' ? 'Simpan Perubahan' : 'Bukukan Transaksi'"></span>
                         </button>
                     </div>
 
@@ -245,27 +268,26 @@
             <div class="space-y-6">
 
                 <!-- Ringkasan Info Transaksi Box -->
-                <div class="bg-[#051B44] rounded-2xl p-6 text-white shadow-xs space-y-4">
+                <div class="bg-[#0B2570] rounded-2xl p-6 text-white shadow-xs space-y-4">
                     <div class="flex items-center justify-between pb-3 border-b border-white/10">
-                        <span class="text-xs font-bold text-sky-200 uppercase tracking-wider">Ringkasan Input</span>
-                        <span class="px-2 py-0.5 rounded text-[10px] font-extrabold"
-                              :class="tipeTransaksi === 'income' ? 'bg-emerald-500/30 text-emerald-300' : 'bg-rose-500/30 text-rose-300'"
-                              x-text="tipeTransaksi === 'income' ? 'Pemasukan' : 'Pengeluaran'"></span>
+                        <span class="text-xs font-bold text-sky-200 uppercase tracking-wider">Ringkasan Entri Kas</span>
+                        <span class="text-[10px] px-2 py-0.5 rounded-md font-extrabold"
+                              :class="tipeTransaksi === 'income' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30' : 'bg-rose-500/20 text-rose-300 border border-rose-400/30'"
+                              x-text="tipeTransaksi === 'income' ? 'Debit (Kas Masuk)' : 'Kredit (Kas Keluar)'"></span>
                     </div>
 
                     <div class="space-y-3 text-xs">
-                        <div class="flex justify-between">
+                        <div class="flex justify-between items-baseline">
                             <span class="text-slate-300">Nominal:</span>
-                            <span class="font-extrabold text-base" :class="tipeTransaksi === 'income' ? 'text-emerald-400' : 'text-rose-400'"
-                                  x-text="formatCurrency(form.nominal)"></span>
+                            <span class="text-lg font-black text-white" x-text="form.nominal ? formatCurrency(form.nominal) : 'Rp 0'"></span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="text-slate-300">Kategori:</span>
-                            <span class="font-bold text-white text-right" x-text="form.kategori || '-'"></span>
+                            <span class="text-slate-300">Akun:</span>
+                            <span class="font-bold text-sky-200 truncate max-w-[150px]" x-text="form.kategori || '-'"></span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-slate-300">Tanggal:</span>
-                            <span class="font-semibold text-white" x-text="form.tanggal || '-'"></span>
+                            <span class="font-semibold text-slate-200" x-text="form.tanggal || '-'"></span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-slate-300">Ref ID:</span>
@@ -278,20 +300,20 @@
                 <div class="bg-sky-50/80 p-5 rounded-2xl border border-sky-200/60 space-y-3">
                     <div class="flex items-center gap-2 text-xs font-bold text-[#0B2570]">
                         <i class="fa-solid fa-lightbulb text-sky-500"></i>
-                        <span>Panduan Input</span>
+                        <span>Prinsip Pembukuan Kas Budidaya</span>
                     </div>
                     <ul class="text-[11px] text-slate-600 space-y-2.5 leading-relaxed list-none">
                         <li class="flex items-start gap-2">
                             <span class="w-4 h-4 rounded-full bg-sky-200/80 text-sky-700 flex items-center justify-center shrink-0 text-[9px] font-extrabold mt-0.5">1</span>
-                            <span>Pastikan tipe transaksi sesuai dengan bukti fisik kwitansi/faktur.</span>
+                            <span><strong>Penerimaan (Debit):</strong> Catat penjualan ikan panen atau hasil bibit.</span>
                         </li>
                         <li class="flex items-start gap-2">
                             <span class="w-4 h-4 rounded-full bg-sky-200/80 text-sky-700 flex items-center justify-center shrink-0 text-[9px] font-extrabold mt-0.5">2</span>
-                            <span>Gunakan Ref ID yang valid seperti Nomor Invoice, Nota, atau Kode Struk untuk audit.</span>
+                            <span><strong>HPP Budidaya (Kredit):</strong> Biaya pakan pelet dan pengadaan bibit yang langsung membentuk bobot ikan.</span>
                         </li>
                         <li class="flex items-start gap-2">
                             <span class="w-4 h-4 rounded-full bg-sky-200/80 text-sky-700 flex items-center justify-center shrink-0 text-[9px] font-extrabold mt-0.5">3</span>
-                            <span>Alokasikan transaksi ke unit Kolam jika beban biaya khusus untuk kolam tersebut.</span>
+                            <span><strong>Beban Operasional (Kredit):</strong> Listrik aerasi, obat probiotik, upah kerja, dan perawatan kolam.</span>
                         </li>
                     </ul>
                 </div>
@@ -307,8 +329,8 @@
         <!-- Filter and Search Bar -->
         <div class="no-print p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-                <h3 class="text-base font-bold text-slate-900">Riwayat Mutasi Transaksi</h3>
-                <p class="text-xs text-slate-400 font-medium">Daftar lengkap seluruh arus transaksi kas operasional budidaya.</p>
+                <h3 class="text-base font-bold text-slate-900">Buku Kas &amp; Mutasi Saldo Berjalan (Cash Ledger)</h3>
+                <p class="text-xs text-slate-400 font-medium">Rekapitulasi kronologis seluruh mutasi debit (masuk), kredit (keluar), dan saldo kas akumulatif.</p>
             </div>
 
             <div class="flex flex-wrap items-center gap-3">
@@ -322,15 +344,15 @@
 
                 <!-- Type Filter -->
                 <select x-model="filterType" class="px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
-                    <option value="">Semua Tipe</option>
-                    <option value="income">Pemasukan (Income)</option>
-                    <option value="expense">Pengeluaran (Expense)</option>
+                    <option value="">Semua Mutasi</option>
+                    <option value="income">Debit (Pemasukan)</option>
+                    <option value="expense">Kredit (Pengeluaran)</option>
                 </select>
 
                 <!-- Counter Badge -->
                 <div class="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-700">
                     <i class="fa-solid fa-receipt text-sky-600"></i>
-                    <span x-text="filteredTransactions.length + ' Data'"></span>
+                    <span x-text="filteredTransactions.length + ' Entri Kas'"></span>
                 </div>
             </div>
         </div>
@@ -339,19 +361,21 @@
             <table class="w-full text-left border-collapse print:text-[10px]">
                 <thead>
                     <tr class="bg-slate-50/70 border-b border-slate-100 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider print:bg-slate-100 print:border-slate-300 print:text-slate-700">
-                        <th class="py-3.5 px-6 print:py-2 print:px-3">TANGGAL</th>
-                        <th class="py-3.5 px-6 print:py-2 print:px-3">DESKRIPSI &amp; REF</th>
-                        <th class="py-3.5 px-6 print:py-2 print:px-3">KATEGORI</th>
-                        <th class="py-3.5 px-6 print:py-2 print:px-3">ALOKASI KOLAM</th>
-                        <th class="py-3.5 px-6 print:py-2 print:px-3">NOMINAL</th>
-                        <th class="no-print py-3.5 px-6 text-right">AKSI</th>
+                        <th class="py-3.5 px-4 print:py-2 print:px-2">TANGGAL</th>
+                        <th class="py-3.5 px-4 print:py-2 print:px-2">NO. REF &amp; URAIAN</th>
+                        <th class="py-3.5 px-4 print:py-2 print:px-2">KATEGORI AKUN</th>
+                        <th class="py-3.5 px-4 print:py-2 print:px-2">KOLAM</th>
+                        <th class="py-3.5 px-4 text-right print:py-2 print:px-2 text-emerald-700">DEBIT (MASUK)</th>
+                        <th class="py-3.5 px-4 text-right print:py-2 print:px-2 text-rose-700">KREDIT (KELUAR)</th>
+                        <th class="py-3.5 px-4 text-right print:py-2 print:px-2 text-[#0B2570]">SALDO BERJALAN</th>
+                        <th class="no-print py-3.5 px-4 text-center">AKSI</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-xs font-medium text-slate-700 print:divide-slate-200 print:text-[10px]">
 
                     <template x-if="filteredTransactions.length === 0">
                         <tr>
-                            <td colspan="6" class="py-12 text-center text-slate-400 text-xs">
+                            <td colspan="8" class="py-12 text-center text-slate-400 text-xs">
                                 <i class="fa-regular fa-folder-open text-3xl text-slate-300 block mb-2"></i>
                                 Tidak ada data transaksi yang sesuai filter atau pencarian.
                             </td>
@@ -360,20 +384,39 @@
 
                     <template x-for="transaction in filteredTransactions" :key="transaction.raw_id || transaction.id">
                         <tr class="hover:bg-slate-50/70 transition-colors print:hover:bg-transparent">
-                            <td class="py-4 px-6 text-slate-500 font-semibold print:py-2 print:px-3" x-text="transaction.tanggal"></td>
-                            <td class="py-4 px-6 print:py-2 print:px-3">
+                            <td class="py-3.5 px-4 text-slate-500 font-semibold print:py-2 print:px-2 whitespace-nowrap" x-text="transaction.tanggal_format || transaction.tanggal"></td>
+                            <td class="py-3.5 px-4 print:py-2 print:px-2">
                                 <div class="font-bold text-slate-900" x-text="transaction.keterangan || '-'"></div>
-                                <div class="text-[10px] text-slate-400 font-mono font-semibold mt-0.5 print:text-slate-600" x-text="transaction.ref"></div>
+                                <div class="text-[10px] text-slate-400 font-mono font-semibold mt-0.5 print:text-slate-600 flex items-center gap-1.5">
+                                    <span class="w-1.5 h-1.5 rounded-full" :class="transaction.tipe === 'income' ? 'bg-emerald-500' : 'bg-rose-500'"></span>
+                                    <span x-text="transaction.ref"></span>
+                                </div>
                             </td>
-                            <td class="py-4 px-6 print:py-2 print:px-3">
-                                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold print:border"
+                            <td class="py-3.5 px-4 print:py-2 print:px-2">
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold print:border whitespace-nowrap"
                                       :class="transaction.tipe === 'income' ? 'bg-[#C6F6D5] text-[#22543D]' : 'bg-[#E0F2FE] text-[#0284C7]'"
                                       x-text="transaction.kategori"></span>
                             </td>
-                            <td class="py-4 px-6 text-slate-600 font-semibold print:py-2 print:px-3" x-text="transaction.kolam || 'Tidak dialokasikan'"></td>
-                            <td class="py-4 px-6 font-extrabold print:py-2 print:px-3" :class="transaction.tipe === 'income' ? 'text-emerald-600' : 'text-rose-600'"
-                                x-text="(transaction.tipe === 'income' ? '+ ' : '- ') + formatCurrency(transaction.nominal)"></td>
-                            <td class="no-print py-4 px-6 text-right">
+                            <td class="py-3.5 px-4 text-slate-600 font-semibold print:py-2 print:px-2 whitespace-nowrap" x-text="transaction.kolam || 'Umum'"></td>
+                            
+                            <!-- DEBIT -->
+                            <td class="py-3.5 px-4 text-right font-extrabold print:py-2 print:px-2 whitespace-nowrap">
+                                <span class="text-emerald-600 font-mono" x-show="transaction.debit > 0" x-text="formatCurrency(transaction.debit)"></span>
+                                <span class="text-slate-300 font-mono" x-show="!transaction.debit || transaction.debit <= 0">-</span>
+                            </td>
+
+                            <!-- KREDIT -->
+                            <td class="py-3.5 px-4 text-right font-extrabold print:py-2 print:px-2 whitespace-nowrap">
+                                <span class="text-rose-600 font-mono" x-show="transaction.kredit > 0" x-text="formatCurrency(transaction.kredit)"></span>
+                                <span class="text-slate-300 font-mono" x-show="!transaction.kredit || transaction.kredit <= 0">-</span>
+                            </td>
+
+                            <!-- SALDO BERJALAN -->
+                            <td class="py-3.5 px-4 text-right font-black print:py-2 print:px-2 text-[#0B2570] font-mono whitespace-nowrap"
+                                x-text="formatCurrency(transaction.saldo_berjalan)"></td>
+
+                            <!-- AKSI -->
+                            <td class="no-print py-3.5 px-4 text-center">
                                 <div class="inline-block text-left" 
                                      x-data="{ 
                                          open: false, 
@@ -429,61 +472,17 @@
                                         <div class="my-1 border-t border-slate-100"></div>
 
                                         <!-- Delete Button -->
-                                        <button type="button" @click="open = false; deleteTransaction(transaction)" class="w-full px-3.5 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2.5 cursor-pointer">
-                                            <i class="fa-solid fa-trash-can text-red-500 w-4"></i>
-                                            <span>Hapus Data</span>
+                                        <button type="button" @click="open = false; deleteTransaction(transaction)" class="w-full px-3.5 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2.5 cursor-pointer">
+                                            <i class="fa-solid fa-trash-can text-rose-600 w-4"></i>
+                                            <span>Hapus Transaksi</span>
                                         </button>
                                     </div>
                                 </div>
                             </td>
                         </tr>
                     </template>
-
                 </tbody>
             </table>
-        </div>
-
-        <!-- Table Footer Pagination -->
-        <div class="no-print p-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-slate-500">
-            <span>Menampilkan <strong class="text-slate-800" x-text="filteredTransactions.length"></strong> dari <strong class="text-slate-800" x-text="transactions.length"></strong> total transaksi</span>
-            <div class="flex items-center gap-1">
-                <span class="text-[11px] text-slate-400">Pencatatan real-time tersinkronisasi</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- =========================================================================
-         LEMBAR TANDA TANGAN & PENGESAHAN RESMI JURNAL KAS (MUNCUL SAAT CETAK)
-         ========================================================================= -->
-    <div class="hidden print:block mt-8 pt-4 page-break-inside-avoid">
-        <div class="flex justify-between items-start text-xs text-slate-800">
-            <div class="text-center w-64">
-                <p class="font-medium text-slate-600">Dibuat &amp; Dibukukan Oleh,</p>
-                <p class="font-bold text-slate-800 mt-0.5">Staff Administrasi &amp; Kasir Farm</p>
-                <div class="h-20 flex items-center justify-center">
-                    <span class="text-[10px] text-slate-400 italic">( Tanda Tangan &amp; Stempel )</span>
-                </div>
-                <div class="border-t border-slate-900 pt-1 font-bold text-slate-900">
-                    Petugas Kasir Budidaya
-                </div>
-                <p class="text-[10px] text-slate-500">NIP / ID: KAS-{{ date('Y') }}-012</p>
-            </div>
-
-            <div class="text-center w-64">
-                <p class="font-medium text-slate-600">Tasikmalaya, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
-                <p class="font-bold text-slate-800 mt-0.5">Mengetahui &amp; Menyetujui,</p>
-                <div class="h-20 flex items-center justify-center">
-                    <span class="text-[10px] text-slate-400 italic">( Tanda Tangan &amp; Stempel )</span>
-                </div>
-                <div class="border-t border-slate-900 pt-1 font-bold text-slate-900">
-                    {{ Auth::user()->nama ?? 'Manajer AMS Budidaya' }}
-                </div>
-                <p class="text-[10px] text-slate-500">Manajer Operasional &amp; Agribisnis</p>
-            </div>
-        </div>
-
-        <div class="mt-8 border-t border-slate-300 pt-2 text-center text-[9px] text-slate-400">
-            Dokumen ini merupakan Buku Kas Resmi dari Sistem Informasi Manajemen Budidaya Ikan Terpadu (AMS BUDIDAYA).
         </div>
     </div>
 
@@ -494,17 +493,17 @@
 <script>
 function transaksiKeuanganComponent() {
     return {
-        showForm: false,
-        formMode: "create",
-        tipeTransaksi: "income",
-        isLoading: false,
+        transactions: {!! json_encode($transactions ?? []) !!},
         searchQuery: "",
         filterType: "",
-        transactions: {!! isset($transactions) && count($transactions) > 0 ? json_encode($transactions) : "[]" !!},
+        showForm: false,
+        formMode: "create", // 'create', 'edit', 'view'
+        isLoading: false,
+        tipeTransaksi: "income",
         form: {
             raw_id: null,
             id: "",
-            tanggal: "{{ date('Y-m-d') }}",
+            tanggal: new Date().toISOString().split("T")[0],
             tipe: "income",
             nominal: "",
             kategori: "",
@@ -515,36 +514,39 @@ function transaksiKeuanganComponent() {
         },
 
         get filteredTransactions() {
-            return this.transactions.filter(item => {
-                const matchType = !this.filterType || item.tipe === this.filterType;
-                const query = this.searchQuery.toLowerCase().trim();
-                const matchQuery = !query || 
-                    (item.keterangan && item.keterangan.toLowerCase().includes(query)) ||
-                    (item.ref && item.ref.toLowerCase().includes(query)) ||
-                    (item.kategori && item.kategori.toLowerCase().includes(query)) ||
-                    (item.kolam && item.kolam.toLowerCase().includes(query));
-                return matchType && matchQuery;
-            });
+            let list = this.transactions;
+            if (this.filterType) {
+                list = list.filter(t => t.tipe === this.filterType);
+            }
+            if (this.searchQuery && this.searchQuery.trim() !== "") {
+                const q = this.searchQuery.toLowerCase();
+                list = list.filter(t => 
+                    (t.keterangan && t.keterangan.toLowerCase().includes(q)) ||
+                    (t.kategori && t.kategori.toLowerCase().includes(q)) ||
+                    (t.ref && t.ref.toLowerCase().includes(q)) ||
+                    (t.kolam && t.kolam.toLowerCase().includes(q))
+                );
+            }
+            return list;
         },
 
-        formatCurrency(value) {
-            return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(value || 0);
+        formatCurrency(num) {
+            return "Rp " + Number(num || 0).toLocaleString("id-ID");
         },
 
         generateSopCode(dateStr) {
-            const d = dateStr ? new Date(dateStr) : new Date();
-            const yy = String(d.getFullYear()).slice(-2);
-            const mm = String(d.getMonth() + 1).padStart(2, '0');
-            const prefix = 'TRX-' + yy + mm + '-';
-            const countThisMonth = this.transactions.filter(t => t.ref && t.ref.startsWith(prefix)).length + 1;
-            return prefix + String(countThisMonth).padStart(3, '0');
+            const date = dateStr ? new Date(dateStr) : new Date();
+            const yy = String(date.getFullYear()).slice(-2);
+            const mm = String(date.getMonth() + 1).padStart(2, '0');
+            const prefix = `TRX-${yy}${mm}-`;
+            const randomNum = String(Math.floor(Math.random() * 900) + 100);
+            return `${prefix}${randomNum}`;
         },
 
         onDateChange() {
-            if (this.formMode === 'create' && this.form.tanggal) {
-                const autoId = this.generateSopCode(this.form.tanggal);
-                this.form.id = autoId;
-                this.form.ref = autoId;
+            if (this.formMode === "create") {
+                this.form.id = this.generateSopCode(this.form.tanggal);
+                this.form.ref = this.form.id;
             }
         },
 
@@ -614,7 +616,7 @@ function transaksiKeuanganComponent() {
                 return;
             }
             if (!this.form.kategori) {
-                alert("Silakan pilih kategori transaksi.");
+                alert("Silakan pilih kategori akun transaksi.");
                 return;
             }
 
