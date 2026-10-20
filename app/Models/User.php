@@ -35,7 +35,8 @@ class User extends Authenticatable
     public function getFotoProfilUrlAttribute(): string
     {
         if ($this->foto_profil && \Illuminate\Support\Facades\Storage::disk('public')->exists($this->foto_profil)) {
-            return asset('storage/' . $this->foto_profil);
+            $version = $this->updated_at ? $this->updated_at->timestamp : time();
+            return asset('storage/' . $this->foto_profil) . '?v=' . $version;
         }
 
         $name = urlencode($this->nama ?: 'User');

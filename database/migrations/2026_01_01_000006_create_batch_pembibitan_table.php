@@ -18,11 +18,14 @@ return new class extends Migration
             $table->foreignId('id_ikan')->nullable()->constrained('ikan', 'id_ikan')->onDelete('set null');
             $table->date('tgl_pemijahan');
             $table->date('est_prcs_pembibitaan')->nullable();
+            $table->integer('jumlah_telur')->nullable();
+            $table->integer('jumlah_menetas')->nullable();
+            $table->decimal('survival_rate', 5, 2)->nullable();
             $table->integer('jumlah_bibitAwal');
             $table->string('jenis_ikan')->nullable();
             $table->string('fase_pertumbuhan')->default('TELUR');
             $table->integer('jumlah_kematian')->default(0);
-            $table->decimal('total_bobot_kg', 8, 2)->default(0);
+            $table->decimal('total_bobot_kg', 8, 2)->default(0.00);
             $table->string('status')->default('aktif');
             $table->timestamps();
         });

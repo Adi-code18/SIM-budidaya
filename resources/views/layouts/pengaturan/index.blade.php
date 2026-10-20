@@ -87,11 +87,18 @@
             <form action="{{ route('pengaturan.update-profile') }}" method="POST" enctype="multipart/form-data" class="space-y-6" x-data="{
                 photoPreview: '{{ $user->foto_profil_url }}',
                 hasCustomPhoto: {{ !empty($user->foto_profil) ? 'true' : 'false' }},
+                hasNewPhotoSelected: false,
                 deletePhoto: false,
 
                 previewFile(e) {
                     const file = e.target.files[0];
                     if (file) {
+                        if (file.size > 5 * 1024 * 1024) {
+                            alert('Ukuran foto terlalu besar (maksimal 5MB). Silakan pilih foto lain yang lebih kecil.');
+                            e.target.value = '';
+                            return;
+                        }
+                        this.hasNewPhotoSelected = true;
                         this.deletePhoto = false;
                         const reader = new FileReader();
                         reader.onload = (event) => {
@@ -102,6 +109,7 @@
                 },
                 removePhoto() {
                     this.deletePhoto = true;
+                    this.hasNewPhotoSelected = false;
                     this.photoPreview = 'https://ui-avatars.com/api/?name={{ urlencode($user->nama ?: 'User') }}&background=0B2570&color=ffffff&bold=true';
                     if (this.$refs.photoInput) this.$refs.photoInput.value = '';
                 }
@@ -121,12 +129,21 @@
                     </div>
                     <div class="space-y-1.5 text-center sm:text-left flex-1">
                         <h4 class="text-xs font-bold text-slate-800">Foto Profil</h4>
-                        <p class="text-[11px] text-slate-500 font-medium">Unggah file foto profil baru (Format: JPG, PNG, WEBP, Maks. 2MB).</p>
+                        <p class="text-[11px] text-slate-500 font-medium">Unggah file foto profil baru (Format: JPG, PNG, WEBP, Maks. 5MB).</p>
                         <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
                             <button type="button" @click="$refs.photoInput.click()" class="px-3.5 py-1.5 rounded-lg bg-[#051B44] hover:bg-navy-900 text-white text-[11px] font-bold shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer">
                                 <i class="fa-solid fa-cloud-arrow-up text-[11px]"></i>
-                                <span>Unggah Foto</span>
+                                <span>Pilih Foto Baru</span>
                             </button>
+                            
+                            <!-- Tombol Cepat Simpan Foto saat baru dipilih / dihapus -->
+                            <template x-if="hasNewPhotoSelected || deletePhoto">
+                                <button type="submit" class="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer animate-pulse">
+                                    <i class="fa-solid fa-check text-[11px]"></i>
+                                    <span>Simpan Foto Sekarang</span>
+                                </button>
+                            </template>
+
                             <template x-if="hasCustomPhoto && !deletePhoto">
                                 <button type="button" @click="removePhoto()" class="px-3.5 py-1.5 rounded-lg bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-600 text-[11px] font-bold transition-colors flex items-center gap-1.5 cursor-pointer">
                                     <i class="fa-solid fa-trash-can text-[10px]"></i>
@@ -134,8 +151,12 @@
                                 </button>
                             </template>
                         </div>
+                        <p x-show="hasNewPhotoSelected" class="text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1 mt-1 inline-flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle-info text-amber-600"></i>
+                            <span>Foto baru siap diunggah. Klik <strong>Simpan Foto Sekarang</strong> untuk menerapkan permanen.</span>
+                        </p>
                     </div>
-                    <input type="file" name="foto_profil" x-ref="photoInput" @change="previewFile" accept="image/jpeg,image/png,image/jpg,image/webp" class="hidden">
+                    <input type="file" name="foto_profil" x-ref="photoInput" @change="previewFile" accept="image/jpeg,image/png,image/jpg,image/webp,image/heic,image/jfif" class="hidden">
                     <input type="hidden" name="hapus_foto" :value="deletePhoto ? '1' : '0'">
                 </div>
 

@@ -28,6 +28,7 @@ class KolamSeeder extends Seeder
                 'kapasitas'        => 500,
                 'status'           => 'aktif',
                 'kesehatan_ph_air' => 7.00,
+                'biaya_pembuatan'  => 2000000.00,
             ],
             // 2. Kondisi Tipe: Hatchery / Pendederan
             [
@@ -36,22 +37,34 @@ class KolamSeeder extends Seeder
                 'kapasitas'        => 15000,
                 'status'           => 'aktif',
                 'kesehatan_ph_air' => 6.90,
+                'biaya_pembuatan'  => 2500000.00,
             ],
-            // 3. Kondisi Tipe: Pembesaran
+            // 3. Kondisi Tipe: Pembesaran A1
             [
                 'nama_kolam'       => 'Kolam Pembesaran A1',
                 'tipe_kolam'       => 'Kolam Pembesaran (Beton)',
                 'kapasitas'        => 2500,
                 'status'           => 'aktif',
                 'kesehatan_ph_air' => 7.20,
+                'biaya_pembuatan'  => 4500000.00,
             ],
-            // 4. Kondisi Tipe: Penampungan Stok & Pemberokan
+            // 4. Kondisi Tipe: Pembesaran A2 (Siap Panen)
+            [
+                'nama_kolam'       => 'Kolam Pembesaran A2',
+                'tipe_kolam'       => 'Kolam Pembesaran (Beton)',
+                'kapasitas'        => 2500,
+                'status'           => 'aktif',
+                'kesehatan_ph_air' => 7.30,
+                'biaya_pembuatan'  => 4500000.00,
+            ],
+            // 5. Kondisi Tipe: Penampungan Stok & Pemberokan
             [
                 'nama_kolam'       => 'Kolam Stok & Pemberokan D1',
                 'tipe_kolam'       => 'Kolam Penampungan Stok / Pemberokan',
                 'kapasitas'        => 1500,
                 'status'           => 'aktif',
                 'kesehatan_ph_air' => 7.20,
+                'biaya_pembuatan'  => 3000000.00,
             ],
         ];
 

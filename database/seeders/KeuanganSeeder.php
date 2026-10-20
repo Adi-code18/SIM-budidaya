@@ -51,5 +51,20 @@ class KeuanganSeeder extends Seeder
         foreach ($transaksiKeuangan as $keu) {
             Keuangan::create($keu);
         }
+
+        // Catat Biaya Investasi Kolam ke Laporan Keuangan (Anti Pengeluaran Gaib)
+        $kolamWithCost = Kolam::where('biaya_pembuatan', '>', 0)->get();
+        foreach ($kolamWithCost as $k) {
+            Keuangan::create([
+                'id_user'           => $userId,
+                'id_kolam'          => $k->id_kolam,
+                'tanggal_transaksi' => now()->subDays(60)->toDateString(),
+                'tipe_transaksi'    => 'pengeluaran',
+                'kategori'          => 'Pembangunan Kolam',
+                'nominal'           => (float) $k->biaya_pembuatan,
+                'keterangan'        => "Biaya pembuatan/investasi kolam {$k->nama_kolam} ({$k->tipe_kolam})",
+                'ref_id'            => 'KOLAM-INV-' . str_pad($k->id_kolam, 4, '0', STR_PAD_LEFT),
+            ]);
+        }
     }
 }

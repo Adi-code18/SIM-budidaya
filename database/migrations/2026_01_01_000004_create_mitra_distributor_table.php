@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('id_user')->constrained('users', 'id_user')->onDelete('cascade');
             $table->string('nama_mitra');
             $table->string('tipe_mitra');
+            $table->string('logo_mitra')->nullable()->comment('Path atau file logo/gambar mitra');
             $table->text('alamat');
             $table->decimal('longitude', 11, 8)->nullable();
             $table->decimal('latitude', 10, 8)->nullable();

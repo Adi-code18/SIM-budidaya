@@ -19,6 +19,8 @@ return new class extends Migration
             $table->integer('kapasitas');
             $table->string('status')->default('aktif');
             $table->decimal('kesehatan_ph_air', 4, 2)->nullable();
+            $table->decimal('biaya_pembuatan', 15, 2)->default(0.00);
+            $table->text('catatan')->nullable();
             $table->timestamps();
         });
     }

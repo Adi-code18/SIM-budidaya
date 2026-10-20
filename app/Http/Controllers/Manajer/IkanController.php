@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Ikan;
 use App\Models\BatchPembibitan;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class IkanController extends Controller
 {
@@ -44,12 +45,20 @@ class IkanController extends Controller
             'target_konsumsi'      => 'nullable|string|max:50',
             'jenis_pakan_didukung' => 'nullable|string|max:100',
             'harga_jual_kg'        => 'nullable|numeric|min:0',
+            'foto'                 => 'nullable|image|mimes:jpeg,png,jpg,webp|max:3072',
             'id_batch'             => 'nullable|exists:batch_pembibitan,id_batch',
         ], [
             'nama_ikan.required'         => 'Nama jenis ikan wajib diisi.',
             'durasi_penetasan.required'  => 'Durasi masa penetasan wajib diisi.',
             'durasi_pembibitan.required' => 'Durasi masa pembibitan wajib diisi.',
+            'foto.image'                 => 'Berkas foto harus berupa gambar valid.',
+            'foto.max'                   => 'Ukuran foto maksimal 3MB.',
         ]);
+
+        $fotoPath = null;
+        if ($request->hasFile('foto')) {
+            $fotoPath = $request->file('foto')->store('ikan', 'public');
+        }
 
         $ikan = Ikan::create([
             'nama_ikan'            => $request->nama_ikan,
@@ -62,6 +71,7 @@ class IkanController extends Controller
             'target_konsumsi'      => $request->target_konsumsi,
             'jenis_pakan_didukung' => $request->jenis_pakan_didukung,
             'harga_jual_kg'        => $request->harga_jual_kg ?? 30000,
+            'foto'                 => $fotoPath,
             'id_batch'             => $request->id_batch ?: null,
         ]);
 
@@ -93,10 +103,11 @@ class IkanController extends Controller
             'target_konsumsi'      => 'nullable|string|max:50',
             'jenis_pakan_didukung' => 'nullable|string|max:100',
             'harga_jual_kg'        => 'nullable|numeric|min:0',
+            'foto'                 => 'nullable|image|mimes:jpeg,png,jpg,webp|max:3072',
             'id_batch'             => 'nullable|exists:batch_pembibitan,id_batch',
         ]);
 
-        $ikan->update([
+        $dataToUpdate = [
             'nama_ikan'            => $request->nama_ikan,
             'durasi_penetasan'     => $request->durasi_penetasan,
             'durasi_pembibitan'    => $request->durasi_pembibitan,
@@ -108,7 +119,16 @@ class IkanController extends Controller
             'jenis_pakan_didukung' => $request->jenis_pakan_didukung,
             'harga_jual_kg'        => $request->harga_jual_kg ?? $ikan->harga_jual_kg ?? 30000,
             'id_batch'             => $request->id_batch ?: null,
-        ]);
+        ];
+
+        if ($request->hasFile('foto')) {
+            if ($ikan->foto && Storage::disk('public')->exists($ikan->foto)) {
+                Storage::disk('public')->delete($ikan->foto);
+            }
+            $dataToUpdate['foto'] = $request->file('foto')->store('ikan', 'public');
+        }
+
+        $ikan->update($dataToUpdate);
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
@@ -127,6 +147,11 @@ class IkanController extends Controller
     {
         $ikan = Ikan::findOrFail($id);
         $nama = $ikan->nama_ikan;
+
+        if ($ikan->foto && Storage::disk('public')->exists($ikan->foto)) {
+            Storage::disk('public')->delete($ikan->foto);
+        }
+
         $ikan->delete();
 
         if (request()->wantsJson() || request()->ajax()) {

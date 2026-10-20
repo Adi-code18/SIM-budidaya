@@ -43,6 +43,32 @@ class IkanSeeder extends Seeder
                 'jenis_pakan_didukung' => 'Pelet + Vitamin',
                 'harga_jual_kg'        => 24000.00,
             ],
+            // 3. Ikan Patin Siam (Pangasius)
+            [
+                'nama_ikan'            => 'Ikan Patin',
+                'durasi_penetasan'     => 2,
+                'durasi_pembibitan'    => 30,
+                'target_konsumsi'      => '2–3 ekor / kg',
+                'bulan_panen_min'      => 5.0,
+                'bulan_panen_max'      => 6.0,
+                'fcr_min'              => 1.20,
+                'fcr_max'              => 1.40,
+                'jenis_pakan_didukung' => 'Pelet Apung + Vitamin',
+                'harga_jual_kg'        => 28000.00,
+            ],
+            // 4. Ikan Gurame Soang
+            [
+                'nama_ikan'            => 'Ikan Gurame',
+                'durasi_penetasan'     => 4,
+                'durasi_pembibitan'    => 45,
+                'target_konsumsi'      => '2–3 ekor / kg',
+                'bulan_panen_min'      => 10.0,
+                'bulan_panen_max'      => 12.0,
+                'fcr_min'              => 1.50,
+                'fcr_max'              => 1.80,
+                'jenis_pakan_didukung' => 'Pelet + Dedaunan Fermentasi',
+                'harga_jual_kg'        => 48000.00,
+            ],
         ];
 
         foreach ($ikans as $item) {

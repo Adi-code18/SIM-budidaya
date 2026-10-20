@@ -247,6 +247,30 @@
                 </div>
             </div>
 
+            <!-- Row 3: Upload Foto Ikan -->
+            <div class="space-y-2 p-4 bg-slate-50/70 rounded-2xl border border-slate-200">
+                <label class="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 block">
+                    FOTO / GAMBAR IKAN (DITAMPILKAN DI LANDING PAGE)
+                </label>
+                <div class="flex items-center gap-4">
+                    <template x-if="form.foto_preview">
+                        <img :src="form.foto_preview" alt="Preview Foto" class="w-16 h-16 rounded-xl object-cover border-2 border-sky-400 shadow-sm shrink-0">
+                    </template>
+                    <template x-if="!form.foto_preview">
+                        <div class="w-16 h-16 rounded-xl bg-slate-200 border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400 shrink-0">
+                            <i class="fa-solid fa-image text-xl"></i>
+                        </div>
+                    </template>
+                    <div class="flex-1 space-y-1">
+                        <input type="file" 
+                               @change="handleFotoChange($event)"
+                               accept="image/png, image/jpeg, image/jpg, image/webp"
+                               class="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-extrabold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100 cursor-pointer">
+                        <p class="text-[10px] text-slate-400">Format: JPG, PNG, WEBP (Maksimal 3MB). Foto ini akan langsung tampil di halaman depan / landing page.</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Form Actions -->
             <div class="flex items-center justify-end gap-3 pt-2">
                 <button type="button" 
@@ -319,9 +343,7 @@
                         <tr class="hover:bg-slate-50/70 transition-colors">
                             <td class="py-4 px-6">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-9 h-9 rounded-xl bg-sky-100 text-[#0284C7] flex items-center justify-center font-extrabold text-xs shrink-0">
-                                        <i class="fa-solid fa-fish"></i>
-                                    </div>
+                                    <img :src="item.foto_url" :alt="item.nama_ikan" class="w-10 h-10 rounded-xl object-cover border border-slate-200 shrink-0 shadow-xs">
                                     <div>
                                         <span class="font-extrabold text-slate-900 block" x-text="item.nama_ikan"></span>
                                         <span class="text-[10px] text-slate-400 font-medium" x-text="'ID: #IK-' + String(item.id_ikan).padStart(4, '0')"></span>
@@ -485,6 +507,8 @@ function ikanComponent() {
             return Math.round((sumPenetasan + sumPembibitan) / this.ikans.length) + ' Hari';
         },
 
+        fotoFile: null,
+
         openCreateForm() {
             this.formMode = 'create';
             this.resetForm();
@@ -494,6 +518,7 @@ function ikanComponent() {
 
         openEditForm(item) {
             this.formMode = 'edit';
+            this.fotoFile = null;
             this.form = {
                 id_ikan: item.id_ikan,
                 nama_ikan: item.nama_ikan,
@@ -506,13 +531,15 @@ function ikanComponent() {
                 target_konsumsi: item.target_konsumsi ?? '',
                 jenis_pakan_didukung: item.jenis_pakan_didukung ?? '',
                 harga_jual_kg: item.harga_jual_kg ?? 30000,
-                id_batch: item.id_batch || ''
+                id_batch: item.id_batch || '',
+                foto_preview: item.foto_url || null
             };
             this.showForm = true;
             window.scrollTo({ top: 0, behavior: 'smooth' });
         },
 
         resetForm() {
+            this.fotoFile = null;
             this.form = {
                 id_ikan: null,
                 nama_ikan: '',
@@ -525,8 +552,17 @@ function ikanComponent() {
                 target_konsumsi: '',
                 jenis_pakan_didukung: '',
                 harga_jual_kg: 30000,
-                id_batch: ''
+                id_batch: '',
+                foto_preview: null
             };
+        },
+
+        handleFotoChange(e) {
+            const file = e.target.files[0];
+            if (file) {
+                this.fotoFile = file;
+                this.form.foto_preview = URL.createObjectURL(file);
+            }
         },
 
         triggerToast(msg) {
@@ -582,27 +618,29 @@ function ikanComponent() {
 
             try {
                 const url = isEdit ? `/ikan/${this.form.id_ikan}` : '/ikan';
-                const method = isEdit ? 'PUT' : 'POST';
+                
+                const formData = new FormData();
+                formData.append('nama_ikan', this.form.nama_ikan.trim());
+                formData.append('durasi_penetasan', Number(this.form.durasi_penetasan));
+                formData.append('durasi_pembibitan', Number(this.form.durasi_pembibitan));
+                if (this.form.fcr_min) formData.append('fcr_min', Number(this.form.fcr_min));
+                if (this.form.fcr_max) formData.append('fcr_max', Number(this.form.fcr_max));
+                if (this.form.bulan_panen_min) formData.append('bulan_panen_min', Number(this.form.bulan_panen_min));
+                if (this.form.bulan_panen_max) formData.append('bulan_panen_max', Number(this.form.bulan_panen_max));
+                if (this.form.target_konsumsi) formData.append('target_konsumsi', this.form.target_konsumsi.trim());
+                if (this.form.jenis_pakan_didukung) formData.append('jenis_pakan_didukung', this.form.jenis_pakan_didukung.trim());
+                if (this.form.harga_jual_kg) formData.append('harga_jual_kg', Number(this.form.harga_jual_kg));
+                if (this.form.id_batch) formData.append('id_batch', this.form.id_batch);
+                if (this.fotoFile) formData.append('foto', this.fotoFile);
+                if (isEdit) formData.append('_method', 'PUT');
 
                 const response = await fetch(url, {
-                    method: method,
+                    method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
                         'Accept': 'application/json',
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
-                    body: JSON.stringify({
-                        nama_ikan: this.form.nama_ikan.trim(),
-                        durasi_penetasan: Number(this.form.durasi_penetasan),
-                        durasi_pembibitan: Number(this.form.durasi_pembibitan),
-                        fcr_min: this.form.fcr_min ? Number(this.form.fcr_min) : 1.00,
-                        fcr_max: this.form.fcr_max ? Number(this.form.fcr_max) : 1.20,
-                        bulan_panen_min: this.form.bulan_panen_min ? Number(this.form.bulan_panen_min) : null,
-                        bulan_panen_max: this.form.bulan_panen_max ? Number(this.form.bulan_panen_max) : null,
-                        target_konsumsi: this.form.target_konsumsi ? this.form.target_konsumsi.trim() : null,
-                        jenis_pakan_didukung: this.form.jenis_pakan_didukung ? this.form.jenis_pakan_didukung.trim() : null,
-                        id_batch: this.form.id_batch || null
-                    })
+                    body: formData
                 });
 
                 const data = await response.json();

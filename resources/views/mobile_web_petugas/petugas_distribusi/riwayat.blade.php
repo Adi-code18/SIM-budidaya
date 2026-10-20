@@ -48,12 +48,31 @@
                         <p class="text-[10px] text-slate-400 font-medium"><i class="fa-regular fa-calendar-check mr-1"></i>Tanggal Order: {{ $r->tanggal_order }}</p>
                     </div>
 
+                    @if($r->bukti_sampai_url)
+                        <div class="relative rounded-xl overflow-hidden border border-slate-200 bg-slate-100 cursor-pointer group"
+                             @click="selectedImage = '{{ $r->bukti_sampai_url }}'; proofModal = true">
+                            <img src="{{ $r->bukti_sampai_url }}" alt="Bukti Serah Terima" class="w-full h-36 object-cover group-hover:scale-105 transition-transform duration-200">
+                            <div class="absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-emerald-600/90 text-white text-[10px] font-bold backdrop-blur-xs flex items-center gap-1 shadow-sm">
+                                <i class="fa-solid fa-camera text-[9px]"></i>
+                                <span>Bukti Serah Terima</span>
+                            </div>
+                        </div>
+                    @endif
+
                     <div class="pt-2 border-t border-slate-100 flex items-center gap-2">
-                        <button @click="selectedImage = 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=500&auto=format&fit=crop&q=60'; proofModal = true"
-                                class="flex-1 py-2 rounded-xl border border-navy-800 text-navy-800 hover:bg-navy-50 font-bold text-xs flex items-center justify-center gap-1.5 transition-all">
-                            <i class="fa-regular fa-image text-xs"></i>
-                            <span>Bukti Foto</span>
-                        </button>
+                        @if($r->bukti_sampai_url)
+                            <button @click="selectedImage = '{{ $r->bukti_sampai_url }}'; proofModal = true"
+                                    class="flex-1 py-2 rounded-xl border border-navy-800 text-navy-800 hover:bg-navy-50 font-bold text-xs flex items-center justify-center gap-1.5 transition-all">
+                                <i class="fa-regular fa-image text-xs"></i>
+                                <span>Lihat Bukti Foto</span>
+                            </button>
+                        @else
+                            <button disabled
+                                    class="flex-1 py-2 rounded-xl border border-slate-200 text-slate-400 font-bold text-xs flex items-center justify-center gap-1.5 cursor-not-allowed">
+                                <i class="fa-regular fa-image text-xs"></i>
+                                <span>Foto Belum Tersedia</span>
+                            </button>
+                        @endif
                     </div>
                 </div>
             @endforeach
@@ -91,7 +110,9 @@
                 </button>
             </div>
 
-            <img :src="selectedImage" class="w-full h-56 object-cover rounded-2xl border border-slate-200 shadow-xs">
+            <div class="bg-slate-950 rounded-2xl overflow-hidden border border-slate-200">
+                <img :src="selectedImage" class="w-full max-h-72 object-contain mx-auto">
+            </div>
             
             <p class="text-[11px] text-slate-500 font-medium">Foto bukti penerimaan barang oleh mitra distributor.</p>
             

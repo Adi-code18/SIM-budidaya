@@ -84,6 +84,20 @@ flowchart TD
 
 ## 4. Matriks Menu & Logika Fungsional (Feature Breakdown & Business Rules)
 
+### 4.0 Landing Page Profil Perusahaan & Hub Komersial WhatsApp (`/`)
+- **Tujuan Bisnis & Diferensiasi (Anti AI-Slop):** Halaman depan publik bernilai konversi tinggi untuk menarik pembeli komoditas ikan skala besar (restoran sunda, hotel, katering, pedagang pasar grosir) serta calon investor budidaya modern.
+- **Katalog Komoditas Ikan Segar Terintegrasi Database:** Menampilkan 4 komoditas unggulan (Nila Merah Nirwana, Lele Sangkuriang, Patin Siam, Gurame Soang) lengkap dengan spesifikasi ukuran konsumsi (ekor/kg), harga patokan, keunggulan biologis, dan tombol pemesanan WhatsApp otomatis per varian ikan.
+- **Kalkulator Simulasi Estimasi Pesanan Interaktif:** Calon pembeli dapat memilih jenis ikan, menggeser/mengisi volume kebutuhan (kg), memilih kategori usaha, dan menentukan kota tujuan pengiriman. Sistem secara otomatis menghitung total nilai patokan, rekomendasi armada pengiriman, dan menghasilkan format pesan WhatsApp pesanan terstruktur sekali klik.
+- **Showcase Standar Mutu Akuakultur (SOP Priangan):**
+  1. *Pemberokan 18–24 Jam:* Pemuasaan di bak air deras sebelum panen guna mengeliminasi aroma lumpur (*geosmin*).
+  2. *Pakan Mix Berkualitas:* Pelet apung berprotein 30% + asupan dedaunan organik fermentasi & probiotik lacto (FCR < 1.2).
+  3. *Garansi Hidup DDP (Delivery Duty Paid):* Seluruh risiko perjalanan ditanggung tambak dengan toleransi susut wajar $\le 2\%$.
+  4. *Panen Suhu Dingin:* Waktu penangkapan hanya dilakukan pagi (05.00–08.00 WIB) atau sore (16.00–18.00 WIB) untuk mencegah stres ikan.
+- **Ruang Kemitraan & Skalabilitas Investor (Smart Aquaculture):**
+  - Pemaparan sistem kontrol kualitas air digital, efisiensi rasio konversi pakan, akuntansi kas tanpa kebocoran aset (*zero hidden costs*), dan 3 skema kerjasama (Kontrak Pasok Restoran, Plasma Kolam Tambak, Permodalan Ekspansi Unit Kolam).
+- **Kebijakan Keamanan & Pemisahan Akses:** Tombol login staf ditiadakan dari navbar publik agar landing page 100% berfokus pada prospek komersial; akses login portal internal staf/manajer tetap privat via URL langsung (`/login`).
+- **Floating WhatsApp Widget:** Tombol melayang di pojok kanan bawah dengan tautan langsung ke WhatsApp tim sales.
+
 ### 4.1 Alur Autentikasi & Keamanan (Auth Routes)
 
 | Rute / Endpoint | Aktor | Deskripsi Fungsionalitas & Branding |
@@ -132,11 +146,15 @@ flowchart TD
 - **Pelacakan Siklus Pembesaran (Grow-out):** Input batch kolam, tanggal tebar bibit, jumlah tebar (ekor), berat awal per ekor (gram), estimasi biomassa total (kg), dan target panen.
 - **Kalkulasi Metrik Otomatis:** Perhitungan otomatis *Day of Culture (DOC)* harian, rata-rata bobot ikan (*Average Body Weight / ABW*), estimasi biomassa kolam, dan rasio konversi pakan (*Feed Conversion Ratio / FCR*).
 - **Manajemen Panen:** Pencatatan panen parsial, panen total/kuras, jumlah berat riil panen (kg), tanggal panen aktual, dan mutasi sisa biomassa.
+- **Pemisahan Modul Kolam:** Pembuatan unit kolam baru dipusatkan sepenuhnya pada menu mandiri **Manajemen Kolam (`/kolam`)** dan dihapus dari halaman Pembesaran guna menjamin kepatuhan pencatatan biaya investasi kolam ke buku kas Keuangan.
 
-#### 5. Monitoring Kolam & Pembudidaya (`/pembudidaya`)
-- **Inventaris Master Kolam:** Data seluruh kolam budidaya mencakup nama/kode kolam, tipe konstruksi (Kolam Terpal, Kolam Beton, Kolam Tanah, Sistem Bioflok), dimensi panjang x lebar x tinggi, volume air (m³), dan lokasi/blok tambak Aquafarm.
-- **Status Operasional Kolam:** Indikator visual ketersediaan kolam (*Tersedia/Kosong, Terisi/Aktif, Masa Pengeringan/Persiapan, Masa Sterilisasi/Perawatan*).
-- **Monitoring Parameter Kualitas Air:** Log pemantauan suhu (°C), derajat keasaman (pH), dan oksigen terlarut (*Dissolved Oxygen / DO*).
+#### 5. Manajemen & Data Kolam (`/kolam`)
+- **Navigasi Sidebar Terpisah:** Ditampilkan sebagai menu mandiri di dalam kelompok *Budidaya & Operasional* pada sidebar navigasi desktop.
+- **Inventaris Master Kolam:** Pengelolaan unit kolam mencakup nama/kode kolam, tipe konstruksi (Kolam Beton, Kolam Bioflok Terpal, Kolam Tanah Tradisional, Hatchery Pemijahan, Kolam Pendederan, Kolam Penampungan Stok / Buffer Pemberokan), kapasitas tampung maksimal (ekor), penanggung jawab/pembudidaya, dan parameter derajat keasaman (pH awal).
+- **Pencatatan Biaya Investasi Kolam (Integrasi Finansial Tanpa "Pengeluaran Gaib"):**
+  - Form tambah kolam dilengkapi dengan input biaya pembuatan/konstruksi kolam (`biaya_pembuatan`), tanggal transaksi, dan catatan spesifikasi.
+  - Setiap kolam baru yang didaftarkan dengan nilai biaya pembuatan $> 0$ **secara otomatis dibukukan sebagai transaksi pengeluaran** pada modul Keuangan (`kategori: 'Pembangunan Kolam'`, `tipe_transaksi: 'pengeluaran'`, `ref_id: 'KOLAM-INV-XXXX'`), sehingga seluruh pengeluaran modal (*capital expenditure*) tercatat transparan dan tidak menjadi pengeluaran tidak terlacak.
+- **Status Operasional Kolam:** Indikator visual status kolam (*Kosong / Tersedia, Terisi Pembesaran, Terisi Pembibitan, Siap Panen*).
 
 #### 6. Log Stok & Manajemen Pakan Terpadu (`/log-pakan`)
 - **Inventori Master Stok Pakan (`StokPakan`):**
@@ -150,35 +168,61 @@ flowchart TD
 - **Log Konsumsi Pakan Harian Kolam (`ManajemenPakan`):**
   - Pencatatan pemberian pakan harian (pagi/sore) per kolam/batch dengan pengurangan saldo stok pakan secara *real-time*.
 
-#### 7. Distribusi Logistik, Multi-Kolam & Alokasi Buffer (`/distribusi`)
-- **Manajemen Surat Jalan & Tiket Pengiriman:** Pembuatan order penjualan ikan (nomor DO `#ORD-YYYY-XXXX`, mitra pemesan, kolam/batch asal, total kg, harga total, tanggal pengiriman, kurir, armada, dan status order: *Pending, Pemberokian/Proses, Dalam Pengiriman, Selesai, Dibatalkan*).
-- **Aturan Alokasi Defisit & Kuras Kolam (Business Rules):**
-  1. **Strict Same-Species Matching:** Pengambilan ikan untuk memenuhi suatu order harus berasal dari batch kolam siap panen dengan jenis ikan yang persis sama (`id_ikan` identik).
-  2. **Alokasi Defisit Multi-Kolam:** Jika kolam utama tidak mencukupi kuota pesanan mitra, sistem mengambil kekurangan (defisit kg) dari kolam lain yang siap panen dari spesies yang sama.
-  3. **Pemberokian & Kuras Kolam (Buffer Handling):** Ketika order memasuki tahap pemberokian/proses dari kolam kuras, sisa kg ikan yang tidak terpakai dapat dipindahkan ke kolam buffer/penampungan aktif lain dari spesies yang sama, sedangkan kolam asal yang telah habis biomassanya diubah statusnya menjadi `kosong`.
+#### 7. Inventaris & Gudang Operasional (`/gudang`)
+- **Pencegahan "Biaya Siluman" & Optimalisasi True P&L:**
+  - Penambahan modul terintegrasi untuk mencatat seluruh sarana produksi dan aset fisik tambak selain pakan dan benih guna mencegah kebocoran barang dan menghitung laba-rugi (*Profit & Loss*) riil perusahaan.
+- **Katalog Barang Saprotan & Peralatan Tambak:**
+  - Klasifikasi 2 kategori utama:
+    - **Saprotan (Sarana Produksi Tambak / Habis Pakai):** Kapur dolomit, probiotik bioflok, vitamin & asam amino, garam krosok, desinfektan kolam, dan obat ikan/antibiotik. Dihitung nilai stok sisa, harga satuan, dan batas minimum stok (*threshold warning*).
+    - **Peralatan Tambak (Capital Asset / Reusable):** Pompa celup, aerator turbo/blower, DO meter digital, pH meter, jaring panen, dan timbangan digital. Dilengkapi pelacakan kondisi fisik (*Baik/Normal*, *Perlu Servis*, *Rusak Total*).
+  - **Penomoran Kode Barang Otomatis:** Prefiks pintar `SPT-XXXX` untuk Saprotan dan `ALT-XXXX` untuk Peralatan Tambak.
+- **Restok & Pengadaan Barang Masuk (Sinkronisasi Kas Otomatis):**
+  - Transaksi restok/pembelian barang baru secara otomatis membukukan transaksi pengeluaran di buku kas Keuangan (`kategori: 'Pengadaan Saprotan'` atau `'Peralatan Tambak'`, `tipe_transaksi: 'pengeluaran'`, `ref_id: 'GUDANG-IN-XXXX'`). Menghapus risiko pengeluaran tidak tercatat di laporan laba rugi.
+- **Pemakaian Barang di Kolam (Atribusi HPP Kolam Akurat):**
+  - Pengeluaran bahan/saprotan wajib dialokasikan ke kolam tujuan (`id_kolam`).
+  - Menghitung **Harga Pokok Produksi (HPP) Kolam** secara komprehensif:
+    $$\text{HPP Kolam} = \text{Biaya Benih} + \text{Biaya Pakan} + \text{Biaya Saprotan (Kapur, Probiotik, Obat, dsb.)}$$
+- **Log & Audit Trail Mutasi Gudang:**
+  - Pencatatan riwayat keluar-masuk barang, penanggung jawab/user, tanggal transaksi, harga satuan, total biaya, dan alasan mutasi secara kronologis.
+
+#### 8. Distribusi Logistik, Multi-Kolam & Alokasi Buffer (`/distribusi`)
+- **Manajemen Surat Jalan & Tiket Pengiriman:** Pembuatan order penjualan ikan (nomor DO `#ORD-YYYY-XXXX`, mitra pemesan, kolam/batch asal, total kg, harga total, tanggal order, tanggal rencana kirim, kurir, armada, dan status order: *Pending/Booking, Pemberokian/Proses, Siap Kirim, Dalam Pengiriman, Selesai, Dibatalkan*).
+- **Aturan Pre-Order & Booking Masa Depan (Future Order Policy):**
+  - Jika pesanan memiliki tanggal kirim di masa depan (H+1 s.d. H+14), status order ditetapkan sebagai `Pending / Pre-Order`.
+  - **Ikan tetap hidup di kolam pembesaran asal** dan tetap diberi pakan normal seperti biasa hingga H-1 keberangkatan. Sistem tidak memindahkan ikan fisik 1 minggu lebih awal agar tidak terjadi susut bobot (5-10%) atau penurunan imunitas ikan.
+  - Kuota pesanan mengunci biomassa siap jual kolam secara virtual (*soft-reservation*).
+- **Diferensiasi Metode Panen (Harvest Type Strategy):**
+  1. **Panen Parsial (Selective Harvest):** Digunakan saat kuota pesanan hanya sebagian dari isi kolam (misal pesan 70 kg dari kolam 200 kg) dan ikan lainnya masih lanjut siklus. Ikan yang dijaring hanya 70 kg (masuk ke bak pemberokan), sisa 130 kg tetap hidup di kolam asal dan siklus pembesaran tetap berjalan.
+  2. **Panen Kuras Total (Total Clean-Out Harvest):** Digunakan jika siklus kolam sudah habis/tua. Kolam dikuras total, kuota pesanan (70 kg) dialokasikan ke pembeli, dan sisa biomassa (130 kg) wajib dipindahkan ke Kolam Buffer/Penampungan aktif. Kolam asal berubah status menjadi `masa_pengeringan/sterilisasi` untuk persiapan tebar bibit berikutnya.
+- **Pemberokan Terjadwal (H-1 Depuration Workflow):**
+  - Timer pemberokan 18–24 jam hanya dipicu aktif pada H-1 tanggal pengiriman untuk membersihkan kotoran perut ikan agar air pengiriman tidak keruh/beracun dan rasa daging tidak berbau lumpur.
+  - Kolam/ikan yang berstatus pemberokan otomatis dilindungi dari pencatatan pemberian pakan harian (*feeding lock*).
+- **Verifikasi Serah Terima DDP & Toleransi Susut Transportasi:**
+  - Sesuai standar DDP (*Delivery Duty Paid*), pengantaran mencatat bobot aktual diterima serta mortalitas perjalanan (kg / ekor).
+  - Toleransi mortalitas $\le 2\%$ ditanggung oleh perusahaan sebagai susut logistik wajar; jika $> 2\%$, sistem memicu evaluasi armada/packing.
 - **Peta Geospatial Interaktif Distribusi (Leaflet.js + OpenStreetMap):**
   - Peta digital GIS interaktif menampilkan sebaran titik koordinat (*latitude/longitude*) seluruh mitra distributor toko/pasar.
   - *Pin marker* interaktif dengan pop-up rute pengiriman, status pesanan aktif, dan informasi kontak mitra.
 
-#### 8. Rekapitulasi & Laporan Keuangan (`/keuangan` & `/keuangan/transaksi`)
+#### 9. Rekapitulasi & Laporan Keuangan (`/keuangan` & `/keuangan/transaksi`)
 - **Buku Kas Arus Kas Masuk & Keluar:** Pencatatan omzet penjualan ikan/bibit (Inflow) dan biaya operasional belanja pakan, bibit, vitamin, listrik, BBM armada, serta perawatan kolam (Outflow).
 - **Penomoran Referensi Transaksi Otomatis (SOP ID):** Format standar akuntansi unik berbasis tanggal (`TRX-YYMM-XXX`).
 - **Skor Kesehatan Keuangan (Financial Health Score):** Metrik kalkulasi rasio margin keuntungan bersih terhadap beban operasional dengan status kesehatan kas (*Stable & Sehat* vs *Perlu Evaluasi*).
 - **Analisis Laba Bersih & Arus Kas Bulanan:** Ringkasan total pendapatan, total beban, laba bersih, dan grafik tren arus kas per bulan sepanjang tahun berjalan.
 
-#### 9. Manajemen Mitra Distributor & Supplier (`/mitra`)
+#### 10. Manajemen Mitra Distributor & Supplier (`/mitra`)
 - **Database Mitra Komprehensif:** Pengelolaan profil pembeli (Pasar Tradisional, Restoran/Hotel, Agen Grosir, Eksportir) serta Supplier Pakan/Bahan Baku.
 - **Integrasi Koordinat Geografis GIS:** Input titik koordinat Latitude dan Longitude dengan bantuan visual peta untuk penentuan rute kurir.
 - **Histori Transaksi Mitra:** Arsip volume order (kg), riwayat pengiriman, dan kontak telepon/WhatsApp langsung.
 
-#### 10. Manajemen Akun Petugas & Tampilan 2FA (`/petugas`)
+#### 11. Manajemen Akun Petugas & Tampilan 2FA (`/petugas`)
 - **Kelola Data Karyawan:** Tambah akun petugas baru, perbarui identitas/nomor telepon, aktivasi/nonaktifkan akun, dan pemilihan role teknis (*Petugas Distribusi*, *Petugas Pembibitan*, *Petugas Pembesaran*).
 - **Setup & Visualisasi Google Authenticator (2FA):**
   - **Form Edit Petugas & Modal Cepat:** Menampilkan card **Google Authenticator (2FA Setup)** berisi QR Code SVG aktif, manual *Secret Key*, dan tombol *Salin Cepat* agar manajer dapat langsung membagikannya kepada petugas.
   - **Regenerasi Kunci 2FA (`/petugas/{id}/regenerate-2fa`):** Fasilitas reset dan pembuatan kunci baru secara aman jika aplikasi petugas hilang.
 - **Manajemen Kredensial & Reset Password:** Pembaruan kata sandi akun petugas secara langsung oleh manajer.
 
-#### 11. Pengaturan Sistem & Profil Manajer (`/pengaturan`)
+#### 12. Pengaturan Sistem & Profil Manajer (`/pengaturan`)
 - **Profil Manajer & Keamanan:** Pengubahan nama, email, nomor kontak, kata sandi, serta unggah dan ganti foto profil avatar.
 - **Preferensi Operasional Tambak:** Konfigurasi nama tambak/perusahaan (*AMS BUDIDAYA*), ambang batas mortalitas kritis, target FCR standar, satuan berat, dan preferensi notifikasi.
 
@@ -317,13 +361,30 @@ skema fitur budidaya dan operasional
 --[✓]fitur viewing data  batch pembesaran
 --[✓]fitur edith data batch pembesaran 
 --[✓]fitur hapus data batch pembesaran
---[✓] fitur selesaikan panen , tapi harus ada order dari distributor 
+--[✓]fitur selesaikan panen , tapi harus ada order dari distributor 
+--[✓] [BARU] fitur sampling bobot berkala (ABW gram/ekor & koreksi biomassa kolam)
+-[✓]kolam (sidebar mandiri)
+--[✓]fitur tambah data kolam baru
+--[✓]pencatatan biaya pembuatan kolam (otomatis debit pengeluaran kas keuangan)
+--[✓]fitur aksi titik 3 (edit, detail, hapus)
+--[✓]filter tipe konstruksi & status kolam
 -[✓]log pakan
+-[✓]inventaris & gudang operasional
+--[✓]katalog saprotan (obat, probiotik, kapur) & peralatan tambak (pompa, aerator, DO meter)
+--[✓]restok barang masuk (otomatis debit pengeluaran kas keuangan)
+--[✓]pemakaian barang di kolam (atribusi HPP riil kolam)
+--[✓]monitoring stok kritis & indikator status servis alat
+--[✓]riwayat mutasi & log audit trail gudang
 skema fitur distribusi 
 -[✓]fitur order & distribusi
 --[✓]fitur tambah order baru
 --[✓]fitur hapus order 
 --[✓]fitur ubah status order
+--[✓]fitur cetak surat jalan PDF resmi & invoice faktur
+--[✓]fitur foto bukti serah terima tim distribusi (status selesai)
+--[✓] [BARU] fitur pre-order / booking masa depan (ikan tetap makan di kolam hingga H-1)
+--[✓] [BARU] pilihan metode panen: panen parsial vs kuras total ke kolam buffer
+--[✓] [BARU] pencatatan susut bobot & mortalitas tiba di tempat serah terima (DDP toleransi < 2%)
 Skema Transaksi keuangan
 -[😁]fitur transaksi 
 --[✓]fitur tambah / catat transaksi selain panen dan beli bibit.
@@ -337,10 +398,12 @@ Skema petugas
 --[✓]fitur navigasi pesanan 
 --[✓]fitur riwayat
 --[✓]profil
+--[✓] [BARU] konfirmasi serah terima dengan input bobot riil & mortalitas perjalanan
 -[😁] pembesaran
 --[✓]fitur dashboard yang diamana itu untuk list kolam 
 --[😁]fitur log pakan pembesaran
 --[✓]fitur profil
+--[✓] [BARU] input sampling pertumbuhan & log harian kualitas air di kolam
 -[😁] pembibitan
 --[✓]fitur input batch pembibitan baru
 --[😁]fitur log pakan pembibitan

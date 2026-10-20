@@ -16,11 +16,11 @@ return new class extends Migration
             $table->foreignId('id_user')->nullable()->constrained('users', 'id_user')->onDelete('set null');
             $table->string('nama_user', 100);
             $table->string('role', 50)->default('manajer');
-            $table->string('action', 50); // e.g. hapus_batch, restock_pakan, void_transaksi, ubah_status_order
-            $table->string('kategori', 50); // e.g. pembesaran, pembibitan, pakan, distribusi, keuangan
+            $table->string('action', 50);
+            $table->string('kategori', 50);
             $table->text('deskripsi');
             $table->string('ip_address', 45)->nullable();
-            $table->string('user_agent')->nullable();
+            $table->string('user_agent', 255)->nullable();
             $table->timestamps();
         });
     }

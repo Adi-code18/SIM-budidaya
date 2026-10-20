@@ -21,6 +21,7 @@ return new class extends Migration
             $table->timestamp('two_factor_confirmed_at')->nullable();
             $table->string('role')->default('pekerja');
             $table->string('no_tlp')->nullable();
+            $table->string('foto_profil')->nullable();
             $table->text('alamat')->nullable();
             $table->string('last_session_id')->nullable();
             $table->string('email_otp', 6)->nullable();
@@ -50,9 +51,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
+        Schema::dropIfExists('password_reset_tokens');
+        Schema::dropIfExists('users');
     }
 };
-

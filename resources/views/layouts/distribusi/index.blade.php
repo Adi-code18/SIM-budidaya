@@ -156,6 +156,32 @@
                             </p>
                         </div>
                     </div>
+
+                    <!-- Input Jadwal Pengiriman / Pre-Order -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                        <div>
+                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">TANGGAL RENCANA KIRIM (PRE-ORDER)</label>
+                            <input type="date" x-model="form.tgl_rencana_kirim" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                            <p x-show="isFormPreOrder" class="text-[10px] text-indigo-700 mt-1.5 font-semibold flex items-center gap-1.5 bg-indigo-50 p-2 rounded-xl border border-indigo-100">
+                                <i class="fa-solid fa-calendar-check text-indigo-600"></i>
+                                <span>Pesanan Pre-Order: Ikan tetap dibiarkan hidup dan diberi pakan normal di kolam asal sampai H-1 sebelum keberangkatan.</span>
+                            </p>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">METODE PANEN</label>
+                            <div class="flex items-center gap-3 pt-2">
+                                <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700">
+                                    <input type="radio" value="parsial" x-model="panenTipeChoice" @change="panen_kuras = false" class="text-sky-600 focus:ring-sky-500">
+                                    <span>Panen Parsial (Sisa di Kolam)</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700">
+                                    <input type="radio" value="kuras" x-model="panenTipeChoice" @change="panen_kuras = true" class="text-sky-600 focus:ring-sky-500">
+                                    <span>Panen Kuras Total (Buffer)</span>
+                                </label>
+                            </div>
+                            <span class="text-[10px] text-slate-400 font-medium block mt-1">Pilih parsial jika sisa ikan masih lanjut dipelihara di kolam asal.</span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Section 3: Kuantitas & Nilai -->
@@ -543,6 +569,15 @@
                         </div>
                     </template>
 
+                    <!-- Pre-Order Booking Banner (Jika jadwal kirim masa depan) -->
+                    <div x-show="order.is_preorder && order.status === 'pending'" class="p-2.5 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-900 text-xs font-semibold flex items-center justify-between">
+                        <span class="flex items-center gap-1.5 font-bold">
+                            <i class="fa-regular fa-calendar-days text-indigo-600"></i>
+                            <span>Pre-Order Terjadwal:</span>
+                        </span>
+                        <span class="font-black text-indigo-950 font-mono" x-text="'Kirim ' + (order.tgl_rencana_kirim || order.tanggal)"></span>
+                    </div>
+
                     <div class="bg-slate-50 border border-slate-100 p-3 rounded-xl space-y-2.5">
                         <div class="grid grid-cols-2 gap-2">
                             <div>
@@ -586,14 +621,53 @@
                     </a>
                 </div>
 
-                <div x-show="order.status === 'selesai'" class="space-y-2 pt-2 border-t border-slate-100">
-                    <div class="grid grid-cols-2 gap-2">
-                        <button type="button" @click="openInvoice(order)" class="py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 font-bold text-xs flex items-center justify-center gap-2 transition-colors">
+                <div x-show="order.status === 'selesai'" class="space-y-2.5 pt-2 border-t border-slate-100">
+                    <!-- Foto Bukti Serah Terima Tim Distribusi -->
+                    <template x-if="order.bukti_foto_url">
+                        <div class="relative group rounded-xl overflow-hidden border border-slate-200/80 bg-slate-100 cursor-pointer shadow-xs hover:shadow-md transition-all"
+                             @click="openProofModal(order)"
+                             title="Klik untuk melihat foto bukti ukuran penuh">
+                            <img :src="order.bukti_foto_url" alt="Bukti Penerimaan" class="w-full h-28 object-cover transition-transform duration-300 group-hover:scale-105">
+                            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent flex flex-col justify-end p-2.5">
+                                <div class="flex items-center justify-between text-white">
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-600/90 text-[10px] font-extrabold backdrop-blur-xs">
+                                        <i class="fa-solid fa-camera text-[9px]"></i>
+                                        <span>Bukti Penerimaan</span>
+                                    </span>
+                                    <span class="text-[10px] text-white/90 font-bold flex items-center gap-1 group-hover:underline">
+                                        <i class="fa-solid fa-magnifying-glass-plus text-[9px]"></i>
+                                        <span>Lihat Foto</span>
+                                    </span>
+                                </div>
+                                <p class="text-[10px] text-slate-200 truncate mt-1">
+                                    <i class="fa-regular fa-user text-[9px] mr-0.5 text-slate-300"></i>
+                                    <span x-text="order.petugas_nama || 'Tim Petugas'"></span>
+                                </p>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template x-if="!order.bukti_foto_url">
+                        <div class="rounded-xl border border-dashed border-slate-200 p-2.5 bg-slate-50/60 text-center">
+                            <p class="text-[11px] text-slate-400 font-medium flex items-center justify-center gap-1.5">
+                                <i class="fa-regular fa-image text-slate-300"></i>
+                                <span>Foto bukti belum diunggah</span>
+                            </p>
+                        </div>
+                    </template>
+
+                    <div class="grid grid-cols-3 gap-1.5">
+                        <button type="button" @click="openProofModal(order)" :disabled="!order.bukti_foto_url"
+                                class="py-2 px-1 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 font-bold text-[11px] flex items-center justify-center gap-1 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                            <i class="fa-regular fa-image text-xs text-emerald-600"></i>
+                            <span>Bukti Foto</span>
+                        </button>
+                        <button type="button" @click="openInvoice(order)" class="py-2 px-1 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 font-bold text-[11px] flex items-center justify-center gap-1 transition-colors">
                             <i class="fa-regular fa-file-lines text-xs"></i>
                             <span>Invoice</span>
                         </button>
                         <a :href="'/distribusi/' + (order.id_transaksi || order.id) + '/surat-jalan-pdf'" target="_blank"
-                           class="py-2 rounded-xl bg-sky-50 text-sky-800 hover:bg-sky-100 border border-sky-200 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors">
+                           class="py-2 px-1 rounded-xl bg-sky-50 text-sky-800 hover:bg-sky-100 border border-sky-200 font-bold text-[11px] flex items-center justify-center gap-1 transition-colors">
                             <i class="fa-solid fa-file-invoice text-sky-600 text-xs"></i>
                             <span>Surat Jalan</span>
                         </a>
@@ -684,14 +758,61 @@
                             <span class="font-semibold text-slate-700" x-text="selectedInvoice?.tanggal || '-'"></span>
                         </div>
                         <div>
+                            <span class="text-slate-400 text-[11px] block">Rencana Pengiriman</span>
+                            <span class="font-semibold text-slate-700" x-text="selectedInvoice?.tgl_rencana_kirim || selectedInvoice?.tanggal || '-'"></span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 text-[11px] block">Metode Panen</span>
+                            <span class="font-semibold text-slate-700 uppercase" x-text="selectedInvoice?.tipe_panen === 'kuras' ? 'Kuras Total (Buffer)' : 'Panen Parsial'"></span>
+                        </div>
+                        <div>
                             <span class="text-slate-400 text-[11px] block">Status Pengiriman</span>
                             <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase inline-block mt-0.5" :class="statusClass(selectedInvoice?.status)" x-text="statusLabel(selectedInvoice?.status)"></span>
                         </div>
                     </div>
 
+                    <!-- Verifikasi Timbangan DDP jika selesai -->
+                    <template x-if="selectedInvoice?.status === 'selesai'">
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80 text-xs space-y-1">
+                            <div class="flex items-center justify-between font-bold">
+                                <span class="text-slate-600">Bobot Riil Diterima:</span>
+                                <span class="text-slate-900" x-text="(selectedInvoice?.berat_aktual_kg || selectedInvoice?.total_kg) + ' kg'"></span>
+                            </div>
+                            <div class="flex items-center justify-between text-[11px]" x-show="selectedInvoice?.susut_bobot_kg > 0">
+                                <span class="text-slate-500">Susut Transportasi (DDP):</span>
+                                <span class="font-bold flex items-center gap-1.5" :class="selectedInvoice?.is_ddp_aman ? 'text-emerald-700' : 'text-amber-700'">
+                                    <span x-text="'-' + selectedInvoice?.susut_bobot_kg + ' kg (' + (selectedInvoice?.persentase_susut || 0) + '%)'"></span>
+                                    <span class="text-[9px] px-1.5 py-0.5 rounded font-extrabold" :class="selectedInvoice?.is_ddp_aman ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'" x-text="selectedInvoice?.is_ddp_aman ? 'DDP Aman (< 2%)' : 'Perlu Evaluasi'"></span>
+                                </span>
+                            </div>
+                        </div>
+                    </template>
+
                     <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
                         <span class="text-xs font-bold text-slate-600">Total Nilai Transaksi</span>
                         <span class="text-base font-black text-emerald-700" x-text="selectedInvoice?.harga_format || 'Rp 0'"></span>
+                    </div>
+                </div>
+
+                <!-- Foto Bukti Serah Terima di Modal Invoice jika order selesai -->
+                <div x-show="selectedInvoice?.status === 'selesai' && selectedInvoice?.bukti_foto_url" class="rounded-2xl border border-slate-200 p-4 space-y-3 bg-white">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">DOKUMENTASI FOTO SERAH TERIMA TIM DISTRIBUSI</span>
+                        <span class="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-extrabold flex items-center gap-1">
+                            <i class="fa-solid fa-circle-check text-[9px] text-emerald-600"></i>
+                            Terverifikasi Selesai
+                        </span>
+                    </div>
+                    <div class="relative group rounded-xl overflow-hidden border border-slate-200 cursor-pointer bg-slate-900" @click="openProofModal(selectedInvoice)">
+                        <img :src="selectedInvoice?.bukti_foto_url" alt="Foto Serah Terima" class="w-full max-h-56 object-contain hover:scale-102 transition-transform duration-200">
+                        <div class="absolute bottom-2 right-2 bg-slate-900/80 text-white text-[10px] font-bold px-2 py-1 rounded-lg backdrop-blur-xs flex items-center gap-1">
+                            <i class="fa-solid fa-magnifying-glass-plus text-[9px]"></i>
+                            <span>Perbesar Foto</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between text-[11px] text-slate-500 pt-1">
+                        <span><strong class="text-slate-700">Petugas:</strong> <span x-text="selectedInvoice?.petugas_nama || 'Tim Distribusi Lapangan'"></span></span>
+                        <span x-show="selectedInvoice?.waktu_selesai"><strong class="text-slate-700">Waktu:</strong> <span x-text="selectedInvoice?.waktu_selesai"></span></span>
                     </div>
                 </div>
 
@@ -719,6 +840,91 @@
         </div>
     </div>
 
+    <!-- Modal Preview Foto Bukti Serah Terima Distribusi -->
+    <div x-show="showProofModal" 
+         x-transition:enter="transition ease-out duration-200" 
+         x-transition:enter-start="opacity-0" 
+         x-transition:enter-end="opacity-100" 
+         x-transition:leave="transition ease-in duration-150" 
+         x-transition:leave-start="opacity-100" 
+         x-transition:leave-end="opacity-0" 
+         class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4" 
+         style="display: none;"
+         @keydown.escape.window="closeProofModal()">
+        <div class="w-full max-w-lg rounded-3xl bg-white shadow-2xl border border-slate-200 overflow-hidden transform transition-all" @click.outside="closeProofModal()">
+            <!-- Header -->
+            <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-slate-50/90">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm font-bold">
+                        <i class="fa-solid fa-camera"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-black text-slate-900">Bukti Serah Terima Fisik</h3>
+                        <p class="text-[11px] text-slate-500 font-medium">
+                            <span x-text="selectedProof?.id || 'Pesanan'"></span> • <span x-text="selectedProof?.customer || 'Mitra'"></span>
+                        </p>
+                    </div>
+                </div>
+                <button type="button" @click="closeProofModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <!-- Body / Image Container -->
+            <div class="p-5 space-y-3">
+                <template x-if="selectedProof?.bukti_foto_url">
+                    <div class="relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-900 flex items-center justify-center">
+                        <img :src="selectedProof.bukti_foto_url" alt="Foto Dokumentasi Distribusi" class="w-full max-h-[60vh] object-contain">
+                    </div>
+                </template>
+                <template x-if="!selectedProof?.bukti_foto_url">
+                    <div class="py-12 text-center text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                        <i class="fa-regular fa-image text-3xl mb-2 text-slate-300"></i>
+                        <p class="text-xs font-bold text-slate-600">Foto bukti belum tersedia</p>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Petugas belum melampirkan foto serah terima untuk pesanan ini.</p>
+                    </div>
+                </template>
+
+                <!-- Information details -->
+                <div class="bg-slate-50 rounded-2xl p-3.5 border border-slate-200/80 space-y-2 text-xs">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-200/60">
+                        <span class="text-slate-500 font-medium">Penerima / Mitra</span>
+                        <span class="font-extrabold text-slate-900" x-text="selectedProof?.customer || '-'"></span>
+                    </div>
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-200/60">
+                        <span class="text-slate-500 font-medium">Petugas Distribusi</span>
+                        <span class="font-bold text-slate-800 flex items-center gap-1">
+                            <i class="fa-solid fa-user-check text-emerald-600 text-[10px]"></i>
+                            <span x-text="selectedProof?.petugas_nama || 'Tim Distribusi Lapangan'"></span>
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-200/60">
+                        <span class="text-slate-500 font-medium">Komoditas &amp; Volume</span>
+                        <span class="font-bold text-slate-800" x-text="(selectedProof?.jenis_ikan || 'Ikan Konsumsi') + ' • ' + (selectedProof?.volume || '-')"></span>
+                    </div>
+                    <div class="flex items-center justify-between" x-show="selectedProof?.waktu_selesai">
+                        <span class="text-slate-500 font-medium">Waktu Selesai</span>
+                        <span class="font-semibold text-slate-700" x-text="selectedProof?.waktu_selesai"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="flex items-center justify-between px-5 py-3.5 border-t border-slate-100 bg-slate-50/80">
+                <a x-show="selectedProof?.bukti_foto_url" :href="selectedProof?.bukti_foto_url" target="_blank"
+                   class="px-3.5 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition-colors shadow-2xs">
+                    <i class="fa-solid fa-arrow-up-right-from-square text-xs text-slate-500"></i>
+                    <span>Buka Ukuran Penuh</span>
+                </a>
+                <div class="ml-auto">
+                    <button type="button" @click="closeProofModal()" class="px-4 py-2 rounded-xl bg-[#051B44] text-white hover:bg-slate-900 font-bold text-xs transition-colors shadow-xs">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 @endsection
 
@@ -729,6 +935,8 @@ function distribusiComponent() {
         activeTab: 'semua',
         showForm: false,
         showInvoice: false,
+        showProofModal: false,
+        selectedProof: null,
         formMode: 'create',
         jenisOrder: 'reguler',
         selectedInvoice: null,
@@ -815,6 +1023,8 @@ function distribusiComponent() {
             kolam_asal: '',
             stok_biomassa: null,
             tanggal: new Date().toISOString().split('T')[0],
+            tgl_rencana_kirim: new Date().toISOString().split('T')[0],
+            tipe_panen: 'parsial',
             mitra: '',
             alamat: '',
             jenisOrder: 'reguler',
@@ -825,6 +1035,15 @@ function distribusiComponent() {
             durasi_pemberokan_jam: 18,
             catatan_grading: '',
             no_surat_jalan: ''
+        },
+        panenTipeChoice: 'parsial',
+
+        get isFormPreOrder() {
+            if (!this.form.tgl_rencana_kirim) return false;
+            const kirim = new Date(this.form.tgl_rencana_kirim);
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            return kirim > today;
         },
 
         orders: {!! isset($orders) && count($orders) > 0 ? json_encode($orders) : json_encode([]) !!},
@@ -989,8 +1208,12 @@ function distribusiComponent() {
                 grading_size: order.grading_size || 'Size 6-8 (Warung / Pasar)',
                 durasi_pemberokan_jam: order.durasi_pemberokan_jam || 18,
                 catatan_grading: order.catatan_grading || '',
-                no_surat_jalan: order.no_surat_jalan || ''
+                no_surat_jalan: order.no_surat_jalan || '',
+                tgl_rencana_kirim: order.tgl_rencana_kirim || order.tanggal || new Date().toISOString().split('T')[0],
+                tipe_panen: order.tipe_panen || 'parsial'
             };
+            this.panenTipeChoice = order.tipe_panen || 'parsial';
+            this.panen_kuras = (order.tipe_panen === 'kuras');
             this.jenisOrder = order.jenis_order || 'reguler';
         },
 
@@ -1010,7 +1233,9 @@ function distribusiComponent() {
                     harga_total: hargaTotal,
                     grading_size: this.form.grading_size,
                     durasi_pemberokan_jam: this.form.durasi_pemberokan_jam,
-                    catatan_grading: this.form.catatan_grading
+                    catatan_grading: this.form.catatan_grading,
+                    tgl_rencana_kirim: this.form.tgl_rencana_kirim,
+                    tipe_panen: this.panenTipeChoice
                 };
 
                 if (this.panen_kuras && this.id_kolam_surplus) {
@@ -1092,6 +1317,8 @@ function distribusiComponent() {
                     id_mitra: this.form.id_mitra,
                     id_pembesaran: this.form.id_pembesaran,
                     tanggal_order: this.form.tanggal,
+                    tgl_rencana_kirim: this.form.tgl_rencana_kirim,
+                    tipe_panen: this.panenTipeChoice,
                     Total_kg: totalKg,
                     harga_total: hargaTotal,
                     Jenis_order: this.form.jenis_ikan || this.form.jenisOrder,
@@ -1214,7 +1441,16 @@ function distribusiComponent() {
                 tanggal: order.tanggal,
                 alamat: order.alamat,
                 status: order.status,
-                total: order.volume
+                total: order.volume,
+                bukti_foto_url: order.bukti_foto_url,
+                petugas_nama: order.petugas_nama,
+                waktu_selesai: order.waktu_selesai,
+                tgl_rencana_kirim: order.tgl_rencana_kirim,
+                tipe_panen: order.tipe_panen,
+                berat_aktual_kg: order.berat_aktual_kg,
+                susut_bobot_kg: order.susut_bobot_kg,
+                persentase_susut: order.persentase_susut,
+                is_ddp_aman: order.is_ddp_aman
             };
             this.showInvoice = true;
         },
@@ -1222,6 +1458,16 @@ function distribusiComponent() {
         closeInvoice() {
             this.showInvoice = false;
             this.selectedInvoice = null;
+        },
+
+        openProofModal(order) {
+            this.selectedProof = order;
+            this.showProofModal = true;
+        },
+
+        closeProofModal() {
+            this.showProofModal = false;
+            this.selectedProof = null;
         },
 
         updateStatus(order) {

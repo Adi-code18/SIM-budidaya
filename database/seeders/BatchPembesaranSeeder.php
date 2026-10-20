@@ -21,15 +21,16 @@ class BatchPembesaranSeeder extends Seeder
         $petugasPembesaran = User::where('role', 'pembesaran')->first() ?? User::first();
         $userId = $petugasPembesaran ? $petugasPembesaran->id_user : 1;
 
-        $kolamPembesaran = Kolam::where('nama_kolam', 'like', '%Pembesaran%')->first() ?? Kolam::first();
+        $kolamA1 = Kolam::where('nama_kolam', 'like', '%A1%')->first() ?? Kolam::first();
+        $kolamA2 = Kolam::where('nama_kolam', 'like', '%A2%')->first() ?? $kolamA1;
         $batchFingerling = BatchPembibitan::where('fase_pertumbuhan', 'FINGERLING')->first();
         $batchBibitSelesai = BatchPembibitan::where('status', 'selesai')->first();
 
         // 1 Kondisi 1 Contoh untuk setiap status_siklus ('berjalan', 'siap_panen', 'selesai')
         $batches = [
-            // 1. Kondisi Siklus: 'berjalan' (Fase pemeliharaan harian berjalan aktif)
+            // 1. Kondisi Siklus: 'berjalan' (Fase pemeliharaan harian berjalan aktif di Kolam A1)
             [
-                'id_kolam'            => $kolamPembesaran->id_kolam,
+                'id_kolam'            => $kolamA1->id_kolam,
                 'id_user'             => $userId,
                 'id_batch_pembibitan' => $batchFingerling ? $batchFingerling->id_batch : null,
                 'asal_bibit'          => 'pembibitan_sendiri',
@@ -46,9 +47,9 @@ class BatchPembesaranSeeder extends Seeder
                 'jenis_ikan'          => 'Ikan Nila',
                 'status_siklus'       => 'berjalan',
             ],
-            // 2. Kondisi Siklus: 'siap_panen' (Mencapai estimasi panen dan bobot target)
+            // 2. Kondisi Siklus: 'siap_panen' (Mencapai bobot target di Kolam A2)
             [
-                'id_kolam'            => $kolamPembesaran->id_kolam,
+                'id_kolam'            => $kolamA2->id_kolam,
                 'id_user'             => $userId,
                 'id_batch_pembibitan' => $batchBibitSelesai ? $batchBibitSelesai->id_batch : null,
                 'asal_bibit'          => 'pembibitan_sendiri',
@@ -67,7 +68,7 @@ class BatchPembesaranSeeder extends Seeder
             ],
             // 3. Kondisi Siklus: 'selesai' (Panen tuntas dan data siklus ditutup)
             [
-                'id_kolam'            => $kolamPembesaran->id_kolam,
+                'id_kolam'            => $kolamA1->id_kolam,
                 'id_user'             => $userId,
                 'id_batch_pembibitan' => null,
                 'asal_bibit'          => 'beli_luar',

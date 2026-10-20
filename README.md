@@ -76,6 +76,22 @@ Menggunakan metode kombinasi antara pelet komersial berprotein tinggi dengan pak
 
 ---
 
+### 5. 📦 SOP Pengelolaan Gudang, Saprotan & Aset Peralatan Tambak
+* **Katalog Saprotan (Sarana Produksi Tambak / Habis Pakai):**
+  * Bahan esensial operasional meliputi kapur dolomit, garam krosok, probiotik bioflok (EM4/Lacto), vitamin C & asam amino, desinfektan kolam, dan antibiotik/obat ikan.
+  * Menggunakan sistem peringatan dini ambang batas minimum stok (*Threshold Alert*) untuk mencegah kekosongan bahan kritis saat budidaya berjalan.
+* **Katalog Peralatan Tambak (Capital Asset / Reusable):**
+  * Aset fisik operasional tambak (pompa celup, aerator turbo/blower, DO meter digital, pH meter, jaring panen, dan timbangan digital).
+  * Pelacakan berkala status kondisi fisik aset (*Baik/Normal*, *Perlu Servis*, *Rusak Total*).
+* **Atribusi Biaya Kolam (True HPP Calculation):**
+  * Setiap pengeluaran saprotan wajib mencatat kolam tujuan (`id_kolam`).
+  * Menghitung **Harga Pokok Produksi (HPP) Kolam** secara komprehensif tanpa ada biaya tersembunyi (*zero hidden costs*):
+    $$\text{HPP Kolam} = \text{Biaya Benih} + \text{Biaya Pakan} + \text{Biaya Saprotan (Kapur, Probiotik, Vitamin, Obat)}$$
+* **Sinkronisasi Otomatis Arus Kas Masuk Gudang:**
+  * Setiap transaksi restok/pembelian barang masuk langsung terdebit secara otomatis di buku kas Keuangan (`kategori: 'Pengadaan Saprotan'` atau `'Peralatan Tambak'`). Menghapus risiko pengeluaran operasional yang "gaib" atau tidak tercatat di laporan laba rugi.
+
+---
+
 ## 🏗️ TEKNOLOGI & ARSITEKTUR SISTEM
 
 | Komponen | Teknologi | Keterangan |
@@ -95,8 +111,10 @@ Menggunakan metode kombinasi antara pelet komersial berprotein tinggi dengan pak
 | Modul / Fitur | 👑 Manajer | 🌱 Petugas Pembibitan | 🌿 Petugas Pembesaran | 🚚 Petugas Distribusi |
 | :--- | :---: | :---: | :---: | :---: |
 | **Autentikasi & 2FA** | Full (Email OTP) | Akun Sendiri (TOTP) | Akun Sendiri (TOTP) | Akun Sendiri (TOTP) |
-| **Master Ikan & Kolam** | CRUD Penuh | Lihat Kolam | Lihat Kolam | Lihat |
+| **Master Ikan & Jenis** | CRUD Penuh | - | - | - |
+| **Manajemen Kolam (Capex)** | CRUD Penuh | Lihat Kolam | Lihat Kolam | Lihat |
 | **Stok & Pembelian Pakan** | CRUD Penuh | - | Lihat Saldo | - |
+| **Inventaris & Gudang (Saprotan & Alat)** | CRUD & Mutasi | - | Lihat & Pakai | - |
 | **Batch Pembibitan (Hatchery)** | CRUD & Approval | CRUD Penuh | Lihat | - |
 | **Batch Pembesaran (Grow-out)** | Monitor & Evaluasi | Lihat | CRUD Penuh | Lihat Kesiapan |
 | **Logging Pakan & Auto-Deduct** | Monitor & Laporan | Input Log Bibit | Input Log Pakan | - |
@@ -116,27 +134,40 @@ Menggunakan metode kombinasi antara pelet komersial berprotein tinggi dengan pak
   - 2FA Google Authenticator (TOTP QR Code) untuk Petugas.
   - Lupa Password via Email OTP token.
   - Session Locker (`last_session_id`) mencegah login ganda.
-- [x] **Master Data & Inventori**:
+- [x] **Master Data, Kolam & Inventori**:
   - CRUD Master Ikan (parameter biologis, FCR target, durasi panen, harga jual).
-  - CRUD Master Kolam (tipe, kapasitas, penanggung jawab, monitoring pH air).
+  - CRUD Master Kolam mandiri di sidebar (tipe, kapasitas, penanggung jawab, monitoring pH).
+  - Integrasi otomatis biaya pembuatan kolam baru ke pengeluaran kas Keuangan (`Pembangunan Kolam`).
   - CRUD Master Pakan & Pembelian Restock (auto-replicate ke modul keuangan).
   - CRUD Master Mitra Distributor (integrasi koordinat Leaflet JS & OpenStreetMap).
+- [x] **Inventaris & Gudang Operasional (`/gudang`)**:
+  - Katalog barang terbagi 2 kategori: Saprotan (habis pakai) dan Peralatan Tambak (aset fisik).
+  - Penomoran kode unik otomatis: `SPT-XXXX` (Saprotan) & `ALT-XXXX` (Peralatan).
+  - Sinkronisasi otomatis transaksi restok ke buku kas Keuangan (mencegah biaya siluman).
+  - Atribusi pemakaian barang langsung ke kolam tujuan guna kalkulasi HPP riil.
+  - Indikator peringatan stok kritis (*minimum threshold warning*) & status kondisi alat (*Baik, Perlu Servis, Rusak*).
+  - Rekam jejak audit trail seluruh mutasi gudang (`masuk_pembelian`, `keluar_pemakaian_kolam`, `penyesuaian_rusak`).
 - [x] **Manajemen Siklus Pembesaran & Pakan**:
   - Integrasi asal bibit (pembibitan sendiri vs beli luar).
   - Logging pakan harian kombinasi pelet dan dedaunan.
   - Pengurangan stok gudang otomatis secara atomik (*DB Transaction Locking*).
   - Kalkulasi Feed Conversion Ratio (FCR) & benchmark efisiensi.
-- [x] **Modul Keuangan (Ledger Sederhana)**:
-  - Pencatatan otomatis pemasukan (penjualan) dan pengeluaran (pakan & bibit).
+- [x] **Workflow Distribusi & Pre-Order**:
+  - Kebijakan Pre-Order masa depan (H+1 s.d. H+14): ikan tetap berada di kolam asal dan diberi makan normal hingga H-1 keberangkatan.
+  - Pilihan panen parsial vs kuras total ke kolam penampungan/buffer.
+  - Proteksi *feeding lock* (larangan pemberian pakan) otomatis saat ikan berstatus masa puasa / pemberokan.
+  - Pencatatan susut bobot & mortalitas tiba di lokasi serah terima (DDP toleransi $\le 2\%$).
+- [x] **Modul Keuangan (Ledger Komprehensif)**:
+  - Pencatatan otomatis pemasukan (penjualan ikan) dan pengeluaran (pakan, bibit, saprotan gudang, aset alat tambak, dan konstruksi kolam).
 - [x] **Mobile Web Interface**:
   - Antarmuka mobile untuk petugas pembibitan, pembesaran, dan distribusi.
   - Upload foto bukti sampai distribusi ikan.
 
 ---
 
-### 🔥 Fitur Roadmap / Yang Harus "Digas" (To-Do List)
+### 🔥 Fitur Unggulan Sistem (Completed Highlights)
 
-1. **📊 Engine Validasi Kalkulasi FCR Presisi & Analisis Kerugian Multi-Metode (Prioritas Utama)**
+1. **📊 Engine Validasi Kalkulasi FCR Presisi & Analisis Kerugian Multi-Metode**
    - [x] **Kalkulasi 4 Jenis FCR Terpadu di UI Dashboard & Detail Kolam**:
      - **FCR Komersial (Saat Panen):** $\frac{\text{Total Pakan (kg)}}{\text{Biomassa Panen (kg)} - \text{Biomassa Awal (kg)}}$.
      - **FCR Biologis (Panen + Mortalitas):** $\frac{\text{Total Pakan (kg)}}{(\text{Biomassa Panen} + \text{Bobot Ikan Mati}) - \text{Biomassa Awal}}$.
@@ -169,6 +200,20 @@ Menggunakan metode kombinasi antara pelet komersial berprotein tinggi dengan pak
 
 6. **🛡️ Audit Log Aktivitas Sistem**
    - [x] Pencatatan log aktivitas krusial pengguna (hapus batch, restock pakan, void transaksi) ke tabel `audit_logs` & antarmuka riwayat audit log.
+
+7. **📦 Inventaris & Gudang Operasional Terintegrasi Keuangan**
+   - [x] Dashboard KPI Nilai Aset Gudang (Total Nilai Stok, Nilai Saprotan, Nilai Peralatan, Stok Kritis).
+   - [x] Form restok barang otomatis memposting mutasi kas pengeluaran ke buku besar Keuangan.
+   - [x] Atribusi pemakaian saprotan langsung ke kolam untuk menghitung HPP riil tanpa kebocoran.
+
+8. **🌊 Company Landing Page & WhatsApp Sales Hub (`/`)**
+   - [x] Antarmuka profil publik modern bertema Aquafarm Priangan untuk menarik pembeli partai besar & calon investor.
+   - [x] Katalog komoditas ikan air tawar siap panen (Nila Merah, Lele, Patin, Gurame) dengan spesifikasi ukuran konsumsi.
+   - [x] Simulator / Kalkulator Pesanan Cepat dengan integrasi otomatis draft WhatsApp Click-to-Chat.
+   - [x] Pemaparan 4 pilar SOP mutu (pemberokan 24 jam di air deras bebas bau lumpur, pakan mix probiotik, garansi DDP, panen dingin).
+   - [x] Ruang kemitraan B2B restoran, hotel, plasma kolam, dan kerjasama permodalan ekspansi unit kolam.
+   - [x] Floating WhatsApp widget interaktif di pojok kanan bawah.
+   - [x] Pemisahan privasi akses: tombol login internal ditiadakan dari navbar publik (portal staf diakses privat via `/login`).
 
 ---
 
@@ -267,19 +312,19 @@ SIM-budidaya/
 ├── app/
 │   ├── Http/Controllers/
 │   │   ├── Auth/              # Auth, Email OTP, TOTP 2FA, Reset Password
-│   │   ├── Manajer/           # Dashboard, Master Ikan, Kolam, Pakan, Mitra, Keuangan
+│   │   ├── Manajer/           # Dashboard, Kolam, Gudang, Pakan, Distribusi, Keuangan, Mitra
 │   │   └── Petugas/           # Mobile Controller Distribusi, Pembibitan, Pembesaran
 │   ├── Mail/                  # Mailable Class (SendOtpMail)
-│   └── Models/                # Model Eloquent (User, Ikan, Kolam, Batch, dll)
+│   └── Models/                # Eloquent: InventarisGudang, LogTransaksiGudang, Kolam, Batch, dll
 ├── database/
-│   ├── migrations/            # Struktur tabel database
-│   └── seeders/               # Data dummy & inisialisasi akun
+│   ├── migrations/            # Skema tabel database (Gudang, Kolam, Keuangan, dll)
+│   └── seeders/               # Seeder data realistis (Inventaris, Kolam, Pakan, Akun)
 ├── resources/
 │   ├── views/
 │   │   ├── auth/              # Halaman Login & OTP
-│   │   ├── manajer/           # Antarmuka Dashboard Desktop Manajer
+│   │   ├── layouts/           # Antarmuka Dashboard Manajer (Gudang, Kolam, Distribusi, Keuangan)
 │   │   └── mobile_web_petugas/# Antarmuka Mobile Web Petugas Lapangan
-│   └── css/ & js/             # Asset Tailwind CSS & Leaflet Maps script
+│   └── css/ & js/             # Asset Tailwind CSS, Alpine.js & Leaflet Maps script
 └── routes/
     ├── web.php                # Rute web portal & mobile web
     └── api.php                # Endpoint API

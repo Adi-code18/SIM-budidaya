@@ -13,13 +13,8 @@
             <p class="text-xs text-slate-500 font-medium mt-0.5">Pantau siklus tebar benih, biomassa, FCR, dan target panen per kolam pembesaran.</p>
         </div>
         <div class="flex items-center gap-2.5">
-            <button @click="openKolamModal()"
-                    class="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-[#031B4E] border border-slate-200/90 font-bold text-xs shadow-xs transition-all flex items-center gap-2">
-                <i class="fa-solid fa-warehouse text-sky-600 text-xs"></i>
-                <span>Tambah Kolam</span>
-            </button>
             <button @click="showForm ? showForm = false : openCreateForm()"
-                    class="px-5 py-2.5 rounded-xl bg-[#031B4E] hover:bg-sky-950 text-white font-bold text-xs shadow-md shadow-sky-950/20 transition-all flex items-center gap-2">
+                    class="px-5 py-2.5 rounded-xl bg-[#031B4E] hover:bg-sky-950 text-white font-bold text-xs shadow-md shadow-sky-950/20 transition-all flex items-center gap-2 cursor-pointer">
                 <i class="fa-solid" :class="showForm ? 'fa-table-list' : 'fa-circle-plus'" class="text-xs"></i>
                 <span x-text="showForm ? 'Lihat Daftar Kolam' : 'Input Batch Baru'"></span>
             </button>
@@ -196,10 +191,10 @@
                         <div class="sm:col-span-1">
                             <div class="flex items-center justify-between mb-1">
                                 <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block">KOLAM PEMBESARAN *</label>
-                                <button type="button" @click="openKolamModal()" class="text-[10px] font-extrabold text-sky-600 hover:text-sky-800 flex items-center gap-1 transition-colors">
-                                    <i class="fa-solid fa-circle-plus"></i>
-                                    <span>+ Kolam</span>
-                                </button>
+                                <a href="{{ route('kolam') }}" class="text-[10px] font-bold text-sky-600 hover:text-sky-800 flex items-center gap-1 transition-colors" title="Buka menu Manajemen Kolam">
+                                    <span>Kelola Kolam</span>
+                                    <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                                </a>
                             </div>
                             <select x-model="form.kolam" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
                                 <option value="">Pilih Kolam Pembesaran...</option>
@@ -771,10 +766,10 @@
             <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
                 <div class="flex items-center justify-between">
                     <span class="text-[11px] font-extrabold uppercase text-slate-400 tracking-wider block">Fasilitas Kolam Aktif</span>
-                    <button type="button" @click="openKolamModal()" class="text-[11px] font-extrabold text-sky-600 hover:text-sky-800 flex items-center gap-1 transition-colors">
-                        <i class="fa-solid fa-plus-circle text-xs"></i>
-                        <span>Tambah Kolam</span>
-                    </button>
+                    <a href="{{ route('kolam') }}" class="text-[11px] font-extrabold text-sky-600 hover:text-sky-800 flex items-center gap-1 transition-colors">
+                        <span>Kelola di Manajemen Kolam</span>
+                        <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                    </a>
                 </div>
                 
                 <div class="space-y-2.5 max-h-[380px] overflow-y-auto pr-1 no-scrollbar">
@@ -1344,81 +1339,6 @@
         </div>
     </div>
 
-    <!-- Modal Tambah Kolam Pembesaran Baru -->
-    <div x-show="kolamModalOpen" 
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0 scale-95"
-         x-transition:enter-end="opacity-100 scale-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100 scale-100"
-         x-transition:leave-end="opacity-0 scale-95"
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto"
-         style="display: none;">
-        
-        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 border border-slate-200 my-auto" @click.outside="kolamModalOpen = false">
-            <!-- Modal Header -->
-            <div class="flex items-center justify-between border-b border-slate-100 pb-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-2xl bg-sky-100 text-sky-700 flex items-center justify-center font-bold text-sm">
-                        <i class="fa-solid fa-warehouse"></i>
-                    </div>
-                    <div>
-                        <span class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider block">FASILITAS PRODUKSI</span>
-                        <h3 class="text-base font-extrabold text-slate-900">Tambah Kolam Pembesaran Baru</h3>
-                    </div>
-                </div>
-                <button @click="kolamModalOpen = false" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors">
-                    <i class="fa-solid fa-xmark text-sm"></i>
-                </button>
-            </div>
-
-            <form @submit.prevent="submitKolam()" class="space-y-4">
-                <div>
-                    <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">NAMA / KODE KOLAM *</label>
-                    <input type="text" x-model="kolamForm.nama_kolam" required placeholder="Contoh: Kolam Pembesaran D-01"
-                           class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:border-sky-600 focus:ring-2 focus:ring-sky-600/10">
-                    <p class="text-[10px] text-slate-400 mt-1">Gunakan penamaan unik yang membedakan lokasi atau blok kolam.</p>
-                </div>
-
-                <div>
-                    <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">TIPE / KONSTRUKSI KOLAM *</label>
-                    <select x-model="kolamForm.tipe_kolam" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:border-sky-600 focus:ring-2 focus:ring-sky-600/10">
-                        <option value="Kolam Pembesaran (Beton)">Kolam Pembesaran (Beton)</option>
-                        <option value="Kolam Pembesaran (Terpal Bulat / Bioflok)">Kolam Pembesaran (Terpal Bulat / Bioflok)</option>
-                        <option value="Kolam Pembesaran (Terpal Kotak)">Kolam Pembesaran (Terpal Kotak)</option>
-                        <option value="Kolam Pembesaran (Tanah)">Kolam Pembesaran (Tanah)</option>
-                        <option value="Kolam Pembesaran (Fiberglass)">Kolam Pembesaran (Fiberglass)</option>
-                    </select>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">KAPASITAS DAYA TAMPUNG (EKOR / KG) *</label>
-                        <input type="number" step="1" min="100" x-model="kolamForm.kapasitas" required placeholder="2500"
-                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:border-sky-600">
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">ESTIMASI PH AIR NORMAL</label>
-                        <input type="number" step="0.1" min="0" max="14" x-model="kolamForm.kesehatan_ph_air" placeholder="7.2"
-                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:border-sky-600">
-                    </div>
-                </div>
-
-                <div class="pt-3 flex items-center justify-end gap-2.5 border-t border-slate-100">
-                    <button type="button" @click="kolamModalOpen = false"
-                            class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50">
-                        Batal
-                    </button>
-                    <button type="submit" :disabled="isSubmittingKolam"
-                            class="px-5 py-2 rounded-xl bg-[#031B4E] hover:bg-sky-950 text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-sky-950/20 disabled:opacity-60">
-                        <i class="fa-solid" :class="isSubmittingKolam ? 'fa-spinner fa-spin' : 'fa-check'"></i>
-                        <span x-text="isSubmittingKolam ? 'Menyimpan...' : 'Simpan Kolam Baru'"></span>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <!-- Notification Toast -->
     <div x-show="showToast"
          x-transition:enter="transition ease-out duration-300"
@@ -1585,82 +1505,8 @@ function pembesaranComponent() {
             id_kolam_stok: '',
             surplus_kg: 0
         },
-        kolamModalOpen: false,
-        isSubmittingKolam: false,
-        kolamForm: {
-            nama_kolam: '',
-            tipe_kolam: 'Kolam Pembesaran (Beton)',
-            kapasitas: 1500,
-            panjang_m: 5,
-            lebar_m: 3,
-            kedalaman_m: 1.2
-        },
         showToast: false,
         toastMessage: '',
-
-        openKolamModal() {
-            this.kolamForm = {
-                nama_kolam: 'Kolam Pembesaran ' + String.fromCharCode(65 + Math.floor(Math.random() * 6)) + '-0' + (this.kolamList.length + 1),
-                tipe_kolam: 'Kolam Pembesaran (Beton)',
-                kapasitas: 1500,
-                panjang_m: 5,
-                lebar_m: 3,
-                kedalaman_m: 1.2
-            };
-            this.kolamModalOpen = true;
-        },
-
-        async submitKolam() {
-            if (!this.kolamForm.nama_kolam) {
-                alert('Nama / Kode kolam wajib diisi!');
-                return;
-            }
-            if (!this.kolamForm.kapasitas || Number(this.kolamForm.kapasitas) <= 0) {
-                alert('Kapasitas kolam wajib diisi!');
-                return;
-            }
-
-            this.isSubmittingKolam = true;
-            try {
-                const res = await fetch('{{ route('pembesaran.kolam.store') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({
-                        nama_kolam: this.kolamForm.nama_kolam,
-                        tipe_kolam: this.kolamForm.tipe_kolam,
-                        kapasitas: Number(this.kolamForm.kapasitas) || 1000,
-                        kesehatan_ph_air: Number(this.kolamForm.kesehatan_ph_air) || 7.2
-                    })
-                });
-
-                const data = await res.json();
-                if (res.ok && data.success) {
-                    const newKolam = data.kolam;
-                    this.kolamList.push({
-                        id_kolam: newKolam.id_kolam,
-                        nama_kolam: newKolam.nama_kolam,
-                        tipe_kolam: newKolam.tipe_kolam,
-                        kapasitas: newKolam.kapasitas,
-                        is_occupied: false
-                    });
-                    this.form.kolam = newKolam.nama_kolam;
-                    this.kolamModalOpen = false;
-                    this.toastMessage = data.message || ("Kolam '" + newKolam.nama_kolam + "' berhasil ditambahkan & otomatis terpilih!");
-                    this.showToast = true;
-                    setTimeout(() => { this.showToast = false; }, 4000);
-                } else {
-                    alert(data.message || (data.errors ? Object.values(data.errors).flat().join('\n') : 'Gagal menambahkan kolam.'));
-                }
-            } catch (e) {
-                alert('Terjadi kesalahan saat menyimpan kolam.');
-            } finally {
-                this.isSubmittingKolam = false;
-            }
-        },
 
         openDetail(item) {
             this.selectedBatch = item;

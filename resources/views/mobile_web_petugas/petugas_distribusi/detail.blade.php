@@ -479,10 +479,33 @@
                         <input type="file" accept="image/*" capture="environment" class="hidden" @change="handleImageUpload($event)">
                     </label>
                 </template>
+                <!-- Input Timbangan Aktual & Toleransi DDP -->
+                <div class="space-y-2 pt-2 border-t border-slate-100 text-left">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block">VERIFIKASI TIMBANGAN & DDP:</span>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-600 block">Bobot Riil Diterima (KG)</label>
+                            <input type="number" step="0.1" x-model="beratAktual" class="w-full text-xs font-bold px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-navy-800">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-600 block">Ikan Mati Diantar (KG)</label>
+                            <input type="number" step="0.1" x-model="mortalitasKg" class="w-full text-xs font-bold px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-navy-800" placeholder="0">
+                        </div>
+                    </div>
+                    <!-- Indicator Badge DDP -->
+                    <div class="p-2 rounded-xl text-[11px] font-semibold flex items-center justify-between"
+                         :class="persenSusut <= 2.0 ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-amber-50 text-amber-800 border border-amber-200'">
+                        <span class="flex items-center gap-1">
+                            <i class="fa-solid" :class="persenSusut <= 2.0 ? 'fa-circle-check text-emerald-600' : 'fa-triangle-exclamation text-amber-600'"></i>
+                            <span x-text="persenSusut <= 2.0 ? 'Toleransi DDP Normal (< 2%)' : 'Susut melebihi batas (> 2%)'"></span>
+                        </span>
+                        <span class="font-extrabold font-mono" x-text="persenSusut.toFixed(1) + '%'"></span>
+                    </div>
+                </div>
 
                 <button @click="uploadModal = false" 
                         class="w-full py-2.5 rounded-xl bg-navy-800 text-white font-bold text-xs shadow-xs">
-                    Simpan Foto
+                    Simpan Foto & Verifikasi
                 </button>
             </div>
         </div>
@@ -500,6 +523,13 @@ function detailTrackingData() {
         uploadedImage: null,
         deliveryDone: false,
         isSubmitting: false,
+        beratAktual: {{ (float) $transaksi->Total_kg }},
+        mortalitasKg: 0,
+        totalKgTarget: {{ (float) $transaksi->Total_kg }},
+        get persenSusut() {
+            const susut = Math.max(0, this.totalKgTarget - Number(this.beratAktual || this.totalKgTarget)) + Number(this.mortalitasKg || 0);
+            return (susut / Math.max(1, this.totalKgTarget)) * 100;
+        },
         
         // Slider Variables
         isDragging: false,
@@ -604,7 +634,9 @@ function detailTrackingData() {
                         'Accept': 'application/json'
                     },
                     body: JSON.stringify({
-                        foto_base64: this.uploadedImage
+                        foto_base64: this.uploadedImage,
+                        berat_aktual_kg: this.beratAktual,
+                        mortalitas_antar_kg: this.mortalitasKg
                     })
                 });
 

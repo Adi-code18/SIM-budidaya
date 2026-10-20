@@ -193,6 +193,15 @@ class PetugasDistribusiController extends Controller
 
         $transaksi->Bukti_sampai = $imagePath;
         $transaksi->status_order = 'selesai';
+
+        if ($request->filled('berat_aktual_kg')) {
+            $transaksi->berat_aktual_kg = (float) $request->berat_aktual_kg;
+            $transaksi->susut_bobot_kg = max(0, (float)$transaksi->Total_kg - (float)$request->berat_aktual_kg);
+        }
+        if ($request->filled('mortalitas_antar_kg')) {
+            $transaksi->mortalitas_antar_kg = (float) $request->mortalitas_antar_kg;
+        }
+
         $transaksi->save();
 
         $orderCode = '#ORD-' . str_pad($transaksi->id_transaksi, 4, '0', STR_PAD_LEFT);

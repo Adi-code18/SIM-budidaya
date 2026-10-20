@@ -445,7 +445,7 @@
 
             @php
                 $isMasterActive = request()->routeIs('ikan*') || request()->routeIs('petugas*') || request()->routeIs('mitra*') || request()->routeIs('stok-pakan*') || request()->routeIs('log-pakan.stok*');
-                $isBudidayaActive = request()->routeIs('pembibitan*') || request()->routeIs('pembesaran*') || request()->routeIs('pembudidaya*') || (request()->routeIs('log-pakan*') && !request()->routeIs('log-pakan.stok*'));
+                $isBudidayaActive = request()->routeIs('kolam*') || request()->routeIs('gudang*') || request()->routeIs('pembibitan*') || request()->routeIs('pembesaran*') || request()->routeIs('pembudidaya*') || (request()->routeIs('log-pakan*') && !request()->routeIs('log-pakan.stok*'));
                 $isKeuanganActive = request()->routeIs('keuangan*');
             @endphp
 
@@ -527,6 +527,12 @@
                     <div class="sidebar-accordion {{ $isBudidayaActive ? 'is-open' : '' }}"
                          :class="openBudidaya ? 'is-open' : ''">
                         <div class="sidebar-accordion-inner pl-4 pr-1 space-y-1 pt-1 pb-1 ml-4 border-l border-white/15">
+                            <a href="{{ route('kolam') }}" 
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium {{ (request()->routeIs('kolam*') || request()->routeIs('pembudidaya*')) ? 'bg-[#0284C7] text-white font-bold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/5' }}">
+                                <i class="fa-solid fa-layer-group text-xs w-4 text-center"></i>
+                                <span>Manajemen Kolam</span>
+                            </a>
+
                             <a href="{{ route('pembibitan') }}" 
                                class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium {{ request()->routeIs('pembibitan*') ? 'bg-[#0284C7] text-white font-bold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/5' }}">
                                 <i class="fa-solid fa-droplet text-xs w-4 text-center"></i>
@@ -534,7 +540,7 @@
                             </a>
 
                             <a href="{{ route('pembesaran') }}" 
-                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium {{ (request()->routeIs('pembesaran*') || request()->routeIs('pembudidaya*')) ? 'bg-[#0284C7] text-white font-bold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/5' }}">
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium {{ request()->routeIs('pembesaran*') ? 'bg-[#0284C7] text-white font-bold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/5' }}">
                                 <i class="fa-solid fa-bars-staggered text-xs w-4 text-center"></i>
                                 <span>Pembesaran</span>
                             </a>
@@ -543,6 +549,12 @@
                                class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium {{ request()->routeIs('log-pakan*') ? 'bg-[#0284C7] text-white font-bold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/5' }}">
                                 <i class="fa-regular fa-calendar text-xs w-4 text-center"></i>
                                 <span>Log Pakan</span>
+                            </a>
+
+                            <a href="{{ route('gudang') }}" 
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium {{ request()->routeIs('gudang*') ? 'bg-[#0284C7] text-white font-bold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/5' }}">
+                                <i class="fa-solid fa-boxes-packing text-xs w-4 text-center"></i>
+                                <span>Inventaris & Gudang</span>
                             </a>
                         </div>
                     </div>
@@ -587,6 +599,13 @@
                         </div>
                     </div>
                 </div>
+
+                {{-- 6. Tema & Landing Page (Single Menu) --}}
+                <a href="{{ route('landing-setting') }}" 
+                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 text-xs font-semibold {{ request()->routeIs('landing-setting*') ? 'bg-[#0284C7] text-white shadow-md shadow-sky-600/30' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}">
+                    <i class="fa-solid fa-palette text-sm w-5 text-center text-amber-400"></i>
+                    <span>Tema &amp; Landing Page</span>
+                </a>
             </nav>
         </aside>
 
@@ -637,13 +656,19 @@
                             </span>
                         </div>
 
-                        {{-- Opsi Pengaturan Profil --}}
+                        {{-- Opsi Kelola Landing Page & Pengaturan Profil --}}
                         <div class="py-1">
+                            <a href="{{ route('landing-setting') }}" 
+                               @click="open = false"
+                               class="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-sky-50 hover:text-sky-700 transition-colors">
+                                <i class="fa-solid fa-palette text-amber-500 w-4 text-center"></i>
+                                <span>Tema &amp; Landing Page</span>
+                            </a>
                             <a href="{{ route('pengaturan') }}" 
                                @click="open = false"
                                class="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-sky-50 hover:text-sky-700 transition-colors">
                                 <i class="fa-solid fa-gear text-slate-400 group-hover:text-sky-600 w-4 text-center"></i>
-                                <span>Pengaturan & Profil</span>
+                                <span>Pengaturan &amp; Profil</span>
                             </a>
                         </div>
 

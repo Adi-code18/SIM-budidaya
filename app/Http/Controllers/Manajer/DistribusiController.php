@@ -56,6 +56,18 @@ class DistribusiController extends Controller
                 'catatan_grading'         => $t->catatan_grading ?? '',
                 'alamat'        => $t->mitra ? $t->mitra->alamat : 'Alamat mitra belum diset',
                 'tanggal'       => $t->tanggal_order ? Carbon::parse($t->tanggal_order)->toDateString() : Carbon::today()->toDateString(),
+                'tgl_rencana_kirim' => $t->tgl_rencana_kirim ? Carbon::parse($t->tgl_rencana_kirim)->toDateString() : ($t->tanggal_order ? Carbon::parse($t->tanggal_order)->toDateString() : null),
+                'tipe_panen'        => $t->tipe_panen ?: 'parsial',
+                'berat_aktual_kg'   => $t->berat_aktual_kg !== null ? (float) $t->berat_aktual_kg : (float) $t->Total_kg,
+                'susut_bobot_kg'    => (float) ($t->susut_bobot_kg ?? 0),
+                'mortalitas_antar_kg' => (float) ($t->mortalitas_antar_kg ?? 0),
+                'persentase_susut'  => (float) $t->persentase_susut,
+                'is_ddp_aman'       => (bool) $t->is_ddp_aman,
+                'is_preorder'       => (bool) ($t->tgl_rencana_kirim && Carbon::parse($t->tgl_rencana_kirim)->isFuture()),
+                'bukti_sampai'   => $t->Bukti_sampai,
+                'bukti_foto_url' => $t->bukti_sampai_url,
+                'petugas_nama'   => $t->user ? $t->user->nama : 'Tim Distribusi Lapangan',
+                'waktu_selesai'  => ($status === 'selesai' && $t->updated_at) ? $t->updated_at->translatedFormat('d M Y, H:i') : null,
                 'label'         => true
             ];
         }
@@ -202,13 +214,29 @@ class DistribusiController extends Controller
             $waktuSelesaiPemberokan = now()->addHours($durasiPemberokan);
         }
 
+        $tglOrder = $request->tanggal_order ? Carbon::parse($request->tanggal_order)->toDateString() : Carbon::today()->toDateString();
+        $tglKirim = $request->tgl_rencana_kirim ? Carbon::parse($request->tgl_rencana_kirim)->toDateString() : $tglOrder;
+        $tipePanen = $request->tipe_panen ?: ($request->boolean('panen_kuras') ? 'kuras' : 'parsial');
+
+        // Jika pesanan adalah Pre-Order (dikirim lebih dari 1 hari ke depan) dan status dipilih 'pemberokian',
+        // sistem menetapkan status awal 'pending' (booking) agar ikan tetap makan normal di kolam asal sampai H-1!
+        $isPreOrder = Carbon::parse($tglKirim)->isFuture() && Carbon::parse($tglKirim)->diffInDays(Carbon::today()) >= 1;
+        if ($isPreOrder && in_array($status, ['pemberokian', 'pemberokan'])) {
+            $status = 'pending';
+        }
+
         $transaksi = TransaksiDistribusi::create([
             'no_surat_jalan'           => $noSuratJalan,
             'id_user'                  => Auth::id() ?? 1,
             'id_mitra'                 => $request->id_mitra,
             'id_pembesaran'            => $request->id_pembesaran,
-            'tanggal_order'            => $request->tanggal_order ?? Carbon::today()->toDateString(),
+            'tanggal_order'            => $tglOrder,
+            'tgl_rencana_kirim'        => $tglKirim,
+            'tipe_panen'               => $tipePanen,
             'Total_kg'                 => $totalKg,
+            'berat_aktual_kg'          => $totalKg,
+            'susut_bobot_kg'           => 0,
+            'mortalitas_antar_kg'      => 0,
             'harga_total'              => $hargaTotal,
             'status_order'             => $status,
             'waktu_mulai_pemberokan'   => $waktuMulaiPemberokan,
@@ -313,6 +341,19 @@ class DistribusiController extends Controller
         }
         if ($request->filled('catatan_grading')) {
             $transaksi->catatan_grading = $request->catatan_grading;
+        }
+        if ($request->filled('tgl_rencana_kirim')) {
+            $transaksi->tgl_rencana_kirim = Carbon::parse($request->tgl_rencana_kirim)->toDateString();
+        }
+        if ($request->filled('tipe_panen')) {
+            $transaksi->tipe_panen = $request->tipe_panen;
+        }
+        if ($request->filled('berat_aktual_kg')) {
+            $transaksi->berat_aktual_kg = (float) $request->berat_aktual_kg;
+            $transaksi->susut_bobot_kg = max(0, (float)$transaksi->Total_kg - (float)$request->berat_aktual_kg);
+        }
+        if ($request->filled('mortalitas_antar_kg')) {
+            $transaksi->mortalitas_antar_kg = (float) $request->mortalitas_antar_kg;
         }
 
         if (in_array($newStatus, ['pemberokan', 'pemberokian']) && !$transaksi->waktu_mulai_pemberokan) {

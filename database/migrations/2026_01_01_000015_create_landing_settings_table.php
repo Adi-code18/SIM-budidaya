@@ -11,8 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('mitra_distributor', function (Blueprint $table) {
-            $table->string('logo_mitra')->nullable()->after('tipe_mitra')->comment('Path atau file logo/gambar mitra');
+        Schema::create('landing_settings', function (Blueprint $table) {
+            $table->id();
+            $table->string('key')->unique();
+            $table->text('value')->nullable();
+            $table->timestamps();
         });
     }
 
@@ -21,8 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('mitra_distributor', function (Blueprint $table) {
-            $table->dropColumn('logo_mitra');
-        });
+        Schema::dropIfExists('landing_settings');
     }
 };

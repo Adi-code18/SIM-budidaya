@@ -19,6 +19,8 @@ class Kolam extends Model
         'kapasitas',
         'status',
         'kesehatan_ph_air',
+        'biaya_pembuatan',
+        'catatan',
     ];
 
     public function user()
@@ -44,5 +46,10 @@ class Kolam extends Model
     public function keuangan()
     {
         return $this->hasMany(Keuangan::class, 'id_kolam', 'id_kolam');
+    }
+
+    public function logKualitasAir()
+    {
+        return $this->hasMany(LogKualitasAir::class, 'id_kolam', 'id_kolam')->latest('tgl_catat');
     }
 }

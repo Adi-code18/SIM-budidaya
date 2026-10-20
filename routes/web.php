@@ -4,9 +4,11 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\EmailOtpController;
 use App\Http\Controllers\Auth\ForgotPasswordOtpController;
 use App\Http\Controllers\Auth\TwoFactorController;
+use App\Http\Controllers\LandingPageController;
 use App\Http\Controllers\Manajer\DashboardController;
 use App\Http\Controllers\Manajer\DistribusiController;
 use App\Http\Controllers\Manajer\IkanController;
+use App\Http\Controllers\Manajer\InventarisGudangController;
 use App\Http\Controllers\Manajer\KeuanganWebController;
 use App\Http\Controllers\Manajer\MitraController;
 use App\Http\Controllers\Manajer\PakanController;
@@ -26,13 +28,11 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 | Web Routes - AMS BUDIDAYA
 |--------------------------------------------------------------------------
-| Terstruktur rapi berdasarkan peran (Auth, Manajer, Petugas)
+| Terstruktur rapi berdasarkan peran (Auth, Manajer, Petugas, Publik)
 */
 
-// Redirect root to dashboard or login
-Route::get('/', function () {
-    return redirect()->route('dashboard');
-});
+// Halaman Publik / Landing Page Perusahaan
+Route::get('/', [LandingPageController::class, 'index'])->name('landing');
 
 // =========================================================================
 // 1. AUTENTIKASI & KEAMANAN 2FA / EMAIL OTP / LUPA PASSWORD (AUTH)
@@ -95,13 +95,24 @@ Route::middleware(['auth', 'role:manajer'])->group(function () {
     // Manajemen Batch Pembesaran
     Route::get('/pembesaran', [PembesaranController::class, 'index'])->name('pembesaran');
     Route::post('/pembesaran', [PembesaranController::class, 'store'])->name('pembesaran.store');
-    Route::post('/pembesaran/kolam', [PembesaranController::class, 'storeKolam'])->name('pembesaran.kolam.store');
     Route::put('/pembesaran/{id}', [PembesaranController::class, 'update'])->name('pembesaran.update');
     Route::delete('/pembesaran/{id}', [PembesaranController::class, 'destroy'])->name('pembesaran.destroy');
     Route::get('/pembesaran/{id}/kartu-kontrol-pdf', [PembesaranController::class, 'exportKartuKontrolPdf'])->name('pembesaran.kartu-kontrol.pdf');
 
-    // Monitoring Kolam & Pembudidaya
-    Route::get('/pembudidaya', [PembudidayaController::class, 'index'])->name('pembudidaya');
+    // Manajemen & Data Kolam (Budidaya & Operasional)
+    Route::get('/kolam', [PembudidayaController::class, 'index'])->name('kolam');
+    Route::post('/kolam', [PembudidayaController::class, 'store'])->name('kolam.store');
+    Route::put('/kolam/{id}', [PembudidayaController::class, 'update'])->name('kolam.update');
+    Route::delete('/kolam/{id}', [PembudidayaController::class, 'destroy'])->name('kolam.destroy');
+    Route::get('/pembudidaya', fn() => redirect()->route('kolam'))->name('pembudidaya');
+
+    // Manajemen Inventaris & Gudang Operasional (Saprotan & Peralatan Tambak)
+    Route::get('/gudang', [InventarisGudangController::class, 'index'])->name('gudang');
+    Route::post('/gudang', [InventarisGudangController::class, 'store'])->name('gudang.store');
+    Route::put('/gudang/{id}', [InventarisGudangController::class, 'update'])->name('gudang.update');
+    Route::delete('/gudang/{id}', [InventarisGudangController::class, 'destroy'])->name('gudang.destroy');
+    Route::post('/gudang/masuk', [InventarisGudangController::class, 'masuk'])->name('gudang.masuk');
+    Route::post('/gudang/keluar', [InventarisGudangController::class, 'keluar'])->name('gudang.keluar');
 
     // Master Data Stok Pakan (Katalog, Restock & Saldo Gudang)
     Route::get('/stok-pakan', [StokPakanController::class, 'index'])->name('stok-pakan');
@@ -163,6 +174,10 @@ Route::middleware(['auth', 'role:manajer'])->group(function () {
     Route::put('/pengaturan/profile', [PengaturanController::class, 'updateProfile'])->name('pengaturan.update-profile');
     Route::get('/pengaturan/preferences', fn() => redirect()->route('pengaturan'));
     Route::put('/pengaturan/preferences', [PengaturanController::class, 'updatePreferences'])->name('pengaturan.update-preferences');
+
+    // Kustomisasi Tema & Konten Landing Page
+    Route::get('/landing-setting', [\App\Http\Controllers\Manajer\LandingSettingController::class, 'index'])->name('landing-setting');
+    Route::post('/landing-setting', [\App\Http\Controllers\Manajer\LandingSettingController::class, 'update'])->name('landing-setting.update');
 });
 
 // =========================================================================
@@ -232,6 +247,8 @@ Route::prefix('petugas-pembesaran')->name('petugas.pembesaran.')->group(function
         Route::post('/create-batch', [PetugasPembesaranController::class, 'storeBatch'])->name('store-batch');
         Route::get('/log-pakan', [PetugasPembesaranController::class, 'logPakan'])->name('log-pakan');
         Route::post('/log-pakan', [PetugasPembesaranController::class, 'storeLogPakan'])->name('log-pakan.store');
+        Route::post('/sampling', [PetugasPembesaranController::class, 'storeSampling'])->name('sampling.store');
+        Route::post('/kualitas-air', [PetugasPembesaranController::class, 'storeKualitasAir'])->name('kualitas-air.store');
         Route::get('/akun', function () {
             return view('mobile_web_petugas.petugas_pembesaran.akun');
         })->name('akun');

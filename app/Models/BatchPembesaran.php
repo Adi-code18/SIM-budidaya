@@ -46,6 +46,11 @@ class BatchPembesaran extends Model
         return $this->belongsTo(BatchPembibitan::class, 'id_batch_pembibitan', 'id_batch');
     }
 
+    public function samplings()
+    {
+        return $this->hasMany(SamplingPembesaran::class, 'id_pembesaran', 'id_pembesaran')->latest('tgl_sampling');
+    }
+
     /**
      * Relasi/Referensi master ikan acuan untuk patokan FCR dan siklus panen.
      */

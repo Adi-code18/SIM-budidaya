@@ -15,11 +15,13 @@ return new class extends Migration
             $table->id('id_pakan');
             $table->foreignId('id_user')->constrained('users', 'id_user')->onDelete('cascade');
             $table->foreignId('id_kolam')->constrained('kolam', 'id_kolam')->onDelete('cascade');
+            $table->foreignId('id_stok_pakan')->nullable()->constrained('stok_pakan', 'id_stok_pakan')->onDelete('set null');
+            $table->enum('kategori_fase', ['pembibitan', 'pembesaran'])->default('pembesaran');
             $table->date('tgl_log');
-            $table->decimal('kg_pelet', 8, 2)->default(0);
-            $table->decimal('kg_daun', 8, 2)->default(0);
+            $table->decimal('kg_pelet', 8, 2)->default(0.00);
+            $table->decimal('kg_daun', 8, 2)->default(0.00);
             $table->string('jenis_daun')->nullable();
-            $table->decimal('total_biaya', 12, 2)->default(0);
+            $table->decimal('total_biaya', 12, 2)->default(0.00);
             $table->decimal('ph_air', 4, 2)->nullable();
             $table->timestamps();
         });

@@ -190,7 +190,24 @@ class PetugasPembesaranController extends Controller
             ->take(15)
             ->get();
 
-        return view('mobile_web_petugas.petugas_pembesaran.log_pakan', compact('activeBatches', 'stokPakanList', 'logs'));
+        // 4. Ambil Riwayat Sampling Bobot & Kualitas Air
+        $recentSamplings = \App\Models\SamplingPembesaran::with('batchPembesaran.kolam')
+            ->latest('tgl_sampling')
+            ->take(10)
+            ->get();
+
+        $recentWaterQuality = \App\Models\LogKualitasAir::with('kolam')
+            ->latest('tgl_catat')
+            ->take(10)
+            ->get();
+
+        return view('mobile_web_petugas.petugas_pembesaran.log_pakan', compact(
+            'activeBatches',
+            'stokPakanList',
+            'logs',
+            'recentSamplings',
+            'recentWaterQuality'
+        ));
     }
 
     /**
@@ -223,6 +240,18 @@ class PetugasPembesaranController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Kolam ini belum diisi ikan aktif. Anda harus memulai siklus tebar benih terlebih dahulu!'
+            ], 422);
+        }
+
+        // Validasi Proteksi: Cek apakah kolam sedang dalam masa pemuasaan/pemberokan aktif untuk panen
+        $isPemberokan = \App\Models\TransaksiDistribusi::whereHas('batchPembesaran', function ($q) use ($request) {
+            $q->where('id_kolam', $request->id_kolam);
+        })->whereIn('status_order', ['pemberokan', 'pemberokian'])->exists();
+
+        if ($isPemberokan) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kolam ini sedang menjalani masa pemuasaan (PEMBEROKAN 18-24 jam) untuk persiapan panen distribusi. Pemberian pakan dilarang keras sesuai SOP!'
             ], 422);
         }
 
@@ -305,10 +334,22 @@ class PetugasPembesaranController extends Controller
             $activeBatch->applyFeedGrowth($kgPelet, $kgDaun);
         }
 
-        // Update pH Air Kolam
+        // Update pH Air Kolam & Simpan Log Kualitas Air
         if ($request->filled('ph_air')) {
             Kolam::where('id_kolam', $request->id_kolam)->update([
                 'kesehatan_ph_air' => $request->ph_air
+            ]);
+        }
+
+        if ($request->filled('ph_air') || $request->filled('suhu_air')) {
+            \App\Models\LogKualitasAir::create([
+                'id_kolam'    => $request->id_kolam,
+                'id_user'     => Auth::id() ?? 1,
+                'tgl_catat'   => now(),
+                'suhu_air'    => $request->filled('suhu_air') ? (float)$request->suhu_air : null,
+                'ph_air'      => $request->filled('ph_air') ? (float)$request->ph_air : null,
+                'kondisi_air' => $request->kondisi_air ?? 'Normal / Baik',
+                'catatan'     => 'Auto-logged saat input pakan harian',
             ]);
         }
 
@@ -321,5 +362,93 @@ class PetugasPembesaranController extends Controller
         }
 
         return redirect()->route('petugas.pembesaran.log-pakan')->with('success', 'Log pakan pembesaran berhasil dicatat & stok terpotong!');
+    }
+
+    /**
+     * Simpan Data Sampling Bobot Pertumbuhan Ikan Mingguan (ABW & Koreksi Biomassa).
+     */
+    public function storeSampling(Request $request)
+    {
+        $request->validate([
+            'id_pembesaran'         => 'required|exists:batch_pembesaran,id_pembesaran',
+            'tgl_sampling'          => 'required|date',
+            'jumlah_sample_ekor'    => 'required|integer|min:1',
+            'total_bobot_sample_gr' => 'required|numeric|min:0.1',
+            'catatan'               => 'nullable|string',
+        ]);
+
+        $batch = BatchPembesaran::findOrFail($request->id_pembesaran);
+        $jmlEkor = (int) $request->jumlah_sample_ekor;
+        $totalGr = (float) $request->total_bobot_sample_gr;
+        $abw = round($totalGr / $jmlEkor, 2); // Gram per ekor
+
+        $biomassaKoreksi = null;
+        if ($batch->jumlah_tebar_ekor > 0) {
+            $estEkorHidup = (int) ($batch->jumlah_tebar_ekor * 0.85);
+            $biomassaKoreksi = round(($estEkorHidup * $abw) / 1000, 2);
+            $batch->biomassa_est = $biomassaKoreksi;
+            $batch->save();
+        }
+
+        $sampling = \App\Models\SamplingPembesaran::create([
+            'id_pembesaran'         => $batch->id_pembesaran,
+            'id_user'               => Auth::id() ?? 1,
+            'tgl_sampling'          => Carbon::parse($request->tgl_sampling)->toDateString(),
+            'jumlah_sample_ekor'    => $jmlEkor,
+            'total_bobot_sample_gr' => $totalGr,
+            'abw_gram'              => $abw,
+            'biomassa_koreksi_kg'   => $biomassaKoreksi,
+            'catatan'               => $request->catatan,
+        ]);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success'  => true,
+                'message'  => "Sampling pertumbuhan berhasil dicatat! Rata-rata bobot: {$abw} gr/ekor.",
+                'sampling' => $sampling
+            ]);
+        }
+
+        return redirect()->back()->with('success', "Sampling bobot tercatat: {$abw} gr/ekor.");
+    }
+
+    /**
+     * Simpan Log Kualitas Air Kolam (Suhu, pH, DO & Kondisi Air).
+     */
+    public function storeKualitasAir(Request $request)
+    {
+        $request->validate([
+            'id_kolam'    => 'required|exists:kolam,id_kolam',
+            'suhu_air'    => 'nullable|numeric|min:15|max:45',
+            'ph_air'      => 'nullable|numeric|min:0|max:14',
+            'kondisi_air' => 'required|string',
+            'catatan'     => 'nullable|string',
+        ]);
+
+        $logAir = \App\Models\LogKualitasAir::create([
+            'id_kolam'    => $request->id_kolam,
+            'id_user'     => Auth::id() ?? 1,
+            'tgl_catat'   => now(),
+            'suhu_air'    => $request->filled('suhu_air') ? (float)$request->suhu_air : null,
+            'ph_air'      => $request->filled('ph_air') ? (float)$request->ph_air : null,
+            'kondisi_air' => $request->kondisi_air,
+            'catatan'     => $request->catatan,
+        ]);
+
+        if ($request->filled('ph_air')) {
+            Kolam::where('id_kolam', $request->id_kolam)->update([
+                'kesehatan_ph_air' => (float)$request->ph_air
+            ]);
+        }
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Log kualitas air berhasil dicatat!',
+                'log'     => $logAir
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Log kualitas air berhasil dicatat!');
     }
 }

@@ -20,12 +20,12 @@ class PetugasProfileController extends Controller
             'nama'        => 'required|string|max:255',
             'no_tlp'      => 'nullable|string|max:30',
             'alamat'      => 'nullable|string|max:500',
-            'foto_profil' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'foto_profil' => 'nullable|image|mimes:jpeg,png,jpg,webp,jfif,heic|max:5120',
         ], [
             'nama.required'     => 'Nama lengkap wajib diisi.',
             'foto_profil.image' => 'File harus berupa foto/gambar.',
-            'foto_profil.mimes' => 'Format foto harus jpeg, png, jpg, atau webp.',
-            'foto_profil.max'   => 'Ukuran foto maksimal 2MB.',
+            'foto_profil.mimes' => 'Format foto harus JPEG, PNG, JPG, WEBP, atau HEIC.',
+            'foto_profil.max'   => 'Ukuran foto maksimal 5MB.',
         ]);
 
         if ($request->hasFile('foto_profil')) {
