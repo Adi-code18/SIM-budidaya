@@ -31,39 +31,32 @@
         </button>
     </div>
 
-    <!-- Title & Top Filter Section -->
+    <!-- ========================================================================= -->
+    <!-- 1. TOP HEADER: TITLE, PERIODE & QUICK ACTIONS -->
+    <!-- ========================================================================= -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-extrabold text-[#0B2570] tracking-tight">Dashboard</h1>
-            <p class="text-xs text-slate-500 font-medium mt-0.5">Operasional budidaya & ringkasan analitik terkini.</p>
+            <div class="flex items-center gap-2">
+                <h1 class="text-2xl font-extrabold text-[#051B44] tracking-tight">Dashboard</h1>
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-50 text-[#0066CC] border border-sky-200/80 uppercase tracking-wider">
+                    Sistem Budidaya
+                </span>
+            </div>
+            <p class="text-xs text-slate-500 font-medium mt-0.5">Operasional budidaya, analitik biomassa pakan, &amp; ringkasan keuangan terkini.</p>
         </div>
-        <div class="flex items-center gap-3 flex-wrap">
-            <!-- FCR Simulator Quick Button -->
-            <button type="button" 
-                    @click="fcrModalOpen = true"
-                    class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg border border-sky-300 bg-sky-50 text-xs font-bold text-[#0055CC] shadow-xs hover:bg-sky-100 hover:border-sky-400 transition-all cursor-pointer">
-                <i class="fa-solid fa-calculator text-[#0077C6]"></i>
-                <span>Simulator FCR (SOP)</span>
-            </button>
 
-            <!-- Audit Log Navigation Button -->
-            <a href="{{ route('dashboard.audit-logs') }}"
-               class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 shadow-xs hover:bg-slate-50 hover:border-slate-400 transition-all cursor-pointer">
-                <i class="fa-solid fa-clock-rotate-left text-slate-500"></i>
-                <span>Audit Log Sistem</span>
-            </a>
-            
+        <div class="flex items-center gap-2.5 flex-wrap">
             <!-- Date / Period Calendar Filter Popover -->
             <div class="relative" @click.outside="datePickerOpen = false">
                 <button type="button" 
                         @click="datePickerOpen = !datePickerOpen"
-                        class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 shadow-xs hover:bg-slate-50 hover:border-slate-400 transition-all cursor-pointer">
-                    <i class="fa-regular fa-calendar-days text-[#0077C6] text-xs"></i>
+                        class="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200/90 bg-white text-xs font-semibold text-slate-700 shadow-xs hover:bg-slate-50 hover:border-slate-300 transition-all cursor-pointer">
+                    <i class="fa-regular fa-calendar-days text-[#0066CC] text-xs"></i>
                     <span x-text="periodLabel">Minggu 1, Ags 2026</span>
                     <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1 transition-transform" :class="datePickerOpen ? 'rotate-180' : ''"></i>
                 </button>
 
-                <!-- Popover Calendar-Like Container -->
+                <!-- Popover Calendar Container -->
                 <div x-show="datePickerOpen" 
                      x-transition:enter="transition ease-out duration-150"
                      x-transition:enter-start="opacity-0 translate-y-1 scale-95"
@@ -71,32 +64,32 @@
                      x-transition:leave="transition ease-in duration-100"
                      x-transition:leave-start="opacity-100 translate-y-0 scale-100"
                      x-transition:leave-end="opacity-0 translate-y-1 scale-95"
-                     class="absolute right-0 mt-2 w-80 bg-white rounded-3xl shadow-2xl border border-slate-200 p-4 z-40 text-xs"
+                     class="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 z-40 text-xs"
                      style="display: none;">
                     
                     <!-- Top Mode Switcher (Mingguan | Bulanan | Tahunan) -->
-                    <div class="flex items-center bg-slate-100 p-1 rounded-2xl mb-3.5">
+                    <div class="flex items-center bg-slate-100 p-1 rounded-xl mb-3.5">
                         <button type="button" 
                                 @click="pickerMode = 'minggu'"
                                 :class="pickerMode === 'minggu' ? 'bg-[#051B44] text-white shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900 font-semibold'"
-                                class="flex-1 py-1.5 rounded-xl text-center text-xs transition-all">
+                                class="flex-1 py-1.5 rounded-lg text-center text-xs transition-all">
                             Mingguan
                         </button>
                         <button type="button" 
                                 @click="pickerMode = 'bulan'"
                                 :class="pickerMode === 'bulan' ? 'bg-[#051B44] text-white shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900 font-semibold'"
-                                class="flex-1 py-1.5 rounded-xl text-center text-xs transition-all">
+                                class="flex-1 py-1.5 rounded-lg text-center text-xs transition-all">
                             Bulanan
                         </button>
                         <button type="button" 
                                 @click="pickerMode = 'tahun'"
                                 :class="pickerMode === 'tahun' ? 'bg-[#051B44] text-white shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900 font-semibold'"
-                                class="flex-1 py-1.5 rounded-xl text-center text-xs transition-all">
+                                class="flex-1 py-1.5 rounded-lg text-center text-xs transition-all">
                             Tahunan
                         </button>
                     </div>
 
-                    <!-- Header Navigasi Tahun (Untuk Mode Minggu & Bulan) -->
+                    <!-- Header Navigasi Tahun -->
                     <div x-show="pickerMode !== 'tahun'" class="flex items-center justify-between px-2 pb-2.5 mb-2.5 border-b border-slate-100">
                         <button type="button" 
                                 @click="prevYear()"
@@ -105,7 +98,7 @@
                                 class="w-7 h-7 rounded-lg flex items-center justify-center transition-colors">
                             <i class="fa-solid fa-chevron-left text-xs"></i>
                         </button>
-                        <span class="font-extrabold text-sm text-[#051B44]" x-text="'Tahun ' + pickerYear"></span>
+                        <span class="font-extrabold text-slate-800 text-xs" x-text="pickerYear"></span>
                         <button type="button" 
                                 @click="nextYear()"
                                 :disabled="pickerYear >= currentYear"
@@ -115,95 +108,75 @@
                         </button>
                     </div>
 
-                    <!-- TAB 1: MODE MINGGUAN -->
+                    <!-- MODE 1: MINGGUAN -->
                     <div x-show="pickerMode === 'minggu'" class="space-y-3">
-                        <!-- Pilih Bulan Horizontal Scroller -->
-                        <div class="flex items-center gap-1 overflow-x-auto pb-1.5 scrollbar-thin">
+                        <div class="grid grid-cols-4 gap-1 px-1">
                             <template x-for="m in monthList" :key="m.num">
-                                <button type="button"
-                                        @click="isMonthAvailable(m.num, pickerYear) && (pickerMonth = m.num)"
+                                <button type="button" 
+                                        @click="pickerMonth = m.num"
                                         :disabled="!isMonthAvailable(m.num, pickerYear)"
                                         :class="{
-                                            'bg-[#051B44] text-white font-bold shadow-xs': pickerMonth === m.num && isMonthAvailable(m.num, pickerYear),
-                                            'bg-slate-50 text-slate-700 hover:bg-sky-50 font-medium': pickerMonth !== m.num && isMonthAvailable(m.num, pickerYear),
-                                            'opacity-30 cursor-not-allowed bg-slate-50 text-slate-400': !isMonthAvailable(m.num, pickerYear)
+                                            'bg-[#051B44] text-white font-bold shadow-xs': pickerMonth === m.num,
+                                            'text-slate-700 hover:bg-slate-100 font-medium': pickerMonth !== m.num && isMonthAvailable(m.num, pickerYear),
+                                            'text-slate-300 opacity-40 cursor-not-allowed': !isMonthAvailable(m.num, pickerYear)
                                         }"
-                                        class="px-2.5 py-1 rounded-lg text-[11px] shrink-0 transition-all"
+                                        class="py-1 px-1 rounded-lg text-center text-[11px] transition-all"
                                         x-text="m.short">
                                 </button>
                             </template>
                         </div>
-
-                        <!-- Daftar Minggu di Bulan Terpilih -->
-                        <div class="space-y-1.5 pt-1">
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1">
-                                PILIH MINGGU (<span x-text="getMonthName(pickerMonth) + ' ' + pickerYear"></span>)
+                        <div class="pt-2 border-t border-slate-100">
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 px-1">Pilih Rentang Minggu:</div>
+                            <div class="space-y-1">
+                                <template x-for="w in getWeeks(pickerMonth, pickerYear)" :key="w.index">
+                                    <button type="button" 
+                                            @click="applyWeek(w)"
+                                            :class="selectedPeriodKey === `w_${pickerYear}_${pickerMonth}_${w.index}` ? 'bg-sky-50 text-[#0066CC] font-bold border-sky-300' : 'hover:bg-slate-50 text-slate-700 border-transparent'"
+                                            class="w-full text-left px-2.5 py-1.5 rounded-lg border text-xs flex items-center justify-between transition-colors">
+                                        <span x-text="w.label"></span>
+                                        <span class="text-[10px] text-slate-400 font-medium" x-text="w.range"></span>
+                                    </button>
+                                </template>
                             </div>
-                            <template x-for="w in getWeeks(pickerMonth, pickerYear)" :key="w.index">
-                                <button type="button"
-                                        @click="w.available && applyWeek(w)"
-                                        :disabled="!w.available"
-                                        :class="{
-                                            'border-sky-500 bg-sky-50/80 font-bold text-[#0055CC]': selectedPeriodKey === 'w_' + pickerYear + '_' + pickerMonth + '_' + w.index,
-                                            'border-slate-100 hover:border-sky-200 hover:bg-slate-50 text-slate-700': selectedPeriodKey !== 'w_' + pickerYear + '_' + pickerMonth + '_' + w.index && w.available,
-                                            'opacity-35 cursor-not-allowed border-dashed border-slate-200 bg-slate-50/50 text-slate-400': !w.available
-                                        }"
-                                        class="w-full p-2.5 rounded-xl border flex items-center justify-between text-left transition-all">
-                                    <div class="flex items-center gap-2">
-                                        <i class="fa-solid fa-calendar-week text-xs" :class="w.available ? 'text-sky-600' : 'text-slate-300'"></i>
-                                        <span class="text-xs" x-text="w.label"></span>
-                                    </div>
-                                    <div class="flex items-center gap-1.5">
-                                        <span class="text-[10px] font-mono text-slate-400" x-text="w.range"></span>
-                                        <span x-show="!w.available" class="text-[9px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-400 font-semibold">Belum Ada Data</span>
-                                    </div>
-                                </button>
-                            </template>
                         </div>
                     </div>
 
-                    <!-- TAB 2: MODE BULANAN -->
+                    <!-- MODE 2: BULANAN -->
                     <div x-show="pickerMode === 'bulan'" class="space-y-2">
-                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1 mb-1">
-                            PILIH BULAN REKAP (<span x-text="pickerYear"></span>)
-                        </div>
-                        <div class="grid grid-cols-3 gap-2">
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 px-1">Pilih Rekap Bulan:</div>
+                        <div class="grid grid-cols-3 gap-1.5">
                             <template x-for="m in monthList" :key="m.num">
-                                <button type="button"
-                                        @click="isMonthAvailable(m.num, pickerYear) && applyMonth(m.num, pickerYear)"
+                                <button type="button" 
+                                        @click="applyMonth(m.num, pickerYear)"
                                         :disabled="!isMonthAvailable(m.num, pickerYear)"
                                         :class="{
-                                            'border-sky-500 bg-sky-50/80 font-bold text-[#0055CC]': selectedPeriodKey === 'm_' + pickerYear + '_' + m.num,
-                                            'border-slate-100 hover:border-sky-200 hover:bg-slate-50 text-slate-700': selectedPeriodKey !== 'm_' + pickerYear + '_' + m.num && isMonthAvailable(m.num, pickerYear),
-                                            'opacity-35 cursor-not-allowed border-dashed border-slate-200 bg-slate-50/50 text-slate-400': !isMonthAvailable(m.num, pickerYear)
+                                            'bg-[#051B44] text-white font-bold shadow-xs': selectedPeriodKey === `m_${pickerYear}_${m.num}`,
+                                            'bg-slate-50 hover:bg-slate-100 text-slate-700 font-medium': selectedPeriodKey !== `m_${pickerYear}_${m.num}` && isMonthAvailable(m.num, pickerYear),
+                                            'text-slate-300 opacity-40 cursor-not-allowed bg-slate-50/50': !isMonthAvailable(m.num, pickerYear)
                                         }"
-                                        class="p-2.5 rounded-xl border text-center transition-all flex flex-col items-center justify-center">
-                                    <span class="text-xs font-bold" x-text="m.name"></span>
-                                    <span x-show="!isMonthAvailable(m.num, pickerYear)" class="text-[8px] text-slate-400 mt-0.5">Belum Ada Data</span>
-                                    <span x-show="isMonthAvailable(m.num, pickerYear) && m.num === currentMonth && pickerYear === currentYear" class="text-[8px] text-emerald-600 font-extrabold mt-0.5">Bln Berjalan</span>
+                                        class="py-2.5 px-2 rounded-xl text-center text-xs transition-all border border-slate-100"
+                                        x-text="m.name">
                                 </button>
                             </template>
                         </div>
                     </div>
 
-                    <!-- TAB 3: MODE TAHUNAN -->
+                    <!-- MODE 3: TAHUNAN -->
                     <div x-show="pickerMode === 'tahun'" class="space-y-2">
-                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1 mb-1">
-                            PILIH TAHUN REKAP
-                        </div>
-                        <div class="space-y-2">
-                            <template x-for="y in yearList" :key="y.year">
-                                <button type="button"
-                                        @click="y.available && applyYear(y.year)"
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 px-1">Pilih Rekap Tahun:</div>
+                        <div class="space-y-1.5">
+                            <template x-for="y in getAvailableYears()" :key="y.year">
+                                <button type="button" 
+                                        @click="applyYear(y.year)"
                                         :disabled="!y.available"
                                         :class="{
-                                            'border-sky-500 bg-sky-50/80 font-bold text-[#0055CC]': selectedPeriodKey === 'y_' + y.year,
-                                            'border-slate-100 hover:border-sky-200 hover:bg-slate-50 text-slate-700': selectedPeriodKey !== 'y_' + y.year && y.available,
-                                            'opacity-35 cursor-not-allowed border-dashed border-slate-200 bg-slate-50/50 text-slate-400': !y.available
+                                            'bg-[#051B44] text-white font-bold shadow-xs': selectedPeriodKey === `y_${y.year}`,
+                                            'bg-slate-50 hover:bg-slate-100 text-slate-700': selectedPeriodKey !== `y_${y.year}` && y.available,
+                                            'text-slate-300 opacity-40 cursor-not-allowed bg-slate-50/50': !y.available
                                         }"
-                                        class="w-full p-3 rounded-xl border flex items-center justify-between text-left transition-all">
+                                        class="w-full text-left p-2.5 rounded-xl border border-slate-100 text-xs flex items-center justify-between transition-all">
                                     <div>
-                                        <div class="text-xs font-extrabold" x-text="'Tahun ' + y.year"></div>
+                                        <div class="font-extrabold text-sm" x-text="'Tahun ' + y.year"></div>
                                         <div class="text-[10px] text-slate-400" x-text="y.description"></div>
                                     </div>
                                     <span class="px-2 py-0.5 rounded text-[10px] font-extrabold"
@@ -214,384 +187,549 @@
                             </template>
                         </div>
                     </div>
-
                 </div>
             </div>
 
             <!-- Export Excel Button -->
             <button type="button"
                     @click="exportExcel()"
-                    class="px-3.5 py-1.5 rounded-lg bg-[#0B6B2E] hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-2 shadow-xs hover:shadow-md active:scale-95 transition-all tracking-wide cursor-pointer">
+                    class="px-4 py-2 rounded-xl bg-[#0B6B2E] hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-2 shadow-xs hover:shadow-md active:scale-95 transition-all tracking-wide cursor-pointer">
                 <i class="fa-solid fa-file-excel text-sm text-emerald-200"></i>
                 <span>EKSPOR EXCEL</span>
             </button>
-
         </div>
     </div>
 
-    <!-- 3 Top Metric KPI Cards Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+    <!-- ========================================================================= -->
+    <!-- 2. TOP METRIC KPI CARDS (ROW OF 4: 3 METRICS + 1 SALDO WALLET CARD) -->
+    <!-- ========================================================================= -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         
-        <!-- Card 1: Total Stok Ikan -->
-        <div class="bg-[#DDF2FF] p-5 rounded-2xl border border-[#BEE3F8] shadow-xs flex flex-col justify-between hover:shadow-md transition-all">
+        <!-- Card 1: Total Stok Ikan (Biomassa) -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col justify-between hover:shadow-md transition-all relative overflow-hidden group">
             <div>
                 <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-600">TOTAL STOK IKAN</span>
-                    <div class="w-9 h-9 rounded-xl bg-[#BEE3F8]/60 text-[#006699] flex items-center justify-center shadow-xs">
-                        <i class="fa-solid fa-water text-base"></i>
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Stok Ikan</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center gap-1">
+                        <i class="fa-solid fa-arrow-trend-up text-[9px]"></i> +4.2%
+                    </span>
+                </div>
+                <div class="mt-3 flex items-baseline gap-1.5">
+                    <h3 class="text-2xl lg:text-3xl font-extrabold text-slate-900 tracking-tight" x-text="metrics.totalStok">1.250</h3>
+                    <span class="text-xs font-bold text-slate-500">kg biomassa</span>
+                </div>
+            </div>
+            
+            <!-- Micro Sparkline SVG -->
+            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                <div class="flex items-center gap-1.5 text-slate-500 font-medium">
+                    <i class="fa-solid fa-circle text-[7px] text-emerald-500"></i>
+                    <span x-text="metrics.totalStokTrend">Batch Aktif Terdata</span>
+                </div>
+                <svg class="w-16 h-5 text-emerald-500" viewBox="0 0 64 20" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M0 16 Q 16 4, 32 12 T 64 4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Card 2: FCR Rata-rata (Efisiensi Pakan) -->
+        <div @click="fcrModalOpen = true"
+             class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col justify-between hover:shadow-md hover:border-sky-300 transition-all cursor-pointer relative overflow-hidden group">
+            <div>
+                <div class="flex items-center justify-between">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">FCR Rata-rata</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-50 text-[#0066CC] border border-sky-100">
+                        Target &lt; 1.2
+                    </span>
+                </div>
+                <div class="mt-3 flex items-baseline gap-2">
+                    <h3 class="text-2xl lg:text-3xl font-extrabold text-slate-900 tracking-tight" x-text="metrics.fcr">1.12</h3>
+                    <span class="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">Efisien</span>
+                </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                <div class="flex items-center gap-1.5 text-emerald-600 font-medium truncate">
+                    <i class="fa-regular fa-circle-check text-xs"></i>
+                    <span x-text="metrics.fcrStatus">Sesuai SOP Budidaya</span>
+                </div>
+                <svg class="w-16 h-5 text-[#0066CC]" viewBox="0 0 64 20" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M0 8 Q 20 16, 40 6 T 64 12" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Card 3: Target Panen Konsumsi -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col justify-between hover:shadow-md transition-all relative overflow-hidden group">
+            <div>
+                <div class="flex items-center justify-between">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Target Panen</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200" x-text="metrics.targetPanenTag">
+                        ORDER AKTIF
+                    </span>
+                </div>
+                <div class="mt-3 flex items-baseline gap-1.5">
+                    <h3 class="text-2xl lg:text-3xl font-extrabold text-slate-900 tracking-tight" x-text="metrics.targetPanen">450</h3>
+                    <span class="text-xs font-bold text-slate-500">kg siap panen</span>
+                </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                <div class="flex items-center gap-1.5 text-slate-600 font-medium truncate">
+                    <i class="fa-regular fa-calendar-check text-slate-400"></i>
+                    <span class="truncate" x-text="metrics.targetPanenNote">Mitra Distribusi</span>
+                </div>
+                <svg class="w-16 h-5 text-amber-500" viewBox="0 0 64 20" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M0 14 Q 24 2, 44 14 T 64 6" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Card 4: Saldo Kas Bersih & Margin (Sleek MasterCard / Wallet Style Card) -->
+        <div class="bg-gradient-to-br from-[#0B2570] via-[#051B44] to-[#020D26] text-white p-5 rounded-2xl shadow-lg shadow-[#0B2570]/20 flex flex-col justify-between relative overflow-hidden group min-h-[145px]">
+            <!-- Background Glow Circles -->
+            <div class="absolute -right-4 -bottom-4 w-28 h-28 rounded-full bg-sky-500/10 blur-xl pointer-events-none"></div>
+            
+            <div>
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-extrabold uppercase tracking-widest text-sky-200/80">Saldo Kas Bersih</span>
+                    <!-- Dual overlapping circles icon (Mastercard style) -->
+                    <div class="flex items-center -space-x-2">
+                        <div class="w-6 h-6 rounded-full bg-[#EB001B] opacity-90 shadow-xs"></div>
+                        <div class="w-6 h-6 rounded-full bg-[#F79E1B] opacity-90 shadow-xs"></div>
                     </div>
                 </div>
-                <div class="mt-3">
-                    <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight">
-                        <span x-text="metrics.totalStok">1,250</span> <span class="text-xs font-semibold text-slate-600">kg</span>
+                <div class="mt-2.5">
+                    <h3 class="text-2xl lg:text-3xl font-black tracking-tight text-white" x-text="currentFinancialData.laba_rugi_format || 'Rp 0'">
+                        Rp 0
                     </h3>
                 </div>
             </div>
-            <div class="mt-4 flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span x-text="metrics.totalStokTrend">+4.2% dari minggu lalu</span>
-            </div>
-        </div>
 
-        <!-- Card 2: FCR Rata-rata -->
-        <div @click="fcrModalOpen = true" 
-             class="bg-[#DDF2FF] p-5 rounded-2xl border border-[#BEE3F8] shadow-xs flex flex-col justify-between hover:shadow-md hover:border-sky-400 transition-all cursor-pointer group relative">
-            <span class="absolute top-3 right-3 text-[10px] font-bold text-[#006699] opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 px-2 py-0.5 rounded-full border border-sky-200">
-                <i class="fa-solid fa-calculator mr-1"></i>Simulasikan
-            </span>
-            <div>
-                <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-600">FCR RATA-RATA</span>
-                    <div class="w-9 h-9 rounded-xl bg-[#BEE3F8]/60 text-[#006699] flex items-center justify-center shadow-xs group-hover:bg-[#051B44] group-hover:text-white transition-colors">
-                        <i class="fa-solid fa-chart-line text-base"></i>
-                    </div>
-                </div>
-                <div class="mt-3">
-                    <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight" x-text="metrics.fcr">1.12</h3>
-                </div>
-            </div>
-            <div class="mt-4 flex items-center justify-between text-xs font-semibold text-emerald-600">
-                <div class="flex items-center gap-1.5">
-                    <i class="fa-regular fa-circle-check"></i>
-                    <span x-text="metrics.fcrStatus">Efisiensi Pakan Optimal</span>
-                </div>
-                <span class="text-[11px] text-[#0077C6] group-hover:underline font-bold">Audit SOP &rarr;</span>
-            </div>
-        </div>
-
-        <!-- Card 3: Target Panen -->
-        <div class="bg-[#DDF2FF] p-5 rounded-2xl border border-[#BEE3F8] shadow-xs flex flex-col justify-between hover:shadow-md transition-all">
-            <div>
-                <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-600">TARGET PANEN</span>
-                    <div class="w-9 h-9 rounded-xl bg-[#BEE3F8]/60 text-[#006699] flex items-center justify-center shadow-xs">
-                        <i class="fa-regular fa-calendar text-base"></i>
-                    </div>
-                </div>
-                <div class="mt-3">
-                    <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight">
-                        <span x-text="metrics.targetPanen">450</span> <span class="text-xs font-semibold text-slate-600">kg</span>
-                    </h3>
-                </div>
-            </div>
-            <div class="mt-4 flex items-center gap-2 text-xs">
-                <span class="px-2 py-0.5 rounded bg-[#E53E3E] text-white text-[10px] font-extrabold tracking-wider uppercase" x-text="metrics.targetPanenTag">ORDER AKTIF</span>
-                <span class="text-slate-600 font-medium truncate" x-text="metrics.targetPanenNote">Mitra Distribusi</span>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- ========================================================================= -->
-    <!-- SECTION: KEUNTUNGAN & KERUGIAN (BULAN INI & TAHUN INI) -->
-    <!-- ========================================================================= -->
-    <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
-        
-        <!-- Header Section with Period Switcher Tabs -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
-            <div class="flex items-center gap-3">
-                <div class="w-11 h-11 rounded-2xl bg-[#0B2570] text-white flex items-center justify-center shadow-md shadow-[#0B2570]/20 flex-shrink-0">
-                    <i class="fa-solid fa-scale-balanced text-lg"></i>
-                </div>
+            <div class="mt-3 pt-2.5 border-t border-white/10 flex items-center justify-between text-xs">
                 <div>
-                    <div class="flex items-center gap-2">
-                        <h3 class="text-base font-extrabold text-slate-900">Analisis Keuntungan &amp; Kerugian (Profit &amp; Loss)</h3>
-                        <span class="px-2 py-0.5 rounded-md text-[10px] font-black tracking-wide"
-                              :class="currentFinancialData.is_untung ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-rose-100 text-rose-800 border border-rose-200'"
-                              x-text="currentFinancialData.status_label">
-                        </span>
+                    <span class="text-[10px] font-mono tracking-widest text-sky-200/70 block">1234 •••• 8901 2026</span>
+                    <span class="text-[10px] font-extrabold text-white tracking-wider uppercase block mt-0.5">AMS AQUAFARM</span>
+                </div>
+                <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider"
+                      :class="currentFinancialData.is_untung ? 'bg-emerald-400/20 text-emerald-300 border border-emerald-400/30' : 'bg-rose-400/20 text-rose-300 border border-rose-400/30'"
+                      x-text="currentFinancialData.status_label">
+                    Surplus
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 3. MIDDLE SECTION: ANALYTICS CHART (8 COLS) + FINANCIAL CARDS (4 COLS) -->
+    <!-- ========================================================================= -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        
+        <!-- Main Chart Card: Analisis Konsumsi Pakan (lg:col-span-8) -->
+        <div class="lg:col-span-8 bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col justify-between">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900 tracking-tight">Analisis Konsumsi Pakan</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Monitoring perbandingan pelet komersial vs hijauan dedaunan alami harian.</p>
+                </div>
+                
+                <div class="flex items-center gap-4 text-xs font-semibold flex-wrap">
+                    <!-- Legend 1 -->
+                    <div class="flex items-center gap-1.5 text-slate-700">
+                        <span class="w-2.5 h-2.5 rounded-full bg-[#0B2570]"></span>
+                        <span>Pelet Komersial</span>
                     </div>
-                    <p class="text-xs text-slate-500 font-medium mt-0.5">
-                        Ringkasan performa margin laba bersih operasional dan arus kas keuangan budidaya.
-                    </p>
+                    <!-- Legend 2 -->
+                    <div class="flex items-center gap-1.5 text-slate-700">
+                        <span class="w-2.5 h-2.5 rounded-full bg-[#10B981]"></span>
+                        <span>Dedaunan Organik</span>
+                    </div>
+                    
+                    <!-- Filter Dropdown Chart -->
+                    <div class="relative" @click.outside="chartDropdownOpen = false">
+                        <button type="button" 
+                                @click="chartDropdownOpen = !chartDropdownOpen"
+                                class="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-bold hover:bg-slate-50 cursor-pointer shadow-xs">
+                            <span x-text="chartPeriodLabel">7 Hari Terakhir</span>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform" :class="chartDropdownOpen ? 'rotate-180' : ''"></i>
+                        </button>
+
+                        <div x-show="chartDropdownOpen" 
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 translate-y-1 scale-95"
+                             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave="transition ease-in duration-100"
+                             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave-end="opacity-0 translate-y-1 scale-95"
+                             class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 py-1 z-30 text-xs"
+                             style="display: none;">
+                            <button type="button" 
+                                    @click="chartPeriodLabel = '7 Hari Terakhir'; chartDropdownOpen = false; window.setChartData('7d'); triggerToast('Grafik: 7 Hari Terakhir', 'info');"
+                                    class="w-full px-3 py-2 text-left hover:bg-sky-50 text-slate-700 hover:text-sky-700 font-semibold">
+                                7 Hari Terakhir
+                            </button>
+                            <button type="button" 
+                                    @click="chartPeriodLabel = '14 Hari Terakhir'; chartDropdownOpen = false; window.setChartData('14d'); triggerToast('Grafik: 14 Hari Terakhir', 'info');"
+                                    class="w-full px-3 py-2 text-left hover:bg-sky-50 text-slate-700 hover:text-sky-700 font-semibold">
+                                14 Hari Terakhir
+                            </button>
+                            <button type="button" 
+                                    @click="chartPeriodLabel = '30 Hari Terakhir'; chartDropdownOpen = false; window.setChartData('30d'); triggerToast('Grafik: 30 Hari Terakhir', 'info');"
+                                    class="w-full px-3 py-2 text-left hover:bg-sky-50 text-slate-700 hover:text-sky-700 font-semibold">
+                                30 Hari Terakhir
+                            </button>
+                            <button type="button" 
+                                    @click="chartPeriodLabel = 'Bulan Ini'; chartDropdownOpen = false; window.setChartData('month'); triggerToast('Grafik: Bulan Ini', 'info');"
+                                    class="w-full px-3 py-2 text-left hover:bg-sky-50 text-slate-700 hover:text-sky-700 font-semibold">
+                                Bulan Ini
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Tab Switcher (Bulan Ini | Tahun Ini | 12 Bulan) -->
-            <div class="flex items-center gap-1.5 p-1 bg-slate-100/90 rounded-2xl border border-slate-200/60 shadow-2xs self-start sm:self-auto">
+            <div class="h-64 sm:h-72 w-full relative">
+                <canvas id="dashboardMainChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Financial Summary Cards (lg:col-span-4) -->
+        <div class="lg:col-span-4 space-y-4 flex flex-col justify-between">
+            
+            <!-- Quick Period Switcher Tabs -->
+            <div class="bg-white p-2 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-1">
                 <button type="button" 
                         @click="finTab = 'bulan'"
-                        :class="finTab === 'bulan' ? 'bg-[#0B2570] text-white shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900 font-semibold hover:bg-slate-200/60'"
-                        class="px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer">
-                    <i class="fa-regular fa-calendar-check text-[11px]"></i>
-                    <span>Bulan Ini (<span x-text="financialSummary.bulan_ini?.nama_bulan || 'Bln Berjalan'"></span>)</span>
+                        :class="finTab === 'bulan' ? 'bg-[#051B44] text-white shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900 font-semibold hover:bg-slate-100'"
+                        class="flex-1 py-1.5 rounded-xl text-center text-xs transition-all">
+                    Bulan Ini
                 </button>
                 <button type="button" 
                         @click="finTab = 'tahun'"
-                        :class="finTab === 'tahun' ? 'bg-[#0B2570] text-white shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900 font-semibold hover:bg-slate-200/60'"
-                        class="px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer">
-                    <i class="fa-solid fa-landmark text-[11px]"></i>
-                    <span>Tahun Ini (<span x-text="financialSummary.tahun_ini?.nama_tahun || 'Tahun 2026'"></span>)</span>
+                        :class="finTab === 'tahun' ? 'bg-[#051B44] text-white shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900 font-semibold hover:bg-slate-100'"
+                        class="flex-1 py-1.5 rounded-xl text-center text-xs transition-all">
+                    Tahun Ini
                 </button>
                 <button type="button" 
                         @click="finTab = 'breakdown'"
-                        :class="finTab === 'breakdown' ? 'bg-[#0B2570] text-white shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900 font-semibold hover:bg-slate-200/60'"
-                        class="px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer">
-                    <i class="fa-solid fa-chart-column text-[11px]"></i>
-                    <span>12 Bulan Sepanjang Tahun</span>
+                        :class="finTab === 'breakdown' ? 'bg-[#051B44] text-white shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900 font-semibold hover:bg-slate-100'"
+                        class="flex-1 py-1.5 rounded-xl text-center text-xs transition-all">
+                    12 Bulan
                 </button>
             </div>
-        </div>
 
-        <!-- TAB 1 & 2: KARTU RINGKASAN FINANSIAL (BULAN INI & TAHUN INI) -->
-        <div x-show="finTab === 'bulan' || finTab === 'tahun'" 
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0 translate-y-1"
-             x-transition:enter-end="opacity-100 translate-y-0"
-             class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            
-            <!-- Card 1: Laba / Rugi Bersih -->
-            <div class="p-5 rounded-2xl border transition-all"
-                 :class="currentFinancialData.is_untung 
-                    ? 'bg-gradient-to-br from-emerald-50/90 via-white to-emerald-50/40 border-emerald-200/80 shadow-xs hover:border-emerald-300' 
-                    : 'bg-gradient-to-br from-rose-50/90 via-white to-rose-50/40 border-rose-200/80 shadow-xs hover:border-rose-300'">
-                <div class="flex items-center justify-between">
-                    <span class="text-[10px] font-extrabold uppercase tracking-wider"
-                          :class="currentFinancialData.is_untung ? 'text-emerald-800' : 'text-rose-800'">
-                        <span x-text="finTab === 'bulan' ? 'LABA / RUGI BERSIH BULAN INI' : 'LABA / RUGI BERSIH TAHUN INI'"></span>
-                    </span>
-                    <div class="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold"
-                         :class="currentFinancialData.is_untung ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'">
-                        <i class="fa-solid" :class="currentFinancialData.is_untung ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down'"></i>
+            <!-- Card Pemasukan (Omset) -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex items-center gap-4 hover:shadow-md transition-all">
+                <div class="w-12 h-12 rounded-xl bg-teal-50 border border-teal-100 text-teal-600 flex items-center justify-center text-lg shrink-0">
+                    <i class="fa-solid fa-arrow-down-left"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Total Pemasukan</span>
+                        <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-teal-50 text-teal-700 border border-teal-200">
+                            Panen
+                        </span>
                     </div>
-                </div>
-
-                <div class="mt-3">
-                    <h4 class="text-2xl lg:text-3xl font-black tracking-tight"
-                        :class="currentFinancialData.is_untung ? 'text-emerald-950' : 'text-rose-950'"
-                        x-text="currentFinancialData.laba_rugi_format || 'Rp 0'">
-                    </h4>
-                </div>
-
-                <div class="mt-4 pt-3 border-t flex items-center justify-between text-xs"
-                     :class="currentFinancialData.is_untung ? 'border-emerald-100 text-emerald-800' : 'border-rose-100 text-rose-800'">
-                    <span class="font-bold flex items-center gap-1">
-                        <i class="fa-solid" :class="currentFinancialData.is_untung ? 'fa-circle-check text-emerald-600' : 'fa-circle-exclamation text-rose-600'"></i>
-                        <span x-text="currentFinancialData.is_untung ? 'Profit Margin: ' + currentFinancialData.margin_percent + '%' : 'Margin Defisit: ' + Math.abs(currentFinancialData.margin_percent) + '%'"></span>
-                    </span>
-                    <span class="text-[11px] font-semibold text-slate-500" x-show="finTab === 'tahun'" x-text="'Rata-rata: ' + (currentFinancialData.avg_laba_format || '')"></span>
+                    <div class="text-xl font-extrabold text-slate-900 tracking-tight mt-1 truncate" x-text="currentFinancialData.pemasukan_format || 'Rp 0'">
+                        Rp 0
+                    </div>
+                    <div class="text-[11px] text-slate-400 font-medium mt-0.5 flex items-center justify-between">
+                        <span>Penjualan mitra distribusi</span>
+                        <a href="{{ route('keuangan') }}" class="font-bold text-[#0066CC] hover:underline text-[10px]">Detail &rarr;</a>
+                    </div>
                 </div>
             </div>
 
-            <!-- Card 2: Total Pemasukan (Omset) -->
-            <div class="p-5 rounded-2xl bg-gradient-to-br from-sky-50/70 via-white to-sky-50/30 border border-sky-200/80 shadow-xs hover:border-sky-300 transition-all">
-                <div class="flex items-center justify-between">
-                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-sky-900">
-                        <span x-text="finTab === 'bulan' ? 'TOTAL PEMASUKAN (OMSET) BULAN INI' : 'TOTAL PEMASUKAN (OMSET) TAHUN INI'"></span>
-                    </span>
-                    <div class="w-8 h-8 rounded-xl bg-sky-100 text-[#0B2570] flex items-center justify-center text-xs font-bold">
-                        <i class="fa-solid fa-money-bill-trend-up"></i>
+            <!-- Card Pengeluaran (Biaya Operasional) -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex items-center gap-4 hover:shadow-md transition-all">
+                <div class="w-12 h-12 rounded-xl bg-rose-50 border border-rose-100 text-rose-600 flex items-center justify-center text-lg shrink-0">
+                    <i class="fa-solid fa-arrow-up-right"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Total Pengeluaran</span>
+                        <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-50 text-rose-700 border border-rose-200" x-text="'Cost ' + (currentFinancialData.cost_ratio || 0) + '%'">
+                            Cost
+                        </span>
+                    </div>
+                    <div class="text-xl font-extrabold text-slate-900 tracking-tight mt-1 truncate" x-text="currentFinancialData.pengeluaran_format || 'Rp 0'">
+                        Rp 0
+                    </div>
+                    <div class="text-[11px] text-slate-400 font-medium mt-0.5 flex items-center justify-between">
+                        <span>Pakan, bibit &amp; kolam</span>
+                        <span class="text-[10px] text-slate-400 font-semibold" x-text="finTab === 'bulan' ? 'Bulan Ini' : 'Tahun Ini'"></span>
                     </div>
                 </div>
+            </div>
 
-                <div class="mt-3">
-                    <h4 class="text-2xl lg:text-3xl font-black text-[#0B2570] tracking-tight"
-                        x-text="currentFinancialData.pemasukan_format || 'Rp 0'">
-                    </h4>
+            <!-- Profit Margin Metric Box -->
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 flex items-center justify-between">
+                <div>
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Margin Profitabilitas</span>
+                    <div class="text-base font-extrabold mt-0.5" 
+                         :class="currentFinancialData.is_untung ? 'text-emerald-700' : 'text-rose-700'">
+                        <span x-text="currentFinancialData.margin_percent">0</span>% Bersih
+                    </div>
                 </div>
+                <div class="text-right">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Evaluasi Kas</span>
+                    <div class="text-xs font-bold text-slate-700 mt-0.5" x-text="currentFinancialData.status_label">
+                        Surplus
+                    </div>
+                </div>
+            </div>
 
-                <div class="mt-4 pt-3 border-t border-sky-100 flex items-center justify-between text-xs text-sky-900">
-                    <span class="font-semibold text-slate-500">Penjualan Ikan &amp; Distribusi</span>
-                    <a href="{{ route('keuangan') }}" class="font-extrabold text-[#0055CC] hover:underline flex items-center gap-1 text-[11px]">
-                        <span>Buku Kas</span>
-                        <i class="fa-solid fa-arrow-right text-[9px]"></i>
+        </div>
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 4. TAB REKAP 12 BULAN (JIKA DIPILIH PADA SWITCHER FINANSIAL) -->
+    <!-- ========================================================================= -->
+    <div x-show="finTab === 'breakdown'" 
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 translate-y-1"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-3"
+         style="display: none;">
+        <div class="flex items-center justify-between text-xs pb-2 border-b border-slate-100">
+            <span class="font-bold text-slate-800">Rincian Profitabilitas Bulanan (Januari – Desember <span x-text="currentYear"></span>)</span>
+            <span class="text-[11px] text-slate-400 italic">Bulan berjalan ditandai dengan sorotan khusus</span>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <template x-for="item in (financialSummary.monthly_breakdown || [])" :key="item.month_num">
+                <div class="p-3.5 rounded-xl border transition-all flex flex-col justify-between"
+                     :class="{
+                         'bg-emerald-50/70 border-emerald-300 ring-2 ring-emerald-500/20 shadow-xs': item.is_current && item.is_profit && item.has_data,
+                         'bg-rose-50/70 border-rose-300 ring-2 ring-rose-500/20 shadow-xs': item.is_current && !item.is_profit && item.has_data,
+                         'bg-sky-50/60 border-sky-300 ring-2 ring-sky-500/20 shadow-xs': item.is_current && !item.has_data,
+                         'bg-slate-50/60 border-slate-200/80 hover:border-sky-300': !item.is_current
+                     }">
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-black text-slate-800" x-text="item.month_name"></span>
+                            <span x-show="item.is_current" class="text-[8px] font-black uppercase px-1.5 py-0.5 rounded bg-[#051B44] text-white">Bln Ini</span>
+                        </div>
+
+                        <div class="mt-2 space-y-1 text-[11px]">
+                            <div class="flex justify-between text-slate-400">
+                                <span>Masuk:</span>
+                                <span class="font-bold text-slate-700" x-text="item.has_data ? item.pemasukan_format : '-'"></span>
+                            </div>
+                            <div class="flex justify-between text-slate-400">
+                                <span>Keluar:</span>
+                                <span class="font-bold text-slate-700" x-text="item.has_data ? item.pengeluaran_format : '-'"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-2.5 pt-2 border-t border-slate-100">
+                        <div class="text-[9px] font-bold text-slate-400 uppercase">Laba / Rugi:</div>
+                        <div class="text-xs font-black truncate mt-0.5"
+                             :class="item.has_data ? (item.is_profit ? 'text-emerald-600' : 'text-rose-600') : 'text-slate-400'"
+                             x-text="item.has_data ? item.laba_rugi_format : 'Rp 0'">
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 5. OPERATIONAL GRID: RECENT ORDERS (LEFT 5 COLS) + STOCK REPORT (RIGHT 7 COLS) -->
+    <!-- EXACT MATCH TO BOTTOM SECTION OF REFERENCE IMAGE -->
+    <!-- ========================================================================= -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        
+        <!-- Left Box: Pesanan Distribusi Terkini (Recent Orders) -->
+        <div class="lg:col-span-5 bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 tracking-tight">Pesanan Distribusi Terkini</h3>
+                        <p class="text-[11px] text-slate-400">Daftar transaksi order &amp; pengiriman panen.</p>
+                    </div>
+                    <a href="{{ route('distribusi') }}" class="text-xs font-bold text-[#0066CC] hover:underline flex items-center gap-1">
+                        <span>Lihat Semua</span>
+                        <i class="fa-solid fa-arrow-right text-[10px]"></i>
                     </a>
                 </div>
-            </div>
 
-            <!-- Card 3: Total Pengeluaran (Biaya Operasional & Pakan) -->
-            <div class="p-5 rounded-2xl bg-gradient-to-br from-amber-50/70 via-white to-amber-50/30 border border-amber-200/80 shadow-xs hover:border-amber-300 transition-all">
-                <div class="flex items-center justify-between">
-                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-amber-900">
-                        <span x-text="finTab === 'bulan' ? 'TOTAL PENGELUARAN BULAN INI' : 'TOTAL PENGELUARAN TAHUN INI'"></span>
-                    </span>
-                    <div class="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center text-xs font-bold">
-                        <i class="fa-solid fa-receipt"></i>
-                    </div>
-                </div>
-
-                <div class="mt-3">
-                    <h4 class="text-2xl lg:text-3xl font-black text-amber-950 tracking-tight"
-                        x-text="currentFinancialData.pengeluaran_format || 'Rp 0'">
-                    </h4>
-                </div>
-
-                <div class="mt-4 pt-3 border-t border-amber-100 flex items-center justify-between text-xs text-amber-900">
-                    <span class="font-semibold text-slate-500">Biaya Pakan, Bibit, &amp; Kolam</span>
-                    <span class="font-bold text-[11px] text-amber-800" x-text="'Cost Ratio: ' + (currentFinancialData.cost_ratio || 0) + '%'"></span>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- TAB 3: MATRIKS REKAP 12 BULAN (TAHUN ANGGARAN BERJALAN) -->
-        <div x-show="finTab === 'breakdown'" 
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0 translate-y-1"
-             x-transition:enter-end="opacity-100 translate-y-0"
-             class="space-y-3"
-             style="display: none;">
-            <div class="flex items-center justify-between text-xs">
-                <span class="font-bold text-slate-700">Rincian Profitabilitas Bulanan (Januari – Desember <span x-text="currentYear"></span>)</span>
-                <span class="text-[11px] text-slate-500 italic">Bulan berjalan ditandai dengan sorotan khusus</span>
-            </div>
-
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                <template x-for="item in (financialSummary.monthly_breakdown || [])" :key="item.month_num">
-                    <div class="p-3.5 rounded-2xl border transition-all flex flex-col justify-between"
-                         :class="{
-                             'bg-emerald-50/70 border-emerald-300 ring-2 ring-emerald-500/30 shadow-xs': item.is_current && item.is_profit && item.has_data,
-                             'bg-rose-50/70 border-rose-300 ring-2 ring-rose-500/30 shadow-xs': item.is_current && !item.is_profit && item.has_data,
-                             'bg-sky-50/60 border-sky-300 ring-2 ring-sky-500/30 shadow-xs': item.is_current && !item.has_data,
-                             'bg-white border-slate-200/80 hover:border-sky-300 shadow-2xs': !item.is_current
-                         }">
-                        <div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-xs font-black text-slate-900" x-text="item.month_name"></span>
-                                <span x-show="item.is_current" class="text-[8px] font-black uppercase px-1.5 py-0.5 rounded bg-[#0B2570] text-white">Bln Ini</span>
+                <div class="divide-y divide-slate-100">
+                    @forelse($recentOrders ?? [] as $order)
+                    @php
+                        $statusClass = match(strtolower($order->status_order ?? '')) {
+                            'selesai'          => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                            'dalam_pengiriman' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
+                            'siap_kirim'       => 'bg-sky-50 text-sky-700 border-sky-200',
+                            'pemberokian'      => 'bg-amber-50 text-amber-700 border-amber-200',
+                            'dibatalkan'       => 'bg-rose-50 text-rose-700 border-rose-200',
+                            default            => 'bg-slate-100 text-slate-700 border-slate-200',
+                        };
+                        $statusText = match(strtolower($order->status_order ?? '')) {
+                            'selesai'          => 'Selesai',
+                            'dalam_pengiriman' => 'Dikirim',
+                            'siap_kirim'       => 'Siap Kirim',
+                            'pemberokian'      => 'Pemberokan',
+                            'dibatalkan'       => 'Batal',
+                            default            => 'Pending',
+                        };
+                    @endphp
+                    <div class="py-3 flex items-center justify-between gap-3 group">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-10 h-10 rounded-xl bg-sky-50 border border-sky-100 text-[#0066CC] flex items-center justify-center text-sm shrink-0 group-hover:bg-[#051B44] group-hover:text-white transition-colors">
+                                <i class="fa-solid fa-truck-ramp-box"></i>
                             </div>
-
-                            <div class="mt-2 space-y-1 text-[11px]">
-                                <div class="flex justify-between text-slate-500">
-                                    <span>Masuk:</span>
-                                    <span class="font-bold text-slate-800" x-text="item.has_data ? item.pemasukan_format : '-'"></span>
-                                </div>
-                                <div class="flex justify-between text-slate-500">
-                                    <span>Keluar:</span>
-                                    <span class="font-bold text-slate-800" x-text="item.has_data ? item.pengeluaran_format : '-'"></span>
-                                </div>
+                            <div class="min-w-0">
+                                <h4 class="text-xs font-bold text-slate-900 truncate group-hover:text-[#0066CC] transition-colors">
+                                    {{ $order->mitra->nama_mitra ?? 'Mitra Distribusi' }}
+                                </h4>
+                                <p class="text-[11px] text-slate-400 mt-0.5 truncate">
+                                    {{ $order->tanggal_order ? \Carbon\Carbon::parse($order->tanggal_order)->format('d M Y') : '-' }} • {{ $order->Total_kg }} kg
+                                </p>
                             </div>
                         </div>
 
-                        <div class="mt-3 pt-2 border-t border-slate-100">
-                            <div class="text-[10px] font-bold text-slate-400 uppercase">Laba / Rugi:</div>
-                            <div class="text-xs font-black truncate mt-0.5"
-                                 :class="item.has_data ? (item.is_profit ? 'text-emerald-700' : 'text-rose-700') : 'text-slate-400'"
-                                 x-text="item.has_data ? item.laba_rugi_format : 'Rp 0'">
+                        <div class="text-right shrink-0">
+                            <div class="text-xs font-extrabold text-slate-900">
+                                Rp {{ number_format($order->harga_total, 0, ',', '.') }}
                             </div>
+                            <span class="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[9px] font-bold border {{ $statusClass }}">
+                                {{ $statusText }}
+                            </span>
                         </div>
                     </div>
-                </template>
+                    @empty
+                    <div class="py-8 text-center text-xs text-slate-400">
+                        Belum ada data transaksi distribusi tercatat.
+                    </div>
+                    @endforelse
+                </div>
+            </div>
+
+            <div class="pt-3 mt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400 font-medium">
+                <span>Kontrak Logistik DDP Aktif</span>
+                <span class="font-bold text-emerald-600">Mortalitas &lt; 2%</span>
             </div>
         </div>
 
-    </div>
-
-    <!-- Main Chart Section: Analisis Konsumsi Pakan -->
-    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <!-- Right Box: Laporan Stok Kolam & Batch Aktif (Stock Report Table) -->
+        <div class="lg:col-span-7 bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col justify-between">
             <div>
-                <h3 class="text-base font-bold text-slate-900">Analisis Konsumsi Pakan</h3>
-                <p class="text-xs text-slate-400 mt-0.5">Perbandingan pelet komersial dan pakan dedaunan alami.</p>
-            </div>
-            
-            <div class="flex items-center gap-5 text-xs font-medium flex-wrap">
-                <!-- Legend 1 -->
-                <div class="flex items-center gap-2 text-slate-700">
-                    <span class="w-2.5 h-2.5 rounded-full bg-[#0B2570]"></span>
-                    <span>Pelet Komersial</span>
-                </div>
-                <!-- Legend 2 -->
-                <div class="flex items-center gap-2 text-slate-700">
-                    <span class="w-2.5 h-2.5 rounded-full bg-[#10B981]"></span>
-                    <span>Dedaunan Organik</span>
-                </div>
-                
-                <!-- Filter Dropdown Chart -->
-                <div class="relative" @click.outside="chartDropdownOpen = false">
-                    <button type="button" 
-                            @click="chartDropdownOpen = !chartDropdownOpen"
-                            class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 text-xs font-medium hover:bg-slate-50 cursor-pointer shadow-xs">
-                        <span x-text="chartPeriodLabel">7 Hari Terakhir</span>
-                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform" :class="chartDropdownOpen ? 'rotate-180' : ''"></i>
-                    </button>
-
-                    <div x-show="chartDropdownOpen" 
-                         x-transition:enter="transition ease-out duration-150"
-                         x-transition:enter-start="opacity-0 translate-y-1 scale-95"
-                         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-                         x-transition:leave="transition ease-in duration-100"
-                         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
-                         x-transition:leave-end="opacity-0 translate-y-1 scale-95"
-                         class="absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-xl border border-slate-100 py-1 z-30 text-xs"
-                         style="display: none;">
-                        <button type="button" 
-                                @click="chartPeriodLabel = '7 Hari Terakhir'; chartDropdownOpen = false; window.setChartData('7d'); triggerToast('Grafik: 7 Hari Terakhir', 'info');"
-                                class="w-full px-3 py-2 text-left hover:bg-sky-50 text-slate-700 hover:text-sky-700 flex items-center justify-between">
-                            <span>7 Hari Terakhir</span>
-                        </button>
-                        <button type="button" 
-                                @click="chartPeriodLabel = '14 Hari Terakhir'; chartDropdownOpen = false; window.setChartData('14d'); triggerToast('Grafik: 14 Hari Terakhir', 'info');"
-                                class="w-full px-3 py-2 text-left hover:bg-sky-50 text-slate-700 hover:text-sky-700 flex items-center justify-between">
-                            <span>14 Hari Terakhir</span>
-                        </button>
-                        <button type="button" 
-                                @click="chartPeriodLabel = '30 Hari Terakhir'; chartDropdownOpen = false; window.setChartData('30d'); triggerToast('Grafik: 30 Hari Terakhir', 'info');"
-                                class="w-full px-3 py-2 text-left hover:bg-sky-50 text-slate-700 hover:text-sky-700 flex items-center justify-between">
-                            <span>30 Hari Terakhir</span>
-                        </button>
-                        <button type="button" 
-                                @click="chartPeriodLabel = 'Bulan Ini (Agustus)'; chartDropdownOpen = false; window.setChartData('month'); triggerToast('Grafik: Bulan Ini', 'info');"
-                                class="w-full px-3 py-2 text-left hover:bg-sky-50 text-slate-700 hover:text-sky-700 flex items-center justify-between">
-                            <span>Bulan Ini (Agustus)</span>
-                        </button>
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 tracking-tight">Laporan Siklus Kolam &amp; Batch Aktif</h3>
+                        <p class="text-[11px] text-slate-400">Performa pertumbuhan, estimasi biomassa, &amp; FCR kolam.</p>
                     </div>
+                    <a href="{{ route('pembesaran') }}" class="text-xs font-bold text-[#0066CC] hover:underline flex items-center gap-1">
+                        <span>Kelola Batch</span>
+                        <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                    </a>
                 </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead>
+                            <tr class="text-[10px] uppercase font-extrabold text-slate-400 border-b border-slate-100">
+                                <th class="pb-2.5 font-bold">Kolam &amp; Komoditas</th>
+                                <th class="pb-2.5 font-bold">Tgl Tebar</th>
+                                <th class="pb-2.5 font-bold text-right">Biomassa</th>
+                                <th class="pb-2.5 font-bold text-center">FCR</th>
+                                <th class="pb-2.5 font-bold text-right">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @forelse($batchStatusList ?? [] as $batch)
+                            @php
+                                $statusBatchClass = match(strtolower($batch->status_siklus ?? '')) {
+                                    'siap_panen' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                                    'berjalan'   => 'bg-sky-50 text-sky-700 border-sky-200',
+                                    'selesai'    => 'bg-slate-100 text-slate-600 border-slate-200',
+                                    default      => 'bg-amber-50 text-amber-700 border-amber-200',
+                                };
+                                $statusBatchText = match(strtolower($batch->status_siklus ?? '')) {
+                                    'siap_panen' => 'Siap Panen',
+                                    'berjalan'   => 'Berjalan',
+                                    'selesai'    => 'Selesai',
+                                    default      => ucfirst($batch->status_siklus ?? 'Aktif'),
+                                };
+                            @endphp
+                            <tr class="hover:bg-slate-50/70 transition-colors">
+                                <td class="py-3">
+                                    <div class="font-bold text-slate-900">{{ $batch->kolam->nama_kolam ?? 'Kolam' }}</div>
+                                    <div class="text-[10px] text-slate-400 mt-0.5">{{ $batch->jenis_ikan }}</div>
+                                </td>
+                                <td class="py-3 text-slate-500 font-medium">
+                                    {{ $batch->tgl_tebar ? \Carbon\Carbon::parse($batch->tgl_tebar)->format('d/m/Y') : '-' }}
+                                </td>
+                                <td class="py-3 text-right">
+                                    <span class="font-bold text-slate-900">{{ number_format($batch->biomassa_est, 1, ',', '.') }} kg</span>
+                                    <div class="text-[10px] text-slate-400">Target {{ number_format($batch->target_panen_kg, 0, ',', '.') }} kg</div>
+                                </td>
+                                <td class="py-3 text-center">
+                                    <span class="px-2 py-0.5 rounded font-mono font-bold text-[11px] {{ ($batch->fcr ?? 0) <= 1.25 ? 'text-emerald-700 bg-emerald-50' : 'text-amber-700 bg-amber-50' }}">
+                                        {{ $batch->fcr ? number_format($batch->fcr, 2) : '1.15' }}
+                                    </span>
+                                </td>
+                                <td class="py-3 text-right">
+                                    <span class="inline-block px-2.5 py-0.5 rounded-full text-[9px] font-bold border {{ $statusBatchClass }}">
+                                        {{ $statusBatchText }}
+                                    </span>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="5" class="py-8 text-center text-xs text-slate-400">
+                                    Belum ada siklus batch pembesaran aktif.
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="pt-3 mt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400 font-medium">
+                <span>Standar Mutu CBIB KKP</span>
+                <span class="text-sky-600 font-bold">Aerasi Deras 24 Jam</span>
             </div>
         </div>
 
-        <div class="h-64 w-full relative">
-            <canvas id="dashboardMainChart"></canvas>
-        </div>
     </div>
 
-    <!-- Map Section: Peta Sebaran Titik Mitra Distributor (Leaflet.js) -->
-    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+    <!-- ========================================================================= -->
+    <!-- 6. MAP SECTION: PETA SEBARAN TITIK MITRA DISTRIBUTOR (LEAFLET.JS) -->
+    <!-- ========================================================================= -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgba(0,0,0,0.03)] overflow-hidden">
         <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-[#051B44] text-white flex items-center justify-center shadow-md shadow-[#051B44]/20 flex-shrink-0">
+                <div class="w-10 h-10 rounded-xl bg-[#051B44] text-white flex items-center justify-center shadow-md shadow-[#051B44]/15 flex-shrink-0">
                     <i class="fa-solid fa-map-location-dot text-base"></i>
                 </div>
                 <div>
-                    <h3 class="text-base font-bold text-slate-900">Peta Sebaran Titik Mitra Distributor</h3>
-                    <p class="text-xs text-slate-400 mt-0.5">Pemetaan geolokasi outlet, restoran, dan eksportir mitra yang bekerjasama.</p>
+                    <h3 class="text-base font-bold text-slate-900 tracking-tight">Peta Sebaran Titik Mitra Distributor</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Pemetaan geolokasi outlet restoran, pasar, &amp; eksportir mitra AquaFarm.</p>
                 </div>
             </div>
+            
             <div class="flex items-center gap-2">
                 <!-- Toggle Satelit / Peta Jalan -->
                 <button type="button" 
                         onclick="if(window.toggleDashboardMapLayer) window.toggleDashboardMapLayer()"
                         id="btnDashboardMapToggle"
-                        class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 text-xs font-bold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
+                        class="px-3.5 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 text-xs font-bold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
                     <i class="fa-solid fa-satellite text-sky-600" id="iconDashboardMapToggle"></i>
                     <span id="textDashboardMapToggle">Satelit HD</span>
                 </button>
 
-                <div class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-50 border border-sky-200/60 text-[#051B44] text-xs font-bold">
+                <div class="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-sky-50 border border-sky-100 text-[#051B44] text-xs font-bold">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span>{{ count($mitraList ?? []) }} Titik Mitra Terdaftar</span>
+                    <span>{{ count($mitraList ?? []) }} Titik Mitra</span>
                 </div>
-                <a href="{{ route('mitra') }}" class="px-3.5 py-1.5 rounded-xl border border-slate-200 hover:border-slate-300 bg-white text-xs font-bold text-[#0055CC] hover:bg-slate-50 transition-all flex items-center gap-1.5 shadow-xs">
+                
+                <a href="{{ route('mitra') }}" class="px-3.5 py-2 rounded-xl border border-slate-200 hover:border-slate-300 bg-white text-xs font-bold text-[#0066CC] hover:bg-slate-50 transition-all flex items-center gap-1.5 shadow-xs">
                     <span>Kelola Mitra</span>
                     <i class="fa-solid fa-arrow-right text-[10px]"></i>
                 </a>
@@ -601,12 +739,12 @@
         <!-- Leaflet Map Container & Side Info Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-12">
             <!-- Map Container -->
-            <div class="lg:col-span-8 xl:col-span-9 relative min-h-[380px] lg:min-h-[440px] bg-slate-100 z-0">
-                <div id="mitraDistributionMap" class="w-full h-full min-h-[380px] lg:min-h-[440px]"></div>
+            <div class="lg:col-span-7 xl:col-span-8 relative min-h-[380px] lg:min-h-[420px] bg-slate-100 z-0">
+                <div id="mitraDistributionMap" class="w-full h-full min-h-[380px] lg:min-h-[420px]"></div>
             </div>
 
             <!-- Side Mitra List Panel -->
-            <div class="lg:col-span-4 xl:col-span-3 border-t lg:border-t-0 lg:border-l border-slate-100 bg-slate-50/50 p-4 sm:p-5 flex flex-col justify-between max-h-[440px] overflow-y-auto">
+            <div class="lg:col-span-5 xl:col-span-4 border-t lg:border-t-0 lg:border-l border-slate-100 bg-slate-50/50 p-4 sm:p-5 flex flex-col justify-between max-h-[420px] overflow-y-auto overflow-x-hidden custom-slim-scroll">
                 <div>
                     <div class="flex items-center justify-between mb-3">
                         <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">DAFTAR OUTLET MITRA</span>
@@ -615,25 +753,27 @@
 
                     <div class="space-y-2.5">
                         @forelse($mitraList as $idx => $mitra)
-                        <div class="p-3 rounded-xl bg-white border border-slate-200/80 shadow-xs hover:border-sky-300 hover:shadow-md transition-all cursor-pointer group"
+                        <div class="p-3 rounded-xl bg-white border border-slate-200/80 shadow-xs hover:border-sky-300 hover:shadow-md transition-all cursor-pointer group overflow-hidden"
                              onclick="window.focusMitra({{ $mitra['lat'] }}, {{ $mitra['lng'] }}, '{{ addslashes($mitra['nama']) }}')">
-                            <div class="flex items-start justify-between gap-2">
-                                <div class="flex items-center gap-2">
-                                    <span class="w-5 h-5 rounded-lg bg-[#051B44] text-white flex items-center justify-center text-[10px] font-bold shrink-0">
+                            <div class="flex items-start justify-between gap-2.5">
+                                <div class="flex items-start gap-2.5 min-w-0 flex-1">
+                                    <span class="w-5 h-5 rounded-lg bg-[#051B44] text-white flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
                                         {{ $idx + 1 }}
                                     </span>
-                                    <h5 class="text-xs font-bold text-slate-800 group-hover:text-[#0055CC] transition-colors leading-snug">
-                                        {{ $mitra['nama'] }}
-                                    </h5>
+                                    <div class="min-w-0 flex-1">
+                                        <h5 class="text-xs font-bold text-slate-800 group-hover:text-[#0066CC] transition-colors leading-snug truncate" title="{{ $mitra['nama'] }}">
+                                            {{ $mitra['nama'] }}
+                                        </h5>
+                                        <p class="text-[11px] text-slate-500 mt-1 truncate flex items-center gap-1">
+                                            <i class="fa-solid fa-location-dot text-rose-500 text-[10px] shrink-0"></i>
+                                            <span class="truncate">{{ $mitra['alamat'] }}</span>
+                                        </p>
+                                    </div>
                                 </div>
-                                <span class="px-2 py-0.5 rounded text-[9px] font-extrabold bg-sky-50 text-sky-700 border border-sky-100 shrink-0">
+                                <span class="px-2 py-0.5 rounded text-[9px] font-extrabold bg-sky-50 text-sky-700 border border-sky-100 shrink-0 whitespace-nowrap self-start">
                                     {{ $mitra['tipe'] }}
                                 </span>
                             </div>
-                            <p class="text-[11px] text-slate-500 mt-1.5 line-clamp-1 leading-tight flex items-center gap-1">
-                                <i class="fa-solid fa-location-dot text-rose-500 text-[10px] shrink-0"></i>
-                                <span>{{ $mitra['alamat'] }}</span>
-                            </p>
                         </div>
                         @empty
                         <div class="p-4 text-center text-slate-400 text-xs">
@@ -644,16 +784,14 @@
                 </div>
 
                 <div class="pt-3 mt-3 border-t border-slate-200/60 text-center">
-                    <span class="text-[10px] text-slate-400 font-medium">Klik pada salah satu mitra untuk fokus lokasi di peta</span>
+                    <span class="text-[10px] text-slate-400 font-medium">Klik outlet untuk fokus titik di peta satelit</span>
                 </div>
             </div>
         </div>
     </div>
 
-
-
     <!-- ========================================================================= -->
-    <!-- MODAL: KALKULATOR & SIMULATOR AUDIT FCR PRESISI (MULTI-METODE SOP) -->
+    <!-- 7. MODAL: KALKULATOR & SIMULATOR AUDIT FCR (MULTI-METODE SOP) -->
     <!-- ========================================================================= -->
     <div x-show="fcrModalOpen" 
          x-transition:enter="transition ease-out duration-300"
@@ -694,19 +832,19 @@
                                 @click="setKomoditasPreset('lele')"
                                 :class="simKomoditas === 'lele' ? 'bg-[#0B2570] text-white font-bold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'"
                                 class="px-3 py-2 rounded-xl text-xs flex items-center justify-center gap-2 transition-all">
-                            <span>🐟 Lele Sangkuriang</span>
+                            <span>🐟 Lele</span>
                         </button>
                         <button type="button" 
                                 @click="setKomoditasPreset('nila')"
                                 :class="simKomoditas === 'nila' ? 'bg-[#0B2570] text-white font-bold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'"
                                 class="px-3 py-2 rounded-xl text-xs flex items-center justify-center gap-2 transition-all">
-                            <span>🐠 Nila Merah / Hitam</span>
+                            <span>🐠 Nila</span>
                         </button>
                         <button type="button" 
                                 @click="setKomoditasPreset('patin')"
                                 :class="simKomoditas === 'patin' ? 'bg-[#0B2570] text-white font-bold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'"
                                 class="px-3 py-2 rounded-xl text-xs flex items-center justify-center gap-2 transition-all">
-                            <span>🐋 Ikan Patin</span>
+                            <span>🐋 Patin</span>
                         </button>
                         <button type="button" 
                                 @click="setKomoditasPreset('custom')"
@@ -728,22 +866,31 @@
                         <div>
                             <label class="block text-[11px] font-semibold text-slate-600 mb-1">Bobot Tebar Awal (W₀)</label>
                             <div class="relative">
-                                <input type="number" step="0.1" min="0" x-model.number="simTebar" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#0B2570]">
-                                <span class="absolute right-3 top-2 text-[10px] text-slate-400 font-bold">kg</span>
+                                <input type="text" inputmode="decimal" maxlength="6" x-model="simTebar" 
+                                       @input="cleanSimInput($event, 'simTebar', 50000, 1)"
+                                       @blur="blurSimInput($event, 'simTebar', 0)"
+                                       class="w-full pl-3 pr-10 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#0B2570]">
+                                <span class="absolute right-3 top-2 text-[10px] text-slate-400 font-bold pointer-events-none select-none">kg</span>
                             </div>
                         </div>
                         <div>
                             <label class="block text-[11px] font-semibold text-slate-600 mb-1">Bobot Panen / Akhir (Wₜ)</label>
                             <div class="relative">
-                                <input type="number" step="0.1" min="0" x-model.number="simPanen" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#0B2570]">
-                                <span class="absolute right-3 top-2 text-[10px] text-slate-400 font-bold">kg</span>
+                                <input type="text" inputmode="decimal" maxlength="7" x-model="simPanen" 
+                                       @input="cleanSimInput($event, 'simPanen', 100000, 1)"
+                                       @blur="blurSimInput($event, 'simPanen', 0)"
+                                       class="w-full pl-3 pr-10 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#0B2570]">
+                                <span class="absolute right-3 top-2 text-[10px] text-slate-400 font-bold pointer-events-none select-none">kg</span>
                             </div>
                         </div>
                         <div>
                             <label class="block text-[11px] font-semibold text-slate-600 mb-1">Total Pakan Diberikan (F)</label>
                             <div class="relative">
-                                <input type="number" step="0.1" min="0" x-model.number="simPakan" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#0B2570]">
-                                <span class="absolute right-3 top-2 text-[10px] text-slate-400 font-bold">kg</span>
+                                <input type="text" inputmode="decimal" maxlength="7" x-model="simPakan" 
+                                       @input="cleanSimInput($event, 'simPakan', 100000, 1)"
+                                       @blur="blurSimInput($event, 'simPakan', 0)"
+                                       class="w-full pl-3 pr-10 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#0B2570]">
+                                <span class="absolute right-3 top-2 text-[10px] text-slate-400 font-bold pointer-events-none select-none">kg</span>
                             </div>
                         </div>
                     </div>
@@ -757,22 +904,31 @@
                         <div>
                             <label class="block text-[11px] font-semibold text-slate-600 mb-1">Ikan Mati Terdata (M)</label>
                             <div class="relative">
-                                <input type="number" step="0.1" min="0" x-model.number="simMatiTerdata" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#0B2570]">
-                                <span class="absolute right-3 top-2 text-[10px] text-slate-400 font-bold">kg</span>
+                                <input type="text" inputmode="decimal" maxlength="6" x-model="simMatiTerdata" 
+                                       @input="cleanSimInput($event, 'simMatiTerdata', 50000, 1)"
+                                       @blur="blurSimInput($event, 'simMatiTerdata', 0)"
+                                       class="w-full pl-3 pr-10 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#0B2570]">
+                                <span class="absolute right-3 top-2 text-[10px] text-slate-400 font-bold pointer-events-none select-none">kg</span>
                             </div>
                         </div>
                         <div>
                             <label class="block text-[11px] font-semibold text-slate-600 mb-1">Mati Tak Tercatat (Uncounted)</label>
                             <div class="relative">
-                                <input type="number" step="0.1" min="0" x-model.number="simMatiTakTercatat" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#0B2570]">
-                                <span class="absolute right-3 top-2 text-[10px] text-slate-400 font-bold">kg</span>
+                                <input type="text" inputmode="decimal" maxlength="6" x-model="simMatiTakTercatat" 
+                                       @input="cleanSimInput($event, 'simMatiTakTercatat', 50000, 1)"
+                                       @blur="blurSimInput($event, 'simMatiTakTercatat', 0)"
+                                       class="w-full pl-3 pr-10 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#0B2570]">
+                                <span class="absolute right-3 top-2 text-[10px] text-slate-400 font-bold pointer-events-none select-none">kg</span>
                             </div>
                         </div>
                         <div>
                             <label class="block text-[11px] font-semibold text-slate-600 mb-1">Target Maksimal FCR SOP</label>
                             <div class="relative">
-                                <input type="number" step="0.05" min="0.5" x-model.number="simTargetFcr" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#0B2570]">
-                                <span class="absolute right-3 top-2 text-[10px] text-slate-400 font-bold">ratio</span>
+                                <input type="text" inputmode="decimal" maxlength="4" x-model="simTargetFcr" 
+                                       @input="cleanSimInput($event, 'simTargetFcr', 3.0, 2)"
+                                       @blur="blurSimInput($event, 'simTargetFcr', 1.10)"
+                                       class="w-full pl-3 pr-14 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#0B2570]">
+                                <span class="absolute right-3 top-2 text-[10px] text-slate-400 font-bold pointer-events-none select-none">ratio</span>
                             </div>
                         </div>
                     </div>
@@ -786,15 +942,21 @@
                         <div>
                             <label class="block text-[11px] font-semibold text-slate-600 mb-1">Harga Pakan / kg</label>
                             <div class="relative">
-                                <span class="absolute left-3 top-2 text-[10px] text-slate-400 font-bold">Rp</span>
-                                <input type="number" step="500" min="0" x-model.number="simHargaPakan" class="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#0B2570]">
+                                <span class="absolute left-3 top-2 text-[10px] text-slate-400 font-bold pointer-events-none select-none">Rp</span>
+                                <input type="text" inputmode="numeric" maxlength="7" x-model="simHargaPakan" 
+                                       @input="cleanSimInput($event, 'simHargaPakan', 1000000, 0)"
+                                       @blur="blurSimInput($event, 'simHargaPakan', 0)"
+                                       class="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#0B2570]">
                             </div>
                         </div>
                         <div>
                             <label class="block text-[11px] font-semibold text-slate-600 mb-1">Harga Jual Ikan / kg</label>
                             <div class="relative">
-                                <span class="absolute left-3 top-2 text-[10px] text-slate-400 font-bold">Rp</span>
-                                <input type="number" step="500" min="0" x-model.number="simHargaJual" class="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#0B2570]">
+                                <span class="absolute left-3 top-2 text-[10px] text-slate-400 font-bold pointer-events-none select-none">Rp</span>
+                                <input type="text" inputmode="numeric" maxlength="7" x-model="simHargaJual" 
+                                       @input="cleanSimInput($event, 'simHargaJual', 1000000, 0)"
+                                       @blur="blurSimInput($event, 'simHargaJual', 0)"
+                                       class="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#0B2570]">
                             </div>
                         </div>
                         <div>
@@ -811,21 +973,18 @@
                 <div>
                     <div class="text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-3">Hasil Evaluasi Multi-Metode:</div>
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        <!-- FCR Komersial -->
                         <div class="p-4 rounded-2xl bg-sky-50 border border-sky-200">
                             <div class="text-[10px] font-extrabold uppercase text-sky-800">FCR KOMERSIAL</div>
                             <div class="text-2xl font-black text-[#0B2570] mt-1" x-text="simFcrKomersial">1.07</div>
                             <div class="text-[10px] text-slate-500 mt-1">Pakan ÷ Bobot Terjual</div>
                         </div>
 
-                        <!-- FCR Biologis -->
                         <div class="p-4 rounded-2xl bg-indigo-50 border border-indigo-200">
                             <div class="text-[10px] font-extrabold uppercase text-indigo-800">FCR BIOLOGIS</div>
                             <div class="text-2xl font-black text-indigo-950 mt-1" x-text="simFcrBiologis">1.01</div>
                             <div class="text-[10px] text-slate-500 mt-1">Memperhitungkan Mati</div>
                         </div>
 
-                        <!-- Feed Efficiency -->
                         <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200">
                             <div class="text-[10px] font-extrabold uppercase text-emerald-800">FEED EFFICIENCY</div>
                             <div class="text-2xl font-black text-emerald-700 mt-1">
@@ -834,7 +993,6 @@
                             <div class="text-[10px] text-slate-500 mt-1">Konversi Daging Efektif</div>
                         </div>
 
-                        <!-- Pakan Terbuang & Rupiah -->
                         <div class="p-4 rounded-2xl border transition-all"
                              :class="simWastedFeedKg > 0 ? 'bg-rose-50 border-rose-200' : 'bg-slate-50 border-slate-200'">
                             <div class="text-[10px] font-extrabold uppercase"
@@ -853,30 +1011,48 @@
                     </div>
                 </div>
 
-                <!-- Dynamic SOP Status & Recommendation Box -->
-                <div class="p-4 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
-                     :class="{
-                         'bg-emerald-50 border-emerald-200 text-emerald-900': simStatusEvaluation.color === 'emerald',
-                         'bg-sky-50 border-sky-200 text-sky-900': simStatusEvaluation.color === 'sky',
-                         'bg-amber-50 border-amber-200 text-amber-900': simStatusEvaluation.color === 'amber',
-                         'bg-rose-50 border-rose-200 text-rose-900': simStatusEvaluation.color === 'rose',
-                         'bg-slate-50 border-slate-200 text-slate-800': simStatusEvaluation.color === 'slate'
-                     }">
+                <!-- Financial Loss & Profit Impact Assessment -->
+                <div class="p-4 rounded-2xl border"
+                     :class="simWastedFeedKg > 0 ? 'bg-rose-50/50 border-rose-200 text-rose-900' : 'bg-emerald-50/50 border-emerald-200 text-emerald-900'">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg"
+                                 :class="simWastedFeedKg > 0 ? 'bg-rose-100 text-rose-600' : 'bg-emerald-100 text-emerald-600'">
+                                <i :class="simWastedFeedKg > 0 ? 'fa-solid fa-triangle-exclamation' : 'fa-solid fa-circle-check'"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs font-extrabold">Audit Finansial Dampak FCR</div>
+                                <div class="text-xs font-semibold opacity-90 mt-0.5">
+                                    <template x-if="simWastedFeedKg > 0">
+                                        <span>Potensi kerugian pakan terbuang: <strong>Rp <span x-text="simWastedFeedRp.toLocaleString('id-ID')">0</span></strong></span>
+                                    </template>
+                                    <template x-if="simWastedFeedKg === 0">
+                                        <span>Efisiensi pakan 100% terjaga sesuai target SOP, tidak terdeteksi kebocoran biaya pakan.</span>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-[10px] uppercase font-bold text-slate-500">Nilai Jual Panen Bruto</div>
+                            <div class="text-sm font-black text-slate-800">
+                                Rp <span x-text="(simPanen * simHargaJual).toLocaleString('id-ID')">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status Evaluasi Komprehensif -->
+                <div class="p-4 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-between">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg shrink-0"
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white"
                              :class="{
-                                 'bg-emerald-200 text-emerald-800': simStatusEvaluation.color === 'emerald',
-                                 'bg-sky-200 text-sky-800': simStatusEvaluation.color === 'sky',
-                                 'bg-amber-200 text-amber-800': simStatusEvaluation.color === 'amber',
-                                 'bg-rose-200 text-rose-800': simStatusEvaluation.color === 'rose',
-                                 'bg-slate-200 text-slate-800': simStatusEvaluation.color === 'slate'
+                                 'bg-emerald-500': simStatusEvaluation.color === 'emerald',
+                                 'bg-sky-500': simStatusEvaluation.color === 'sky',
+                                 'bg-amber-500': simStatusEvaluation.color === 'amber',
+                                 'bg-rose-500': simStatusEvaluation.color === 'rose',
+                                 'bg-slate-400': simStatusEvaluation.color === 'slate'
                              }">
-                            <i class="fa-solid" :class="{
-                                'fa-circle-check': simStatusEvaluation.color === 'emerald' || simStatusEvaluation.color === 'sky',
-                                'fa-triangle-exclamation': simStatusEvaluation.color === 'amber',
-                                'fa-circle-xmark': simStatusEvaluation.color === 'rose',
-                                'fa-circle-info': simStatusEvaluation.color === 'slate'
-                            }"></i>
+                            <i class="fa-solid fa-info text-xs"></i>
                         </div>
                         <div>
                             <div class="text-sm font-extrabold" x-text="simStatusEvaluation.label">Sangat Efisien</div>
@@ -926,6 +1102,19 @@
         align-items: center;
         justify-content: center;
     }
+    .custom-slim-scroll::-webkit-scrollbar {
+        width: 4px;
+    }
+    .custom-slim-scroll::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .custom-slim-scroll::-webkit-scrollbar-thumb {
+        background: #CBD5E1;
+        border-radius: 9999px;
+    }
+    .custom-slim-scroll::-webkit-scrollbar-thumb:hover {
+        background: #94A3B8;
+    }
 </style>
 <script>
     function dashboardData() {
@@ -938,7 +1127,7 @@
 
         return {
             datePickerOpen: false,
-            pickerMode: 'minggu', // 'minggu' | 'bulan' | 'tahun'
+            pickerMode: 'minggu',
             currentYear: _curY,
             currentMonth: _curM,
             currentDate: _curD,
@@ -961,22 +1150,58 @@
             simMatiTakTercatat: 10,
             simHargaPakan: 12500,
             simHargaJual: 24000,
-            simTargetFcr: 1.10,
+            simTargetFcr: '1.10',
 
             setKomoditasPreset(type) {
                 this.simKomoditas = type;
                 if (type === 'lele') {
-                    this.simTargetFcr = 1.10;
+                    this.simTargetFcr = '1.10';
                     this.simHargaPakan = 12500;
                     this.simHargaJual = 24000;
                 } else if (type === 'nila') {
-                    this.simTargetFcr = 1.35;
+                    this.simTargetFcr = '1.35';
                     this.simHargaPakan = 11500;
                     this.simHargaJual = 32000;
                 } else if (type === 'patin') {
-                    this.simTargetFcr = 1.45;
+                    this.simTargetFcr = '1.45';
                     this.simHargaPakan = 11000;
                     this.simHargaJual = 26000;
+                }
+            },
+
+            cleanSimInput(event, prop, maxVal, maxDecimals = 1) {
+                let el = event.target;
+                let raw = el.value;
+                let cleaned = String(raw).replace(/[^0-9.]/g, '');
+                const dotIndex = cleaned.indexOf('.');
+                if (dotIndex !== -1) {
+                    cleaned = cleaned.slice(0, dotIndex + 1) + cleaned.slice(dotIndex + 1).replace(/\./g, '');
+                }
+                if (cleaned.length > 1 && cleaned.startsWith('0') && cleaned[1] !== '.') {
+                    cleaned = cleaned.replace(/^0+/, '') || '0';
+                }
+                if (dotIndex !== -1 && maxDecimals >= 0) {
+                    const parts = cleaned.split('.');
+                    if (parts[1] && parts[1].length > maxDecimals) {
+                        cleaned = parts[0] + '.' + parts[1].slice(0, maxDecimals);
+                    }
+                }
+                if (cleaned !== '' && cleaned !== '.' && parseFloat(cleaned) > maxVal) {
+                    cleaned = String(maxVal);
+                }
+                el.value = cleaned;
+                this[prop] = cleaned;
+            },
+
+            blurSimInput(event, prop, defaultVal = 0) {
+                let el = event.target;
+                if (el.value === '' || el.value === '.' || isNaN(parseFloat(el.value))) {
+                    el.value = String(defaultVal);
+                    this[prop] = String(defaultVal);
+                } else {
+                    let val = parseFloat(el.value);
+                    el.value = String(val);
+                    this[prop] = String(val);
                 }
             },
 
@@ -1076,24 +1301,16 @@
                 };
             },
 
-            // KPI Metrics
-            metrics: {!! json_encode($metrics ?? [
-                'totalStok' => '0',
-                'totalStokTrend' => 'Belum Ada Batch Aktif',
-                'fcr' => '0.00',
-                'fcrStatus' => 'Belum Ada Data Pakan',
-                'targetPanen' => '0',
-                'targetPanenNote' => 'Belum Ada Order',
-                'targetPanenTag' => 'TIDAK ADA ORDER'
-            ]) !!},
+            metrics: {
+                totalStok: '{{ $metrics["totalStok"] }}',
+                totalStokTrend: '{{ $metrics["totalStokTrend"] }}',
+                fcr: '{{ $metrics["fcr"] }}',
+                fcrStatus: '{{ $metrics["fcrStatus"] }}',
+                targetPanen: '{{ $metrics["targetPanen"] }}',
+                targetPanenTag: '{{ $metrics["targetPanenTag"] }}',
+                targetPanenNote: '{{ $metrics["targetPanenNote"] }}'
+            },
 
-            // Data Mitra
-            mitraList: {!! isset($mitraList) ? json_encode($mitraList) : '[]' !!},
-
-            // Data Rekap Pakan Nyata dari Database
-            pakanRekap: {!! isset($pakanRekap) ? json_encode($pakanRekap) : '[]' !!},
-
-            // Daftar Bulan
             monthList: [
                 { num: 1, name: 'Januari', short: 'Jan' },
                 { num: 2, name: 'Februari', short: 'Feb' },
@@ -1102,15 +1319,14 @@
                 { num: 5, name: 'Mei', short: 'Mei' },
                 { num: 6, name: 'Juni', short: 'Jun' },
                 { num: 7, name: 'Juli', short: 'Jul' },
-                { num: 8, name: 'Agustus', short: 'Agu' },
+                { num: 8, name: 'Agustus', short: 'Ags' },
                 { num: 9, name: 'September', short: 'Sep' },
                 { num: 10, name: 'Oktober', short: 'Okt' },
                 { num: 11, name: 'November', short: 'Nov' },
-                { num: 12, name: 'Desember', short: 'Des' },
+                { num: 12, name: 'Desember', short: 'Des' }
             ],
 
-            // Daftar Tahun
-            get yearList() {
+            getAvailableYears() {
                 const cy = this.currentYear;
                 return [
                     { year: cy - 2, available: true, badge: `Arsip ${cy - 2}`, description: `Rekap Tahunan Periode ${cy - 2}` },
@@ -1153,9 +1369,6 @@
             getWeeks(mNum, year) {
                 const mName = this.getMonthName(mNum);
                 const lastDay = new Date(year, mNum, 0).getDate();
-                const isPastMonth = (year < this.currentYear) || (year === this.currentYear && mNum < this.currentMonth);
-                const isCurrentMonth = (year === this.currentYear && mNum === this.currentMonth);
-
                 const rawWeeks = [
                     { index: 1, startDay: 1, endDay: 7 },
                     { index: 2, startDay: 8, endDay: 14 },
@@ -1165,22 +1378,14 @@
                 ];
 
                 return rawWeeks.filter(w => w.startDay <= lastDay).map(w => {
-                    const actualEnd = Math.min(w.endDay, lastDay);
-                    const sPad = String(w.startDay).padStart(2, '0');
-                    const ePad = String(actualEnd).padStart(2, '0');
-                    
-                    let available = false;
-                    if (isPastMonth) {
-                        available = true;
-                    } else if (isCurrentMonth) {
-                        available = (w.startDay <= this.currentDate);
-                    }
-
+                    const startLabel = `${w.startDay} ${mName.substring(0,3)}`;
+                    const endLabel = `${w.endDay} ${mName.substring(0,3)}`;
                     return {
                         index: w.index,
                         label: `Minggu ${w.index}`,
-                        range: `${sPad} - ${ePad} ${mName.substring(0,3)}`,
-                        available: available
+                        range: `${startLabel} – ${endLabel}`,
+                        startDay: w.startDay,
+                        endDay: w.endDay
                     };
                 });
             },
@@ -1191,7 +1396,7 @@
                 this.periodLabel = `${weekObj.label}, ${mName.substring(0,3)} ${this.pickerYear}`;
                 this.fullPeriodLabel = `${weekObj.label} (${weekObj.range} ${this.pickerYear})`;
                 this.datePickerOpen = false;
-                this.triggerToast(`Periode ekspor dipilih: ${this.fullPeriodLabel}`, 'info');
+                this.triggerToast(`Periode dipilih: ${this.fullPeriodLabel}`, 'info');
             },
 
             applyMonth(mNum, year) {
@@ -1200,7 +1405,7 @@
                 this.periodLabel = `${mName} ${year}`;
                 this.fullPeriodLabel = `Bulan ${mName} ${year}`;
                 this.datePickerOpen = false;
-                this.triggerToast(`Periode ekspor dipilih: ${this.fullPeriodLabel}`, 'info');
+                this.triggerToast(`Periode dipilih: ${this.fullPeriodLabel}`, 'info');
             },
 
             applyYear(year) {
@@ -1208,53 +1413,35 @@
                 this.periodLabel = `Tahun ${year}`;
                 this.fullPeriodLabel = `Rekap Tahun Anggaran ${year}`;
                 this.datePickerOpen = false;
-                this.triggerToast(`Periode ekspor dipilih: ${this.fullPeriodLabel}`, 'info');
+                this.triggerToast(`Periode dipilih: ${this.fullPeriodLabel}`, 'info');
             },
 
-            // Ekspor Excel Laporan Dashboard Lengkap & Rapi
+            // Ekspor Excel
             exportExcel() {
                 const periodeExport = this.fullPeriodLabel || this.periodLabel;
-                this.triggerToast(`Menyiapkan laporan Excel lengkap periode [${periodeExport}]...`, 'info');
+                this.triggerToast(`Menyiapkan laporan Excel [${periodeExport}]...`, 'info');
 
                 const periodKey = this.selectedPeriodKey || 'all';
                 const exportUrl = `{{ route('dashboard.export-excel') }}?period=${encodeURIComponent(periodKey)}&label=${encodeURIComponent(periodeExport)}`;
 
                 setTimeout(() => {
                     window.location.href = exportUrl;
-                    setTimeout(() => {
-                        this.triggerToast(`Laporan Excel [${periodeExport}] berhasil diunduh!`, 'success');
-                    }, 1200);
-                }, 300);
+                }, 400);
             }
         };
     }
 
+    // Chart Global Handler
     let dashboardChartInstance = null;
+    const chartDatasets = {!! json_encode($chartDatasets ?? []) !!};
 
-    const chartDatasets = {!! json_encode($chartDatasets ?? [
-        '7d' => ['labels' => [], 'pelet' => [], 'daun' => []],
-        '14d' => ['labels' => [], 'pelet' => [], 'daun' => []],
-        '30d' => ['labels' => [], 'pelet' => [], 'daun' => []],
-        'month' => ['labels' => [], 'pelet' => [], 'daun' => []]
-    ]) !!};
-
-    window.setChartData = function(periodKey) {
-        if (!dashboardChartInstance) return;
-        const data = chartDatasets[periodKey] || chartDatasets['7d'];
-        dashboardChartInstance.data.labels = data.labels;
-        dashboardChartInstance.data.datasets[0].data = data.pelet;
-        dashboardChartInstance.data.datasets[1].data = data.daun;
-        dashboardChartInstance.update('active');
-    };
-
-    window.updateChartPeriod = function(periodName) {
-        if (periodName.includes('30') || periodName.includes('Bulan')) {
-            window.setChartData('30d');
-        } else if (periodName.includes('14')) {
-            window.setChartData('14d');
-        } else {
-            window.setChartData('7d');
-        }
+    window.setChartData = function(period) {
+        if (!dashboardChartInstance || !chartDatasets[period]) return;
+        const ds = chartDatasets[period];
+        dashboardChartInstance.data.labels = ds.labels;
+        dashboardChartInstance.data.datasets[0].data = ds.pelet;
+        dashboardChartInstance.data.datasets[1].data = ds.daun;
+        dashboardChartInstance.update();
     };
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -1262,42 +1449,71 @@
         const canvas = document.getElementById('dashboardMainChart');
         if (canvas) {
             const ctx = canvas.getContext('2d');
+
+            // Soft Gradient Area Fill
+            const gradPelet = ctx.createLinearGradient(0, 0, 0, 260);
+            gradPelet.addColorStop(0, 'rgba(11, 37, 112, 0.22)');
+            gradPelet.addColorStop(1, 'rgba(11, 37, 112, 0.00)');
+
+            const gradDaun = ctx.createLinearGradient(0, 0, 0, 260);
+            gradDaun.addColorStop(0, 'rgba(16, 185, 129, 0.20)');
+            gradDaun.addColorStop(1, 'rgba(16, 185, 129, 0.00)');
+
             dashboardChartInstance = new Chart(ctx, {
-                type: 'bar',
+                type: 'line',
                 data: {
                     labels: chartDatasets['7d'].labels,
                     datasets: [
                         {
                             label: 'Pelet Komersial',
                             data: chartDatasets['7d'].pelet,
-                            backgroundColor: '#0B2570',
-                            borderRadius: 6,
-                            borderSkipped: false,
-                            barPercentage: 0.6,
-                            categoryPercentage: 0.5
+                            borderColor: '#0B2570',
+                            backgroundColor: gradPelet,
+                            fill: true,
+                            tension: 0.42,
+                            borderWidth: 2.8,
+                            pointBackgroundColor: '#0B2570',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2,
+                            pointRadius: 3.5,
+                            pointHoverRadius: 6.5,
                         },
                         {
                             label: 'Dedaunan Organik',
                             data: chartDatasets['7d'].daun,
-                            backgroundColor: '#10B981',
-                            borderRadius: 6,
-                            borderSkipped: false,
-                            barPercentage: 0.6,
-                            categoryPercentage: 0.5
+                            borderColor: '#10B981',
+                            backgroundColor: gradDaun,
+                            fill: true,
+                            tension: 0.42,
+                            borderWidth: 2.8,
+                            pointBackgroundColor: '#10B981',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2,
+                            pointRadius: 3.5,
+                            pointHoverRadius: 6.5,
                         }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index',
+                    },
                     plugins: {
                         legend: {
                             display: false
                         },
                         tooltip: {
+                            backgroundColor: '#051B44',
+                            titleFont: { family: 'Plus Jakarta Sans', size: 12, weight: '700' },
+                            bodyFont: { family: 'Plus Jakarta Sans', size: 11, weight: '500' },
+                            padding: 10,
+                            cornerRadius: 10,
                             callbacks: {
                                 label: function(context) {
-                                    return context.dataset.label + ': ' + context.raw + ' kg';
+                                    return ' ' + context.dataset.label + ': ' + context.raw + ' kg';
                                 }
                             }
                         }
@@ -1359,7 +1575,6 @@
                 }
             }
 
-            // Fix leaflet default icon asset paths
             delete L.Icon.Default.prototype._getIconUrl;
             L.Icon.Default.mergeOptions({
                 iconRetinaUrl: "{{ asset('leaflet/images/marker-icon-2x.png') }}",
@@ -1433,7 +1648,6 @@
                 }
             });
 
-            // Auto fit bounds to show all markers
             if (markers.length > 0) {
                 const group = new L.featureGroup(markers);
                 map.fitBounds(group.getBounds().pad(0.15));
@@ -1441,8 +1655,10 @@
                     map.setZoom(16);
                 }
             }
+            setTimeout(function() {
+                map.invalidateSize();
+            }, 300);
 
-            // Global focus function for sidebar outlet list clicks
             window.focusMitra = function(lat, lng, nama) {
                 map.flyTo([lat, lng], 17, { animate: true, duration: 1.2 });
                 markers.forEach(function(marker) {

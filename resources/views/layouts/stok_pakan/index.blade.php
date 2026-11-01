@@ -39,6 +39,7 @@
             <div class="relative flex items-center flex-1 max-w-md">
                 <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs absolute left-3.5 pointer-events-none"></i>
                 <input type="text" x-model="searchQuery"
+                       maxlength="100"
                        placeholder="Cari nama pakan, kode pakan, atau satuan..."
                        style="padding-left: 2.25rem !important;"
                        class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all shadow-xs">
@@ -186,14 +187,14 @@
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-slate-50/70 border-b border-slate-200/80 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
-                        <th class="py-4 px-5">KODE</th>
-                        <th class="py-4 px-5">NAMA PAKAN</th>
-                        <th class="py-4 px-5">PERUNTUKAN</th>
-                        <th class="py-4 px-5">STOK TERSISA</th>
-                        <th class="py-4 px-5">BATAS MINIMUM</th>
-                        <th class="py-4 px-5">STATUS STOK</th>
-                        <th class="py-4 px-5">HARGA ACUAN</th>
-                        <th class="py-4 px-5 text-right">AKSI</th>
+                        <th class="py-4 px-5 whitespace-nowrap">KODE</th>
+                        <th class="py-4 px-5 whitespace-nowrap min-w-[180px]">NAMA PAKAN</th>
+                        <th class="py-4 px-5 whitespace-nowrap">PERUNTUKAN</th>
+                        <th class="py-4 px-5 whitespace-nowrap">STOK TERSISA</th>
+                        <th class="py-4 px-5 whitespace-nowrap">BATAS MINIMUM</th>
+                        <th class="py-4 px-5 whitespace-nowrap">STATUS STOK</th>
+                        <th class="py-4 px-5 whitespace-nowrap">HARGA ACUAN</th>
+                        <th class="py-4 px-5 text-right whitespace-nowrap">AKSI</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
@@ -212,18 +213,18 @@
                         <tr class="hover:bg-slate-50/80 transition-colors">
                             
                             <!-- Kode Pakan -->
-                            <td class="py-4 px-5">
-                                <span class="font-black text-[#031B4E] bg-slate-100 px-2.5 py-1 rounded-md text-[11px] border border-slate-200" x-text="item.kode_pakan"></span>
+                            <td class="py-4 px-5 whitespace-nowrap">
+                                <span class="inline-flex items-center justify-center font-black font-mono text-[#031B4E] bg-slate-100 px-2.5 py-1 rounded-md text-[11px] border border-slate-200 whitespace-nowrap tracking-wider shadow-2xs" x-text="item.kode_pakan"></span>
                             </td>
 
                             <!-- Nama Pakan -->
-                            <td class="py-4 px-5">
+                            <td class="py-4 px-5 min-w-[180px]">
                                 <span class="font-extrabold text-slate-900 block text-xs" x-text="item.nama_pakan"></span>
                                 <span class="text-[10px] text-slate-400 font-normal mt-0.5 block" x-text="item.keterangan || '-'"></span>
                             </td>
 
                             <!-- Kategori Peruntukan -->
-                            <td class="py-4 px-5">
+                            <td class="py-4 px-5 whitespace-nowrap">
                                 <template x-if="item.kategori_peruntukan === 'pembibitan'">
                                     <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-200">
                                         <i class="fa-solid fa-seedling text-[9px] text-emerald-600"></i>
@@ -245,7 +246,7 @@
                             </td>
 
                             <!-- Stok Tersisa -->
-                            <td class="py-4 px-5">
+                            <td class="py-4 px-5 whitespace-nowrap">
                                 <div class="flex items-baseline gap-1">
                                     <span class="text-sm font-black text-slate-900" x-text="Number(item.stok_tersisa).toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })"></span>
                                     <span class="text-[10px] font-extrabold text-slate-400 uppercase" x-text="item.satuan"></span>
@@ -253,12 +254,12 @@
                             </td>
 
                             <!-- Batas Minimum -->
-                            <td class="py-4 px-5 font-bold text-slate-600">
+                            <td class="py-4 px-5 whitespace-nowrap font-bold text-slate-600">
                                 <span x-text="Number(item.batas_minimum).toLocaleString('id-ID') + ' ' + item.satuan"></span>
                             </td>
 
                             <!-- Status Stok -->
-                            <td class="py-4 px-5">
+                            <td class="py-4 px-5 whitespace-nowrap">
                                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold border" :class="item.status_badge">
                                     <span class="w-1.5 h-1.5 rounded-full" :class="item.dot_class"></span>
                                     <span x-text="item.status_label"></span>
@@ -266,12 +267,12 @@
                             </td>
 
                             <!-- Harga Acuan -->
-                            <td class="py-4 px-5 font-extrabold text-emerald-700">
+                            <td class="py-4 px-5 whitespace-nowrap font-extrabold text-emerald-700">
                                 <span x-text="'Rp ' + Number(item.harga_per_satuan).toLocaleString('id-ID') + '/' + item.satuan"></span>
                             </td>
 
                             <!-- Aksi Menu Dropdown -->
-                            <td class="py-4 px-5 text-right">
+                            <td class="py-4 px-5 text-right whitespace-nowrap">
                                 <div class="relative inline-block text-left" 
                                      x-data="{ 
                                          open: false,
@@ -409,7 +410,7 @@
                             <span>Sudah Ada di Gudang</span>
                         </span>
                     </div>
-                    <input type="text" x-model="masterForm.nama_pakan" required placeholder="Contoh: Pelet PF-500 Starter"
+                    <input type="text" x-model="masterForm.nama_pakan" required maxlength="100" placeholder="Contoh: Pelet PF-500 Starter"
                            :class="existingDuplicatePakan ? 'border-amber-400 bg-amber-50/40 text-amber-950 focus:ring-amber-500 ring-2 ring-amber-400/20' : 'border-slate-200 bg-slate-50 focus:bg-white focus:ring-sky-500'"
                            class="w-full px-4 py-2.5 rounded-xl border text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 transition-all">
                     
@@ -605,21 +606,30 @@
                     <!-- Stok Awal / Tersisa -->
                     <div>
                         <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">TOTAL STOK JENIS INI*</label>
-                        <input type="number" step="0.1" min="0" x-model="masterForm.stok_tersisa" required
+                        <input type="text" inputmode="decimal" maxlength="7" x-model="masterForm.stok_tersisa" 
+                               @input="cleanFormInput($event, 'masterForm', 'stok_tersisa', 100000, 1)"
+                               @blur="blurFormInput($event, 'masterForm', 'stok_tersisa', 0)"
+                               required
                                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
                     </div>
 
                     <!-- Batas Minimum -->
                     <div>
                         <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">BATAS MIN. *</label>
-                        <input type="number" step="0.1" min="0" x-model="masterForm.batas_minimum" required
+                        <input type="text" inputmode="decimal" maxlength="6" x-model="masterForm.batas_minimum" 
+                               @input="cleanFormInput($event, 'masterForm', 'batas_minimum', 50000, 1)"
+                               @blur="blurFormInput($event, 'masterForm', 'batas_minimum', 0)"
+                               required
                                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-amber-700 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
                     </div>
 
                     <!-- Harga Acuan Satuan -->
                     <div>
                         <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">HARGA/SATUAN *</label>
-                        <input type="number" step="100" min="0" x-model="masterForm.harga_per_satuan" required
+                        <input type="text" inputmode="numeric" maxlength="8" x-model="masterForm.harga_per_satuan" 
+                               @input="cleanFormInput($event, 'masterForm', 'harga_per_satuan', 10000000, 0)"
+                               @blur="blurFormInput($event, 'masterForm', 'harga_per_satuan', 0)"
+                               required
                                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-emerald-700 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
                     </div>
                 </div>
@@ -638,7 +648,7 @@
                 <!-- Keterangan / Deskripsi -->
                 <div>
                     <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">KETERANGAN / SPESIFIKASI (OPSIONAL)</label>
-                    <textarea x-model="masterForm.keterangan" rows="2" placeholder="Catatan kandungan protein, pabrikan, atau instruksi simpan..."
+                    <textarea x-model="masterForm.keterangan" rows="2" maxlength="500" placeholder="Catatan kandungan protein, pabrikan, atau instruksi simpan..."
                               class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all"></textarea>
                 </div>
 
@@ -787,7 +797,7 @@
                     <!-- Tanggal Pembelian -->
                     <div>
                         <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">TANGGAL PEMBELIAN *</label>
-                        <input type="date" x-model="beliForm.tgl_beli" required
+                        <input type="date" x-model="beliForm.tgl_beli" max="{{ date('Y-m-d') }}" required
                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600 transition-all">
                     </div>
 
@@ -795,7 +805,10 @@
                     <div>
                         <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">JUMLAH PASOKAN *</label>
                         <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-600 overflow-hidden">
-                            <input type="number" step="0.1" min="0.1" x-model="beliForm.jumlah" @input="recalculateBeliTotal()" required
+                            <input type="text" inputmode="decimal" maxlength="6" x-model="beliForm.jumlah" 
+                                   @input="cleanFormInput($event, 'beliForm', 'jumlah', 50000, 1)"
+                                   @blur="blurFormInput($event, 'beliForm', 'jumlah', 0.1)"
+                                   required
                                    class="w-full px-3.5 py-2.5 text-xs font-black text-slate-900 border-0 bg-transparent focus:outline-none">
                             <span class="px-3 py-2.5 text-xs font-black text-slate-500 bg-slate-100 border-l border-slate-200" x-text="selectedBeliPakan ? selectedBeliPakan.satuan.toUpperCase() : 'KG'"></span>
                         </div>
@@ -806,7 +819,10 @@
                     <!-- Harga Satuan -->
                     <div>
                         <label class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1.5">HARGA PER SATUAN (RP) *</label>
-                        <input type="number" step="100" min="0" x-model="beliForm.harga_satuan" @input="recalculateBeliTotal()" required
+                        <input type="text" inputmode="numeric" maxlength="8" x-model="beliForm.harga_satuan" 
+                               @input="cleanFormInput($event, 'beliForm', 'harga_satuan', 10000000, 0)"
+                               @blur="blurFormInput($event, 'beliForm', 'harga_satuan', 0)"
+                               required
                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600 transition-all">
                     </div>
 
@@ -1083,6 +1099,48 @@ function stokPakanComponent() {
             const qty = Number(this.beliForm.jumlah) || 0;
             const price = Number(this.beliForm.harga_satuan) || 0;
             this.beliForm.total_biaya = Math.round(qty * price);
+        },
+
+        cleanFormInput(event, formObj, prop, maxVal, maxDecimals = 1) {
+            let el = event.target;
+            let raw = el.value;
+            let cleaned = String(raw).replace(/[^0-9.]/g, '');
+            const dotIndex = cleaned.indexOf('.');
+            if (dotIndex !== -1) {
+                cleaned = cleaned.slice(0, dotIndex + 1) + cleaned.slice(dotIndex + 1).replace(/\./g, '');
+            }
+            if (cleaned.length > 1 && cleaned.startsWith('0') && cleaned[1] !== '.') {
+                cleaned = cleaned.replace(/^0+/, '') || '0';
+            }
+            if (dotIndex !== -1 && maxDecimals >= 0) {
+                const parts = cleaned.split('.');
+                if (parts[1] && parts[1].length > maxDecimals) {
+                    cleaned = parts[0] + '.' + parts[1].slice(0, maxDecimals);
+                }
+            }
+            if (cleaned !== '' && cleaned !== '.' && parseFloat(cleaned) > maxVal) {
+                cleaned = String(maxVal);
+            }
+            el.value = cleaned;
+            this[formObj][prop] = cleaned;
+            if (formObj === 'beliForm') {
+                this.recalculateBeliTotal();
+            }
+        },
+
+        blurFormInput(event, formObj, prop, defaultVal = 0) {
+            let el = event.target;
+            if (el.value === '' || el.value === '.' || isNaN(parseFloat(el.value))) {
+                el.value = String(defaultVal);
+                this[formObj][prop] = String(defaultVal);
+            } else {
+                let val = parseFloat(el.value);
+                el.value = String(val);
+                this[formObj][prop] = String(val);
+            }
+            if (formObj === 'beliForm') {
+                this.recalculateBeliTotal();
+            }
         },
 
         async handleSaveMaster() {

@@ -29,6 +29,17 @@
     </script>
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
+
+        /* Sembunyikan icon mata bawaan browser (Microsoft Edge / IE) agar tidak dobel dengan tombol custom */
+        input::-ms-reveal,
+        input::-ms-clear,
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+            pointer-events: none !important;
+        }
     </style>
 </head>
 <body class="h-full bg-slate-100 flex items-center justify-center p-0 sm:p-4 antialiased">

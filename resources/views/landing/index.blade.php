@@ -235,29 +235,36 @@
                 activeSlide: 0,
                 totalSlides: 6,
                 autoTimer: null,
-                isPaused: false,
                 touchStartX: 0,
                 touchEndX: 0,
 
                 startAuto() {
                     this.stopAuto();
                     this.autoTimer = setInterval(() => {
-                        if (!this.isPaused) {
-                            this.next();
-                        }
-                    }, 5000);
+                        this.next(false);
+                    }, 4500);
                 },
                 stopAuto() {
-                    if (this.autoTimer) clearInterval(this.autoTimer);
+                    if (this.autoTimer) {
+                        clearInterval(this.autoTimer);
+                        this.autoTimer = null;
+                    }
                 },
-                next() {
+                restartAuto() {
+                    this.stopAuto();
+                    this.startAuto();
+                },
+                next(manual = true) {
                     this.activeSlide = (this.activeSlide + 1) % this.totalSlides;
+                    if (manual) this.restartAuto();
                 },
                 prev() {
                     this.activeSlide = (this.activeSlide - 1 + this.totalSlides) % this.totalSlides;
+                    this.restartAuto();
                 },
                 goTo(idx) {
                     this.activeSlide = idx;
+                    this.restartAuto();
                 },
                 handleTouchStart(e) {
                     this.touchStartX = e.changedTouches[0].screenX;
@@ -272,8 +279,6 @@
                 }
              }"
              x-init="startAuto()"
-             @mouseenter="isPaused = true"
-             @mouseleave="isPaused = false"
              @touchstart.passive="handleTouchStart($event)"
              @touchend.passive="handleTouchEnd($event)">
 
@@ -281,16 +286,14 @@
         <div class="flex w-full min-h-[580px] lg:min-h-[620px] transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform"
              :style="'transform: translate3d(-' + (activeSlide * 100) + '%, 0, 0);'">
 
-            <!-- ================= SLIDE 1: EXACT ITB COLLAGE / SHOWCASE BANNER (#1 DI JABAR) ================= -->
-            <div class="w-full shrink-0 min-h-[580px] lg:min-h-[620px] relative py-12 sm:py-16 lg:py-20 flex items-center bg-gradient-to-r from-[#003d82] via-[#004b93] to-[#071d49] bg-cover bg-center"
-                 style="{{ !empty($settings['hero_image']) ? 'background-image: url(' . $settings['hero_image_url'] . ');' : '' }}">
+            <!-- ================= SLIDE 1: EXACT ITB SHOWCASE BANNER (#1 DI JABAR) ================= -->
+            <div class="w-full shrink-0 min-h-[580px] lg:min-h-[620px] relative py-12 sm:py-16 lg:py-20 flex items-center bg-cover bg-center"
+                 style="background-image: url('{{ !empty($settings['hero_image']) ? $settings['hero_image_url'] : asset('images/slider_sunrise.jpg') }}');">
                 
-                @if(!empty($settings['hero_image']))
-                <div class="absolute inset-0 bg-gradient-to-r from-[#002b5e]/95 via-[#004b93]/90 to-[#071d49]/85"></div>
-                @endif
+                <div class="absolute inset-0 bg-gradient-to-r from-[#002b5e]/95 via-[#004b93]/90 to-[#071d49]/80"></div>
 
                 <!-- ITB Blueprint Architectural Line-Art Background (Left & Top Right) -->
-                <div class="absolute inset-y-0 left-0 w-96 pointer-events-none opacity-25 select-none hidden md:block">
+                <div class="absolute inset-y-0 left-0 w-96 pointer-events-none opacity-20 select-none hidden md:block">
                     <svg class="w-full h-full" viewBox="0 0 300 600" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M 30,50 A 40,40 0 0,1 110,50 L 110,130 A 40,40 0 0,1 30,130 Z" stroke="#38bdf8" stroke-width="1.5"/>
                         <path d="M 50,70 A 20,20 0 0,1 90,70 L 90,110 A 20,20 0 0,1 50,110 Z" stroke="#38bdf8" stroke-width="1"/>
@@ -302,7 +305,7 @@
                         <rect x="30" y="340" width="80" height="90" rx="40" stroke="#38bdf8" stroke-width="1.5"/>
                     </svg>
                 </div>
-                <div class="absolute top-0 right-0 w-80 h-80 pointer-events-none opacity-20 select-none hidden lg:block">
+                <div class="absolute top-0 right-0 w-80 h-80 pointer-events-none opacity-15 select-none hidden lg:block">
                     <svg class="w-full h-full" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M 120,0 A 60,60 0 0,0 60,60 L 60,120 L 120,120 Z" stroke="#38bdf8" stroke-width="1.5"/>
                         <circle cx="90" cy="90" r="20" stroke="#38bdf8" stroke-width="1"/>
@@ -310,12 +313,10 @@
                 </div>
 
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
+                    @if(!empty($settings['hero_image']))
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-                        
-                        <!-- Left: Authentic ITB Quad-Photo Collage OR Custom Upload Showcase -->
+                        <!-- Left: Foto Khusus Unggahan Slide 1 -->
                         <div class="lg:col-span-6 relative">
-                            @if(!empty($settings['hero_image']))
-                            <!-- Tampilan Foto Khusus Unggahan Slide 1 dengan Frame Blueprint ITB -->
                             <div class="relative rounded-2xl overflow-hidden border-2 border-white/80 shadow-2xl group max-w-xl mx-auto">
                                 <img src="{{ $settings['hero_image_url'] }}" 
                                      alt="Banner Utama Slide 1" 
@@ -329,47 +330,6 @@
                                     <span class="px-2.5 py-1 rounded-full bg-emerald-500 text-slate-950 text-[10px] font-black uppercase tracking-wider">Terverifikasi</span>
                                 </div>
                             </div>
-                            @else
-                            <!-- Tampilan Kolase 4 Foto Bawaan Resmi Gaya ITB QS Ranking -->
-                            <div class="relative flex items-center justify-center py-4">
-                                <div class="absolute -top-3 left-4 w-10 h-10 border-2 border-sky-400/50 rounded-lg -rotate-12 pointer-events-none hidden sm:block"></div>
-                                <div class="absolute top-1/2 left-2 -translate-y-1/2 w-12 h-12 rounded-full border border-sky-300/40 flex items-center justify-center pointer-events-none hidden sm:flex">
-                                    <div class="w-8 h-8 rounded-full border border-sky-300/40 border-dashed"></div>
-                                </div>
-
-                                <div class="grid grid-cols-12 gap-3 sm:gap-4 items-center w-full max-w-xl">
-                                    <div class="col-span-5 space-y-3 sm:space-y-4">
-                                        <div class="relative rounded-xl overflow-hidden border-2 border-white/70 shadow-2xl group/img">
-                                            <img src="{{ $settings['collage_img1'] }}" alt="Fasilitas Budidaya Bioflok" class="w-full h-36 sm:h-44 object-cover group-hover/img:scale-105 transition-transform duration-500">
-                                            <div class="absolute bottom-1.5 left-2 bg-black/60 backdrop-blur-xs px-2 py-0.5 rounded text-[9px] font-bold text-sky-200">Kolam Bioflok</div>
-                                        </div>
-                                        <div class="relative rounded-xl overflow-hidden border-2 border-white/70 shadow-2xl group/img">
-                                            <img src="{{ $settings['collage_img2'] }}" alt="Panen Ikan Nila Segar" class="w-full h-32 sm:h-36 object-cover group-hover/img:scale-105 transition-transform duration-500">
-                                            <div class="absolute bottom-1.5 left-2 bg-black/60 backdrop-blur-xs px-2 py-0.5 rounded text-[9px] font-bold text-amber-300">Panen Segar</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-span-4">
-                                        <div class="relative rounded-xl overflow-hidden border-2 border-white/80 shadow-2xl h-72 sm:h-84 group/img">
-                                            <img src="{{ $settings['collage_img3'] }}" alt="Laboratorium Kualitas Air" class="w-full h-full object-cover object-center group-hover/img:scale-105 transition-transform duration-500">
-                                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-                                            <div class="absolute bottom-3 left-3 right-3 text-left">
-                                                <span class="text-[9px] font-extrabold uppercase tracking-widest text-[#FFC700] block">Riset &amp; Mutu</span>
-                                                <span class="text-xs font-bold text-white leading-tight block">Laboratorium Air</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-span-3">
-                                        <div class="relative rounded-xl overflow-hidden border-2 border-white/70 shadow-2xl h-64 sm:h-76 group/img">
-                                            <img src="{{ $settings['collage_img4'] }}" alt="Chef Restoran Sajian Ikan" class="w-full h-full object-cover object-top group-hover/img:scale-105 transition-transform duration-500">
-                                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-                                            <div class="absolute bottom-2.5 left-2 right-2 text-left">
-                                                <span class="text-[9px] font-bold text-emerald-300 leading-tight block">Standar Resto</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            @endif
                         </div>
 
                         <!-- Right: ITB Official Typography & Badges -->
@@ -402,7 +362,7 @@
                                 {{ $settings['hero_description'] ?? 'Fasilitas Akuakultur Terpadu & Pemasok Utama Ikan Air Tawar Bebas Bau Lumpur (Zero Geosmin) Melalui Standar Pemberokan 24 Jam.' }}
                             </p>
 
-                            <!-- 3 Gold Shield Badges (Persis Tampilan 3 Logo QS Ranking ITB) -->
+                            <!-- 3 Gold Shield Badges -->
                             <div class="flex flex-wrap items-center gap-3 pt-1">
                                 <div class="w-20 sm:w-24 rounded-lg bg-gradient-to-b from-amber-400 to-[#FF8F00] text-slate-950 p-2 sm:p-2.5 text-center shadow-lg border border-amber-300">
                                     <div class="text-[8px] uppercase tracking-wider font-extrabold leading-tight">{{ $settings['slide1_badge1_title'] ?? 'MUTU KKP' }}</div>
@@ -437,10 +397,76 @@
                                 </a>
                                 @endif
                             </div>
-
+                        </div>
+                    </div>
+                    @else
+                    <!-- Tampilan Full-Width Hero Slide 1 (Bersih Tanpa Kolase Foto AI Tempel) -->
+                    <div class="max-w-4xl space-y-6 text-left">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <div class="flex items-center gap-1.5 font-heading italic text-white tracking-tight">
+                                <span class="text-base sm:text-lg font-black lowercase">{{ explode(' ', $settings['slide1_subbrand'] ?? 'satu priangan')[0] ?? 'satu' }}</span>
+                                <span class="text-base sm:text-lg font-extrabold uppercase tracking-widest text-[#FFC700]">{{ explode(' ', $settings['slide1_subbrand'] ?? 'satu priangan')[1] ?? 'priangan' }}</span>
+                            </div>
+                            <div class="h-4 w-px bg-white/20"></div>
+                            <div class="px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-400/40 text-emerald-300 text-xs font-heading font-bold">
+                                <i class="fa-solid fa-award text-[#FFC700] mr-1.5"></i>
+                                <span>{{ $settings['slide1_tag'] ?? 'TERAKREDITASI CBIB PRIMA 1' }}</span>
+                            </div>
                         </div>
 
+                        <div class="space-y-1.5">
+                            <h2 class="font-heading text-sm sm:text-base font-extrabold uppercase tracking-widest text-sky-200">
+                                {{ $settings['brand_name'] ?? 'AQUAFARM PRIANGAN' }}
+                            </h2>
+                            <h1 class="font-heading font-black text-3xl sm:text-5xl lg:text-6xl tracking-tight text-[#FFC700] leading-tight drop-shadow-sm uppercase">
+                                {{ $settings['hero_headline'] ?? 'TERAKREDITASI #1 DI JAWA BARAT' }}
+                            </h1>
+                            <p class="font-heading text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-200 pt-1">
+                                {{ $settings['slide1_subheadline'] ?? 'KOMODITAS AIR TAWAR • NILA MERAH • LELE • PATIN • GURAME' }}
+                            </p>
+                        </div>
+
+                        <p class="text-sm sm:text-base text-slate-200 leading-relaxed max-w-2xl">
+                            {{ $settings['hero_description'] ?? 'Fasilitas Akuakultur Terpadu & Pemasok Utama Ikan Air Tawar Bebas Bau Lumpur (Zero Geosmin) Melalui Standar Pemberokan 24 Jam.' }}
+                        </p>
+
+                        <!-- 3 Gold Shield Badges -->
+                        <div class="flex flex-wrap items-center gap-3 pt-1">
+                            <div class="w-24 sm:w-28 rounded-xl bg-gradient-to-b from-amber-400 to-[#FF8F00] text-slate-950 p-2.5 sm:p-3 text-center shadow-lg border border-amber-300">
+                                <div class="text-[9px] uppercase tracking-wider font-extrabold leading-tight">{{ $settings['slide1_badge1_title'] ?? 'MUTU KKP' }}</div>
+                                <div class="font-heading text-2xl sm:text-3xl font-black leading-tight text-slate-900">{{ $settings['slide1_badge1_val'] ?? '#1' }}</div>
+                                <div class="text-[8px] uppercase font-bold tracking-tight text-slate-950">{{ $settings['slide1_badge1_sub'] ?? 'CBIB PRIMA 1' }}</div>
+                            </div>
+                            <div class="w-24 sm:w-28 rounded-xl bg-gradient-to-b from-amber-400 to-[#FF8F00] text-slate-950 p-2.5 sm:p-3 text-center shadow-lg border border-amber-300">
+                                <div class="text-[9px] uppercase tracking-wider font-extrabold leading-tight">{{ $settings['slide1_badge2_title'] ?? 'AIR DERAS' }}</div>
+                                <div class="font-heading text-2xl sm:text-3xl font-black leading-tight text-slate-900">{{ $settings['slide1_badge2_val'] ?? '0%' }}</div>
+                                <div class="text-[8px] uppercase font-bold tracking-tight text-slate-950">{{ $settings['slide1_badge2_sub'] ?? 'ZERO GEOSMIN' }}</div>
+                            </div>
+                            <div class="w-24 sm:w-28 rounded-xl bg-gradient-to-b from-amber-400 to-[#FF8F00] text-slate-950 p-2.5 sm:p-3 text-center shadow-lg border border-amber-300">
+                                <div class="text-[9px] uppercase tracking-wider font-extrabold leading-tight">{{ $settings['slide1_badge3_title'] ?? 'LOGISTIK DDP' }}</div>
+                                <div class="font-heading text-2xl sm:text-3xl font-black leading-tight text-slate-900">{{ $settings['slide1_badge3_val'] ?? '≤2%' }}</div>
+                                <div class="text-[8px] uppercase font-bold tracking-tight text-slate-950">{{ $settings['slide1_badge3_sub'] ?? 'SUSUT HIDUP' }}</div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-3 pt-3">
+                            <a href="https://wa.me/{{ $company['phone_wa'] }}?text={{ urlencode($settings['wa_template_text'] ?? 'Halo Aquafarm Priangan, saya tertarik memesan pasokan ikan panen segar.') }}" 
+                               target="_blank"
+                               class="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl font-heading text-xs sm:text-sm uppercase tracking-wider font-extrabold text-slate-950 bg-[#FFC700] hover:bg-amber-300 active:scale-95 shadow-lg shadow-black/30 transition-all cursor-pointer">
+                                <i class="fa-brands fa-whatsapp text-base"></i>
+                                <span>Pesan Panen via WhatsApp</span>
+                            </a>
+
+                            @if(($settings['show_calculator'] ?? '1') == '1')
+                            <a href="#kalkulator" 
+                               class="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl font-heading text-xs sm:text-sm uppercase tracking-wider font-bold text-white bg-white/10 hover:bg-white/20 border border-white/30 backdrop-blur-xs transition-all cursor-pointer">
+                                <i class="fa-solid fa-calculator text-[#FFC700]"></i>
+                                <span>Hitung Kebutuhan Ikan</span>
+                            </a>
+                            @endif
+                        </div>
                     </div>
+                    @endif
                 </div>
             </div>
 
@@ -685,6 +711,8 @@
                 <div class="itb-post-image rounded-lg shadow-sm border border-slate-200 bg-slate-900 group relative h-80 sm:h-96">
                     <img src="{{ $ikan->foto_url }}" 
                          alt="{{ $ikan->nama_ikan }}" 
+                         loading="lazy" 
+                         decoding="async"
                          class="w-full h-full object-cover opacity-85 group-hover:opacity-100">
                     <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
 
@@ -759,7 +787,7 @@
                     <div>
                         <!-- Fish Photo Thumbnail (ITB Style Image Frame) -->
                         <div class="itb-post-image rounded-md mb-3 h-36 overflow-hidden bg-slate-100 border border-slate-200/80">
-                            <img src="{{ $ikan->foto_url }}" alt="{{ $ikan->nama_ikan }}" class="w-full h-full object-cover">
+                            <img src="{{ $ikan->foto_url }}" alt="{{ $ikan->nama_ikan }}" loading="lazy" decoding="async" class="w-full h-full object-cover">
                         </div>
 
                         <!-- Header Badges -->

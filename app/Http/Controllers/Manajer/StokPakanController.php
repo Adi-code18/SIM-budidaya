@@ -147,12 +147,12 @@ class StokPakanController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nama_pakan'          => 'required|string|max:255',
+            'nama_pakan'          => 'required|string|max:100',
             'kategori_peruntukan' => 'required|in:pembibitan,pembesaran,semua',
             'satuan'              => 'required|string|max:50',
-            'stok_tersisa'        => 'required|numeric|min:0',
-            'batas_minimum'       => 'required|numeric|min:0',
-            'harga_per_satuan'    => 'required|numeric|min:0',
+            'stok_tersisa'        => 'required|numeric|min:0|max:100000',
+            'batas_minimum'       => 'required|numeric|min:0|max:50000',
+            'harga_per_satuan'    => 'required|numeric|min:0|max:10000000',
             'id_mitra'            => [
                 'nullable',
                 'exists:mitra_distributor,id_mitra',
@@ -168,14 +168,19 @@ class StokPakanController extends Controller
                     }
                 }
             ],
-            'keterangan'          => 'nullable|string',
+            'keterangan'          => 'nullable|string|max:500',
         ], [
             'nama_pakan.required'          => 'Nama jenis pakan wajib diisi.',
+            'nama_pakan.max'               => 'Nama jenis pakan maksimal 100 karakter.',
             'kategori_peruntukan.required' => 'Kategori peruntukan pakan wajib dipilih.',
             'satuan.required'              => 'Satuan pakan wajib diisi.',
             'stok_tersisa.required'        => 'Jumlah stok awal wajib diisi.',
+            'stok_tersisa.max'             => 'Jumlah stok awal maksimal 100.000.',
             'batas_minimum.required'       => 'Batas minimum peringatan wajib diisi.',
+            'batas_minimum.max'            => 'Batas minimum maksimal 50.000.',
             'harga_per_satuan.required'    => 'Harga acuan per satuan wajib diisi.',
+            'harga_per_satuan.max'         => 'Harga acuan per satuan maksimal Rp 10.000.000.',
+            'keterangan.max'               => 'Keterangan maksimal 500 karakter.',
         ]);
 
         // Validasi Duplikasi Nama Pakan (Case-Insensitive & Trimmed)
@@ -272,13 +277,25 @@ class StokPakanController extends Controller
         $stok = StokPakan::findOrFail($id);
 
         $validated = $request->validate([
-            'nama_pakan'          => 'required|string|max:255',
+            'nama_pakan'          => 'required|string|max:100',
             'kategori_peruntukan' => 'required|in:pembibitan,pembesaran,semua',
             'satuan'              => 'required|string|max:50',
-            'stok_tersisa'        => 'required|numeric|min:0',
-            'batas_minimum'       => 'required|numeric|min:0',
-            'harga_per_satuan'    => 'required|numeric|min:0',
-            'keterangan'          => 'nullable|string',
+            'stok_tersisa'        => 'required|numeric|min:0|max:100000',
+            'batas_minimum'       => 'required|numeric|min:0|max:50000',
+            'harga_per_satuan'    => 'required|numeric|min:0|max:10000000',
+            'keterangan'          => 'nullable|string|max:500',
+        ], [
+            'nama_pakan.required'          => 'Nama jenis pakan wajib diisi.',
+            'nama_pakan.max'               => 'Nama jenis pakan maksimal 100 karakter.',
+            'kategori_peruntukan.required' => 'Kategori peruntukan pakan wajib dipilih.',
+            'satuan.required'              => 'Satuan pakan wajib diisi.',
+            'stok_tersisa.required'        => 'Jumlah stok wajib diisi.',
+            'stok_tersisa.max'             => 'Jumlah stok maksimal 100.000.',
+            'batas_minimum.required'       => 'Batas minimum peringatan wajib diisi.',
+            'batas_minimum.max'            => 'Batas minimum maksimal 50.000.',
+            'harga_per_satuan.required'    => 'Harga acuan per satuan wajib diisi.',
+            'harga_per_satuan.max'         => 'Harga acuan per satuan maksimal Rp 10.000.000.',
+            'keterangan.max'               => 'Keterangan maksimal 500 karakter.',
         ]);
 
         // Validasi Duplikasi Nama Pakan terhadap item lain (Case-Insensitive & Trimmed)
@@ -363,14 +380,18 @@ class StokPakanController extends Controller
         $validated = $request->validate([
             'id_stok_pakan' => 'required|exists:stok_pakan,id_stok_pakan',
             'id_mitra'      => 'nullable|exists:mitra_distributor,id_mitra',
-            'tgl_beli'      => 'required|date',
-            'jumlah'        => 'required|numeric|min:0.1|max:10000',
-            'harga_satuan'  => 'required|numeric|min:0',
-            'total_biaya'   => 'nullable|numeric|min:0',
+            'tgl_beli'      => 'required|date|before_or_equal:today',
+            'jumlah'        => 'required|numeric|min:0.1|max:50000',
+            'harga_satuan'  => 'required|numeric|min:0|max:10000000',
+            'total_biaya'   => 'nullable|numeric|min:0|max:500000000000',
         ], [
-            'id_stok_pakan.required' => 'Silakan pilih jenis pakan yang dibeli.',
-            'jumlah.required'        => 'Jumlah pasokan pakan wajib diisi.',
-            'harga_satuan.required'  => 'Harga per satuan wajib diisi.',
+            'id_stok_pakan.required'   => 'Silakan pilih jenis pakan yang dibeli.',
+            'tgl_beli.required'        => 'Tanggal pembelian wajib diisi.',
+            'tgl_beli.before_or_equal' => 'Tanggal pembelian tidak boleh melebihi hari ini.',
+            'jumlah.required'          => 'Jumlah pasokan pakan wajib diisi.',
+            'jumlah.max'               => 'Jumlah pasokan maksimal 50.000.',
+            'harga_satuan.required'    => 'Harga per satuan wajib diisi.',
+            'harga_satuan.max'         => 'Harga per satuan maksimal Rp 10.000.000.',
         ]);
 
         $stokItem = StokPakan::find($validated['id_stok_pakan']);

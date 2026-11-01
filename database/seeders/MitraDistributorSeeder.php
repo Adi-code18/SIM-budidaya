@@ -10,6 +10,12 @@ use Illuminate\Support\Facades\DB;
 
 class MitraDistributorSeeder extends Seeder
 {
+    /**
+     * Seeder Mitra Supplier & Buyer AquaFarm.
+     * Mengacu pada SOP Doc 2.0 Bab 1 Bagian B & C.4, Bab 2 Bagian B (Pelayanan Mitra Pasar,
+     * Rumah Makan/Restoran, serta Supplier Pakan & Benih Luar).
+     * Memenuhi BRD REQ-MST-04 dan REQ-DIST-02 (Segregasi Order Rumah Makan vs Pasar).
+     */
     public function run(): void
     {
         Schema::disableForeignKeyConstraints();
@@ -19,9 +25,8 @@ class MitraDistributorSeeder extends Seeder
         $manajer = User::where('role', 'manajer')->first() ?? User::first();
         $userId = $manajer ? $manajer->id_user : 1;
 
-        // 1 Kondisi 1 Contoh untuk setiap tipe mitra (Supplier & Client)
         $mitraList = [
-            // 1. Kondisi Tipe: Supplier Pakan
+            // 1. Supplier: Distributor Pakan Komersial & Suplemen Pabrikan
             [
                 'id_user'    => $userId,
                 'nama_mitra' => 'CV Sentosa Pakan Mandiri',
@@ -30,7 +35,7 @@ class MitraDistributorSeeder extends Seeder
                 'latitude'   => -7.32550000,
                 'longitude'  => 108.24120000,
             ],
-            // 2. Kondisi Tipe: Supplier Bibit
+            // 2. Supplier: Balai Pembenihan Benih Ikan Unggul (BBI)
             [
                 'id_user'    => $userId,
                 'nama_mitra' => 'Balai Pembenihan Unggul Mina Raya',
@@ -39,16 +44,25 @@ class MitraDistributorSeeder extends Seeder
                 'latitude'   => -7.35120000,
                 'longitude'  => 108.15230000,
             ],
-            // 3. Kondisi Tipe: Buyer Restoran
+            // 3. Buyer Restoran 1: Rumah Makan Spesialis Ikan Bakar & Gurame (Wajib Pemberokan 12-24 Jam)
             [
                 'id_user'    => $userId,
-                'nama_mitra' => 'Resto Seafood & Grill Tasik',
+                'nama_mitra' => 'Resto Saung Gurame & Seafood Tasik',
                 'tipe_mitra' => 'Restoran',
                 'alamat'     => 'Jl. Gudang Jero II No. 15, Cipedes, Kota Tasikmalaya, Jawa Barat 46112',
                 'latitude'   => -7.31938300,
                 'longitude'  => 108.21510000,
             ],
-            // 4. Kondisi Tipe: Buyer Pasar Tradisional
+            // 4. Buyer Restoran 2: Rumah Makan Lesehan Khas Sunda Ciamis
+            [
+                'id_user'    => $userId,
+                'nama_mitra' => 'RM Lesehan Alam Ikan Ciamis',
+                'tipe_mitra' => 'Restoran',
+                'alamat'     => 'Jl. Jend. Sudirman No. 142, Kertasari, Kec. Ciamis, Kabupaten Ciamis, Jawa Barat 46213',
+                'latitude'   => -7.32710000,
+                'longitude'  => 108.35410000,
+            ],
+            // 5. Buyer Pasar Tradisional 1: Pusat Grosir Ikan Air Tawar Tasikmalaya (Sortir Cepat)
             [
                 'id_user'    => $userId,
                 'nama_mitra' => 'Pasar Induk Cikurubuk Grosir Ikan',
@@ -57,7 +71,16 @@ class MitraDistributorSeeder extends Seeder
                 'latitude'   => -7.33820000,
                 'longitude'  => 108.20540000,
             ],
-            // 5. Kondisi Tipe: Buyer Eksportir
+            // 6. Buyer Pasar Tradisional 2: Pasar Manis Sentra Ikan Ciamis
+            [
+                'id_user'    => $userId,
+                'nama_mitra' => 'Pasar Manis Grosir Ikan Ciamis',
+                'tipe_mitra' => 'Pasar',
+                'alamat'     => 'Jl. Perintis Kemerdekaan Blok Ikan No. 5, Ciamis, Jawa Barat 46211',
+                'latitude'   => -7.33150000,
+                'longitude'  => 108.35200000,
+            ],
+            // 7. Buyer Institusi / Eksportir: Distribusi Cold Chain & Standar Ekspor Beroksigen
             [
                 'id_user'    => $userId,
                 'nama_mitra' => 'PT Nusantara Aqua Global Export',

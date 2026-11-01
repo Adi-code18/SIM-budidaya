@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\EmailOtpController;
 use App\Http\Controllers\Auth\ForgotPasswordOtpController;
 use App\Http\Controllers\Auth\TwoFactorController;
+use App\Http\Controllers\ErrorHubController;
 use App\Http\Controllers\LandingPageController;
 use App\Http\Controllers\Manajer\DashboardController;
 use App\Http\Controllers\Manajer\DistribusiController;
@@ -260,6 +261,13 @@ Route::prefix('petugas-pembesaran')->name('petugas.pembesaran.')->group(function
 Route::get('/preview-email-otp', function () {
     return new App\Mail\SendOtpMail('482915', 'Adi Darmawan', 5);
 });
+
+// =========================================================================
+// 5. PUSAT DIREKTORI & SIMULASI KODE ERROR HTTP (AQUAFARM PRIANGAN)
+// =========================================================================
+Route::get('/errors', [ErrorHubController::class, 'index'])->name('errors.index');
+Route::get('/errors/abort/{code}', [ErrorHubController::class, 'simulate'])->name('errors.abort');
+Route::get('/errors/{code}', [ErrorHubController::class, 'show'])->name('errors.show');
 
 if (app()->environment('local', 'testing')) {
     Route::get('/test-login/{role?}', function ($role = 'manajer') {

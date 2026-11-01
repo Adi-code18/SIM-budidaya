@@ -40,6 +40,17 @@
     {{-- SweetAlert2 (Modal Dialog & Toast Notifikasi Elegan) --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
+        /* Sembunyikan icon mata bawaan browser (Microsoft Edge / IE) agar tidak dobel dengan tombol custom */
+        input::-ms-reveal,
+        input::-ms-clear,
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+            pointer-events: none !important;
+        }
+
         /* Backdrop overlay hanya untuk modal dialog, BUKAN untuk toast */
         .swal2-container {
             z-index: 99999 !important;

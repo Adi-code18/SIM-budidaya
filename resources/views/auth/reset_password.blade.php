@@ -17,6 +17,17 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
+
+        /* Sembunyikan icon mata bawaan browser (Microsoft Edge / IE) agar tidak dobel dengan tombol custom */
+        input::-ms-reveal,
+        input::-ms-clear,
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+            pointer-events: none !important;
+        }
     </style>
 </head>
 <body class="bg-[#f4f6f9] min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-10">

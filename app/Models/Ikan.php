@@ -56,11 +56,20 @@ class Ikan extends Model
         if (str_contains($namaLower, 'lele')) {
             return 'https://images.unsplash.com/photo-1524704654690-b56c05c78a00?auto=format&fit=crop&w=1200&q=80';
         }
-        if (str_contains($namaLower, 'gurame')) {
+        if (str_contains($namaLower, 'gurame') || str_contains($namaLower, 'gurami')) {
             return 'https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?auto=format&fit=crop&w=1200&q=80';
         }
         if (str_contains($namaLower, 'patin')) {
             return 'https://images.unsplash.com/photo-1534043464124-3be32fe000c9?auto=format&fit=crop&w=1200&q=80';
+        }
+        if (str_contains($namaLower, 'bawal')) {
+            return 'https://images.unsplash.com/photo-1524704654690-b56c05c78a00?auto=format&fit=crop&w=1200&q=80';
+        }
+        if (str_contains($namaLower, 'mas')) {
+            return 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1200&q=80';
+        }
+        if (str_contains($namaLower, 'tawes') || str_contains($namaLower, 'nilem')) {
+            return 'https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?auto=format&fit=crop&w=1200&q=80';
         }
 
         return 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1200&q=80';

@@ -272,7 +272,20 @@ class DashboardController extends Controller
             'monthly_breakdown'      => $monthlyFinance
         ];
 
-        return view('layouts.dashboard.index', compact('metrics', 'mitraList', 'pakanRekap', 'chartDatasets', 'financialSummary'));
+        // 6. Transaksi Distribusi & Laporan Batch Terbaru untuk UI Dashboard Modern
+        $recentOrders = TransaksiDistribusi::with(['mitra', 'batchPembesaran.kolam'])
+            ->latest('tanggal_order')
+            ->latest('id_transaksi')
+            ->take(4)
+            ->get();
+
+        $batchStatusList = BatchPembesaran::with(['kolam'])
+            ->where('status_siklus', '!=', 'gagal')
+            ->latest('tgl_tebar')
+            ->take(5)
+            ->get();
+
+        return view('layouts.dashboard.index', compact('metrics', 'mitraList', 'pakanRekap', 'chartDatasets', 'financialSummary', 'recentOrders', 'batchStatusList'));
     }
 
     public function exportExcel(Request $request)

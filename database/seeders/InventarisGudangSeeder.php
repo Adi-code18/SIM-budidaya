@@ -191,6 +191,45 @@ class InventarisGudangSeeder extends Seeder
                 'kondisi_alat' => 'normal',
                 'lokasi_penyimpanan' => 'Gudang Panen - Rak E1',
                 'catatan' => 'Jaring kantong mata 1.5 inch dengan pelampung busa eva & timbel bawah.'
+            ],
+            [
+                'kode_barang' => 'ALT-0007',
+                'nama_barang' => 'Mesin Pencacah / Chopper Dedaunan Basah 6.5 HP',
+                'kategori_barang' => 'peralatan',
+                'tipe_saprotan' => null,
+                'satuan' => 'unit',
+                'stok_tersisa' => 1,
+                'min_stok' => 1,
+                'harga_satuan_terakhir' => 2850000,
+                'kondisi_alat' => 'normal',
+                'lokasi_penyimpanan' => 'Gudang Pakan & Pencacahan',
+                'catatan' => 'Peralatan pakan SOP Bab 2 E untuk mencacah daun talas, kangkung, dan daun pepaya pakan campuran.'
+            ],
+            [
+                'kode_barang' => 'ALT-0008',
+                'nama_barang' => 'Drum Tangki Fiber Pengangkut Ikan Ber-Aerator 1000L',
+                'kategori_barang' => 'peralatan',
+                'tipe_saprotan' => null,
+                'satuan' => 'unit',
+                'stok_tersisa' => 2,
+                'min_stok' => 1,
+                'harga_satuan_terakhir' => 3800000,
+                'kondisi_alat' => 'normal',
+                'lokasi_penyimpanan' => 'Pool Armada Logistik',
+                'catatan' => 'Peralatan distribusi SOP Bab 2 E untuk pengiriman ikan hidup sistem DDP bebas kematian massal.'
+            ],
+            [
+                'kode_barang' => 'ALT-0009',
+                'nama_barang' => 'Tabung Silinder Oksigen Murni 6m³ + Regulator Medis',
+                'kategori_barang' => 'peralatan',
+                'tipe_saprotan' => null,
+                'satuan' => 'tabung',
+                'stok_tersisa' => 3,
+                'min_stok' => 1,
+                'harga_satuan_terakhir' => 1450000,
+                'kondisi_alat' => 'normal',
+                'lokasi_penyimpanan' => 'Gudang Packing & Pengemasan',
+                'catatan' => 'Peralatan SOP Bab 2 E untuk aerasi packing kantong plastik beroksigen kirim jarak jauh.'
             ]
         ];
 

@@ -183,7 +183,7 @@ class LandingSettingController extends Controller
             if ($oldImage && Storage::disk('public')->exists($oldImage)) {
                 Storage::disk('public')->delete($oldImage);
             }
-            $dataToSave['hero_image'] = $request->file('hero_image')->store('landing', 'public');
+            $dataToSave['hero_image'] = $this->storeOptimizedBanner($request->file('hero_image'));
         } elseif ($request->boolean('reset_hero_image')) {
             $oldImage = $currentSettings['hero_image'] ?? null;
             if ($oldImage && Storage::disk('public')->exists($oldImage)) {
@@ -198,7 +198,7 @@ class LandingSettingController extends Controller
             if ($oldImage && Storage::disk('public')->exists($oldImage)) {
                 Storage::disk('public')->delete($oldImage);
             }
-            $dataToSave['hero_image_2'] = $request->file('hero_image_2')->store('landing', 'public');
+            $dataToSave['hero_image_2'] = $this->storeOptimizedBanner($request->file('hero_image_2'));
         } elseif ($request->boolean('reset_hero_image_2')) {
             $oldImage = $currentSettings['hero_image_2'] ?? null;
             if ($oldImage && Storage::disk('public')->exists($oldImage)) {
@@ -213,7 +213,7 @@ class LandingSettingController extends Controller
             if ($oldImage && Storage::disk('public')->exists($oldImage)) {
                 Storage::disk('public')->delete($oldImage);
             }
-            $dataToSave['hero_image_3'] = $request->file('hero_image_3')->store('landing', 'public');
+            $dataToSave['hero_image_3'] = $this->storeOptimizedBanner($request->file('hero_image_3'));
         } elseif ($request->boolean('reset_hero_image_3')) {
             $oldImage = $currentSettings['hero_image_3'] ?? null;
             if ($oldImage && Storage::disk('public')->exists($oldImage)) {
@@ -228,7 +228,7 @@ class LandingSettingController extends Controller
             if ($oldImage && Storage::disk('public')->exists($oldImage)) {
                 Storage::disk('public')->delete($oldImage);
             }
-            $dataToSave['hero_image_4'] = $request->file('hero_image_4')->store('landing', 'public');
+            $dataToSave['hero_image_4'] = $this->storeOptimizedBanner($request->file('hero_image_4'));
         } elseif ($request->boolean('reset_hero_image_4')) {
             $oldImage = $currentSettings['hero_image_4'] ?? null;
             if ($oldImage && Storage::disk('public')->exists($oldImage)) {
@@ -243,7 +243,7 @@ class LandingSettingController extends Controller
             if ($oldImage && Storage::disk('public')->exists($oldImage)) {
                 Storage::disk('public')->delete($oldImage);
             }
-            $dataToSave['hero_image_5'] = $request->file('hero_image_5')->store('landing', 'public');
+            $dataToSave['hero_image_5'] = $this->storeOptimizedBanner($request->file('hero_image_5'));
         } elseif ($request->boolean('reset_hero_image_5')) {
             $oldImage = $currentSettings['hero_image_5'] ?? null;
             if ($oldImage && Storage::disk('public')->exists($oldImage)) {
@@ -258,7 +258,7 @@ class LandingSettingController extends Controller
             if ($oldImage && Storage::disk('public')->exists($oldImage)) {
                 Storage::disk('public')->delete($oldImage);
             }
-            $dataToSave['hero_image_6'] = $request->file('hero_image_6')->store('landing', 'public');
+            $dataToSave['hero_image_6'] = $this->storeOptimizedBanner($request->file('hero_image_6'));
         } elseif ($request->boolean('reset_hero_image_6')) {
             $oldImage = $currentSettings['hero_image_6'] ?? null;
             if ($oldImage && Storage::disk('public')->exists($oldImage)) {
@@ -269,6 +269,75 @@ class LandingSettingController extends Controller
 
         LandingSetting::saveSettings($dataToSave);
 
+        \Illuminate\Support\Facades\Cache::forget('landing_settings_data');
+        \Illuminate\Support\Facades\Cache::forget('landing_ikans_and_metrics');
+
         return redirect()->route('landing-setting')->with('status', 'Tema & Konten Landing Page berhasil diperbarui!');
+    }
+
+    /**
+     * Simpan file gambar dengan kompresi & resize otomatis (maks 1920px lebar)
+     */
+    private function storeOptimizedBanner($file): string
+    {
+        $extension = strtolower($file->getClientOriginalExtension());
+        $filename = \Illuminate\Support\Str::random(40) . '.' . ($extension === 'png' ? 'png' : 'jpg');
+        $relativeDir = 'landing';
+        $fullDir = storage_path('app/public/' . $relativeDir);
+
+        if (!file_exists($fullDir)) {
+            mkdir($fullDir, 0755, true);
+        }
+
+        $targetPath = $fullDir . '/' . $filename;
+        $sourcePath = $file->getRealPath();
+
+        if (extension_loaded('gd')) {
+            $imageInfo = @getimagesize($sourcePath);
+            if ($imageInfo) {
+                $srcWidth = $imageInfo[0];
+                $srcHeight = $imageInfo[1];
+                $mime = $imageInfo['mime'];
+
+                $maxWidth = 1920;
+                if ($srcWidth > $maxWidth) {
+                    $newWidth = $maxWidth;
+                    $newHeight = (int) round(($srcHeight * $newWidth) / $srcWidth);
+
+                    $srcImage = null;
+                    if ($mime === 'image/jpeg' || $mime === 'image/jpg') {
+                        $srcImage = @imagecreatefromjpeg($sourcePath);
+                    } elseif ($mime === 'image/png') {
+                        $srcImage = @imagecreatefrompng($sourcePath);
+                    } elseif ($mime === 'image/webp') {
+                        $srcImage = @imagecreatefromwebp($sourcePath);
+                    }
+
+                    if ($srcImage) {
+                        $destImage = imagecreatetruecolor($newWidth, $newHeight);
+
+                        if ($mime === 'image/png') {
+                            imagealphablending($destImage, false);
+                            imagesavealpha($destImage, true);
+                        }
+
+                        imagecopyresampled($destImage, $srcImage, 0, 0, 0, 0, $newWidth, $newHeight, $srcWidth, $srcHeight);
+
+                        if ($mime === 'image/png') {
+                            imagepng($destImage, $targetPath, 8);
+                        } else {
+                            imagejpeg($destImage, $targetPath, 85);
+                        }
+
+                        imagedestroy($srcImage);
+                        imagedestroy($destImage);
+
+                        return $relativeDir . '/' . $filename;
+                    }
+                }
+            }
+        }
+
+        return $file->store($relativeDir, 'public');
     }
 }

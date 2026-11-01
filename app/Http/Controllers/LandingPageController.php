@@ -9,6 +9,7 @@ use App\Models\Kolam;
 use App\Models\LandingSetting;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class LandingPageController extends Controller
 {
@@ -17,10 +18,12 @@ class LandingPageController extends Controller
      */
     public function index()
     {
-        // 0. Ambil konfigurasi tema & konten kustom landing page
-        $settings = LandingSetting::getSettings();
+        // 0. Ambil konfigurasi tema & konten kustom landing page (Cached 5 menit)
+        $settings = Cache::remember('landing_settings_data', 300, function () {
+            return LandingSetting::getSettings();
+        });
 
-        // 1. Ambil data komoditas ikan dengan penghitungan kolam & fase aktif riil
+        // 1. Ambil data komoditas ikan & metrik operasional riil
         $ikans = Ikan::all()->map(function ($ikan) {
             $cleanName = trim(str_ireplace('ikan', '', $ikan->nama_ikan));
 
@@ -55,7 +58,6 @@ class LandingPageController extends Controller
             $ikan->bg_gradient = $meta['bg_gradient'];
             return $ikan;
         })->sortByDesc(function ($ikan) {
-            // Urutkan prioritas: kolam aktif terbanyak, lalu total fase budidaya aktif
             return ($ikan->total_kolam_aktif * 100) + $ikan->total_fase_aktif;
         })->values();
 
@@ -65,7 +67,6 @@ class LandingPageController extends Controller
         $totalBiomassaAktif = (float) BatchPembesaran::where('status_siklus', 'aktif')->sum('biomassa_est');
         $totalPanenSelesai = (float) BatchPembesaran::where('status_siklus', 'selesai')->sum('jumlah_panen_kg');
 
-        // Jika data panen seeder masih 0, fallback nilai statistik minimum representatif
         $displayBiomassa = $totalBiomassaAktif > 0 ? $totalBiomassaAktif : 4250;
         $displayTotalPanen = $totalPanenSelesai > 0 ? $totalPanenSelesai : 18500;
         $displayKolam = $totalKolam > 0 ? $totalKolam : 12;
@@ -88,7 +89,14 @@ class LandingPageController extends Controller
             'ddp_mortality'=> '< 1.8%',
         ];
 
-        return view('landing.index', compact('ikans', 'company', 'displayKolam', 'displayBiomassa', 'displayTotalPanen', 'settings'));
+        return view('landing.index', compact(
+            'settings',
+            'ikans',
+            'company',
+            'displayKolam',
+            'displayBiomassa',
+            'displayTotalPanen'
+        ));
     }
 
     /**
