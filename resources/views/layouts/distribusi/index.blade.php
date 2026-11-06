@@ -87,6 +87,22 @@
                                 <option :value="m.id_mitra" x-text="m.label"></option>
                             </template>
                         </select>
+                        <!-- Mitra Credit Info Pill -->
+                        <div x-show="selectedMitraDetail" class="mt-2 p-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs flex flex-wrap items-center justify-between gap-2">
+                            <div class="flex items-center gap-1.5">
+                                <i class="fa-solid fa-credit-card text-sky-600 text-xs"></i>
+                                <span class="text-slate-600 font-medium">Plafon: <strong class="text-slate-900" x-text="'Rp ' + Number(selectedMitraDetail?.plafon_kredit || 0).toLocaleString('id-ID')"></strong></span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-slate-500">Piutang: <strong :class="selectedMitraDetail?.total_piutang_berjalan > 0 ? 'text-amber-700 font-mono' : 'text-slate-700'" x-text="'Rp ' + Number(selectedMitraDetail?.total_piutang_berjalan || 0).toLocaleString('id-ID')"></strong></span>
+                            </div>
+                            <div>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-extrabold"
+                                      :class="selectedMitraDetail?.sisa_plafon > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'"
+                                      x-text="'Sisa Plafon: Rp ' + Number(selectedMitraDetail?.sisa_plafon || 0).toLocaleString('id-ID')">
+                                </span>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Pilih Sumber Batch Pembesaran & Jenis Ikan -->
@@ -347,6 +363,55 @@
                     </p>
                 </div>
 
+                <!-- Section: Termin Pembayaran & Proteksi Risiko Distribusi -->
+                <div class="space-y-4 pt-2 border-t border-slate-100">
+                    <div class="flex items-center gap-2.5 text-sm font-bold text-slate-900">
+                        <div class="w-8 h-8 rounded-xl bg-[#0B2570] text-white flex items-center justify-center">
+                            <i class="fa-solid fa-file-invoice-dollar text-xs"></i>
+                        </div>
+                        <span>Termin Pembayaran &amp; Proteksi Klaim Susut Timbangan (DDP)</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">METODE PEMBAYARAN</label>
+                            <select x-model="form.metode_pembayaran" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                                <option value="tunai">Tunai / COD (Cash On Delivery)</option>
+                                <option value="transfer">Transfer Bank (Langsung)</option>
+                                <option value="tempo">Tempo / Kredit Mitra (Invoice)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">TERMIN PEMBAYARAN (HARI)</label>
+                            <select x-model.number="form.termin_hari" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                                <option value="0">Cash / Lunas Saat Kirim (0 Hari)</option>
+                                <option value="7">Tempo 7 Hari</option>
+                                <option value="14">Tempo 14 Hari (Standar Mitra)</option>
+                                <option value="30">Tempo 30 Hari (Supermarket / Resto)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">TOLERANSI SUSUT TIMBANGAN (DDP)</label>
+                            <div class="flex items-center gap-2">
+                                <input type="number" step="0.1" min="0" max="10" x-model.number="form.toleransi_susut_persen" placeholder="2.0"
+                                       class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
+                                <span class="text-xs font-extrabold text-slate-400">%</span>
+                            </div>
+                            <span class="text-[9.5px] text-slate-400 block mt-0.5">Acuan SOP CBIB Aquafarm: &le; 2.0%</span>
+                        </div>
+                    </div>
+
+                    <div x-show="form.metode_pembayaran === 'tempo' || form.termin_hari > 0" class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-clock text-amber-600"></i>
+                            <span>Dicatat sebagai <strong>Piutang Mitra Berjalan</strong>. Kas bertambah saat pelunasan dicatat.</span>
+                        </div>
+                        <span class="text-[11px] font-mono font-bold text-amber-950" x-text="'Jatuh Tempo: +' + (form.termin_hari || 14) + ' hari'"></span>
+                    </div>
+                </div>
+
                 <!-- Section 4: Workflow Pemberokan & Grading Standar Resto -->
                 <div class="space-y-4 pt-2 border-t border-slate-100">
                     <div class="flex items-center gap-2.5 text-sm font-bold text-slate-900">
@@ -434,6 +499,58 @@
             <div class="px-3.5 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-center">
                 <span class="text-[9px] uppercase tracking-wider text-emerald-700 block font-extrabold">BUFFER PEMBEROKAN</span>
                 <span class="text-xs font-extrabold text-emerald-800">{{ number_format($totalBufferPemberokan ?? 0, 0, ',', '.') }} kg</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Risk & Receivables Control Bar (Termin Piutang & Proteksi Klaim Susut DDP) -->
+    <div x-show="!showForm" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Card 1: Total Piutang Berjalan -->
+        <div class="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
+            <div>
+                <div class="flex items-center gap-1.5">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">PIUTANG MITRA BERJALAN</span>
+                    <span class="text-[9px] px-1.5 py-0.5 rounded font-extrabold bg-amber-100 text-amber-800">Termin Tempo</span>
+                </div>
+                <h3 class="text-xl font-black text-slate-900 mt-1" x-text="'Rp ' + Number(totalPiutangBerjalan).toLocaleString('id-ID')"></h3>
+                <span class="text-[10px] font-semibold text-slate-500 mt-0.5 block">
+                    <span :class="orderMenunggakCount > 0 ? 'text-rose-600 font-extrabold' : 'text-emerald-600'">
+                        <span x-text="orderMenunggakCount"></span> tagihan jatuh tempo / menunggak
+                    </span>
+                </span>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 flex items-center justify-center">
+                <i class="fa-solid fa-file-invoice-dollar text-base"></i>
+            </div>
+        </div>
+
+        <!-- Card 2: Proteksi Klaim Susut DDP -->
+        <div class="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
+            <div>
+                <div class="flex items-center gap-1.5">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">KLAIM SUSUT DDP MITRA</span>
+                    <span class="text-[9px] px-1.5 py-0.5 rounded font-extrabold bg-rose-100 text-rose-800">Potongan Timbangan</span>
+                </div>
+                <h3 class="text-xl font-black text-rose-600 mt-1" x-text="'Rp ' + Number(totalKlaimSusutRp).toLocaleString('id-ID')"></h3>
+                <span class="text-[10px] font-semibold text-slate-500 mt-0.5 block">Akumulasi susut &gt; toleransi 2%</span>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 flex items-center justify-center">
+                <i class="fa-solid fa-scale-unbalanced text-base"></i>
+            </div>
+        </div>
+
+        <!-- Card 3: Tagihan Riil Terlindungi -->
+        <div class="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
+            <div>
+                <div class="flex items-center gap-1.5">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">PROTEKSI TAGIHAN NETTO</span>
+                    <span class="text-[9px] px-1.5 py-0.5 rounded font-extrabold bg-emerald-100 text-emerald-800">Toleransi 2.0%</span>
+                </div>
+                <h3 class="text-xl font-black text-emerald-700 mt-1" x-text="'Rp ' + Number(totalTagihanNetto).toLocaleString('id-ID')"></h3>
+                <span class="text-[10px] font-semibold text-slate-500 mt-0.5 block">Total omzet bersih terproteksi klaim</span>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center">
+                <i class="fa-solid fa-shield-halved text-base"></i>
             </div>
         </div>
     </div>
@@ -585,9 +702,32 @@
                                 <h3 class="text-base font-black text-slate-900 mt-0.5" x-text="order.volume"></h3>
                             </div>
                             <div class="text-right">
-                                <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">TOTAL HARGA</span>
-                                <h3 class="text-base font-black text-emerald-700 mt-0.5" x-text="order.harga_format || ('Rp ' + Number(order.harga_total || 0).toLocaleString('id-ID'))"></h3>
+                                <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">TAGIHAN NETTO</span>
+                                <h3 class="text-base font-black text-emerald-700 mt-0.5" x-text="order.total_tagihan_format || order.harga_format || ('Rp ' + Number(order.harga_total || 0).toLocaleString('id-ID'))"></h3>
                             </div>
+                        </div>
+
+                        <!-- Info Potongan Klaim Susut DDP jika ada penyesuaian -->
+                        <div x-show="order.potongan_klaim_rp > 0" class="pt-2 border-t border-slate-200/60 flex items-center justify-between text-[11px] text-rose-700">
+                            <span class="flex items-center gap-1 font-semibold">
+                                <i class="fa-solid fa-scale-unbalanced text-[10px]"></i>
+                                <span>Klaim Susut Timbangan:</span>
+                            </span>
+                            <span class="font-extrabold font-mono" x-text="'-' + (order.potongan_klaim_format || 'Rp 0')"></span>
+                        </div>
+
+                        <!-- Status Pembayaran & Sisa Piutang -->
+                        <div class="pt-2 border-t border-slate-200/60 flex items-center justify-between text-[11px]">
+                            <span class="px-2 py-0.5 rounded text-[9.5px] font-black uppercase"
+                                  :class="{
+                                      'bg-emerald-100 text-emerald-800': order.status_pembayaran === 'lunas',
+                                      'bg-amber-100 text-amber-800': order.status_pembayaran === 'tempo' && !order.is_jatuh_tempo,
+                                      'bg-rose-100 text-rose-800': order.status_pembayaran === 'menunggak' || order.is_jatuh_tempo,
+                                      'bg-sky-100 text-sky-800': order.status_pembayaran === 'sebagian'
+                                  }"
+                                  x-text="paymentStatusLabel(order)">
+                            </span>
+                            <span x-show="order.sisa_piutang > 0" class="text-amber-900 font-extrabold font-mono text-[11px]" x-text="'Sisa: ' + (order.sisa_piutang_format || 'Rp 0')"></span>
                         </div>
 
                         <div class="pt-2 border-t border-slate-200/60 flex items-center justify-between text-[11px]" x-show="order.batch_code">
@@ -598,6 +738,9 @@
 
                     <div class="space-y-1 text-xs text-slate-500 font-medium">
                         <p><span class="font-bold text-slate-700">TANGGAL ORDER:</span> <span x-text="order.tanggal"></span></p>
+                        <p class="text-[11px]" x-show="order.tgl_jatuh_tempo && order.status_pembayaran !== 'lunas'">
+                            <span class="font-bold text-amber-800">Jatuh Tempo:</span> <span class="font-mono text-amber-900" x-text="order.tgl_jatuh_tempo"></span>
+                        </p>
                         <p class="text-[11px]" x-show="order.alamat !== '-'"><span class="font-bold text-slate-700">Alamat:</span> <span x-text="order.alamat"></span></p>
                     </div>
                 </div>
@@ -613,6 +756,14 @@
                             <span>Ubah Status</span>
                         </button>
                     </div>
+
+                    <!-- Tombol Catat Pelunasan Piutang jika belum lunas -->
+                    <button type="button" x-show="order.sisa_piutang > 0" @click="openBayarModal(order)"
+                            class="w-full py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-bold text-xs flex items-center justify-center gap-2 transition-colors">
+                        <i class="fa-solid fa-hand-holding-dollar text-amber-600 text-xs"></i>
+                        <span>Catat Pembayaran Piutang</span>
+                    </button>
+
                     <!-- Tombol Cetak Surat Jalan PDF Resmi -->
                     <a :href="'/distribusi/' + (order.id_transaksi || order.id) + '/surat-jalan-pdf'" target="_blank"
                        class="w-full py-2 rounded-xl bg-sky-50 text-sky-800 hover:bg-sky-100 border border-sky-200 font-bold text-xs flex items-center justify-center gap-2 transition-colors">
@@ -655,6 +806,13 @@
                             </p>
                         </div>
                     </template>
+
+                    <!-- Tombol Pelunasan Piutang jika belum lunas pada order yang selesai terkirim -->
+                    <button type="button" x-show="order.sisa_piutang > 0" @click="openBayarModal(order)"
+                            class="w-full py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-bold text-xs flex items-center justify-center gap-2 transition-colors">
+                        <i class="fa-solid fa-hand-holding-dollar text-amber-600 text-xs"></i>
+                        <span>Catat Pelunasan Piutang</span>
+                    </button>
 
                     <div class="grid grid-cols-3 gap-1.5">
                         <button type="button" @click="openProofModal(order)" :disabled="!order.bukti_foto_url"
@@ -771,9 +929,13 @@
                         </div>
                     </div>
 
-                    <!-- Verifikasi Timbangan DDP jika selesai -->
-                    <template x-if="selectedInvoice?.status === 'selesai'">
-                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80 text-xs space-y-1">
+                    <!-- Verifikasi Timbangan DDP & Proteksi Klaim Susut -->
+                    <template x-if="selectedInvoice?.status === 'selesai' || selectedInvoice?.berat_aktual_kg">
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80 text-xs space-y-1.5">
+                            <div class="flex items-center justify-between">
+                                <span class="text-slate-600 font-medium">Bobot Timbang Muat:</span>
+                                <span class="text-slate-900 font-bold" x-text="(selectedInvoice?.total_kg || 0) + ' kg'"></span>
+                            </div>
                             <div class="flex items-center justify-between font-bold">
                                 <span class="text-slate-600">Bobot Riil Diterima:</span>
                                 <span class="text-slate-900" x-text="(selectedInvoice?.berat_aktual_kg || selectedInvoice?.total_kg) + ' kg'"></span>
@@ -782,15 +944,48 @@
                                 <span class="text-slate-500">Susut Transportasi (DDP):</span>
                                 <span class="font-bold flex items-center gap-1.5" :class="selectedInvoice?.is_ddp_aman ? 'text-emerald-700' : 'text-amber-700'">
                                     <span x-text="'-' + selectedInvoice?.susut_bobot_kg + ' kg (' + (selectedInvoice?.persentase_susut || 0) + '%)'"></span>
-                                    <span class="text-[9px] px-1.5 py-0.5 rounded font-extrabold" :class="selectedInvoice?.is_ddp_aman ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'" x-text="selectedInvoice?.is_ddp_aman ? 'DDP Aman (< 2%)' : 'Perlu Evaluasi'"></span>
+                                    <span class="text-[9px] px-1.5 py-0.5 rounded font-extrabold" :class="selectedInvoice?.is_ddp_aman ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'" x-text="selectedInvoice?.is_ddp_aman ? 'DDP Aman (&le; 2%)' : 'Di Luar Toleransi'"></span>
                                 </span>
+                            </div>
+                            <div class="flex items-center justify-between text-[11px] text-rose-700 font-bold pt-1 border-t border-slate-200" x-show="selectedInvoice?.potongan_klaim_rp > 0">
+                                <span>Potongan Klaim Susut DDP:</span>
+                                <span x-text="'-' + (selectedInvoice?.potongan_klaim_format || 'Rp 0')"></span>
                             </div>
                         </div>
                     </template>
 
+                    <!-- Rincian Termin & Status Pembayaran -->
+                    <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-200/80 text-xs space-y-1.5">
+                        <div class="flex items-center justify-between">
+                            <span class="text-slate-600">Metode &amp; Termin:</span>
+                            <span class="font-bold text-slate-800 uppercase" x-text="(selectedInvoice?.metode_pembayaran || 'tunai') + (selectedInvoice?.termin_hari > 0 ? ' (Tempo ' + selectedInvoice.termin_hari + ' Hari)' : ' (COD / Cash)')"></span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-slate-600">Status Pembayaran:</span>
+                            <span class="font-black uppercase text-[10px] px-2 py-0.5 rounded"
+                                  :class="selectedInvoice?.status_pembayaran === 'lunas' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'"
+                                  x-text="selectedInvoice?.status_pembayaran || 'lunas'"></span>
+                        </div>
+                        <div class="flex items-center justify-between" x-show="selectedInvoice?.tgl_jatuh_tempo">
+                            <span class="text-slate-600">Jatuh Tempo:</span>
+                            <span class="font-bold text-amber-900 font-mono" x-text="selectedInvoice?.tgl_jatuh_tempo"></span>
+                        </div>
+                        <div class="flex items-center justify-between" x-show="selectedInvoice?.jumlah_terbayar > 0">
+                            <span class="text-slate-600">Jumlah Terbayar:</span>
+                            <span class="font-bold text-emerald-700 font-mono" x-text="selectedInvoice?.jumlah_terbayar_format || 'Rp 0'"></span>
+                        </div>
+                        <div class="flex items-center justify-between pt-1 border-t border-amber-200 font-black" x-show="selectedInvoice?.sisa_piutang > 0">
+                            <span class="text-amber-900">Sisa Piutang Berjalan:</span>
+                            <span class="text-rose-700 font-mono" x-text="selectedInvoice?.sisa_piutang_format || 'Rp 0'"></span>
+                        </div>
+                    </div>
+
                     <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
-                        <span class="text-xs font-bold text-slate-600">Total Nilai Transaksi</span>
-                        <span class="text-base font-black text-emerald-700" x-text="selectedInvoice?.harga_format || 'Rp 0'"></span>
+                        <div>
+                            <span class="text-xs font-bold text-slate-600 block">Total Tagihan Akhir</span>
+                            <span class="text-[10px] text-slate-400 font-medium" x-show="selectedInvoice?.potongan_klaim_rp > 0">Setelah potongan klaim susut</span>
+                        </div>
+                        <span class="text-base font-black text-emerald-700" x-text="selectedInvoice?.total_tagihan_format || selectedInvoice?.harga_format || 'Rp 0'"></span>
                     </div>
                 </div>
 
@@ -925,6 +1120,114 @@
         </div>
     </div>
 
+    <!-- Modal Catat Pembayaran Piutang Mitra -->
+    <div x-show="showBayarModal" 
+         x-transition:enter="transition ease-out duration-200" 
+         x-transition:enter-start="opacity-0" 
+         x-transition:enter-end="opacity-100" 
+         x-transition:leave="transition ease-in duration-150" 
+         x-transition:leave-start="opacity-100" 
+         x-transition:leave-end="opacity-0" 
+         class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4" 
+         style="display: none;"
+         @keydown.escape.window="closeBayarModal()">
+        <div class="w-full max-w-lg rounded-3xl bg-white shadow-2xl border border-slate-200 overflow-hidden transform transition-all" @click.outside="closeBayarModal()">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/90">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-[#0B2570] text-white flex items-center justify-center text-sm font-bold">
+                        <i class="fa-solid fa-hand-holding-dollar"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400">PENGENDALIAN PIUTANG MITRA</p>
+                        <h3 class="text-base font-extrabold text-slate-900" x-text="'Pelunasan Tagihan ' + (selectedOrderBayar?.id || '')"></h3>
+                    </div>
+                </div>
+                <button type="button" @click="closeBayarModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors">✕</button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6 space-y-4 max-h-[75vh] overflow-y-auto" x-show="selectedOrderBayar">
+                <!-- Info Ringkasan Tagihan & Sisa Piutang -->
+                <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-2 text-xs">
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-500 font-medium">Mitra Distributor:</span>
+                        <span class="font-extrabold text-slate-900" x-text="selectedOrderBayar?.customer || '-'"></span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-500 font-medium">Komoditas &amp; Volume:</span>
+                        <span class="font-bold text-slate-800" x-text="(selectedOrderBayar?.jenis_ikan || 'Ikan') + ' • ' + (selectedOrderBayar?.volume || '')"></span>
+                    </div>
+                    <div class="flex items-center justify-between" x-show="selectedOrderBayar?.potongan_klaim_rp > 0">
+                        <span class="text-rose-600 font-medium">Potongan Klaim Susut DDP:</span>
+                        <span class="font-bold text-rose-600 font-mono" x-text="'-' + (selectedOrderBayar?.potongan_klaim_format || 'Rp 0')"></span>
+                    </div>
+                    <div class="flex items-center justify-between pt-1 border-t border-slate-200 font-bold">
+                        <span class="text-slate-700">Total Tagihan Bersih:</span>
+                        <span class="text-slate-900 font-mono" x-text="selectedOrderBayar?.total_tagihan_format || selectedOrderBayar?.harga_format"></span>
+                    </div>
+                    <div class="flex items-center justify-between text-emerald-700 font-bold" x-show="selectedOrderBayar?.jumlah_terbayar > 0">
+                        <span>Sudah Dibayar Sebelumnya:</span>
+                        <span class="font-mono" x-text="selectedOrderBayar?.jumlah_terbayar_format || 'Rp 0'"></span>
+                    </div>
+                    <div class="flex items-center justify-between pt-1.5 border-t border-amber-200 font-black text-amber-950 bg-amber-50/80 p-2.5 rounded-xl">
+                        <span>SISA PIUTANG WAJIB BAYAR:</span>
+                        <span class="font-mono text-sm text-rose-700" x-text="selectedOrderBayar?.sisa_piutang_format || 'Rp 0'"></span>
+                    </div>
+                </div>
+
+                <!-- Form Input Pembayaran -->
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">NOMINAL PEMBAYARAN (RP) *</label>
+                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50/70 overflow-hidden focus-within:bg-white focus-within:ring-2 focus-within:ring-sky-500">
+                            <span class="px-3.5 py-2.5 text-xs font-extrabold text-slate-500 bg-slate-100 border-r border-slate-200">Rp</span>
+                            <input type="number" step="1000" min="1" :max="selectedOrderBayar?.sisa_piutang || 100000000" x-model.number="formBayar.jumlah_bayar"
+                                   class="w-full px-3.5 py-2.5 text-xs font-bold text-slate-800 bg-transparent border-0 focus:outline-none">
+                        </div>
+                        <span class="text-[10px] text-slate-400 mt-1 block">Bisa pembayaran lunas penuh atau dicicil (DP / sebagian).</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">TANGGAL PEMBAYARAN *</label>
+                            <input type="date" x-model="formBayar.tanggal_bayar"
+                                   class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">METODE BAYAR</label>
+                            <select x-model="formBayar.metode_pembayaran" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
+                                <option value="transfer">Transfer Bank (BCA / Mandiri)</option>
+                                <option value="tunai">Kas Tunai di Kantor</option>
+                                <option value="giro">Bilyet Giro / Cek</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">CATATAN TRANSAKSI (REF / BUKTI)</label>
+                        <input type="text" x-model="formBayar.catatan" placeholder="Contoh: Transfer via BCA ref #TRX9921 atau pelunasan batch 1"
+                               class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
+                    </div>
+                </div>
+
+                <div class="p-3 bg-sky-50 rounded-xl border border-sky-100 text-sky-900 text-xs flex items-center gap-2">
+                    <i class="fa-solid fa-circle-info text-sky-600 text-sm"></i>
+                    <span>Pelunasan ini otomatis tercatat sebagai transaksi <strong>Pemasukan Kas Riil</strong> di modul Keuangan Tambak.</span>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="flex items-center justify-between gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/80">
+                <button type="button" @click="closeBayarModal()" class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-white transition-colors">Batal</button>
+                <button type="button" @click="submitBayarPiutang()" class="px-5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-check text-xs"></i>
+                    <span>Simpan Pembayaran &amp; Sinkronkan Kas</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
 </div>
 @endsection
 
@@ -945,6 +1248,35 @@ function distribusiComponent() {
         emptyAndStockPonds: {!! json_encode($emptyAndStockPonds ?? []) !!},
         panen_kuras: false,
         id_kolam_surplus: '',
+
+        totalPiutangBerjalan: {{ (float) ($totalPiutangBerjalan ?? 0) }},
+        totalKlaimSusutRp: {{ (float) ($totalKlaimSusutRp ?? 0) }},
+        orderMenunggakCount: {{ (int) ($orderMenunggakCount ?? 0) }},
+        showBayarModal: false,
+        selectedOrderBayar: null,
+        formBayar: {
+            jumlah_bayar: 0,
+            tanggal_bayar: new Date().toISOString().split('T')[0],
+            metode_pembayaran: 'transfer',
+            catatan: ''
+        },
+
+        get totalTagihanNetto() {
+            return (this.orders || []).reduce((acc, o) => acc + (Number(o.total_tagihan_akhir !== undefined ? o.total_tagihan_akhir : (o.harga_total || 0)) || 0), 0);
+        },
+
+        get selectedMitraDetail() {
+            return (this.mitraList || []).find(m => m.id_mitra == this.form.id_mitra);
+        },
+
+        paymentStatusLabel(order) {
+            if (!order) return 'Lunas';
+            if (order.status_pembayaran === 'lunas') return 'Lunas';
+            if (order.status_pembayaran === 'menunggak' || order.is_jatuh_tempo) return 'Jatuh Tempo';
+            if (order.status_pembayaran === 'sebagian') return 'Sebagian';
+            if (order.status_pembayaran === 'tempo') return 'Tempo (' + (order.termin_hari || 14) + 'H)';
+            return order.status_pembayaran || 'Lunas';
+        },
 
         alokasi: {
             buffer_kg: '',
@@ -1034,7 +1366,10 @@ function distribusiComponent() {
             grading_size: 'Size 6-8 (Warung / Pasar)',
             durasi_pemberokan_jam: 18,
             catatan_grading: '',
-            no_surat_jalan: ''
+            no_surat_jalan: '',
+            metode_pembayaran: 'tunai',
+            termin_hari: 0,
+            toleransi_susut_persen: 2.0
         },
         panenTipeChoice: 'parsial',
 
@@ -1119,6 +1454,12 @@ function distribusiComponent() {
             if (sel) {
                 this.form.mitra = sel.nama_mitra;
                 this.form.alamat = sel.alamat;
+                if (this.formMode === 'create' && sel.termin_default_hari !== undefined) {
+                    this.form.termin_hari = sel.termin_default_hari;
+                    if (sel.termin_default_hari > 0) {
+                        this.form.metode_pembayaran = 'tempo';
+                    }
+                }
             }
         },
 
@@ -1131,7 +1472,6 @@ function distribusiComponent() {
                 if (this.form.totalBerat && Number(this.form.totalBerat) > 0 && !this.form.totalHarga) {
                     this.form.totalHarga = 'Rp ' + (Number(this.form.totalBerat) * 35000).toLocaleString('id-ID');
                 }
-                // Pastikan id buffer & cross batch sesuai jenis ikan yang sama
                 const validBuffer = this.availableBufferBatches.find(b => b.id_pembesaran == this.alokasi.id_batch_buffer);
                 if (!validBuffer) {
                     this.alokasi.id_batch_buffer = this.availableBufferBatches.length > 0 ? this.availableBufferBatches[0].id_pembesaran : '';
@@ -1179,7 +1519,10 @@ function distribusiComponent() {
                 grading_size: 'Size 6-8 (Warung / Pasar)',
                 durasi_pemberokan_jam: 18,
                 catatan_grading: '',
-                no_surat_jalan: ''
+                no_surat_jalan: '',
+                metode_pembayaran: 'tunai',
+                termin_hari: 0,
+                toleransi_susut_persen: 2.0
             };
             this.jenisOrder = 'reguler';
         },
@@ -1210,7 +1553,10 @@ function distribusiComponent() {
                 catatan_grading: order.catatan_grading || '',
                 no_surat_jalan: order.no_surat_jalan || '',
                 tgl_rencana_kirim: order.tgl_rencana_kirim || order.tanggal || new Date().toISOString().split('T')[0],
-                tipe_panen: order.tipe_panen || 'parsial'
+                tipe_panen: order.tipe_panen || 'parsial',
+                metode_pembayaran: order.metode_pembayaran || 'tunai',
+                termin_hari: order.termin_hari !== undefined ? order.termin_hari : 0,
+                toleransi_susut_persen: order.toleransi_susut_persen !== undefined ? order.toleransi_susut_persen : 2.0
             };
             this.panenTipeChoice = order.tipe_panen || 'parsial';
             this.panen_kuras = (order.tipe_panen === 'kuras');
@@ -1235,7 +1581,10 @@ function distribusiComponent() {
                     durasi_pemberokan_jam: this.form.durasi_pemberokan_jam,
                     catatan_grading: this.form.catatan_grading,
                     tgl_rencana_kirim: this.form.tgl_rencana_kirim,
-                    tipe_panen: this.panenTipeChoice
+                    tipe_panen: this.panenTipeChoice,
+                    metode_pembayaran: this.form.metode_pembayaran,
+                    termin_hari: this.form.termin_hari,
+                    toleransi_susut_persen: this.form.toleransi_susut_persen
                 };
 
                 if (this.panen_kuras && this.id_kolam_surplus) {
@@ -1284,6 +1633,17 @@ function distribusiComponent() {
                             if (data.transaksi.no_surat_jalan) target.no_surat_jalan = data.transaksi.no_surat_jalan;
                             if (data.transaksi.grading_size) target.grading_size = data.transaksi.grading_size;
                             if (data.transaksi.waktu_selesai_pemberokan) target.waktu_selesai_pemberokan = data.transaksi.waktu_selesai_pemberokan;
+                            if (data.transaksi.metode_pembayaran) target.metode_pembayaran = data.transaksi.metode_pembayaran;
+                            if (data.transaksi.status_pembayaran) target.status_pembayaran = data.transaksi.status_pembayaran;
+                            if (data.transaksi.termin_hari !== undefined) target.termin_hari = data.transaksi.termin_hari;
+                            if (data.transaksi.total_tagihan_akhir !== undefined) {
+                                target.total_tagihan_akhir = data.transaksi.total_tagihan_akhir;
+                                target.total_tagihan_format = 'Rp ' + Number(data.transaksi.total_tagihan_akhir).toLocaleString('id-ID');
+                            }
+                            if (data.transaksi.sisa_piutang !== undefined) {
+                                target.sisa_piutang = data.transaksi.sisa_piutang;
+                                target.sisa_piutang_format = 'Rp ' + Number(data.transaksi.sisa_piutang).toLocaleString('id-ID');
+                            }
                         }
                     }
 
@@ -1325,7 +1685,10 @@ function distribusiComponent() {
                     status_order: this.form.status,
                     grading_size: this.form.grading_size,
                     durasi_pemberokan_jam: this.form.durasi_pemberokan_jam,
-                    catatan_grading: this.form.catatan_grading
+                    catatan_grading: this.form.catatan_grading,
+                    metode_pembayaran: this.form.metode_pembayaran,
+                    termin_hari: this.form.termin_hari,
+                    toleransi_susut_persen: this.form.toleransi_susut_persen
                 };
 
                 if (this.panen_kuras && this.id_kolam_surplus) {
@@ -1382,6 +1745,10 @@ function distribusiComponent() {
                             }
                         }
 
+                        const isTempo = (this.form.metode_pembayaran === 'tempo' || this.form.termin_hari > 0);
+                        const sisaPiutangInit = isTempo ? hargaTotal : 0;
+                        const terbayarInit = isTempo ? 0 : hargaTotal;
+
                         this.orders.unshift({
                             id_transaksi: newTrx.id_transaksi,
                             id: '#ORD-2023-' + String(newTrx.id_transaksi).padStart(4, '0'),
@@ -1402,8 +1769,25 @@ function distribusiComponent() {
                             grading_size: newTrx.grading_size || this.form.grading_size,
                             durasi_pemberokan_jam: newTrx.durasi_pemberokan_jam || this.form.durasi_pemberokan_jam,
                             waktu_selesai_pemberokan: newTrx.waktu_selesai_pemberokan,
+                            metode_pembayaran: this.form.metode_pembayaran,
+                            status_pembayaran: isTempo ? 'tempo' : 'lunas',
+                            termin_hari: this.form.termin_hari,
+                            tgl_jatuh_tempo: newTrx.tgl_jatuh_tempo || null,
+                            toleransi_susut_persen: this.form.toleransi_susut_persen,
+                            potongan_klaim_rp: 0,
+                            potongan_klaim_format: 'Rp 0',
+                            total_tagihan_akhir: hargaTotal,
+                            total_tagihan_format: 'Rp ' + Number(hargaTotal).toLocaleString('id-ID'),
+                            jumlah_terbayar: terbayarInit,
+                            jumlah_terbayar_format: 'Rp ' + Number(terbayarInit).toLocaleString('id-ID'),
+                            sisa_piutang: sisaPiutangInit,
+                            sisa_piutang_format: 'Rp ' + Number(sisaPiutangInit).toLocaleString('id-ID'),
                             label: true
                         });
+
+                        if (isTempo) {
+                            this.totalPiutangBerjalan += sisaPiutangInit;
+                        }
                     } else {
                         alert(data.message || 'Gagal menyimpan transaksi pesanan.');
                     }
@@ -1450,7 +1834,19 @@ function distribusiComponent() {
                 berat_aktual_kg: order.berat_aktual_kg,
                 susut_bobot_kg: order.susut_bobot_kg,
                 persentase_susut: order.persentase_susut,
-                is_ddp_aman: order.is_ddp_aman
+                is_ddp_aman: order.is_ddp_aman,
+                metode_pembayaran: order.metode_pembayaran || 'tunai',
+                status_pembayaran: order.status_pembayaran || 'lunas',
+                termin_hari: order.termin_hari || 0,
+                tgl_jatuh_tempo: order.tgl_jatuh_tempo || null,
+                potongan_klaim_rp: order.potongan_klaim_rp || 0,
+                potongan_klaim_format: order.potongan_klaim_format || 'Rp 0',
+                total_tagihan_akhir: order.total_tagihan_akhir || order.harga_total,
+                total_tagihan_format: order.total_tagihan_format || order.harga_format,
+                jumlah_terbayar: order.jumlah_terbayar || 0,
+                jumlah_terbayar_format: order.jumlah_terbayar_format || 'Rp 0',
+                sisa_piutang: order.sisa_piutang || 0,
+                sisa_piutang_format: order.sisa_piutang_format || 'Rp 0'
             };
             this.showInvoice = true;
         },
@@ -1468,6 +1864,59 @@ function distribusiComponent() {
         closeProofModal() {
             this.showProofModal = false;
             this.selectedProof = null;
+        },
+
+        openBayarModal(order) {
+            this.selectedOrderBayar = order;
+            this.formBayar.jumlah_bayar = Number(order.sisa_piutang !== undefined ? order.sisa_piutang : (order.total_tagihan_akhir || order.harga_total || 0));
+            this.formBayar.tanggal_bayar = new Date().toISOString().split('T')[0];
+            this.formBayar.metode_pembayaran = order.metode_pembayaran || 'transfer';
+            this.formBayar.catatan = '';
+            this.showBayarModal = true;
+        },
+
+        closeBayarModal() {
+            this.showBayarModal = false;
+            this.selectedOrderBayar = null;
+        },
+
+        async submitBayarPiutang() {
+            if (!this.selectedOrderBayar) return;
+            if (!this.formBayar.jumlah_bayar || Number(this.formBayar.jumlah_bayar) <= 0) {
+                alert('Silakan masukkan jumlah pembayaran yang valid!');
+                return;
+            }
+            const rawId = this.selectedOrderBayar.id_transaksi || String(this.selectedOrderBayar.id).replace(/[^0-9]/g, '');
+            try {
+                const res = await fetch('/distribusi/' + rawId + '/bayar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify(this.formBayar)
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    const t = this.orders.find(o => o.id === this.selectedOrderBayar.id || o.id_transaksi == rawId);
+                    if (t && data.transaksi) {
+                        t.jumlah_terbayar = data.transaksi.jumlah_terbayar;
+                        t.jumlah_terbayar_format = 'Rp ' + Number(data.transaksi.jumlah_terbayar).toLocaleString('id-ID');
+                        t.sisa_piutang = data.transaksi.sisa_piutang;
+                        t.sisa_piutang_format = 'Rp ' + Number(data.transaksi.sisa_piutang).toLocaleString('id-ID');
+                        t.status_pembayaran = data.transaksi.status_pembayaran;
+                    }
+                    this.totalPiutangBerjalan = this.orders.filter(o => ['tempo', 'menunggak', 'sebagian'].includes(o.status_pembayaran))
+                        .reduce((acc, cur) => acc + (Number(cur.sisa_piutang) || 0), 0);
+                    alert(data.message || 'Pembayaran berhasil dicatat dan disinkronkan ke buku kas keuangan!');
+                    this.closeBayarModal();
+                } else {
+                    alert(data.message || 'Gagal memproses pembayaran piutang.');
+                }
+            } catch(e) {
+                alert('Terjadi kesalahan koneksi saat mencatat pembayaran.');
+            }
         },
 
         updateStatus(order) {

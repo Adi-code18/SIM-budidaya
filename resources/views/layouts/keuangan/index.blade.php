@@ -207,6 +207,280 @@
         </div>
     </div>
 
+    <!-- PILAR: NERACA POSISI KEUANGAN (AKTIVA & PASIVA EKSEKUTIF) -->
+    <div class="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden page-break-inside-avoid print:border-slate-300 print:shadow-none print:rounded-lg">
+        <div class="px-3.5 py-2.5 print:px-2 print:py-1 border-b border-slate-100 print:border-slate-300 flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-gradient-to-r from-slate-50 via-sky-50/30 to-slate-50">
+            <div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-[#051B44] text-white">Executive Balance Sheet</span>
+                    <span class="px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase bg-sky-100 text-sky-900 border border-sky-300 flex items-center gap-1.5 shadow-2xs">
+                        <i class="fa-regular fa-calendar-check text-sky-700 text-[9.5px]"></i>
+                        <span>Posisi per {{ $neraca['tanggalCutoff'] ?? \Carbon\Carbon::now()->translatedFormat('d F Y') }}</span>
+                    </span>
+                    <span class="text-[9px] font-mono font-bold text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
+                        Cut-off: {{ $neraca['jamCutoff'] ?? \Carbon\Carbon::now()->format('H:i') . ' WIB' }}
+                    </span>
+                </div>
+                <h3 class="text-xs sm:text-sm print:text-[8.5px] font-black text-slate-900 mt-1">Neraca Posisi Keuangan (Aktiva vs Pasiva Tambak)</h3>
+                <p class="text-[10px] print:text-[6.5px] text-slate-500 font-medium mt-0.5">
+                    Potret saldo nilai aset riil budidaya (Kas, Piutang Mitra, Aset Biologis Ikan, Stok Gudang &amp; Fasilitas) vs Kewajiban &amp; Ekuitas per <strong>{{ $neraca['tanggalCutoff'] ?? \Carbon\Carbon::now()->translatedFormat('d F Y') }}</strong> (Tahun Buku {{ $neraca['tahunBuku'] ?? $currentYear }})
+                </p>
+            </div>
+            <div class="flex items-center gap-2 self-start sm:self-auto">
+                @if(!empty($neraca['isBalanced']))
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] print:text-[7px] font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                    <i class="fa-solid fa-circle-check text-emerald-600 text-xs"></i>
+                    <span>SEIMBANG (BALANCED)</span>
+                </span>
+                @else
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] print:text-[7px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-600 text-xs"></i>
+                    <span>PERLU PENYESUAIAN</span>
+                </span>
+                @endif
+                <div class="text-right pl-2 border-l border-slate-200">
+                    <span class="text-[8px] uppercase tracking-wider text-slate-400 block font-extrabold">TOTAL ASET</span>
+                    <span class="text-xs font-black text-[#0B2570]">{{ $neraca['totalAktivaFormatted'] ?? 'Rp 0' }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-3.5 sm:p-4 print:p-2">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 print:gap-2">
+
+                <!-- SISI KIRI: AKTIVA (ASSETS) -->
+                <div class="rounded-xl border border-sky-100 bg-sky-50/20 p-3 sm:p-3.5 print:p-1.5 space-y-3">
+                    <div class="flex items-center justify-between border-b border-sky-200/70 pb-2">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-lg bg-[#0B2570] text-white flex items-center justify-center text-xs">
+                                <i class="fa-solid fa-vault"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-black text-slate-900 uppercase tracking-wide">AKTIVA (ASSETS)</h4>
+                                <span class="text-[9px] text-slate-400 font-semibold">Seluruh sumber daya ekonomi tambak</span>
+                            </div>
+                        </div>
+                        <span class="text-[10px] font-mono font-bold text-sky-800 bg-sky-100/70 px-2 py-0.5 rounded">Sisi Debit</span>
+                    </div>
+
+                    <!-- Kategori 1: Aktiva Lancar -->
+                    <div class="space-y-1.5">
+                        <div class="flex items-center justify-between text-[10px] font-extrabold uppercase tracking-wider text-sky-950 px-1">
+                            <span>1. AKTIVA LANCAR (CURRENT ASSETS)</span>
+                            <span class="font-mono text-[#0B2570]">{{ $neraca['totalAktivaLancarFormatted'] ?? 'Rp 0' }}</span>
+                        </div>
+                        <div class="bg-white rounded-lg border border-slate-200/90 divide-y divide-slate-100 text-xs">
+                            <div class="p-2 flex items-center justify-between">
+                                <div class="space-y-0.5">
+                                    <div class="font-bold text-slate-800 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-money-bill-wave text-emerald-600 text-[11px]"></i>
+                                        <span>Kas &amp; Setara Kas Operasional</span>
+                                    </div>
+                                    <span class="text-[9px] text-slate-400 block">Saldo riil di tangan dari realisasi penerimaan panen</span>
+                                </div>
+                                <span class="font-black text-slate-900 font-mono text-xs">{{ $neraca['kasRiilFormatted'] ?? 'Rp 0' }}</span>
+                            </div>
+
+                            <div class="p-2 flex items-center justify-between bg-amber-50/30">
+                                <div class="space-y-0.5">
+                                    <div class="font-bold text-slate-800 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-file-invoice-dollar text-amber-600 text-[11px]"></i>
+                                        <span>Piutang Mitra Distribusi (Termin Berjalan)</span>
+                                    </div>
+                                    <span class="text-[9px] text-slate-400 block">Tagihan tempo mitra aktif diluar potongan klaim susut</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="font-black text-amber-900 font-mono text-xs">{{ $neraca['piutangMitraFormatted'] ?? 'Rp 0' }}</span>
+                                    <span class="text-[8.5px] text-amber-700 block font-semibold">Terkontrol Termin</span>
+                                </div>
+                            </div>
+
+                            <div class="p-2 flex items-center justify-between">
+                                <div class="space-y-0.5">
+                                    <div class="font-bold text-slate-800 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-fish text-sky-600 text-[11px]"></i>
+                                        <span>Persediaan Ikan Hidup (Aset Biologis)</span>
+                                    </div>
+                                    <span class="text-[9px] text-slate-400 block">Biomassa di kolam aktif dikalikan HPP budidaya</span>
+                                </div>
+                                <span class="font-black text-slate-900 font-mono text-xs">{{ $neraca['persediaanIkanFormatted'] ?? 'Rp 0' }}</span>
+                            </div>
+
+                            <div class="p-2 flex items-center justify-between">
+                                <div class="space-y-0.5">
+                                    <div class="font-bold text-slate-800 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-warehouse text-indigo-600 text-[11px]"></i>
+                                        <span>Persediaan Gudang (Pakan &amp; Saprotan)</span>
+                                    </div>
+                                    <span class="text-[9px] text-slate-400 block">Nilai fisik stok pelet pakan + obat &amp; bahan kimia gudang</span>
+                                </div>
+                                <span class="font-black text-slate-900 font-mono text-xs">{{ $neraca['persediaanGudangFormatted'] ?? 'Rp 0' }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kategori 2: Aktiva Tetap -->
+                    <div class="space-y-1.5 pt-1">
+                        <div class="flex items-center justify-between text-[10px] font-extrabold uppercase tracking-wider text-sky-950 px-1">
+                            <span>2. AKTIVA TETAP BERSIH (NET FIXED ASSETS)</span>
+                            <span class="font-mono text-[#0B2570]">{{ $neraca['totalAktivaTetapFormatted'] ?? 'Rp 0' }}</span>
+                        </div>
+                        <div class="bg-white rounded-lg border border-slate-200/90 divide-y divide-slate-100 text-xs">
+                            <div class="p-2 flex items-center justify-between">
+                                <div class="space-y-0.5">
+                                    <div class="font-bold text-slate-800 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-water text-sky-700 text-[11px]"></i>
+                                        <span>Fasilitas Fisik Kolam Budidaya</span>
+                                    </div>
+                                    <span class="text-[9px] text-slate-400 block">Biaya perolehan: {{ $neraca['nilaiKolamGrossFormatted'] ?? 'Rp 0' }} (Masa manfaat 4 thn)</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="font-black text-slate-900 font-mono text-xs">{{ $neraca['nilaiKolamFormatted'] ?? 'Rp 0' }}</span>
+                                    <span class="text-[8.5px] text-slate-400 block font-medium">Nilai Buku</span>
+                                </div>
+                            </div>
+
+                            <div class="p-2 flex items-center justify-between">
+                                <div class="space-y-0.5">
+                                    <div class="font-bold text-slate-800 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-gears text-slate-600 text-[11px]"></i>
+                                        <span>Peralatan Tambak, Pompa &amp; Aerasi</span>
+                                    </div>
+                                    <span class="text-[9px] text-slate-400 block">Biaya perolehan: {{ $neraca['nilaiPeralatanGrossFormatted'] ?? 'Rp 0' }} (Masa manfaat 3 thn)</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="font-black text-slate-900 font-mono text-xs">{{ $neraca['nilaiPeralatanFormatted'] ?? 'Rp 0' }}</span>
+                                    <span class="text-[8.5px] text-slate-400 block font-medium">Nilai Buku</span>
+                                </div>
+                            </div>
+
+                            <!-- Baris Kontra-Aktiva: Akumulasi Penyusutan -->
+                            <div class="p-2 flex items-center justify-between bg-rose-50/40">
+                                <div class="space-y-0.5">
+                                    <div class="font-bold text-rose-700 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-arrow-trend-down text-rose-500 text-[11px]"></i>
+                                        <span>Akumulasi Penyusutan Aset Tetap</span>
+                                    </div>
+                                    <span class="text-[9px] text-slate-500 block">Garis lurus (Kolam 4 thn &amp; Alat 3 thn) selama {{ $neraca['umurOperasionalBulan'] ?? '3.5' }} bulan</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="font-black text-rose-600 font-mono text-xs">- {{ $neraca['totalAkumulasiPenyusutanFormatted'] ?? 'Rp 0' }}</span>
+                                    <span class="text-[8.5px] text-rose-500 block font-semibold">Kontra-Aktiva</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Box Total Aktiva -->
+                    <div class="p-2.5 rounded-xl bg-[#0B2570] text-white flex items-center justify-between shadow-xs">
+                        <div>
+                            <span class="text-[9px] font-extrabold uppercase tracking-widest text-sky-200 block">TOTAL AKTIVA (ASSETS)</span>
+                            <span class="text-[9px] text-sky-300 font-medium">Aktiva Lancar + Aktiva Tetap</span>
+                        </div>
+                        <span class="text-sm font-black font-mono tracking-tight">{{ $neraca['totalAktivaFormatted'] ?? 'Rp 0' }}</span>
+                    </div>
+                </div>
+
+                <!-- SISI KANAN: PASIVA (LIABILITIES & EQUITY) -->
+                <div class="rounded-xl border border-emerald-100 bg-emerald-50/20 p-3 sm:p-3.5 print:p-1.5 space-y-3">
+                    <div class="flex items-center justify-between border-b border-emerald-200/70 pb-2">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-lg bg-emerald-700 text-white flex items-center justify-center text-xs">
+                                <i class="fa-solid fa-scale-balanced"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-black text-slate-900 uppercase tracking-wide">PASIVA (KEWAJIBAN &amp; EKUITAS)</h4>
+                                <span class="text-[9px] text-slate-400 font-semibold">Sumber pendanaan modal dan proteksi risiko</span>
+                            </div>
+                        </div>
+                        <span class="text-[10px] font-mono font-bold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded">Sisi Kredit</span>
+                    </div>
+
+                    <!-- Kategori 1: Kewajiban / Liabilitas -->
+                    <div class="space-y-1.5">
+                        <div class="flex items-center justify-between text-[10px] font-extrabold uppercase tracking-wider text-emerald-950 px-1">
+                            <span>1. KEWAJIBAN (LIABILITIES)</span>
+                            <span class="font-mono text-emerald-800">{{ $neraca['totalKewajibanFormatted'] ?? 'Rp 0' }}</span>
+                        </div>
+                        <div class="bg-white rounded-lg border border-slate-200/90 divide-y divide-slate-100 text-xs">
+                            <div class="p-2 flex items-center justify-between bg-rose-50/30">
+                                <div class="space-y-0.5">
+                                    <div class="font-bold text-slate-800 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-shield-virus text-rose-600 text-[11px]"></i>
+                                        <span>Cadangan Proteksi Klaim Susut DDP</span>
+                                    </div>
+                                    <span class="text-[9px] text-slate-400 block">Total potongan klaim susut &amp; mortalitas mitra diluar toleransi</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="font-black text-rose-900 font-mono text-xs">{{ $neraca['cadanganKlaimSusutFormatted'] ?? 'Rp 0' }}</span>
+                                    <span class="text-[8.5px] text-rose-600 block font-semibold">Proteksi Risiko</span>
+                                </div>
+                            </div>
+
+                            <div class="p-2 flex items-center justify-between">
+                                <div class="space-y-0.5">
+                                    <div class="font-bold text-slate-800 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-hand-holding-dollar text-slate-500 text-[11px]"></i>
+                                        <span>Hutang Supplier Pakan / Benih</span>
+                                    </div>
+                                    <span class="text-[9px] text-slate-400 block">Kewajiban pembelian bahan belum tertagih</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="font-black text-slate-900 font-mono text-xs">Rp 0</span>
+                                    <span class="text-[8.5px] text-emerald-600 block font-semibold">Nihil / Lancar</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kategori 2: Ekuitas / Modal -->
+                    <div class="space-y-1.5 pt-1">
+                        <div class="flex items-center justify-between text-[10px] font-extrabold uppercase tracking-wider text-emerald-950 px-1">
+                            <span>2. EKUITAS (EQUITY)</span>
+                            <span class="font-mono text-emerald-800">{{ $neraca['totalEkuitasFormatted'] ?? 'Rp 0' }}</span>
+                        </div>
+                        <div class="bg-white rounded-lg border border-slate-200/90 divide-y divide-slate-100 text-xs">
+                            <div class="p-2 flex items-center justify-between">
+                                <div class="space-y-0.5">
+                                    <div class="font-bold text-slate-800 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-landmark text-sky-700 text-[11px]"></i>
+                                        <span>Modal Awal Disetor Pemilik</span>
+                                    </div>
+                                    <span class="text-[9px] text-slate-400 block">Penyertaan modal pokok pendirian &amp; investasi awal budidaya</span>
+                                </div>
+                                <span class="font-black text-slate-900 font-mono text-xs">{{ $neraca['modalAwalFormatted'] ?? 'Rp 0' }}</span>
+                            </div>
+
+                            <div class="p-2 flex items-center justify-between bg-emerald-50/30">
+                                <div class="space-y-0.5">
+                                    <div class="font-bold text-slate-800 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-chart-line text-emerald-600 text-[11px]"></i>
+                                        <span>Laba Ditahan (Akumulasi Surplus Usaha)</span>
+                                    </div>
+                                    <span class="text-[9px] text-slate-400 block">Akumulasi laba bersih operasional tambak &amp; distribusi</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="font-black text-emerald-900 font-mono text-xs">{{ $neraca['labaDitahanFormatted'] ?? 'Rp 0' }}</span>
+                                    <span class="text-[8.5px] text-emerald-700 block font-semibold">Surplus Bertumbuh</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Box Total Pasiva -->
+                    <div class="p-2.5 rounded-xl bg-emerald-800 text-white flex items-center justify-between shadow-xs">
+                        <div>
+                            <span class="text-[9px] font-extrabold uppercase tracking-widest text-emerald-200 block">TOTAL PASIVA (LIABILITIES &amp; EQUITY)</span>
+                            <span class="text-[9px] text-emerald-300 font-medium">Kewajiban + Ekuitas Bersih</span>
+                        </div>
+                        <span class="text-sm font-black font-mono tracking-tight">{{ $neraca['totalPasivaFormatted'] ?? 'Rp 0' }}</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
     <!-- PILAR BARU: Analisis Kinerja Laba / Rugi per Kolam & Siklus Batch (Pond & Batch Profitability) -->
     <div class="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden page-break-inside-avoid print:border-slate-300 print:shadow-none print:rounded-lg">
         <div class="px-3.5 py-2.5 print:px-2 print:py-1 border-b border-slate-100 print:border-slate-300 flex items-center justify-between bg-slate-50/60">

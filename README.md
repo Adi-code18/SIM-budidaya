@@ -152,13 +152,20 @@ Menggunakan metode kombinasi antara pelet komersial berprotein tinggi dengan pak
   - Logging pakan harian kombinasi pelet dan dedaunan.
   - Pengurangan stok gudang otomatis secara atomik (*DB Transaction Locking*).
   - Kalkulasi Feed Conversion Ratio (FCR) & benchmark efisiensi.
-- [x] **Workflow Distribusi & Pre-Order**:
+- [x] **Workflow Distribusi, Piutang Mitra & Proteksi Klaim Susut DDP**:
   - Kebijakan Pre-Order masa depan (H+1 s.d. H+14): ikan tetap berada di kolam asal dan diberi makan normal hingga H-1 keberangkatan.
   - Pilihan panen parsial vs kuras total ke kolam penampungan/buffer.
   - Proteksi *feeding lock* (larangan pemberian pakan) otomatis saat ikan berstatus masa puasa / pemberokan.
   - Pencatatan susut bobot & mortalitas tiba di lokasi serah terima (DDP toleransi $\le 2\%$).
-- [x] **Modul Keuangan (Ledger Komprehensif)**:
-  - Pencatatan otomatis pemasukan (penjualan ikan) dan pengeluaran (pakan, bibit, saprotan gudang, aset alat tambak, dan konstruksi kolam).
+  - Sistem Termin Pembayaran Piutang (*Credit Terms* 7 s.d. 30 hari) & batas plafon kredit per distributor.
+  - Otomasi potongan klaim susut timbangan DDP melebihi toleransi dengan pencatatan Cadangan Klaim di sisi Kewajiban Neraca.
+  - Modal Catat Pembayaran Piutang (cicilan/lunas) yang otomatis memposting mutasi kas masuk ke Buku Kas Keuangan.
+- [x] **Modul Keuangan (Executive Balance Sheet & Cash Ledger Terkalibrasi)**:
+  - Pencatatan otomatis pemasukan (penjualan panen, setoran modal disetor, pelunasan piutang) dan pengeluaran (pakan, bibit, saprotan gudang, aset alat tambak, dan konstruksi kolam).
+  - **Executive Balance Sheet (Neraca Posisi Keuangan)**: Aktiva Lancar + Tetap Bersih vs Kewajiban + Ekuitas Modal & Laba Ditahan (100% seimbang secara matematis).
+  - **Akumulasi Penyusutan Aset Tetap Metode Garis Lurus (*Straight-Line*)**: Depresiasi Kolam (48 bulan) dan Mesin/Alat (36 bulan) sebagai Kontra-Aktiva pengurang Nilai Perolehan ke Nilai Buku Bersih (*Net Book Value*).
+  - **Kalibrasi Biaya Pokok Produksi (HPP) & Persediaan Biologis**: Pemisahan belanja modal (*Capex*) dari biaya operasional riil, menghasilkan HPP per Kg standar industri (~Rp 21.500/kg) dan valuasi persediaan ikan hidup yang presisi.
+  - **Buku Kas & Cash Ledger Paginasi Lembar (Anti-Lag UX)**: Pembagian data per lembar (10, 15, 25, 50, Semua baris) dengan navigasi instan dan tampilan bebas potong.
 - [x] **Mobile Web Interface**:
   - Antarmuka mobile untuk petugas pembibitan, pembesaran, dan distribusi.
   - Upload foto bukti sampai distribusi ikan.
@@ -214,6 +221,43 @@ Menggunakan metode kombinasi antara pelet komersial berprotein tinggi dengan pak
    - [x] Ruang kemitraan B2B restoran, hotel, plasma kolam, dan kerjasama permodalan ekspansi unit kolam.
    - [x] Floating WhatsApp widget interaktif di pojok kanan bawah.
    - [x] Pemisahan privasi akses: tombol login internal ditiadakan dari navbar publik (portal staf diakses privat via `/login`).
+
+9. **⚖️ Neraca Posisi Keuangan Eksekutif (Aktiva vs Pasiva) & Depresiasi Garis Lurus**
+   - [x] **Keseimbangan Presisi (Aktiva = Pasiva, Selisih Rp 0)**:
+     - **Aktiva Lancar**: Kas riil likuid operasional, Piutang termin mitra berjalan, Persediaan biologis ikan hidup di kolam aktif, dan Persediaan pakan/saprotan gudang.
+     - **Aktiva Tetap Bersih (*Net Book Value*)**: Nilai perolehan kotor kolam & peralatan mesin dikurangi Akumulasi Penyusutan (*Accumulated Depreciation*).
+     - **Kewajiban**: Cadangan klaim potongan susut timbangan DDP mitra.
+     - **Ekuitas**: Modal disetor awal pemilik/investor + Laba ditahan bersih dari akumulasi operasional.
+   - [x] **Akumulasi Penyusutan Metode Garis Lurus (*Straight-Line*)**:
+     - Fasilitas Fisik Kolam Budidaya disusutkan merata selama **4 Tahun (48 Bulan)**.
+     - Peralatan Tambak, Pompa & Aerasi disusutkan merata selama **3 Tahun (36 Bulan)**.
+     - Dihitung dinamis dan otomatis berdasarkan umur operasional tambak sejak transaksi pertama.
+   - [x] **Kalibrasi Biaya Produksi & HPP Wajar**:
+     - Pemisahan belanja modal (*Capex*) dari biaya operasional harian (*Opex*).
+     - HPP per Kg stabil di rentang standar budidaya air tawar (~Rp 21.500/kg) untuk memvalidasi nilai biomassa hidup secara objektif.
+
+10. **🛡️ Manajemen Risiko Distribusi, Termin Piutang & Proteksi Klaim Susut (DDP)**
+    - [x] **Kontrol Termin Piutang Mitra (*Credit Terms*)**:
+      - Pengaturan batas tempo bayar (Cash On Delivery, 7, 14, hingga 30 hari).
+      - Monitoring batas plafon kredit per mitra distributor dengan visual badge status: *Lunas, Tempo, Menunggak*.
+      - Widget KPI Risiko Piutang di dashboard Distribusi (Total Piutang Berjalan, Piutang Jatuh Tempo, Cadangan Klaim).
+    - [x] **Proteksi Pemotongan Klaim Susut Bobot Timbangan**:
+      - Toleransi standar DDP perikanan $\le 2\%$.
+      - Otomasi pemotongan nilai tagihan akhir jika susut bobot timbangan di lokasi serah terima melebihi ambang batas toleransi.
+      - Alokasi otomatis potongan klaim ke pos kewajiban cadangan klaim neraca keuangan.
+    - [x] **Modal Pelunasan Piutang Terintegrasi Buku Kas**:
+      - Tombol aksi *"Catat Bayar"* langsung dari baris pesanan distribusi untuk menerima cicilan bertahap maupun pelunasan penuh.
+      - Otomatis mencatat jurnal uang masuk ke Buku Kas Keuangan tanpa duplikasi.
+
+11. **📖 Buku Kas Digital & Cash Ledger Paginasi Lembar (Anti-Lag UX)**
+    - [x] **Paginasi Lembar Cerdas (Pagination)**:
+      - Menghilangkan *infinite scroll* berat saat menangani ribuan transaksi kas.
+      - Pilihan ukuran baris: `10`, `15`, `25`, `50`, dan `Semua` entri per lembar.
+      - Navigasi halaman lengkap: *Pertama (`«`), Sebelumnya (`‹`), Angka Halaman Dinamis, Selanjutnya (`›`), Terakhir (`»`), serta Input Lompat Halaman Cepat*.
+    - [x] **Tampilan Ramping Bebas Potong**:
+      - Header toolbar terpadu (Badge jumlah entri kas, pencarian kata kunci instan, filter tipe mutasi debit/kredit, dan selektor baris dalam satu baris horizontal rapat).
+      - Pemadatan teks uraian transaksi (`line-clamp-1` + hover tooltip) menjaga tinggi baris tetap ramping (~42px).
+      - Kompatibilitas cetak (*Print-Friendly*): secara otomatis membuka seluruh data kas saat tombol *"Cetak Buku Kas"* atau print browser ditekan tanpa terpotong batas halaman.
 
 ---
 

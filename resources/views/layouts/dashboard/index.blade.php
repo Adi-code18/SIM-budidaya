@@ -232,32 +232,38 @@
             </div>
         </div>
 
-        <!-- Card 2: FCR Rata-rata (Efisiensi Pakan) -->
-        <div @click="fcrModalOpen = true"
-             class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col justify-between hover:shadow-md hover:border-sky-300 transition-all cursor-pointer relative overflow-hidden group">
+        <!-- Card 2: Total Kolam Aktif -->
+        <a href="{{ route('kolam') }}"
+           class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col justify-between hover:shadow-md hover:border-sky-300 transition-all cursor-pointer relative overflow-hidden group"
+           title="Buka Manajemen Fasilitas Kolam">
             <div>
                 <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">FCR Rata-rata</span>
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-50 text-[#0066CC] border border-sky-100">
-                        Target &lt; 1.2
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Kolam Aktif</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-50 text-[#0066CC] border border-sky-100" x-text="metrics.kolamBadge">
+                        {{ $metrics['kolamBadge'] ?? '100% Siap Operasi' }}
                     </span>
                 </div>
                 <div class="mt-3 flex items-baseline gap-2">
-                    <h3 class="text-2xl lg:text-3xl font-extrabold text-slate-900 tracking-tight" x-text="metrics.fcr">1.12</h3>
-                    <span class="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">Efisien</span>
+                    <h3 class="text-2xl lg:text-3xl font-extrabold text-slate-900 tracking-tight" x-text="metrics.totalKolam">
+                        {{ $metrics['totalKolam'] ?? '6' }}
+                    </h3>
+                    <span class="text-xs font-bold text-slate-500">unit kolam</span>
+                    <span class="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded" x-text="metrics.kolamTerisi + ' Terisi'">
+                        {{ ($metrics['kolamTerisi'] ?? 4) . ' Terisi' }}
+                    </span>
                 </div>
             </div>
 
             <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
                 <div class="flex items-center gap-1.5 text-emerald-600 font-medium truncate">
                     <i class="fa-regular fa-circle-check text-xs"></i>
-                    <span x-text="metrics.fcrStatus">Sesuai SOP Budidaya</span>
+                    <span x-text="metrics.kolamStatus">{{ $metrics['kolamStatus'] ?? '4 Terisi Siklus • 2 Standby' }}</span>
                 </div>
                 <svg class="w-16 h-5 text-[#0066CC]" viewBox="0 0 64 20" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M0 8 Q 20 16, 40 6 T 64 12" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
             </div>
-        </div>
+        </a>
 
         <!-- Card 3: Target Panen Konsumsi -->
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col justify-between hover:shadow-md transition-all relative overflow-hidden group">
@@ -636,7 +642,12 @@
                                 <th class="pb-2.5 font-bold">Kolam &amp; Komoditas</th>
                                 <th class="pb-2.5 font-bold">Tgl Tebar</th>
                                 <th class="pb-2.5 font-bold text-right">Biomassa</th>
-                                <th class="pb-2.5 font-bold text-center">FCR</th>
+                                <th class="pb-2.5 font-bold text-center">
+                                    <span>FCR</span>
+                                    <button type="button" @click="fcrModalOpen = true" class="ml-1 text-sky-500 hover:text-sky-700 transition-colors cursor-pointer" title="Buka Simulator Audit FCR">
+                                        <i class="fa-solid fa-calculator text-[10px]"></i>
+                                    </button>
+                                </th>
                                 <th class="pb-2.5 font-bold text-right">Status</th>
                             </tr>
                         </thead>
@@ -1304,6 +1315,13 @@
             metrics: {
                 totalStok: '{{ $metrics["totalStok"] }}',
                 totalStokTrend: '{{ $metrics["totalStokTrend"] }}',
+                totalKolam: '{{ $metrics["totalKolam"] ?? 6 }}',
+                totalKolamSemua: '{{ $metrics["totalKolamSemua"] ?? 6 }}',
+                kolamTerisi: '{{ $metrics["kolamTerisi"] ?? 4 }}',
+                kolamStandby: '{{ $metrics["kolamStandby"] ?? 2 }}',
+                kolamRatio: '{{ $metrics["kolamRatio"] ?? "4/6 Terisi Siklus" }}',
+                kolamStatus: '{{ $metrics["kolamStatus"] ?? "4 Terisi Siklus • 2 Standby" }}',
+                kolamBadge: '{{ $metrics["kolamBadge"] ?? "100% Siap Operasi" }}',
                 fcr: '{{ $metrics["fcr"] }}',
                 fcrStatus: '{{ $metrics["fcrStatus"] }}',
                 targetPanen: '{{ $metrics["targetPanen"] }}',

@@ -327,19 +327,22 @@
     <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden space-y-0">
         
         <!-- Filter and Search Bar -->
-        <div class="no-print p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="no-print p-4 sm:p-5 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4">
             <div>
-                <h3 class="text-base font-bold text-slate-900">Buku Kas &amp; Mutasi Saldo Berjalan (Cash Ledger)</h3>
-                <p class="text-xs text-slate-400 font-medium">Rekapitulasi kronologis seluruh mutasi debit (masuk), kredit (keluar), dan saldo kas akumulatif.</p>
+                <div class="flex items-center gap-2.5">
+                    <h3 class="text-base font-bold text-slate-900">Buku Kas &amp; Mutasi Saldo Berjalan (Cash Ledger)</h3>
+                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-sky-50 text-sky-700 border border-sky-200" x-text="filteredTransactions.length + ' Entri Kas'"></span>
+                </div>
+                <p class="text-xs text-slate-400 font-medium mt-0.5">Rekapitulasi kronologis seluruh mutasi debit (masuk), kredit (keluar), dan saldo kas akumulatif.</p>
             </div>
 
-            <div class="flex flex-wrap items-center gap-3">
+            <div class="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-2.5 shrink-0">
                 <!-- Search Input -->
-                <div class="relative flex items-center">
-                    <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs absolute left-3.5 pointer-events-none"></i>
+                <div class="relative flex items-center flex-1 sm:flex-initial">
+                    <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs absolute left-3 pointer-events-none"></i>
                     <input type="text" x-model="searchQuery" placeholder="Cari keterangan / ref..." 
-                           style="padding-left: 2.25rem !important;"
-                           class="pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all w-52 sm:w-64">
+                           style="padding-left: 2rem !important;"
+                           class="pl-8 pr-3 py-2 rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all w-full sm:w-52">
                 </div>
 
                 <!-- Type Filter -->
@@ -349,31 +352,35 @@
                     <option value="expense">Kredit (Pengeluaran)</option>
                 </select>
 
-                <!-- Counter Badge -->
-                <div class="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-700">
-                    <i class="fa-solid fa-receipt text-sky-600"></i>
-                    <span x-text="filteredTransactions.length + ' Entri Kas'"></span>
-                </div>
+                <!-- Rows Per Page Selector -->
+                <select x-model="perPage" class="px-2.5 py-2 rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all cursor-pointer">
+                    <option value="10">10 baris</option>
+                    <option value="15">15 baris</option>
+                    <option value="25">25 baris</option>
+                    <option value="50">50 baris</option>
+                    <option value="all">Semua</option>
+                </select>
             </div>
         </div>
 
-        <div class="overflow-x-auto">
+        <!-- Table Container -->
+        <div id="cash-ledger-table-container" class="overflow-x-auto print:overflow-visible">
             <table class="w-full text-left border-collapse print:text-[10px]">
                 <thead>
-                    <tr class="bg-slate-50/70 border-b border-slate-100 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider print:bg-slate-100 print:border-slate-300 print:text-slate-700">
-                        <th class="py-3.5 px-4 print:py-2 print:px-2">TANGGAL</th>
-                        <th class="py-3.5 px-4 print:py-2 print:px-2">NO. REF &amp; URAIAN</th>
-                        <th class="py-3.5 px-4 print:py-2 print:px-2">KATEGORI AKUN</th>
-                        <th class="py-3.5 px-4 print:py-2 print:px-2">KOLAM</th>
-                        <th class="py-3.5 px-4 text-right print:py-2 print:px-2 text-emerald-700">DEBIT (MASUK)</th>
-                        <th class="py-3.5 px-4 text-right print:py-2 print:px-2 text-rose-700">KREDIT (KELUAR)</th>
-                        <th class="py-3.5 px-4 text-right print:py-2 print:px-2 text-[#0B2570]">SALDO BERJALAN</th>
-                        <th class="no-print py-3.5 px-4 text-center">AKSI</th>
+                    <tr class="bg-slate-50/90 border-b border-slate-200 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider print:bg-slate-100 print:border-slate-300 print:text-slate-700">
+                        <th class="py-3 px-4 print:py-2 print:px-2 whitespace-nowrap">TANGGAL</th>
+                        <th class="py-3 px-4 print:py-2 print:px-2 min-w-[260px]">NO. REF &amp; URAIAN</th>
+                        <th class="py-3 px-4 print:py-2 print:px-2 whitespace-nowrap">KATEGORI AKUN</th>
+                        <th class="py-3 px-4 print:py-2 print:px-2 whitespace-nowrap">KOLAM</th>
+                        <th class="py-3 px-4 text-right print:py-2 print:px-2 text-emerald-700 whitespace-nowrap">DEBIT (MASUK)</th>
+                        <th class="py-3 px-4 text-right print:py-2 print:px-2 text-rose-700 whitespace-nowrap">KREDIT (KELUAR)</th>
+                        <th class="py-3 px-4 text-right print:py-2 print:px-2 text-[#0B2570] whitespace-nowrap">SALDO BERJALAN</th>
+                        <th class="no-print py-3 px-4 text-center whitespace-nowrap">AKSI</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-xs font-medium text-slate-700 print:divide-slate-200 print:text-[10px]">
 
-                    <template x-if="filteredTransactions.length === 0">
+                    <template x-if="displayedTransactions.length === 0">
                         <tr>
                             <td colspan="8" class="py-12 text-center text-slate-400 text-xs">
                                 <i class="fa-regular fa-folder-open text-3xl text-slate-300 block mb-2"></i>
@@ -382,41 +389,41 @@
                         </tr>
                     </template>
 
-                    <template x-for="transaction in filteredTransactions" :key="transaction.raw_id || transaction.id">
+                    <template x-for="transaction in displayedTransactions" :key="transaction.raw_id || transaction.id">
                         <tr class="hover:bg-slate-50/70 transition-colors print:hover:bg-transparent">
-                            <td class="py-3.5 px-4 text-slate-500 font-semibold print:py-2 print:px-2 whitespace-nowrap" x-text="transaction.tanggal_format || transaction.tanggal"></td>
-                            <td class="py-3.5 px-4 print:py-2 print:px-2">
-                                <div class="font-bold text-slate-900" x-text="transaction.keterangan || '-'"></div>
+                            <td class="py-2.5 px-4 text-slate-500 font-semibold print:py-1.5 print:px-2 whitespace-nowrap" x-text="transaction.tanggal_format || transaction.tanggal"></td>
+                            <td class="py-2.5 px-4 print:py-1.5 print:px-2 max-w-sm lg:max-w-md">
+                                <div class="font-bold text-slate-900 leading-snug line-clamp-1" :title="transaction.keterangan" x-text="transaction.keterangan || '-'"></div>
                                 <div class="text-[10px] text-slate-400 font-mono font-semibold mt-0.5 print:text-slate-600 flex items-center gap-1.5">
-                                    <span class="w-1.5 h-1.5 rounded-full" :class="transaction.tipe === 'income' ? 'bg-emerald-500' : 'bg-rose-500'"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full shrink-0" :class="transaction.tipe === 'income' ? 'bg-emerald-500' : 'bg-rose-500'"></span>
                                     <span x-text="transaction.ref"></span>
                                 </div>
                             </td>
-                            <td class="py-3.5 px-4 print:py-2 print:px-2">
+                            <td class="py-2.5 px-4 print:py-1.5 print:px-2 whitespace-nowrap">
                                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold print:border whitespace-nowrap"
                                       :class="transaction.tipe === 'income' ? 'bg-[#C6F6D5] text-[#22543D]' : 'bg-[#E0F2FE] text-[#0284C7]'"
                                       x-text="transaction.kategori"></span>
                             </td>
-                            <td class="py-3.5 px-4 text-slate-600 font-semibold print:py-2 print:px-2 whitespace-nowrap" x-text="transaction.kolam || 'Umum'"></td>
+                            <td class="py-2.5 px-4 text-slate-600 font-semibold print:py-1.5 print:px-2 whitespace-nowrap" x-text="transaction.kolam || 'Umum'"></td>
                             
                             <!-- DEBIT -->
-                            <td class="py-3.5 px-4 text-right font-extrabold print:py-2 print:px-2 whitespace-nowrap">
+                            <td class="py-2.5 px-4 text-right font-extrabold print:py-1.5 print:px-2 whitespace-nowrap">
                                 <span class="text-emerald-600 font-mono" x-show="transaction.debit > 0" x-text="formatCurrency(transaction.debit)"></span>
                                 <span class="text-slate-300 font-mono" x-show="!transaction.debit || transaction.debit <= 0">-</span>
                             </td>
 
                             <!-- KREDIT -->
-                            <td class="py-3.5 px-4 text-right font-extrabold print:py-2 print:px-2 whitespace-nowrap">
+                            <td class="py-2.5 px-4 text-right font-extrabold print:py-1.5 print:px-2 whitespace-nowrap">
                                 <span class="text-rose-600 font-mono" x-show="transaction.kredit > 0" x-text="formatCurrency(transaction.kredit)"></span>
                                 <span class="text-slate-300 font-mono" x-show="!transaction.kredit || transaction.kredit <= 0">-</span>
                             </td>
 
                             <!-- SALDO BERJALAN -->
-                            <td class="py-3.5 px-4 text-right font-black print:py-2 print:px-2 text-[#0B2570] font-mono whitespace-nowrap"
+                            <td class="py-2.5 px-4 text-right font-black print:py-1.5 print:px-2 text-[#0B2570] font-mono whitespace-nowrap"
                                 x-text="formatCurrency(transaction.saldo_berjalan)"></td>
 
                             <!-- AKSI -->
-                            <td class="no-print py-3.5 px-4 text-center">
+                            <td class="no-print py-2.5 px-4 text-center whitespace-nowrap">
                                 <div class="inline-block text-left" 
                                      x-data="{ 
                                          open: false, 
@@ -484,6 +491,96 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- Paging / Navigation Controls Footer (no-print) -->
+        <div class="no-print px-5 py-3.5 bg-slate-50/80 border-t border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            
+            <!-- Left Info & Jump to Page -->
+            <div class="flex flex-wrap items-center gap-3 text-slate-600">
+                <span class="font-medium text-slate-600">
+                    Menampilkan <span class="font-bold text-slate-900" x-text="paginationInfo.start"></span> - <span class="font-bold text-slate-900" x-text="paginationInfo.end"></span> dari <span class="font-bold text-[#0B2570]" x-text="filteredTransactions.length"></span> entri kas
+                </span>
+                
+                <template x-if="totalPages > 1">
+                    <div class="flex items-center gap-2 pl-2 border-l border-slate-300">
+                        <span class="text-[11px] text-slate-400 font-semibold">Ke Hal:</span>
+                        <input type="number" 
+                               min="1" 
+                               :max="totalPages" 
+                               :value="currentPage" 
+                               @keydown.enter="goToPage($event.target.value)"
+                               @change="goToPage($event.target.value)"
+                               class="w-12 px-1.5 py-0.5 bg-white border border-slate-200 rounded-md text-center font-bold text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-sky-500">
+                        <span class="text-[11px] text-slate-400 font-semibold" x-text="'/ ' + totalPages"></span>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Right Pagination Buttons -->
+            <div class="flex items-center gap-1.5 self-end sm:self-auto" x-show="totalPages > 1">
+                <!-- First Page Button -->
+                <button type="button" 
+                        @click="goToPage(1)" 
+                        :disabled="currentPage === 1"
+                        :class="currentPage === 1 ? 'opacity-40 cursor-not-allowed bg-slate-100 text-slate-400' : 'bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-900 cursor-pointer shadow-2xs'"
+                        class="w-8 h-8 rounded-lg border border-slate-200 font-bold text-xs transition-colors flex items-center justify-center"
+                        title="Halaman Pertama">
+                    <i class="fa-solid fa-angles-left text-[10px]"></i>
+                </button>
+
+                <!-- Previous Page Button -->
+                <button type="button" 
+                        @click="prevPage()" 
+                        :disabled="currentPage === 1"
+                        :class="currentPage === 1 ? 'opacity-40 cursor-not-allowed bg-slate-100 text-slate-400' : 'bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-900 cursor-pointer shadow-2xs'"
+                        class="h-8 px-2.5 rounded-lg border border-slate-200 font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                        title="Halaman Sebelumnya">
+                    <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                    <span class="hidden md:inline text-[11px]">Sebelumnya</span>
+                </button>
+
+                <!-- Page Number Pills with smart ellipsis -->
+                <div class="flex items-center gap-1">
+                    <template x-for="(page, idx) in paginationRange" :key="idx">
+                        <div>
+                            <template x-if="page === '...'">
+                                <span class="w-8 h-8 flex items-center justify-center text-slate-400 text-xs font-bold">...</span>
+                            </template>
+                            <template x-if="page !== '...'">
+                                <button type="button" 
+                                        @click="goToPage(page)"
+                                        :class="currentPage === page ? 'bg-[#0B2570] text-white border-[#0B2570] shadow-xs' : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs'"
+                                        class="w-8 h-8 rounded-lg border text-xs font-bold transition-all flex items-center justify-center cursor-pointer"
+                                        x-text="page">
+                                </button>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Next Page Button -->
+                <button type="button" 
+                        @click="nextPage()" 
+                        :disabled="currentPage >= totalPages"
+                        :class="currentPage >= totalPages ? 'opacity-40 cursor-not-allowed bg-slate-100 text-slate-400' : 'bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-900 cursor-pointer shadow-2xs'"
+                        class="h-8 px-2.5 rounded-lg border border-slate-200 font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                        title="Halaman Selanjutnya">
+                    <span class="hidden md:inline text-[11px]">Selanjutnya</span>
+                    <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                </button>
+
+                <!-- Last Page Button -->
+                <button type="button" 
+                        @click="goToPage(totalPages)" 
+                        :disabled="currentPage >= totalPages"
+                        :class="currentPage >= totalPages ? 'opacity-40 cursor-not-allowed bg-slate-100 text-slate-400' : 'bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-900 cursor-pointer shadow-2xs'"
+                        class="w-8 h-8 rounded-lg border border-slate-200 font-bold text-xs transition-colors flex items-center justify-center"
+                        title="Halaman Terakhir">
+                    <i class="fa-solid fa-angles-right text-[10px]"></i>
+                </button>
+            </div>
+
+        </div>
     </div>
 
 </div>
@@ -496,6 +593,9 @@ function transaksiKeuanganComponent() {
         transactions: {!! json_encode($transactions ?? []) !!},
         searchQuery: "",
         filterType: "",
+        perPage: 10,
+        currentPage: 1,
+        isPrinting: false,
         showForm: false,
         formMode: "create", // 'create', 'edit', 'view'
         isLoading: false,
@@ -513,6 +613,15 @@ function transaksiKeuanganComponent() {
             keterangan: ""
         },
 
+        init() {
+            this.$watch('searchQuery', () => { this.currentPage = 1; });
+            this.$watch('filterType', () => { this.currentPage = 1; });
+            this.$watch('perPage', () => { this.currentPage = 1; });
+
+            window.addEventListener('beforeprint', () => { this.isPrinting = true; });
+            window.addEventListener('afterprint', () => { this.isPrinting = false; });
+        },
+
         get filteredTransactions() {
             let list = this.transactions;
             if (this.filterType) {
@@ -528,6 +637,87 @@ function transaksiKeuanganComponent() {
                 );
             }
             return list;
+        },
+
+        get totalPages() {
+            if (this.perPage === 'all') return 1;
+            const count = this.filteredTransactions.length;
+            const size = Number(this.perPage) || 25;
+            return Math.ceil(count / size) || 1;
+        },
+
+        get displayedTransactions() {
+            if (this.isPrinting || this.perPage === 'all') {
+                return this.filteredTransactions;
+            }
+            const size = Number(this.perPage) || 25;
+            const start = (this.currentPage - 1) * size;
+            return this.filteredTransactions.slice(start, start + size);
+        },
+
+        get paginationInfo() {
+            const total = this.filteredTransactions.length;
+            if (total === 0) return { start: 0, end: 0, total: 0 };
+            if (this.perPage === 'all') return { start: 1, end: total, total: total };
+            const size = Number(this.perPage) || 25;
+            const start = (this.currentPage - 1) * size + 1;
+            const end = Math.min(start + size - 1, total);
+            return { start, end, total };
+        },
+
+        get paginationRange() {
+            const total = this.totalPages;
+            const current = this.currentPage;
+            if (total <= 7) {
+                return Array.from({ length: total }, (_, i) => i + 1);
+            }
+            const delta = 1;
+            const range = [];
+            const rangeWithDots = [];
+            let l;
+
+            for (let i = 1; i <= total; i++) {
+                if (i === 1 || i === total || (i >= current - delta && i <= current + delta)) {
+                    range.push(i);
+                }
+            }
+
+            for (let i of range) {
+                if (l) {
+                    if (i - l === 2) {
+                        rangeWithDots.push(l + 1);
+                    } else if (i - l !== 1) {
+                        rangeWithDots.push('...');
+                    }
+                }
+                rangeWithDots.push(i);
+                l = i;
+            }
+
+            return rangeWithDots;
+        },
+
+        goToPage(page) {
+            if (page === '...') return;
+            const num = parseInt(page, 10);
+            if (isNaN(num)) return;
+            this.currentPage = Math.max(1, Math.min(num, this.totalPages));
+            const container = document.getElementById('cash-ledger-table-container');
+            if (container) {
+                container.scrollTop = 0;
+            }
+        },
+
+        nextPage() {
+            if (this.currentPage < this.totalPages) {
+                this.goToPage(this.currentPage + 1);
+            }
+        },
+
+        prevPage() {
+            if (this.currentPage > 1) {
+                this.goToPage(this.currentPage - 1);
+            }
         },
 
         formatCurrency(num) {

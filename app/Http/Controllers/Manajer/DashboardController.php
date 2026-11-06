@@ -68,6 +68,20 @@ class DashboardController extends Controller
         $activeBatchCount = $activeBatches->where('status_siklus', 'berjalan')->count();
         $totalStokTrend = $activeBatchCount > 0 ? ($activeBatchCount . ' Batch Aktif Terpantau') : 'Stok Kolam Terdata';
 
+        // Metrik Fasilitas Kolam Aktif
+        $totalKolam = Kolam::count();
+        $kolamAktif = Kolam::where('status', 'aktif')->count();
+        $kolamTerisi = Kolam::whereHas('batchPembesaran', function($q) {
+            $q->whereIn('status_siklus', ['aktif', 'berjalan', 'siap_panen']);
+        })->orWhereHas('batchPembibitan', function($q) {
+            $q->where('status', '!=', 'selesai')->where('status', '!=', 'gagal');
+        })->count();
+        $kolamStandby = max(0, $kolamAktif - $kolamTerisi);
+
+        $kolamRatio = $kolamTerisi . '/' . $totalKolam . ' Terisi Siklus';
+        $kolamStatusNote = $kolamTerisi . ' Terisi Siklus • ' . $kolamStandby . ' Standby';
+        $kolamBadge = ($kolamAktif === $totalKolam && $totalKolam > 0) ? '100% Siap Operasi' : ($kolamAktif . '/' . $totalKolam . ' Aktif');
+
         // Get latest active distribution order for target note
         $latestOrder = TransaksiDistribusi::with('mitra')->where('status_order', '!=', 'selesai')->latest('tanggal_order')->first();
         if (!$latestOrder) {
@@ -77,15 +91,22 @@ class DashboardController extends Controller
         $targetTag = $latestOrder ? strtoupper(str_replace('_', ' ', $latestOrder->status_order ?? 'ORDER AKTIF')) : 'ORDER AKTIF';
 
         $metrics = [
-            'totalStok'       => number_format($totalStok, 0, ',', '.'),
-            'totalStokTrend'  => $totalStokTrend,
-            'fcr'             => $avgFcr > 0 ? number_format($avgFcr, 2, '.', '') : '0.00',
-            'fcrStatus'       => $fcrStatus,
-            'targetPanen'     => number_format($targetPanen, 0, ',', '.'),
-            'targetPanenNote' => $targetNote,
-            'targetPanenTag'  => $targetTag,
-            'totalPakan'      => number_format($totalPakan, 0, ',', '.'),
-            'avgPh'           => $avgPh > 0 ? number_format($avgPh, 1, '.', '') : '0.0'
+            'totalStok'          => number_format($totalStok, 0, ',', '.'),
+            'totalStokTrend'     => $totalStokTrend,
+            'totalKolam'         => $kolamAktif,
+            'totalKolamSemua'    => $totalKolam,
+            'kolamTerisi'        => $kolamTerisi,
+            'kolamStandby'       => $kolamStandby,
+            'kolamRatio'         => $kolamRatio,
+            'kolamStatus'        => $kolamStatusNote,
+            'kolamBadge'         => $kolamBadge,
+            'fcr'                => $avgFcr > 0 ? number_format($avgFcr, 2, '.', '') : '0.00',
+            'fcrStatus'          => $fcrStatus,
+            'targetPanen'        => number_format($targetPanen, 0, ',', '.'),
+            'targetPanenNote'    => $targetNote,
+            'targetPanenTag'     => $targetTag,
+            'totalPakan'         => number_format($totalPakan, 0, ',', '.'),
+            'avgPh'              => $avgPh > 0 ? number_format($avgPh, 1, '.', '') : '0.0'
         ];
 
         // 2. Daftar Titik Koordinat Mitra Distributor untuk Leaflet Map

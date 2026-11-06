@@ -63,6 +63,22 @@ class DistribusiController extends Controller
                 'mortalitas_antar_kg' => (float) ($t->mortalitas_antar_kg ?? 0),
                 'persentase_susut'  => (float) $t->persentase_susut,
                 'is_ddp_aman'       => (bool) $t->is_ddp_aman,
+                'toleransi_susut_persen'    => (float) ($t->toleransi_susut_persen ?? 2.0),
+                'susut_diluar_toleransi_kg' => (float) ($t->susut_diluar_toleransi_kg ?? 0),
+                'potongan_klaim_rp'         => (float) ($t->potongan_klaim_rp ?? 0),
+                'potongan_klaim_format'     => 'Rp ' . number_format($t->potongan_klaim_rp ?? 0, 0, ',', '.'),
+                'total_tagihan_akhir'       => (float) ($t->tagihan_riil),
+                'total_tagihan_format'      => 'Rp ' . number_format($t->tagihan_riil, 0, ',', '.'),
+                'metode_pembayaran'         => $t->metode_pembayaran ?? 'tunai',
+                'status_pembayaran'         => $t->status_pembayaran ?? 'lunas',
+                'termin_hari'               => (int) ($t->termin_hari ?? 0),
+                'tgl_jatuh_tempo'           => $t->tgl_jatuh_tempo ? Carbon::parse($t->tgl_jatuh_tempo)->toDateString() : null,
+                'jumlah_terbayar'           => (float) ($t->jumlah_terbayar ?? 0),
+                'jumlah_terbayar_format'    => 'Rp ' . number_format($t->jumlah_terbayar ?? 0, 0, ',', '.'),
+                'sisa_piutang'              => (float) $t->sisa_piutang,
+                'sisa_piutang_format'       => 'Rp ' . number_format($t->sisa_piutang, 0, ',', '.'),
+                'is_jatuh_tempo'            => (bool) $t->is_jatuh_tempo,
+                'catatan_klaim'             => $t->catatan_klaim ?? '',
                 'is_preorder'       => (bool) ($t->tgl_rencana_kirim && Carbon::parse($t->tgl_rencana_kirim)->isFuture()),
                 'bukti_sampai'   => $t->Bukti_sampai,
                 'bukti_foto_url' => $t->bukti_sampai_url,
@@ -74,11 +90,15 @@ class DistribusiController extends Controller
 
         $mitraList = $mitraRecords->map(function ($m) {
             return [
-                'id_mitra'   => $m->id_mitra,
-                'nama_mitra' => $m->nama_mitra,
-                'tipe_mitra' => $m->tipe_mitra,
-                'alamat'     => $m->alamat,
-                'label'      => 'MTR-' . str_pad($m->id_mitra, 3, '0', STR_PAD_LEFT) . ' — ' . $m->nama_mitra . ' (' . $m->tipe_mitra . ')',
+                'id_mitra'               => $m->id_mitra,
+                'nama_mitra'             => $m->nama_mitra,
+                'tipe_mitra'             => $m->tipe_mitra,
+                'alamat'                 => $m->alamat,
+                'plafon_kredit'          => (float) ($m->plafon_kredit ?? 20000000),
+                'termin_default_hari'    => (int) ($m->termin_default_hari ?? 14),
+                'total_piutang_berjalan' => (float) $m->total_piutang_berjalan,
+                'sisa_plafon'            => (float) $m->sisa_plafon,
+                'label'                  => 'MTR-' . str_pad($m->id_mitra, 3, '0', STR_PAD_LEFT) . ' — ' . $m->nama_mitra . ' (' . $m->tipe_mitra . ')',
             ];
         });
 
@@ -141,6 +161,19 @@ class DistribusiController extends Controller
         $totalBufferPemberokan = (float) TransaksiDistribusi::whereIn('status_order', ['dalam_pengiriman', 'pemberokian', 'siap_kirim'])
             ->sum('Total_kg');
 
+        // Metrik Keuangan Risiko Distribusi (Piutang & Klaim Susut DDP)
+        $totalPiutangBerjalan = (float) TransaksiDistribusi::whereIn('status_pembayaran', ['tempo', 'menunggak', 'sebagian'])
+            ->get()->sum(fn($t) => $t->sisa_piutang);
+
+        $totalKlaimSusutRp = (float) TransaksiDistribusi::sum('potongan_klaim_rp');
+
+        $orderMenunggakCount = TransaksiDistribusi::where('status_pembayaran', 'menunggak')
+            ->orWhere(function($q) {
+                $q->whereIn('status_pembayaran', ['tempo', 'sebagian'])
+                  ->whereNotNull('tgl_jatuh_tempo')
+                  ->whereDate('tgl_jatuh_tempo', '<', now()->toDateString());
+            })->count();
+
         return view('layouts.distribusi.index', compact(
             'orders', 
             'mitraList', 
@@ -149,7 +182,10 @@ class DistribusiController extends Controller
             'stockPonds',
             'emptyAndStockPonds',
             'totalStokSiapPanen',
-            'totalBufferPemberokan'
+            'totalBufferPemberokan',
+            'totalPiutangBerjalan',
+            'totalKlaimSusutRp',
+            'orderMenunggakCount'
         ));
     }
 
@@ -238,6 +274,11 @@ class DistribusiController extends Controller
             'susut_bobot_kg'           => 0,
             'mortalitas_antar_kg'      => 0,
             'harga_total'              => $hargaTotal,
+            'metode_pembayaran'        => $request->metode_pembayaran ?: 'tunai',
+            'termin_hari'              => (int) ($request->termin_hari ?: 0),
+            'tgl_jatuh_tempo'          => ($request->metode_pembayaran === 'tempo') ? Carbon::parse($tglOrder)->addDays((int) ($request->termin_hari ?: 14))->toDateString() : null,
+            'toleransi_susut_persen'   => (float) ($request->toleransi_susut_persen ?: 2.0),
+            'jumlah_terbayar'          => (float) ($request->jumlah_terbayar ?: 0),
             'status_order'             => $status,
             'waktu_mulai_pemberokan'   => $waktuMulaiPemberokan,
             'waktu_selesai_pemberokan' => $waktuSelesaiPemberokan,
@@ -246,6 +287,9 @@ class DistribusiController extends Controller
             'catatan_grading'          => $request->catatan_grading,
             'Jenis_order'              => $jenisOrder,
         ]);
+
+        $transaksi->recalculateKlaimSusut();
+        $transaksi->save();
 
         AuditLog::record(
             'tambah_order',
@@ -355,6 +399,29 @@ class DistribusiController extends Controller
         if ($request->filled('mortalitas_antar_kg')) {
             $transaksi->mortalitas_antar_kg = (float) $request->mortalitas_antar_kg;
         }
+        if ($request->filled('metode_pembayaran')) {
+            $transaksi->metode_pembayaran = $request->metode_pembayaran;
+        }
+        if ($request->filled('termin_hari')) {
+            $transaksi->termin_hari = (int) $request->termin_hari;
+            if ($transaksi->metode_pembayaran === 'tempo' && $transaksi->tanggal_order) {
+                $transaksi->tgl_jatuh_tempo = Carbon::parse($transaksi->tanggal_order)->addDays((int)$request->termin_hari)->toDateString();
+            }
+        }
+        if ($request->filled('toleransi_susut_persen')) {
+            $transaksi->toleransi_susut_persen = (float) $request->toleransi_susut_persen;
+        }
+        if ($request->filled('jumlah_terbayar')) {
+            $transaksi->jumlah_terbayar = (float) $request->jumlah_terbayar;
+        }
+        if ($request->filled('status_pembayaran')) {
+            $transaksi->status_pembayaran = $request->status_pembayaran;
+        }
+        if ($request->filled('catatan_klaim')) {
+            $transaksi->catatan_klaim = $request->catatan_klaim;
+        }
+
+        $transaksi->recalculateKlaimSusut();
 
         if (in_array($newStatus, ['pemberokan', 'pemberokian']) && !$transaksi->waktu_mulai_pemberokan) {
             $durasi = $transaksi->durasi_pemberokan_jam ?: 18;
@@ -411,18 +478,107 @@ class DistribusiController extends Controller
         $totalKgFormatted = number_format($transaksi->Total_kg, 1, ',', '.');
         $statusLabel = strtoupper(str_replace('_', ' ', $transaksi->status_order ?? 'Siap Kirim'));
 
-        Keuangan::updateOrCreate(
-            ['ref_id' => $orderRef],
-            [
-                'id_user'           => Auth::id() ?? 1,
-                'id_kolam'          => $idKolam,
-                'tanggal_transaksi' => $transaksi->tanggal_order ? Carbon::parse($transaksi->tanggal_order)->toDateString() : Carbon::today()->toDateString(),
-                'tipe_transaksi'    => 'pemasukan',
-                'kategori'          => 'Penjualan Panen ' . $species,
-                'nominal'           => (float) $transaksi->harga_total,
-                'keterangan'        => "Pelunasan transaksi #{$orderRef} ({$totalKgFormatted} kg {$species}) oleh {$mitraNama} [Status: {$statusLabel}]",
-            ]
+        // Jika status pembayaran LUNAS: catat total tagihan bersih (setelah potongan klaim susut!)
+        if ($transaksi->status_pembayaran === 'lunas') {
+            $nominalKas = $transaksi->tagihan_riil;
+            $ket = "Pelunasan transaksi #{$orderRef} ({$totalKgFormatted} kg {$species}) oleh {$mitraNama} [Status: {$statusLabel}]";
+            if ($transaksi->potongan_klaim_rp > 0) {
+                $ket .= " (Dipotong Klaim Susut DDP Rp " . number_format($transaksi->potongan_klaim_rp, 0, ',', '.') . ")";
+            }
+
+            Keuangan::updateOrCreate(
+                ['ref_id' => $orderRef],
+                [
+                    'id_user'           => Auth::id() ?? 1,
+                    'id_kolam'          => $idKolam,
+                    'tanggal_transaksi' => $transaksi->tanggal_order ? Carbon::parse($transaksi->tanggal_order)->toDateString() : Carbon::today()->toDateString(),
+                    'tipe_transaksi'    => 'pemasukan',
+                    'kategori'          => 'Penjualan Panen ' . $species,
+                    'nominal'           => (float) $nominalKas,
+                    'keterangan'        => $ket,
+                ]
+            );
+        } elseif ($transaksi->jumlah_terbayar > 0) {
+            // Jika tempo tapi ada DP/pembayaran sebagian
+            Keuangan::updateOrCreate(
+                ['ref_id' => $orderRef],
+                [
+                    'id_user'           => Auth::id() ?? 1,
+                    'id_kolam'          => $idKolam,
+                    'tanggal_transaksi' => $transaksi->tanggal_order ? Carbon::parse($transaksi->tanggal_order)->toDateString() : Carbon::today()->toDateString(),
+                    'tipe_transaksi'    => 'pemasukan',
+                    'kategori'          => 'Penjualan Panen (DP/Sebagian) ' . $species,
+                    'nominal'           => (float) $transaksi->jumlah_terbayar,
+                    'keterangan'        => "Pembayaran uang muka/sebagian transaksi #{$orderRef} oleh {$mitraNama} [Sisa Piutang: Rp " . number_format($transaksi->sisa_piutang, 0, ',', '.') . "]",
+                ]
+            );
+        } else {
+            // Belum ada uang masuk sama sekali (100% piutang tempo): hapus entri kas jika sebelumnya pernah tercatat
+            Keuangan::where('ref_id', $orderRef)->delete();
+        }
+    }
+
+    /**
+     * Catat Pelunasan atau Cicilan Pembayaran Piutang Order Distribusi
+     */
+    public function bayarPiutang(Request $request, $id)
+    {
+        $cleanId = is_numeric($id) ? $id : (int) preg_replace('/[^0-9]/', '', $id);
+        $transaksi = TransaksiDistribusi::with(['mitra', 'batchPembesaran'])->findOrFail($cleanId);
+
+        if (!$request->filled('nominal_bayar') && $request->filled('jumlah_bayar')) {
+            $request->merge(['nominal_bayar' => $request->jumlah_bayar]);
+        }
+
+        $request->validate([
+            'nominal_bayar' => 'required|numeric|min:1',
+            'tanggal_bayar' => 'nullable|date',
+            'catatan'       => 'nullable|string'
+        ]);
+
+        $nominalBayar = (float) $request->nominal_bayar;
+        $transaksi->jumlah_terbayar = (float)$transaksi->jumlah_terbayar + $nominalBayar;
+        $tagihanRiil = $transaksi->tagihan_riil;
+
+        if ($transaksi->jumlah_terbayar >= $tagihanRiil) {
+            $transaksi->status_pembayaran = 'lunas';
+            $transaksi->tgl_lunas = $request->tanggal_bayar ?: now()->toDateString();
+        } else {
+            $transaksi->status_pembayaran = 'sebagian';
+        }
+        $transaksi->save();
+
+        // Catat kas masuk ke Keuangan
+        $paymentRef = 'PAY-' . str_pad($transaksi->id_transaksi, 4, '0', STR_PAD_LEFT) . '-' . time();
+        $species = $transaksi->batchPembesaran ? $transaksi->batchPembesaran->jenis_ikan : ($transaksi->Jenis_order ?? 'Ikan Segar');
+        $mitraNama = $transaksi->mitra ? $transaksi->mitra->nama_mitra : ('Mitra #' . $transaksi->id_mitra);
+
+        Keuangan::create([
+            'id_user'           => Auth::id() ?? 1,
+            'id_kolam'          => $transaksi->batchPembesaran ? $transaksi->batchPembesaran->id_kolam : null,
+            'tanggal_transaksi' => $request->tanggal_bayar ?: now()->toDateString(),
+            'tipe_transaksi'    => 'pemasukan',
+            'kategori'          => 'Pelunasan Piutang Panen ' . $species,
+            'nominal'           => $nominalBayar,
+            'keterangan'        => "Pembayaran piutang #SJ-{$transaksi->no_surat_jalan} ({$mitraNama}) senilai Rp " . number_format($nominalBayar, 0, ',', '.') . ($request->catatan ? " - {$request->catatan}" : "") . " [Sisa: Rp " . number_format($transaksi->sisa_piutang, 0, ',', '.') . "]",
+            'ref_id'            => $paymentRef,
+        ]);
+
+        AuditLog::record(
+            'bayar_piutang',
+            'keuangan',
+            "Mencatat pelunasan piutang #SJ-{$transaksi->no_surat_jalan} dari {$mitraNama} senilai Rp " . number_format($nominalBayar, 0, ',', '.') . " [Status: " . strtoupper($transaksi->status_pembayaran) . "]"
         );
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Pembayaran piutang Rp ' . number_format($nominalBayar, 0, ',', '.') . ' berhasil dibukukan ke Keuangan!',
+                'transaksi' => $transaksi
+            ]);
+        }
+
+        return redirect()->route('distribusi')->with('success', 'Pembayaran piutang berhasil dibukukan ke Keuangan!');
     }
 
     /**

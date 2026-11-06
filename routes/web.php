@@ -136,6 +136,7 @@ Route::middleware(['auth', 'role:manajer'])->group(function () {
     Route::get('/distribusi', [DistribusiController::class, 'index'])->name('distribusi');
     Route::post('/distribusi', [DistribusiController::class, 'store'])->name('distribusi.store');
     Route::put('/distribusi/{id}', [DistribusiController::class, 'update'])->name('distribusi.update');
+    Route::post('/distribusi/{id}/bayar', [DistribusiController::class, 'bayarPiutang'])->name('distribusi.bayar');
     Route::delete('/distribusi/{id}', [DistribusiController::class, 'destroy'])->name('distribusi.destroy');
     Route::get('/distribusi/export-pdf', [DistribusiController::class, 'exportRekapPdf'])->name('distribusi.export-pdf');
 
