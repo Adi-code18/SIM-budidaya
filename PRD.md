@@ -199,16 +199,49 @@ flowchart TD
   - Kolam/ikan yang berstatus pemberokan otomatis dilindungi dari pencatatan pemberian pakan harian (*feeding lock*).
 - **Verifikasi Serah Terima DDP & Toleransi Susut Transportasi:**
   - Sesuai standar DDP (*Delivery Duty Paid*), pengantaran mencatat bobot aktual diterima serta mortalitas perjalanan (kg / ekor).
-  - Toleransi mortalitas $\le 2\%$ ditanggung oleh perusahaan sebagai susut logistik wajar; jika $> 2\%$, sistem memicu evaluasi armada/packing.
+  - Toleransi mortalitas & susut $\le 2\%$ ditanggung oleh perusahaan sebagai susut logistik wajar; jika $> 2\%$, sistem memicu evaluasi armada/packing dan pemotongan klaim.
+- **Manajemen Termin Piutang Mitra (*Credit Terms*) & Batas Plafon:**
+  - Pilihan metode pembayaran fleksibel: Tunai/Transfer Instan (COD), Termin 7 Hari, 14 Hari, atau 30 Hari.
+  - Tanggal jatuh tempo dihitung otomatis berdasarkan tanggal order dan termin yang disepakati (`tgl_jatuh_tempo = tanggal_order + termin_hari`).
+  - Monitoring batas plafon kredit per mitra distributor (`limit_piutang_rp`) guna mencegah *over-leverage* atau tunggakan distributor yang melebihi kapasitas modal kerja.
+  - Visual status pembayaran: *Lunas*, *Tempo* (masih dalam tenggat wajar), dan *Menunggak* (melewati jatuh tempo).
+- **Proteksi Pemotongan Klaim Susut Bobot Timbangan (DDP):**
+  - Pada pengiriman berbasis DDP (*Delivery Duty Paid*), timbangan di lokasi serah terima pembeli menjadi acuan akhir. Toleransi susut wajar ditetapkan $\le 2\%$.
+  - Jika susut bobot timbangan melebihi toleransi ($> 2\%$), sistem secara otomatis menghitung selisih kg di luar toleransi dan memotong nilai tagihan akhir (`potongan_klaim_rp = susut_diluar_toleransi_kg * harga_per_kg`).
+  - Pemotongan klaim ini secara otomatis dialokasikan ke pos **Kewajiban Cadangan Klaim Susut** pada Neraca Keuangan.
+- **Modal Pencatatan Pelunasan Piutang Terintegrasi Buku Kas:**
+  - Manajer dapat mencatat pembayaran bertahap (cicilan/DP) maupun pelunasan penuh langsung dari tabel distribusi melalui modal terpadu (`POST /distribusi/{id}/bayar`).
+  - Sistem otomatis menghitung `sisa_piutang`, memperbarui status transaksi menjadi *Sebagian* atau *Lunas*, dan memposting jurnal penerimaan kas (*Debit*) ke modul Keuangan tanpa risiko data ganda.
 - **Peta Geospatial Interaktif Distribusi (Leaflet.js + OpenStreetMap):**
   - Peta digital GIS interaktif menampilkan sebaran titik koordinat (*latitude/longitude*) seluruh mitra distributor toko/pasar.
   - *Pin marker* interaktif dengan pop-up rute pengiriman, status pesanan aktif, dan informasi kontak mitra.
 
 #### 9. Rekapitulasi & Laporan Keuangan (`/keuangan` & `/keuangan/transaksi`)
-- **Buku Kas Arus Kas Masuk & Keluar:** Pencatatan omzet penjualan ikan/bibit (Inflow) dan biaya operasional belanja pakan, bibit, vitamin, listrik, BBM armada, serta perawatan kolam (Outflow).
+- **Buku Kas Arus Kas Masuk & Keluar:** Pencatatan omzet penjualan ikan/bibit (Inflow), setoran modal disetor awal (Equity Injection), pelunasan piutang distribusi, dan biaya operasional belanja pakan, bibit, vitamin, listrik, BBM armada, serta perawatan kolam (Outflow).
 - **Penomoran Referensi Transaksi Otomatis (SOP ID):** Format standar akuntansi unik berbasis tanggal (`TRX-YYMM-XXX`).
 - **Skor Kesehatan Keuangan (Financial Health Score):** Metrik kalkulasi rasio margin keuntungan bersih terhadap beban operasional dengan status kesehatan kas (*Stable & Sehat* vs *Perlu Evaluasi*).
 - **Analisis Laba Bersih & Arus Kas Bulanan:** Ringkasan total pendapatan, total beban, laba bersih, dan grafik tren arus kas per bulan sepanjang tahun berjalan.
+- **Executive Balance Sheet (Neraca Posisi Keuangan: Aktiva vs Pasiva):**
+  - **Sisi Aktiva (Assets):**
+    - *Aktiva Lancar:* Kas riil likuid operasional, Piutang mitra distributor aktif (termin berjalan), Persediaan ikan hidup (Aset Biologis) di kolam aktif, dan Persediaan gudang (pakan pelet & saprotan).
+    - *Aktiva Tetap Bersih (Net Book Value):* Nilai perolehan kotor fasilitas fisik kolam & peralatan mesin tambak dikurangi Akumulasi Penyusutan (*Accumulated Depreciation*).
+  - **Sisi Pasiva (Liabilities & Equity):**
+    - *Kewajiban (Liabilitas):* Cadangan klaim potongan susut timbangan DDP mitra.
+    - *Ekuitas:* Modal Disetor Awal Investasi Pemilik/Investor (Rp 100 Juta) + Laba Ditahan Bersih Usaha (*Retained Earnings*).
+  - **Keseimbangan Presisi (100% Balanced):** Formula matematis diverifikasi seimbang tanpa selisih (Aktiva = Pasiva, Selisih Rp 0) dilengkapi stempel tanggal dan jam cut-off WIB (*Asia/Jakarta*).
+- **Akumulasi Penyusutan Aset Tetap Metode Garis Lurus (*Straight-Line Depreciation*):**
+  - Masa manfaat ekonomis fasilitas fisik kolam: **4 Tahun (48 Bulan)**.
+  - Masa manfaat ekonomis peralatan mesin tambak (pompa, blower aerasi, instrumen uji): **3 Tahun (36 Bulan)**.
+  - Dihitung secara dinamis dan objektif berbasis umur operasional tambak (bulan berjalan sejak perolehan/transaksi pertama), disajikan sebagai akun Kontra-Aktiva di Neraca.
+- **Kalibrasi Biaya Produksi (HPP) & Valuasi Persediaan Biologis:**
+  - Memisahkan Belanja Modal (*Capex* Kolam & Peralatan) dari Biaya Pokok Produksi (*HPP Budidaya*).
+  - HPP per Kg dihitung murni dari biaya pakan, bibit, dan saprotan operasional kolam dibagi total biomassa panen, menghasilkan benchmark wajar (~Rp 21.500/kg).
+  - Valuasi persediaan ikan hidup di kolam aktif dihitung presisi dari total biomassa ikan kolam aktif dikalikan HPP wajar.
+- **Buku Kas Digital & Cash Ledger Paginasi Lembar (Anti-Lag UX):**
+  - Menghilangkan beban *infinite scroll* saat volume transaksi mencapai ribuan entri.
+  - Fleksibilitas jumlah baris: `10`, `15`, `25`, `50`, dan `Semua` entri per lembar.
+  - Navigasi lembar buku kas lengkap (*Pertama, Sebelumnya, Nomor Halaman Dinamis, Selanjutnya, Terakhir, Lompat Halaman Langsung*).
+  - Tata letak rapat bebas potong dengan perampingan baris (`line-clamp-1` + hover tooltip) dan fitur cetak ramah printer (*Print-Friendly* auto-expand).
 
 #### 10. Manajemen Mitra Distributor & Supplier (`/mitra`)
 - **Database Mitra Komprehensif:** Pengelolaan profil pembeli (Pasar Tradisional, Restoran/Hotel, Agen Grosir, Eksportir) serta Supplier Pakan/Bahan Baku.
@@ -385,14 +418,21 @@ skema fitur distribusi
 --[✓] [BARU] fitur pre-order / booking masa depan (ikan tetap makan di kolam hingga H-1)
 --[✓] [BARU] pilihan metode panen: panen parsial vs kuras total ke kolam buffer
 --[✓] [BARU] pencatatan susut bobot & mortalitas tiba di tempat serah terima (DDP toleransi < 2%)
+--[✓] [BARU] fitur termin pembayaran piutang distributor (7-30 hari) & monitoring limit kredit
+--[✓] [BARU] fitur proteksi potongan klaim susut timbangan DDP (> 2%)
+--[✓] [BARU] fitur catat pembayaran / pelunasan piutang cicilan langsung masuk ke kas keuangan
 Skema Transaksi keuangan
--[😁]fitur transaksi 
---[✓]fitur tambah / catat transaksi selain panen dan beli bibit.
---[😁]fitur cetak transaksi keluar dan masuk
+-[✓]fitur transaksi 
+--[✓]fitur tambah / catat transaksi kas operasional & setoran modal awal
+--[✓]fitur cetak buku kas keluar dan masuk (Print-Friendly auto-expand)
 --[✓]fitur edit transaksi
 --[✓]fitur hapus data transaksi
 --[✓]fitur view data transaksi
---[]fitur cetak laporan analisis 
+--[✓]fitur cetak laporan analisis bulanan & tahunan ke PDF
+--[✓] [BARU] fitur Executive Balance Sheet (Neraca Posisi Keuangan: Aktiva vs Pasiva 100% Seimbang)
+--[✓] [BARU] fitur Akumulasi Penyusutan Aset Tetap Metode Garis Lurus (Kolam 48 bln & Mesin 36 bln)
+--[✓] [BARU] fitur Paginasi Lembar & Navigasi Cepat Cash Ledger (10, 15, 25, 50, Semua baris)
+--[✓] [BARU] kalibrasi otomatis HPP per Kg (~Rp 21.500/kg) & Valuasi Persediaan Biologis Ikan 
 Skema petugas 
 -[✓] distribusi
 --[✓]fitur navigasi pesanan 

@@ -119,8 +119,8 @@ Menggunakan metode kombinasi antara pelet komersial berprotein tinggi dengan pak
 | **Batch Pembesaran (Grow-out)** | Monitor & Evaluasi | Lihat | CRUD Penuh | Lihat Kesiapan |
 | **Logging Pakan & Auto-Deduct** | Monitor & Laporan | Input Log Bibit | Input Log Pakan | - |
 | **Panen & Pemberokan** | Monitor Alokasi | - | Input Siap Panen | Update Timer & Sortir |
-| **Distribusi & Surat Jalan** | Buat Order & Monitor | - | Lihat | Update Status & Bukti |
-| **Keuangan Ledger** | CRUD Penuh | - | - | - |
+| **Distribusi & Termin Piutang** | Buat Order, Plafon & Bayar Piutang | - | Lihat | Update Status & Bukti |
+| **Keuangan, Neraca & Depresiasi** | CRUD Penuh, Neraca & Depresiasi | - | - | - |
 | **Peta Interaktif (GIS)** | Peta Global | - | - | Rute Kirim Mitra |
 
 ---
